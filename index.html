@@ -485,11 +485,13 @@ async function markAll(group){
 }
 
 /* ---------- render ---------- */
+/* 명단 탭 칩: 지금 보는 목록([출석]/[제적]/[졸업])의 인원. '전체'는 교사 빼고 */
+const rosterCnt=g=>[...S.people.values()].filter(p=>teamOf(p)===S.team&&rosterModeOf(p)===(S.rosterMode||"active")&&(g==="all"?p.group!=="T"&&!(isHomeroom()&&p.group==="T"):p.group===g)).length;
 function renderChips(){
   const k=S.date;
   const items=[["all","전체"],...GROUPS].map(([g,l])=>{
     const ps=activePeople(g).filter(p=>g!=="all"||p.group!=="T");const on=ps.filter(p=>isOn(k,p.id)).length;
-    return `<button class="chip" data-g="${g}" aria-pressed="${S.group===g}"${canRenameClass(g)?` title="더블클릭(휴대폰은 두 번 톡톡)하면 반 이름을 바꿀 수 있어요"`:""}>${l}${S.tab==="check"?`<span class="c num">${on}/${ps.length}</span>`:""}</button>`});
+    return `<button class="chip" data-g="${g}" aria-pressed="${S.group===g}"${canRenameClass(g)?` title="더블클릭(휴대폰은 두 번 톡톡)하면 반 이름을 바꿀 수 있어요"`:""}>${l}${S.tab==="check"?`<span class="c num">${on}/${ps.length}</span>`:S.tab==="roster"?`<span class="c num">${rosterCnt(g)}</span>`:""}</button>`});
   $("#chips").innerHTML=items.join("");$("#chips").hidden=S.tab==="schedule";
 }
 function renderTeams(){
