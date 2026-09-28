@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>신당중앙교회</title>
+<meta name="description" content="교회학교 교육부 주일 출석·달란트·명단 관리">
+<meta name="theme-color" content="#18856B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="출석부">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta property="og:title" content="신당중앙교회">
+<meta property="og:description" content="교회학교 교육부 주일 출석·달란트·명단 관리">
+<meta property="og:image" content="icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+  html, body { margin: 0; height: 100%; background: #F1F5F2; }
+  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+  .fallback { position: fixed; inset: auto 0 0 0; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    font: 13px/1.5 "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; color: #5F726D; text-align: center; }
+  .loader { position: fixed; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    background: #F1F5F2; color: #17302B; font-family: "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; transition: opacity .25s; }
+  .loader.out { opacity: 0; pointer-events: none; }
+  .loader .spin { width: 44px; height: 44px; border-radius: 50%; border: 4px solid #D4EDE4; border-top-color: #18856B; animation: spin .9s linear infinite; }
+  .loader b { font-size: 24px; }
+  .loader span { color: #5F726D; font-size: 14px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .fallback { z-index: 3; }
+  .fallback a { color: #18856B; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="loader" id="loader" role="status" aria-live="polite"><div class="spin" aria-hidden="true"></div><b>신당중앙교회</b><span>출석부를 불러오는 중이에요…</span></div>
+<!-- 앱 주소(구글 웹앱 /exec)를 바꾸면 아래 src만 고치면 됩니다 -->
+<iframe id="app" title="신당중앙교회" allow="clipboard-write"
+  src="https://script.google.com/macros/s/AKfycbxAIzrJ4PjqNm4lo-1iC88RjRV56JTSkug5moMo_a-x7Im4v98XxCZ0Z-Gm0Y2FaUGt/exec"></iframe>
+<p class="fallback" id="fallback" hidden>앱이 열리지 않으면 <a id="direct" target="_top">여기를 눌러 바로 열기</a></p>
+<script>
+  // 20초 안에 앱이 뜨지 않는 경우를 대비한 직접 열기 링크
+  var app = document.getElementById('app'), fb = document.getElementById('fallback');
+  document.getElementById('direct').href = app.src;
+  // 앱 화면이 올라오면 로딩 안내를 걷어요 (그다음은 앱 안의 로딩 안내가 이어받아요)
+  var loaded = false, ld = document.getElementById('loader');
+  app.addEventListener('load', function () { loaded = true; ld.className = 'loader out'; setTimeout(function () { ld.hidden = true; }, 300); });
+  setTimeout(function () { if (!loaded) fb.hidden = false; }, 20000);
+  // 홈 화면 설치용
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+</script>
+</body>
+</html>
