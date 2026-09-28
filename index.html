@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<base target="_top">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>신당중앙교회</title>
 <meta name="description" content="교회학교 교육부 주일 출석·달란트·명단 관리">
 <meta name="theme-color" content="#18856B">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="출석부">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta property="og:title" content="신당중앙교회">
@@ -16,38 +14,1840 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>신당중앙교회 교육팀 출석부</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
 <style>
-  html, body { margin: 0; height: 100%; background: #F1F5F2; }
-  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
-  .fallback { position: fixed; inset: auto 0 0 0; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-    font: 13px/1.5 "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; color: #5F726D; text-align: center; }
-  .loader { position: fixed; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
-    background: #F1F5F2; color: #17302B; font-family: "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; transition: opacity .25s; }
-  .loader.out { opacity: 0; pointer-events: none; }
-  .loader .spin { width: 44px; height: 44px; border-radius: 50%; border: 4px solid #D4EDE4; border-top-color: #18856B; animation: spin .9s linear infinite; }
-  .loader b { font-size: 24px; }
-  .loader span { color: #5F726D; font-size: 14px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .fallback { z-index: 3; }
-  .fallback a { color: #18856B; font-weight: 600; }
+:root{
+  --ground:#F1F5F2; --surface:#FFFFFF; --sunk:#E6ECE8; --line:#D5DED9;
+  --ink:#17302B; --muted:#5F726D; --accent:#18856B; --accent-ink:#FFFFFF; --accent-soft:#D4EDE4;
+  --gold:#C98A0E; --gold-soft:#FBEFD2; --new:#B4476A; --new-soft:#F8E1E9; --danger:#B3261E;
+  --shadow:0 1px 2px rgba(23,48,43,.06),0 4px 14px rgba(23,48,43,.06);
+  --display:"Jua","IBM Plex Sans KR",system-ui,sans-serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#0F1614; --surface:#18221F; --sunk:#202C28; --line:#2C3A35;
+    --ink:#E3EDE9; --muted:#93A7A1; --accent:#3BC49C; --accent-ink:#06231B; --accent-soft:#173B31;
+    --gold:#F0BD4B; --gold-soft:#3A2E12; --new:#EE8AAB; --new-soft:#3D1D29; --danger:#F2867E;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0F1614; --surface:#18221F; --sunk:#202C28; --line:#2C3A35;
+  --ink:#E3EDE9; --muted:#93A7A1; --accent:#3BC49C; --accent-ink:#06231B; --accent-soft:#173B31;
+  --gold:#F0BD4B; --gold-soft:#3A2E12; --new:#EE8AAB; --new-soft:#3D1D29; --danger:#F2867E;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+.app{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:0 96px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ground);padding-block:14px 10px;margin-inline:-16px;padding-inline:16px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.brand h1{font-family:var(--display);font-weight:400;font-size:24px;margin:0;letter-spacing:.01em}
+.brand small{color:var(--muted);font-size:12px}
+.datebar{display:flex;align-items:center;gap:8px;margin-top:10px}
+.datebar .arrow{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:18px;display:grid;place-items:center}
+.datebar .date{flex:1;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;height:40px;display:flex;align-items:center;justify-content:center;gap:8px;position:relative}
+.datebar .date strong{font-size:16px}
+.datebar .date input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.today-tag{font-size:11px;background:var(--accent-soft);color:var(--accent);padding:1px 7px;border-radius:99px;font-weight:600}
+.teams{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px;background:var(--sunk);border-radius:12px;padding:3px}
+.teams button{border:0;background:none;border-radius:9px;padding:7px 2px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap}
+.teams button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+@media (max-width:380px){.teams button{font-size:12px}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 13px;font-size:14px;font-weight:500;display:flex;gap:6px;align-items:center}
+.chip .c{font-size:12px;color:var(--muted)}
+.chip{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.chip[aria-pressed="true"] .c{color:inherit;opacity:.75}
+
+.summary{display:flex;align-items:center;gap:14px;margin-block:14px 8px}
+.ring{--p:0;width:58px;height:58px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p)*1%),var(--sunk) 0);display:grid;place-items:center;flex:none}
+.ring span{width:44px;height:44px;border-radius:50%;background:var(--ground);display:grid;place-items:center;font-size:13px;font-weight:700}
+.summary .big{font-size:26px;font-weight:700;line-height:1.1}
+.summary .big em{font-style:normal;color:var(--muted);font-size:16px;font-weight:500}
+.summary .sub{color:var(--muted);font-size:13px}
+.summary .spacer{flex:1}
+.summary .btn{white-space:nowrap;flex:none}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--danger)}
+
+.group-h{display:flex;align-items:baseline;gap:8px;margin-block:18px 8px;font-family:var(--display);font-size:18px}
+.group-h .c{font-family:var(--body);font-size:13px;color:var(--muted)}
+.homeroom{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:8px 12px;margin-bottom:8px;font-size:14px}
+.homeroom .lbl{font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:1px 8px;flex:none}
+.homeroom b{font-weight:600}
+.homeroom .none{color:var(--muted)}
+.homeroom .spacer{flex:1}
+.hr-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.hr-chip{display:inline-flex;align-items:center;gap:4px;background:var(--accent-soft);color:var(--ink);border:1px solid var(--line);border-radius:99px;padding:4px 6px 4px 12px;font-size:14px;font-weight:600}
+.hr-chip button{border:0;background:none;color:var(--muted);font-size:18px;line-height:1;padding:0 6px;cursor:pointer}
+.hr-chip.pick{background:var(--surface);font-weight:500;padding:4px 12px;cursor:pointer}
+.hr-add{display:flex;gap:6px}.hr-add input{flex:1;min-width:0}
+.homeroom button{border:0;background:none;color:var(--accent);font-weight:600;font-size:13px;padding:4px 2px}
+.group-h .mini{margin-left:auto;font-family:var(--body);font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--accent);border-radius:99px;padding:3px 10px}
+.sec-h{display:flex;align-items:baseline;gap:8px;margin:14px 0 6px 2px;font-weight:700;font-size:15px}
+.sec-h .c{font-size:12px;color:var(--muted);font-weight:500}
+.sec-h .badge{background:var(--ink);color:var(--ground);border-radius:6px;padding:0 7px;font-size:13px}
+.split-n{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--sunk);border-radius:10px;padding:3px;margin-top:12px}
+.split-n button{border:0;background:none;border-radius:8px;padding:8px 2px;font-size:13px;font-weight:600;color:var(--muted)}
+.split-n button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.assign{display:flex;flex-direction:column;gap:6px;margin-top:12px;max-height:44vh;overflow:auto}
+.assign .ar{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--ground);border-radius:10px}
+.assign .ar .nm{flex:1;min-width:0;font-size:14px;font-weight:600}
+.assign .ar .opts{display:flex;gap:4px}
+.assign .ar .opts button{width:34px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:13px;color:var(--muted)}
+.assign .ar .opts button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.split-tools{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13px;flex-wrap:wrap}
+.bcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.bhead{display:flex;align-items:center;gap:10px}
+.bhead b{font-size:16px}
+.bhead .muted{font-size:12px}
+.bhead .sp{flex:1}
+.bline{display:flex;align-items:center;gap:8px;font-size:14px;flex-wrap:wrap}
+.bline .k{width:52px;flex:none;font-size:12px;color:var(--muted)}
+.bline .v{flex:1;min-width:120px;user-select:text;word-break:break-all}
+.bline .none{color:var(--muted);font-size:13px}
+.bline a,.bline button{font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--accent);border-radius:8px;padding:3px 8px;text-decoration:none}
+.a2hs{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+.a2hs svg{width:34px;height:34px;flex:none;stroke:var(--accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.a2hs .tx{flex:1;min-width:0}
+.a2hs .tx b{display:block;font-size:15px}
+.a2hs .tx span{font-size:12px;color:var(--muted)}
+.a2hs .x{border:0;background:none;color:var(--muted);font-size:18px;padding:4px 6px}
+.steps{margin:12px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.steps b{color:var(--accent)}
+.urlbox{display:flex;gap:8px;align-items:center;margin-top:12px;background:var(--ground);border-radius:10px;padding:8px 10px}
+.urlbox code{flex:1;min-width:0;font-size:12px;word-break:break-all;user-select:all}
+.role-badge{display:inline-block;vertical-align:middle;margin-left:8px;font-family:var(--body);font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:2px 9px}
+.brand h1{font-size:clamp(17px,4.8vw,24px)}
+#brandTitle{cursor:pointer}
+nav.tabs button{font-size:11px;white-space:nowrap}
+.icon-btn{flex:none;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--muted);padding:0;text-decoration:none}
+.icon-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.icon-btn.tel{color:var(--accent)}
+.icon-btn.has{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
+.memo-line{color:var(--gold)!important;font-size:12px;font-weight:600}
+@media (max-width:440px){.row{gap:6px}.row .avatar{width:34px;height:34px;font-size:12px}.who b{font-size:15px}}
+.chipset{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chipset button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 11px;font-size:13px}
+.cal-head{display:flex;align-items:center;gap:8px;margin:14px 0 8px}
+.cal-head b{flex:1;text-align:center;font-family:var(--display);font-size:20px;font-weight:400}
+.cal{display:grid;grid-template-columns:1.9fr repeat(6,minmax(0,1fr));gap:3px}
+.cal .wd{font-size:11px;text-align:center;color:var(--muted);padding:2px 0}
+.cal .wd.sun{color:var(--danger);font-weight:700}
+.cal-cell{min-height:60px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:3px;text-align:left;display:flex;flex-direction:column;gap:2px;overflow:hidden;min-width:0}
+.cal-cell.sun{min-height:84px;background:color-mix(in srgb,var(--danger) 5%,var(--surface))}
+.cal-cell .dn{font-size:12px;font-weight:600}
+.cal-cell.sun .dn{color:var(--danger);font-size:14px}
+.cal-cell.out{opacity:.4}
+.cal-cell.sel{outline:2px solid var(--accent);outline-offset:-1px}
+.cal-cell.today .dn{background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:0 5px;align-self:flex-start}
+.cal-cell .ev{font-size:10px;line-height:1.3;background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:1px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-cell.sun .ev{font-size:11px}
+.cal-cell .more{font-size:10px;color:var(--muted)}
+.ev-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;text-align:left;width:100%}
+.ev-card b{font-size:15px}
+.ev-card span{font-size:12px;color:var(--muted)}
+.file-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.file-row .nm{flex:1;min-width:120px;word-break:break-all}
+.guide ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.6}
+.guide h4{margin:16px 0 0;font-size:15px}
+.hist-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.hist-item .when{flex:none;width:86px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.hist-item .what{flex:1;min-width:0}
+.hist-item .by{display:block;font-size:11px;color:var(--muted)}
+.hist-kind{display:inline-block;font-size:11px;font-weight:600;border-radius:99px;padding:0 7px;margin-right:4px;background:var(--sunk);color:var(--muted)}
+.hist-kind.t{background:var(--gold-soft);color:var(--gold)}
+.yr-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row .check,.row .icon-btn.big{width:44px;height:44px;border-radius:12px}
+.icon-btn.big{border-width:2px}
+.icon-btn.big svg{width:20px;height:20px}
+.icon-btn.nonum{opacity:.45}
+.act-box{flex:none;display:flex;flex-direction:column;align-items:center}
+.act-box .act-lbl{font-size:10px;color:var(--muted);text-align:center;margin-top:2px;font-weight:600}
+.act-box .act-lbl.memo{color:var(--gold)}
+.roster-wrap{display:flex;flex-direction:column}
+.roster-wrap>.homeroom{order:3}
+.roster-wrap>.list{margin-bottom:12px}
+.roster-wrap>.list,.roster-wrap>.empty{order:2}
+.call-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
+.call-row .k{width:52px;font-size:12px;color:var(--muted)}
+.call-row .v{flex:1;min-width:120px;font-size:17px;font-weight:700;letter-spacing:.02em;user-select:all}
+.call-row a.btn{text-decoration:none}
+.vis-badge{display:inline-block;font-size:11px;font-weight:700;color:var(--danger);background:color-mix(in srgb,var(--danger) 12%,transparent);border-radius:99px;padding:0 7px;margin-right:4px}
+.pv-table{border-collapse:collapse;font-size:12px}
+.pv-table td,.pv-table th{border:1px solid #ddd;padding:3px 6px;white-space:nowrap}
+.pv-doc table{border-collapse:collapse}.pv-doc td,.pv-doc th{border:1px solid #ccc;padding:3px 6px}
+.pv-doc img{max-width:100%}
+.group-empty{font-size:13px;color:var(--muted);padding:4px 4px 2px}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 10px 8px 8px;transition:background .15s,border-color .15s}
+.row.on{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+.check{flex:none;width:48px;height:48px;border-radius:12px;border:2px solid var(--line);background:var(--ground);display:grid;place-items:center}
+.check svg{width:26px;height:26px;opacity:0;transform:scale(.6);transition:.15s}
+.row.on .check{background:var(--accent);border-color:var(--accent)}
+.row.on .check svg{opacity:1;transform:none;stroke:var(--accent-ink)}
+.who{flex:1;min-width:0;display:flex;flex-direction:column;background:none;border:0;text-align:left;padding:0}
+.who b{font-size:16px;font-weight:600;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.who span{font-size:12px;color:var(--muted)}
+.tag{font-size:11px;font-weight:600;padding:0 7px;border-radius:99px;line-height:18px}
+.tag.new{background:var(--new-soft);color:var(--new)}
+.tag.bd{background:var(--gold-soft);color:var(--gold)}
+.tag.role{background:var(--sunk);color:var(--muted)}
+.talent{flex:none;display:flex;align-items:center;gap:2px;background:var(--gold-soft);border-radius:10px;padding:2px 2px 2px 4px}
+.talent-box{flex:none}
+.talent .arrows{display:flex;flex-direction:column;gap:2px}
+.talent .arrows button{width:34px;height:22px;border:0;background:color-mix(in srgb,var(--gold) 12%,transparent);color:var(--gold);border-radius:6px;display:grid;place-items:center;padding:0}
+.talent .arrows svg{width:16px;height:16px}
+.talent .arrows button:active{background:color-mix(in srgb,var(--gold) 20%,transparent)}
+.talent input{width:40px;height:46px;border:1px solid transparent;border-radius:8px;background:transparent;text-align:center;font-weight:700;color:var(--gold);font-size:16px;padding:0;-moz-appearance:textfield}
+.talent input::-webkit-outer-spin-button,.talent input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.talent input:focus{background:var(--surface);border-color:var(--gold);outline:none}
+.avatar{flex:none;width:42px;height:42px;border-radius:50%;object-fit:cover;background:var(--sunk);display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--muted);overflow:hidden}
+.avatar.lg{width:96px;height:96px;font-size:24px}
+.who-wrap{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:0;text-align:left;padding:0}
+.photo-field{grid-column:1/-1;display:flex;align-items:center;gap:12px}
+.photo-field .btns{display:flex;gap:8px;flex-wrap:wrap}
+.photo-field input[type=file]{display:none}
+.sheet-head{display:flex;align-items:center;gap:14px}
+.check-box{flex:none;display:flex;flex-direction:column;align-items:center}
+.check-lbl{font-size:10px;color:var(--accent);text-align:center;margin-top:2px;font-weight:600}
+.talent-lbl{font-size:10px;color:var(--gold);text-align:center;margin-top:-2px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.search{width:100%;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:0 14px;margin-top:14px}
+.muted{color:var(--muted)}
+.empty{text-align:center;color:var(--muted);padding:40px 10px}
+
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar{display:grid;grid-template-columns:56px 1fr 64px;gap:10px;align-items:center;font-size:14px}
+.bar .track{height:14px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.bar .fill{height:100%;background:var(--accent);border-radius:99px}
+.bar .v{text-align:right;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-size:12px;color:var(--muted);font-weight:600}
+td.r,th.r{text-align:right}
+.tablewrap{overflow-x:auto}
+h2.sec{font-family:var(--display);font-weight:400;font-size:19px;margin:22px 0 10px}
+details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
+details.fold>summary h2.sec{margin-bottom:6px}
+details.fold .fold-sum{font-size:13px;color:var(--muted)}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::after{content:"펼치기 ▾";margin-left:auto;font-size:13px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+details.fold[open]>summary::after{content:"접기 ▴"}
+.seg{display:flex;background:var(--sunk);border-radius:10px;padding:3px;gap:3px;margin-top:14px}
+.seg button{flex:1;border:0;background:none;border-radius:8px;padding:7px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+.brand .left{display:flex;align-items:center;gap:8px;min-width:0}
+.back{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:18px;display:grid;place-items:center;flex:none}
+.home-intro{margin-block:18px 12px}
+.home-intro .yr{font-family:var(--display);font-size:30px;line-height:1.1;margin:0}
+.home-intro p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.dept-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:360px){.dept-grid{grid-template-columns:1fr}}
+.dept{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 14px;min-height:132px;box-shadow:var(--shadow)}
+.dept .top{display:flex;align-items:center;justify-content:space-between;width:100%;gap:6px}
+.dept .name{font-family:var(--display);font-size:clamp(16px,4.6vw,20px);line-height:1.2;word-break:keep-all}
+.dept .range{font-size:13px;color:var(--muted)}
+.dept .stat{margin-top:auto;word-break:keep-all;font-size:13px;font-weight:600;color:var(--accent)}
+.dept .lock{flex:none;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--muted);background:var(--sunk);border-radius:99px;padding:1px 7px}
+.lock-ic{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+.admin-list{display:flex;flex-direction:column;padding:4px 14px}
+.admin-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
+.admin-row:last-child{border-bottom:0}
+.admin-row b{min-width:92px}
+.admin-row .code{flex:1;font-size:17px;font-weight:700;letter-spacing:.12em;min-width:80px}
+.admin-row .code.none{letter-spacing:0;font-size:13px;font-weight:500;color:var(--muted)}
+.err{color:var(--danger);font-size:13px;margin:8px 0 0}
+.promo-card{display:flex;flex-direction:column;gap:10px}
+.promo-card .line{font-size:14px}
+.promo-card .btns{display:flex;gap:8px;flex-wrap:wrap}
+.move-list{display:flex;flex-direction:column;gap:6px;margin-top:12px;max-height:46vh;overflow:auto}
+.move{display:flex;align-items:center;gap:8px;font-size:14px;padding:8px 10px;background:var(--ground);border-radius:10px}
+.move .arrow{color:var(--muted)}
+.move .n{margin-left:auto;font-weight:700}
+.run{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;font:inherit;color:inherit;padding:10px 12px;background:var(--ground);border:2px solid transparent;border-radius:12px;cursor:pointer}
+.run[aria-pressed="true"]{border-color:var(--danger);background:var(--surface)}
+.run:disabled{cursor:default;opacity:.6}
+.run .h{display:flex;gap:8px;align-items:center;font-weight:600}
+.run .h .st{margin-left:auto;font-size:12px;font-weight:500;color:var(--muted)}
+.run .d{font-size:13px;color:var(--muted)}
+.move.grad .to{color:var(--new);font-weight:600}
+.progress{height:8px;background:var(--sunk);border-radius:99px;overflow:hidden;margin-top:12px}
+.progress div{height:100%;background:var(--accent);width:0;transition:width .2s}
+body.home nav.tabs,body.home #datebar,body.home #chips{display:none}
+body.home .app{padding-block-end:32px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs div{max-width:640px;margin:0 auto;display:flex}
+nav.tabs button{flex:1;border:0;background:none;padding:9px 0 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--muted);font-weight:500}
+nav.tabs svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-current="page"]{color:var(--accent)}
+
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(10,20,17,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:640px;max-height:92%;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+.sheet h3{font-family:var(--display);font-weight:400;font-size:21px;margin:0 0 4px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.pc-h{margin:18px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:15px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600}
+.form label.full{grid-column:1/-1}
+.form .name-sex{display:flex;gap:6px}
+.form .name-sex input{flex:1;min-width:0}
+.form .name-sex select{flex:none;width:72px;padding:0 6px}
+.form input,.form select,.form textarea{height:42px;border:1px solid var(--line);border-radius:10px;background:var(--ground);padding:0 10px;font-size:15px;font-weight:400;color:var(--ink)}
+.form textarea{height:70px;padding:8px 10px;resize:vertical}
+.form .inline{flex-direction:row;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
+.form .inline input{height:20px;width:20px}
+.actions{display:flex;gap:8px;margin-top:16px;align-items:center}
+.actions .spacer{flex:1}
+.contact{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.contact div{display:flex;align-items:center;gap:8px;font-size:14px}
+.contact .k{width:64px;color:var(--muted);font-size:12px;flex:none}
+.contact .v{flex:1;user-select:text;word-break:break-all}
+.boot-loader{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--ground);color:var(--ink);text-align:center;padding:16px;transition:opacity .25s}
+.boot-loader.out{opacity:0;pointer-events:none}
+.boot-loader .spin{width:44px;height:44px;border-radius:50%;border:4px solid var(--accent-soft);border-top-color:var(--accent);animation:bootspin .9s linear infinite}
+.boot-loader b{font-family:var(--display);font-size:24px;font-weight:400}
+.boot-loader span{color:var(--muted);font-size:14px}
+@keyframes bootspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.boot-loader .spin{animation-duration:2.5s}}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:8px 14px;border-radius:99px;font-size:13px;z-index:30}
+.notice{background:var(--gold-soft);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px}
+@media (max-width:380px){.form{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<div class="loader" id="loader" role="status" aria-live="polite"><div class="spin" aria-hidden="true"></div><b>신당중앙교회</b><span>출석부를 불러오는 중이에요…</span></div>
-<!-- 앱 주소(구글 웹앱 /exec)를 바꾸면 아래 src만 고치면 됩니다 -->
-<iframe id="app" title="신당중앙교회" allow="clipboard-write"
-  src="https://script.google.com/macros/s/AKfycbxAIzrJ4PjqNm4lo-1iC88RjRV56JTSkug5moMo_a-x7Im4v98XxCZ0Z-Gm0Y2FaUGt/exec"></iframe>
-<p class="fallback" id="fallback" hidden>앱이 열리지 않으면 <a id="direct" target="_top">여기를 눌러 바로 열기</a></p>
+
+<div class="boot-loader" id="bootLoader" role="status" aria-live="polite"><div class="spin" aria-hidden="true"></div><b>신당중앙교회</b><span id="bootMsg">출석부를 불러오는 중이에요…</span></div>
+
+<div class="app">
+  <header class="top">
+    <div class="brand"><div class="left"><button class="back" id="homeBtn" aria-label="메인 화면으로" hidden>‹</button><h1 id="brandTitle" title="메인 화면으로">신당중앙교회 교육팀 출석부</h1></div><small id="sync" class="muted">불러오는 중…</small></div>
+    <div class="datebar" id="datebar">
+      <button class="arrow" id="prev" aria-label="지난 주일">‹</button>
+      <div class="date"><strong id="dateLabel" class="num"></strong><span id="todayTag" class="today-tag" hidden>오늘</span>
+        <input type="date" id="datePick" aria-label="날짜 선택"></div>
+      <button class="arrow" id="next" aria-label="다음 주일">›</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </header>
+  <main id="view"></main>
+</div>
+
+<nav class="tabs"><div>
+  <button data-tab="schedule"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M9 3.5v3M15 3.5v3M8 13h2M12 13h2M8 16.5h2"/></svg>일정</button>
+  <button data-tab="check"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12.5l3 3 5-6"/></svg>출결메모</button>
+  <button data-tab="roster"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.2c2.3.1 4 1.6 4.5 4.3"/></svg>명단</button>
+  <button data-tab="bday"><svg viewBox="0 0 24 24"><path d="M5 20h14v-7H5z"/><path d="M4 13h16M12 13V9M9 9h6"/><path d="M12 6.5c-.8-.8-.8-2 0-3 .8 1 .8 2.2 0 3z"/></svg>생일</button>
+  <button data-tab="talent"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5v9M9.5 9.5h3.8a1.7 1.7 0 010 3.4h-2.6a1.7 1.7 0 000 3.4h3.8"/></svg>달란트</button>
+  <button data-tab="stats"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>통계</button>
+</div></nav>
+
 <script>
-  // 20초 안에 앱이 뜨지 않는 경우를 대비한 직접 열기 링크
-  var app = document.getElementById('app'), fb = document.getElementById('fallback');
-  document.getElementById('direct').href = app.src;
-  // 앱 화면이 올라오면 로딩 안내를 걷어요 (그다음은 앱 안의 로딩 안내가 이어받아요)
-  var loaded = false, ld = document.getElementById('loader');
-  app.addEventListener('load', function () { loaded = true; ld.className = 'loader out'; setTimeout(function () { ld.hidden = true; }, 300); });
-  setTimeout(function () { if (!loaded) fb.hidden = false; }, 20000);
-  // 홈 화면 설치용
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+const TEAMS={
+  infant:{label:"영아교육팀",short:"영아",unit:"영아",groups:[["0","0세"],["1","1세"],["2","2세"],["3","3세"],["4","4세"]]},
+  toddler:{label:"유아교육팀",short:"유아",unit:"어린이",groups:[["5","5세"],["6","6세"],["7","7세"]]},
+  youth:{label:"유소년교육팀",short:"유소년",unit:"학생",groups:[["1","1학년"],["2","2학년"],["3","3학년"],["4","4학년"],["5","5학년"],["6","6학년"]]},
+  teen:{label:"중고등교육팀",short:"중고등",unit:"학생",groups:[["m1","중1"],["m2","중2"],["m3","중3"],["h1","고1"],["h2","고2"],["h3","고3"]]},
+};
+const teamOf=p=>p.team||"youth";
+/* 영아교육팀은 나이와 관계없이 반을 편성해요. 반 목록은 부서 설정(classes), 나이는 사람마다 따로(age).
+   반을 아직 안 정한 아이는 "_"(미배정). 유아·유소년·중고등은 반 = 나이·학년 그대로. */
+const FLEX_TEAMS=["infant"];
+const isFlex=t=>FLEX_TEAMS.includes(t);
+/* 반 이름: 영아는 반 목록 전체를, 나머지 부서는 나이·학년 순서는 그대로 두고 이름만 바꿔요 */
+const classesOf=t=>{const c=((S.settings||{})[t]||{}).classes;
+  if(isFlex(t))return Array.isArray(c)&&c.length?c:TEAMS[t].groups;
+  const nm=Object.fromEntries((Array.isArray(c)?c:[]).filter(x=>x&&x[1]));return TEAMS[t].groups.map(([k,l])=>[k,nm[k]||l])};
+const hasUnassigned=t=>[...S.people.values()].some(p=>teamOf(p)===t&&p.group==="_");
+const groupsOf=t=>[...classesOf(t),...(isFlex(t)&&hasUnassigned(t)?[["_","미배정"]]:[]),["T","교사"]];
+const pickGroupsOf=t=>[...classesOf(t),...(isFlex(t)?[["_","미배정"]]:[]),["T","교사"]];
+const isClassKey=g=>g!=="T"&&g!=="_";
+const ageLabel=p=>isFlex(teamOf(p))&&p.group!=="T"&&p.age?(Object.fromEntries(TEAMS[teamOf(p)].groups.concat(...FLEX_TEAMS.map(t=>TEAMS[t].groups)))[p.age]||""):"";
+let GROUPS,GL;
+const S={promos:new Map(),view:"home",depts:new Map(),codes:{},isAdmin:false,people:new Map(),att:new Map(),classes:new Map(),date:null,team:"youth",group:"all",tab:"check",q:"",statMode:"week",db:null,ready:false,editable:true,fold:{}};
+function setTeam(t){S.team=TEAMS[t]?t:"youth";const sc=(S.scope||{})[S.team];GROUPS=groupsOf(S.team).filter(([g])=>!sc||sc.level!=="grade"||sc.grades.includes(g));GL=Object.fromEntries(groupsOf(S.team));if(S.group!=="all"&&!GROUPS.some(x=>x[0]===S.group))S.group="all"}
+const TL=(t=S.team)=>((S.settings||{})[t]||{}).talentLabel||"달란트";
+const talentOn=(t=S.team)=>((S.settings||{})[t]||{}).talent!==false;
+const myScope=()=>(S.scope||{})[S.team]||{level:"dept",grades:[]};
+const isHomeroom=()=>myScope().level==="grade";
+const canManageGrades=()=>S.isAdmin||(myScope().level==="dept"&&deptLocked(S.team));
+function roleLabel(){if(S.isAdmin)return "총관리자";const sc=myScope();if(sc.level==="grade")return "담임 · "+sc.grades.map(g=>GL[g]).join(", ");return deptLocked(S.team)?"팀 관리자":""}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const keyOf=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parseKey=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
+const START_KEY="2027-01-03";const START=new Date(2027,0,3);
+function realSunday(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-d.getDay());return d}
+function lastSunday(){const d=realSunday();return d<START?new Date(START):d}
+function toSunday(d){d=new Date(d);d.setDate(d.getDate()-d.getDay());return d<START?new Date(START):d}
+S.date=keyOf(lastSunday());
+try{const t=localStorage.getItem("ya-team");if(t)S.team=t;const g=localStorage.getItem("ya-group");if(g)S.group=g}catch(e){}
+setTeam(S.team);
+
+function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
+
+/* ---------- derived ---------- */
+function activePeople(group){
+  return [...S.people.values()].filter(p=>teamOf(p)===S.team&&p.active!==false&&(group==="all"||!group||p.group===group))
+    .sort((a,b)=>GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||(a.order??999)-(b.order??999)||a.name.localeCompare(b.name,"ko"));
+}
+const attOf=k=>S.att.get(k)||{p:{},t:{}};
+const isOn=(k,id)=>!!(attOf(k).p||{})[id];
+const talentOf=(k,id)=>Number((attOf(k).t||{})[id]||0);
+function bdInWeek(p,k){
+  if(!p.birthday||!/^\d{1,2}\/\d{1,2}$/.test(p.birthday))return false;
+  const [m,d]=p.birthday.split("/").map(Number);const s=parseKey(k);
+  for(let i=0;i<7;i++){const x=new Date(s);x.setDate(s.getDate()+i);if(x.getMonth()+1===m&&x.getDate()===d)return true}
+  return false;
+}
+
+/* ---------- writes ---------- */
+const queues={};
+function enqueue(key,fn){queues[key]=(queues[key]||Promise.resolve()).then(fn).catch(onWriteError);return queues[key]}
+function onWriteError(e){
+  console.error(e);
+  toast((e&&e.message)||"저장하지 못했어요. 잠시 후 다시 시도해 주세요");load();
+}
+function writeAtt(k,body){
+  const cur=S.att.get(k)||{date:k,p:{},t:{}};
+  const next={...cur,p:{...cur.p,...(body.p||{})},t:{...cur.t,...(body.t||{})},m:{...(cur.m||{}),...(body.m||{})}};
+  S.att.set(k,next);render();
+  if(!S.db)return;
+  enqueue("att/"+k,async()=>{
+    const ref=S.db.doc("att/"+k);
+    try{await ref.update(body)}
+    catch(e){if(e&&e.code==="invalid_argument"){const snap=await ref.get();if(snap.exists)throw e;await ref.set({date:k,p:body.p||{},t:body.t||{}})}else throw e}
+  });
+}
+function togglePresent(id){if(!S.editable)return;writeAtt(S.date,{p:{[id]:isOn(S.date,id)?0:1}})}
+const talentTimers={};
+function bumpTalent(id,delta){
+  if(!S.editable)return;
+  const k=S.date;const v=Math.max(0,talentOf(k,id)+delta);
+  const cur=S.att.get(k)||{date:k,p:{},t:{}};S.att.set(k,{...cur,t:{...cur.t,[id]:v}});render();
+  clearTimeout(talentTimers[k+id]);
+  talentTimers[k+id]=setTimeout(()=>writeAtt(k,{t:{[id]:talentOf(k,id)}}),500);
+}
+async function markAll(group){
+  if(!S.editable)return;
+  const ids=activePeople(group).map(p=>p.id);const allOn=ids.every(id=>isOn(S.date,id));
+  const p={};ids.forEach(id=>p[id]=allOn?0:1);writeAtt(S.date,{p});
+}
+
+/* ---------- render ---------- */
+function renderChips(){
+  const k=S.date;
+  const items=[["all","전체"],...GROUPS].map(([g,l])=>{
+    const ps=activePeople(g).filter(p=>g!=="all"||p.group!=="T");const on=ps.filter(p=>isOn(k,p.id)).length;
+    return `<button class="chip" data-g="${g}" aria-pressed="${S.group===g}"${canRenameClass(g)?` title="더블클릭(휴대폰은 두 번 톡톡)하면 반 이름을 바꿀 수 있어요"`:""}>${l}${S.tab==="check"?`<span class="c num">${on}/${ps.length}</span>`:""}</button>`});
+  $("#chips").innerHTML=items.join("");$("#chips").hidden=S.tab==="schedule";
+}
+function renderTeams(){
+  const home=S.view==="home";document.body.classList.toggle("home",home);
+  $("#homeBtn").hidden=home;if(home)$("#brandTitle").textContent="신당중앙교회 교육팀 출석부";else{const r=roleLabel();$("#brandTitle").innerHTML=esc(TEAMS[S.team].label)+(r?`<span class="role-badge">${esc(r)}</span>`:"")}
+}
+function renderDate(){
+  const d=parseKey(S.date);
+  $("#dateLabel").textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 주일`;
+  $("#todayTag").hidden=S.date!==keyOf(lastSunday());$("#todayTag").textContent=realSunday()<START?"시작 주일":"이번 주";
+  $("#datePick").min=START_KEY;$("#prev").disabled=S.date<=START_KEY;
+  $("#datePick").value=S.date;
+  $("#datebar").hidden=S.tab==="roster"||S.tab==="schedule";
+}
+const safePhoto=v=>typeof v==="string"&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v)?v:"";
+const avatar=(p,cls="")=>{const ph=safePhoto(p.photo);return ph?`<img class="avatar ${cls}" src="${ph}" alt="${esc(p.name)} 사진">`:`<span class="avatar ${cls}" aria-hidden="true">${esc((p.name||"?").slice(-2))}</span>`};
+function resizeImage(file,max=200){
+  return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{
+    const sc=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.72))};img.src=fr.result};fr.readAsDataURL(file)});
+}
+const UP_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>';
+const DOWN_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+const CHECK_SVG='<svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+
+function personRow(p){
+  const k=S.date,on=isOn(k,p.id),t=talentOf(k,p.id);
+  const tags=[p.isNew?'<span class="tag new">새친구</span>':"",bdInWeek(p,k)?'<span class="tag bd">생일주간</span>':"",p.group==="T"&&p.role?`<span class="tag role">${esc(p.role)}</span>`:""].join("");
+  const sub=[ageLabel(p),p.birthday?"생일 "+p.birthday:"",p.note||""].filter(Boolean).join(" · ");
+  return `<div class="row ${on?"on":""}">
+    <button class="who-wrap" data-open="${p.id}">${avatar(p)}<span class="who"><b>${esc(p.name)}${tags}</b><span>${esc(sub)}</span>${memoOf(k,p.id)?`<span class="memo-line">${esc(memoOf(k,p.id))}</span>`:""}</span></button>
+    <div class="act-box"><button class="icon-btn big tel ${telOfP(p)?"":"nonum"}" data-call="${p.id}" aria-label="${esc(p.name)} 전화 걸기">${PHONE_SVG}</button><div class="act-lbl">전화</div></div>
+    <div class="act-box"><button class="icon-btn big ${memoOf(k,p.id)?"has":""}" data-memo="${p.id}" aria-label="${esc(p.name)} 출결 메모">${MEMO_SVG}</button><div class="act-lbl ${memoOf(k,p.id)?"memo":""}">메모</div></div>
+    <div class="check-box"><button class="check" data-toggle="${p.id}" aria-pressed="${on}" aria-label="${esc(p.name)} 출석">${CHECK_SVG}</button><div class="check-lbl">출석</div></div>
+    ${p.group==="T"||!talentOn()?"":`<div class="talent-box"><div class="talent"><input class="num" type="number" inputmode="numeric" min="0" step="1" data-tv="${p.id}" value="${t}" aria-label="${esc(p.name)} 달란트"><div class="arrows"><button data-t="${p.id}" data-d="1" aria-label="${esc(p.name)} 달란트 1 올리기">${UP_SVG}</button><button data-t="${p.id}" data-d="-1" aria-label="${esc(p.name)} 달란트 1 내리기">${DOWN_SVG}</button></div></div><div class="talent-lbl">달란트</div></div>`}
+  </div>`;
+}
+const classKey=g=>S.team+"_"+g;
+const SEC_LETTERS=["A","B","C","D"];
+const classOfKey=(t,g)=>S.classes.get(t+"_"+g)||{};
+const classOf=g=>classOfKey(S.team,g);
+const sectionsOfKey=(t,g)=>{const x=classOfKey(t,g).sections;return Array.isArray(x)?x.filter(v=>SEC_LETTERS.includes(v)):[]};
+const sectionsOf=g=>sectionsOfKey(S.team,g);
+const secOf=p=>{const ss=sectionsOfKey(teamOf(p),p.group);return ss.includes(p.section)?p.section:""};
+const classLabel=p=>(GL[p.group]||"")+(secOf(p)?" "+secOf(p)+"반":"");
+const homeroomOf=(g,sec)=>{const c=classOf(g);return (sec?(c.teachers||{})[sec]:c.teacher)||""};
+/* 담임은 여러 명일 수 있어요. 저장은 "김은혜, 박요한"처럼 쉼표로 이어서 한 칸에 */
+const hrNames=v=>[...new Set(String(v||"").split(/\s*[,，]\s*/).map(x=>x.trim()).filter(Boolean))];
+const hrJoin=list=>hrNames(list.join(",")).join(", ");
+const hrText=v=>hrNames(v).join("·");
+function homeroomBar(g,sec=""){
+  const t=hrNames(homeroomOf(g,sec));
+  return `<div class="homeroom"><span class="lbl">${sec?sec+"반 담임":"담임"}</span>${t.length?`<b>${t.map(esc).join("·")} 선생님</b>`:`<span class="none">아직 지정 안 됨</span>`}<span class="spacer"></span>${S.editable?`<button data-homeroom="${g}" data-sec="${sec}">${t.length?"추가·삭제":"지정"}</button>`:""}</div>`;
+}
+/* 담임 선생님 출결: 각 반 담임 칸 바로 아래에서 체크 (교사 명단에 같은 이름이 있을 때) */
+const hrPeople=(g,sec)=>{const ns=hrNames(homeroomOf(g,sec));return ns.length?[...S.people.values()].filter(p=>teamOf(p)===S.team&&p.group==="T"&&p.active!==false&&ns.includes(p.name)):[]};
+const hrRows=(g,sec="")=>{const ts=hrPeople(g,sec);return ts.length?`<div class="list" style="margin-bottom:8px">${ts.map(personRow).join("")}</div>`:""};
+function saveClass(g,patch){
+  const key=classKey(g);const body={...classOf(g),team:S.team,group:g,...patch};
+  S.classes.set(key,body);render();
+  if(S.db)enqueue("classes/"+key,()=>S.db.doc("classes/"+key).set(body));
+}
+function openHomeroom(g,sec=""){
+  let list=hrNames(homeroomOf(g,sec));const orig=hrJoin(list);
+  const names=[...S.people.values()].filter(p=>teamOf(p)===S.team&&p.group==="T"&&p.active!==false).map(p=>p.name).sort((a,b)=>a.localeCompare(b,"ko"));
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="담임교사 추가·삭제"><h3>${TEAMS[S.team].short} ${GL[g]}${sec?" "+sec+"반":""} 담임</h3>
+    <p class="muted" style="margin:0;font-size:14px">담임을 여러 명 둘 수 있어요. 이름 옆 ×를 누르면 빠져요.</p>
+    <div class="hr-list" id="hr-cur"></div>
+    <div class="form"><label class="full">담임 추가<span class="hr-add"><input id="f-homeroom" list="hr-list" placeholder="예: 김은혜" autocomplete="off"><button type="button" class="btn" data-add>추가</button></span></label>
+    <datalist id="hr-list">${names.map(n=>`<option value="${esc(n)}">`).join("")}</datalist></div>
+    <div id="hr-pick"></div>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
+  document.body.appendChild(ov);
+  const inp=ov.querySelector("#f-homeroom");
+  const draw=()=>{
+    ov.querySelector("#hr-cur").innerHTML=list.length?list.map((n,i)=>`<span class="hr-chip">${esc(n)}<button type="button" data-del="${i}" aria-label="${esc(n)} 담임에서 빼기">×</button></span>`).join(""):`<span class="muted" style="font-size:13px">아직 담임이 없어요</span>`;
+    const rest=names.filter(n=>!list.includes(n));
+    ov.querySelector("#hr-pick").innerHTML=rest.length?`<p class="muted" style="font-size:12px;margin:8px 0 4px">교사 명단에서 누르면 바로 추가돼요</p><div class="hr-list">${rest.map(n=>`<button type="button" class="hr-chip pick" data-pick="${esc(n)}">+ ${esc(n)}</button>`).join("")}</div>`:"";
+  };
+  const add=v=>{const add=hrNames(v).filter(n=>!list.includes(n));if(add.length){list=list.concat(add);draw()}inp.value="";inp.focus()};
+  draw();
+  ov.addEventListener("click",e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    const d=e.target.closest("[data-del]");if(d){list.splice(Number(d.dataset.del),1);draw();return}
+    const pk=e.target.closest("[data-pick]");if(pk)return add(pk.dataset.pick);
+    if(e.target.closest("[data-add]"))add(inp.value);
+  });
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();add(inp.value)}});
+  ov.querySelector("form").addEventListener("submit",e=>{e.preventDefault();
+    if(inp.value.trim())add(inp.value);
+    const v=hrJoin(list);ov.remove();if(v===orig)return;
+    saveClass(g,sec?{teachers:{...(classOf(g).teachers||{}),[sec]:v}}:{teacher:v});
+    toast(v?`담임을 저장했어요 (${list.length}명)`:"담임을 모두 지웠어요");
+  });
+  inp.focus();
+}
+function openSplit(g){
+  if(!S.editable)return;
+  const studs=activePeople(g);
+  const cur=sectionsOf(g);let n=Math.max(1,cur.length);
+  const assign=new Map(studs.map(p=>[p.id,secOf(p)]));
+  const letters=()=>n>1?SEC_LETTERS.slice(0,n):[];
+  const balance=all=>{const L=letters();if(!L.length){studs.forEach(p=>assign.set(p.id,""));return}
+    const cnt=Object.fromEntries(L.map(l=>[l,0]));
+    if(!all)studs.forEach(p=>{const v=assign.get(p.id);if(L.includes(v))cnt[v]++;else assign.set(p.id,"")});
+    else studs.forEach(p=>assign.set(p.id,""));
+    [...studs].sort((a,b)=>a.name.localeCompare(b.name,"ko")).forEach(p=>{if(assign.get(p.id))return;const l=L.reduce((m,x)=>cnt[x]<cnt[m]?x:m,L[0]);assign.set(p.id,l);cnt[l]++});
+  };
+  const ov=document.createElement("div");ov.className="overlay";
+  const draw=()=>{
+    const L=letters();const count=l=>studs.filter(p=>assign.get(p.id)===l).length;
+    ov.innerHTML=`<div class="sheet" role="dialog" aria-label="분반 나누기와 합치기"><h3>${TEAMS[S.team].short} ${GL[g]} 분반</h3>
+      <p class="muted" style="margin:0;font-size:14px">반 개수를 고르고 학생마다 반을 정하세요. "1개 반"을 고르면 분반을 합쳐요.</p>
+      <div class="split-n">${[1,2,3,4].map(k=>`<button type="button" data-n="${k}" aria-pressed="${n===k}">${k===1?"1개 반":SEC_LETTERS.slice(0,k).join("·")}</button>`).join("")}</div>
+      ${L.length?`<div class="split-tools"><button type="button" class="btn" data-balance>가나다순 골고루 나누기</button><span class="muted num">${L.map(l=>`${l}반 ${count(l)}명`).join(" · ")}</span></div>`:""}
+      <div class="assign">${studs.length?studs.map(p=>`<div class="ar">${avatar(p)}<span class="nm">${esc(p.name)}</span>${L.length?`<span class="opts">${L.map(l=>`<button type="button" data-as="${p.id}" data-l="${l}" aria-pressed="${assign.get(p.id)===l}" aria-label="${esc(p.name)} ${l}반">${l}</button>`).join("")}</span>`:`<span class="muted" style="font-size:12px">한 반</span>`}</div>`).join(""):`<p class="muted">이 학년에 학생이 없어요.</p>`}</div>
+      <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button type="button" class="btn primary" data-save>저장</button></div></div>`;
+  };
+  if(n>1)balance(false);
+  draw();document.body.appendChild(ov);
+  ov.addEventListener("click",async e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    const nb=e.target.closest("[data-n]");if(nb){n=Number(nb.dataset.n);balance(false);draw();return}
+    if(e.target.closest("[data-balance]")){balance(true);draw();return}
+    const as=e.target.closest("[data-as]");if(as){assign.set(as.dataset.as,as.dataset.l);draw();return}
+    if(!e.target.closest("[data-save]"))return;
+    const L=letters();const c=classOf(g);
+    const teachers=Object.fromEntries(Object.entries(c.teachers||{}).filter(([k])=>L.includes(k)));
+    const patch={sections:L,teachers};
+    if(!L.length)patch.teacher=hrJoin([c.teacher||""].concat(Object.values(c.teachers||{})));
+    if(L.length&&!teachers.A&&c.teacher)patch.teachers={...teachers,A:c.teacher};
+    const changed=studs.filter(p=>(p.section||"")!==(assign.get(p.id)||""));
+    ov.remove();saveClass(g,patch);
+    for(const p of changed){const v=assign.get(p.id)||"";S.people.set(p.id,{...S.people.get(p.id),section:v});
+      if(S.db)enqueue("people/"+p.id,()=>writeWithRetry(S.db.doc("people/"+p.id),{section:v}));}
+    render();toast(L.length?`${GL[g]}을(를) ${L.join("·")}반으로 나눴어요`:`${GL[g]} 분반을 합쳤어요`);
+  });
+}
+/* ---------- 주소록 (권한별, 웹앱 전용) ---------- */
+function storeGradeCode(k,code){S._gcodes={...(S._gcodes||{}),[k]:code};if(S.remember===false)return;let c={};try{c=JSON.parse(localStorage.getItem("ya-gcodes")||"{}")}catch(_){}c[k]=code;try{localStorage.setItem("ya-gcodes",JSON.stringify(c))}catch(_){}}
+function loadContacts(){
+  if(S.bookLoading)return S.bookP;S.bookLoading=true;const team=S.team;
+  return S.bookP=(async()=>{
+    try{const d=await call("contacts",team);S.book={team,...d}}catch(e){S.book={team,error:e.message,grades:[],contacts:{},gradeLocked:{},gradeCodes:{}}}
+    S.bookLoading=false;if(S.tab==="roster"||S.tab==="check")render();
+  })();
+}
+/* 사람 수정 창에서 연락처·주소를 같이 고칠 수 있는지 (주소록 권한이 있는 학년만) */
+const bookReady=()=>S.book&&S.book.team===S.team&&!S.book.error;
+const canContact=g=>bookReady()&&S.book.grades.includes(g);
+const telOf=v=>String(v||"").replace(/[^0-9+]/g,"");
+function bookLine(k,v,tel){
+  if(!v)return `<div class="bline"><span class="k">${k}</span><span class="v none">없음</span></div>`;
+  return `<div class="bline"><span class="k">${k}</span><span class="v num">${esc(v)}</span>${tel&&telOf(v).length>=9?`<a href="tel:${telOf(v)}">전화</a>`:""}<button data-copy-c="${esc(v)}">복사</button></div>`;
+}
+/* 생일은 MM/DD로 맞춰 저장해요 (3/5, 0305, 3월 5일 → 03/05) */
+function normBirthday(v){
+  v=String(v||"").trim();if(!v)return "";
+  const m=v.match(/^(\d{1,2})\s*[\/.\-월]\s*(\d{1,2})\s*일?$/)||v.match(/^(\d{2})(\d{2})$/);
+  if(!m)return null;const mm=Number(m[1]),dd=Number(m[2]);
+  if(mm<1||mm>12||dd<1||dd>31)return null;
+  return String(mm).padStart(2,"0")+"/"+String(dd).padStart(2,"0");
+}
+/* 명단 위쪽: 연락처를 볼 수 있는 범위와 잠긴 학년의 [번호 입력] (예전 주소록 탭) */
+function contactScopeBar(){
+  const B=S.book;if(!B||B.team!==S.team)return S.bookLoading?`<div class="homeroom" style="margin-top:4px"><span class="lbl">연락처</span><span class="none" style="font-size:13px">불러오는 중…</span></div>`:"";
+  if(B.error)return `<div class="homeroom" style="margin-top:4px"><span class="lbl">연락처</span><span class="none" style="font-size:13px">${esc(B.error)}</span></div>`;
+  const locked=B.dept?[]:classesOf(S.team).map(([g])=>g).filter(g=>!B.grades.includes(g)&&B.gradeLocked[g]&&(S.group==="all"||S.group===g));
+  const txt=B.dept?"이름을 누르면 연락처·주소가 보여요":B.grades.length?`${B.grades.filter(g=>g!=="T").map(g=>GL[g]).join(", ")} 연락처를 볼 수 있어요`:"담임 번호를 입력하면 그 학년 연락처가 보여요";
+  return `<div class="homeroom" style="margin-top:4px;flex-wrap:wrap"><span class="lbl">연락처</span><span class="none" style="font-size:13px">${esc(txt)}</span><span class="spacer"></span>${locked.map(g=>`<button data-gcode="${g}">${GL[g]} 번호 입력</button>`).join("")}</div>`;
+}
+/* 사람 정보 창의 연락처·주소 (권한이 있을 때만) */
+function contactLines(p){
+  if(!bookReady())return S.bookLoading?`<p class="muted" style="font-size:13px;margin:10px 0 0">연락처를 불러오는 중…</p>`:"";
+  if(!canContact(p.group))return `<p class="muted" style="font-size:13px;margin:10px 0 0">연락처·주소는 이 반의 담임 번호가 있어야 보여요.</p>`;
+  const c=S.book.contacts[p.id]||{};
+  return `<div class="bcard" style="margin-top:12px">${p.group==="T"?bookLine("연락처",c.phone,true):bookLine("보호자",c.guardian,false)+bookLine("부모",c.parentPhone,true)+bookLine("학생",c.phone,true)}${bookLine("주소",c.address,false)}
+    <p class="muted" style="font-size:11px;margin:6px 0 0">연락처와 주소는 캡처하거나 다른 곳에 옮기지 말아 주세요.</p></div>`;
+}
+function openGradeCodeEntry(g){
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="담임 번호 입력"><h3>${TEAMS[S.team].short} ${GL[g]} 연락처</h3>
+    <p class="muted" style="margin:0;font-size:14px">부서 관리자에게 받은 담임 번호를 입력하세요.</p>
+    <div class="form"><label class="full">담임 번호<input id="f-gcode" type="password" inputmode="numeric" maxlength="8" autocomplete="off" required></label></div>
+    <p class="err" id="gcErr" hidden>번호가 맞지 않아요.</p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">확인</button></div></form>`;
+  document.body.appendChild(ov);const inp=ov.querySelector("#f-gcode");inp.focus();
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+  ov.querySelector("form").addEventListener("submit",async e=>{
+    e.preventDefault();const code=inp.value.trim();let ok=false;try{ok=await call("verifyGradeCode",S.team,g,code)}catch(err){toast(err.message);return}
+    if(ok){storeGradeCode(S.team+"_"+g,code);ov.remove();S.book=null;render()}else{ov.querySelector("#gcErr").hidden=false;inp.select()}
+  });
+}
+function openGradeManage(){
+  const B=S.book;if(!B||!B.dept)return;
+  const ov=document.createElement("div");ov.className="overlay";
+  const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="담임 번호 관리"><h3>${TEAMS[S.team].label} 담임 번호</h3>
+    <p class="muted" style="margin:0;font-size:14px">담임 번호를 받은 사람(예: 담임)은 그 학년 연락처·주소만 볼 수 있어요. 부서 고유번호를 가진 사람과 관리자는 모든 학년을 봐요.</p>
+    <div class="admin-list card" style="margin-top:12px">${classesOf(S.team).map(([g,gl])=>{const code=(B.gradeCodes||{})[g]||"";return `<div class="admin-row"><b style="min-width:56px">${gl}</b><span class="code num ${code?"":"none"}">${code?esc(code):"번호 없음"}</span>
+      ${code?`<button class="btn" data-copy-c="${esc(code)}">복사</button>`:""}<button class="btn" data-ggen="${g}">${code?"새 번호":"번호 만들기"}</button>${code?`<button class="btn danger" data-gclear="${g}">해제</button>`:""}</div>`}).join("")}</div>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>닫기</button></div></div>`};
+  draw();document.body.appendChild(ov);
+  ov.addEventListener("click",async e=>{
+    if(e.target===ov||e.target.closest("[data-close]")){ov.remove();S.book=null;render();return}
+    const cp=e.target.closest("[data-copy-c]");if(cp){navigator.clipboard.writeText(cp.dataset.copyC).then(()=>toast("복사했어요"),()=>toast("길게 눌러 복사하세요"));return}
+    const gen=e.target.closest("[data-ggen]"),clr=e.target.closest("[data-gclear]");
+    if(!gen&&!clr)return;
+    if(clr&&!clr.dataset.armed){clr.dataset.armed="1";clr.textContent="한 번 더 누르면 해제";return}
+    const g=(gen||clr).dataset[gen?"ggen":"gclear"];const code=gen?randomCode():"";
+    try{await tracked(call("setGradeCode",S.team,g,code));B.gradeCodes={...(B.gradeCodes||{}),[g]:code};B.gradeLocked={...(B.gradeLocked||{}),[g]:!!code};draw();toast(code?`${GL[g]} 담임 번호를 만들었어요`:`${GL[g]} 담임 번호를 해제했어요`)}
+    catch(err){alertBox("번호를 저장하지 못했어요",err.message)}
+  });
+}
+function openHomeroomCodes(){
+  if(!canManageGrades())return;
+  const ov=document.createElement("div");ov.className="overlay";let codes=null,editing="";
+  const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="담임 권한 관리"><h3>${TEAMS[S.team].label} 담임 권한</h3>
+    <p class="muted" style="margin:0;font-size:14px">반마다 담임 번호를 만들어 담임 선생님께 알려 주세요. 담임 번호로 들어오면 <b>자기 반만</b> 출석·달란트·명단(연락처 포함)을 관리할 수 있어요. 다른 반, 교사 명단, 연말 등반은 보이지 않아요.</p>
+    <div class="admin-list card" style="margin-top:12px">${codes?classesOf(S.team).map(([g,gl])=>{const code=codes[g]||"";const hr=hrText((S.classes.get(S.team+"_"+g)||{}).teacher);if(editing===g)return `<form class="admin-row" data-gform="${g}"><b style="min-width:56px">${gl}</b><input id="f-gc-${g}" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" placeholder="숫자 4~8자리" value="${esc(code)}" autocomplete="off" style="flex:1;min-width:110px;height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:16px;letter-spacing:.1em;background:var(--ground);color:var(--ink)"><button class="btn primary" type="submit">저장</button><button class="btn" type="button" data-gcancel>취소</button></form>`;
+      return `<div class="admin-row"><b style="min-width:56px">${gl}</b><span class="code num ${code?"":"none"}">${code?esc(code):"번호 없음"}</span>${hr?`<span class="muted" style="font-size:12px">담임 ${esc(hr)}</span>`:""}
+      ${code?`<button class="btn" data-copy-c="${esc(code)}">복사</button>`:""}<button class="btn" data-ggen="${g}">${code?"새 번호":"번호 만들기"}</button><button class="btn" data-gedit="${g}">직접 입력</button>${code?`<button class="btn danger" data-gclear="${g}">해제</button>`:""}</div>`}).join(""):`<p class="muted">불러오는 중…</p>`}</div>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>닫기</button></div></div>`};
+  draw();document.body.appendChild(ov);
+  call("gradeCodes",S.team).then(c=>{codes=c;draw()}).catch(e=>{toast(e.message);ov.remove()});
+  ov.addEventListener("submit",async e=>{
+    const f=e.target.closest("[data-gform]");if(!f)return;e.preventDefault();
+    const g=f.dataset.gform;const v=(ov.querySelector("#f-gc-"+g).value||"").trim();
+    if(!/^[0-9]{4,8}$/.test(v)){toast("담임 번호는 숫자 4~8자리로 적어 주세요");return}
+    try{await tracked(call("setGradeCode",S.team,g,v));codes={...codes,[g]:v};editing="";draw();toast(`${GL[g]} 담임 번호를 저장했어요`)}
+    catch(err){alertBox("번호를 저장하지 못했어요",err.message)}
+  });
+  ov.addEventListener("click",async e=>{
+    if(e.target===ov||e.target.closest("[data-close]")){ov.remove();S.book=null;render();return}
+    const cp=e.target.closest("[data-copy-c]");if(cp){navigator.clipboard.writeText(cp.dataset.copyC).then(()=>toast("복사했어요"),()=>toast("길게 눌러 복사하세요"));return}
+    const ed=e.target.closest("[data-gedit]");if(ed){editing=ed.dataset.gedit;draw();const inp=ov.querySelector("#f-gc-"+editing);if(inp){inp.focus();inp.select()}return}
+    if(e.target.closest("[data-gcancel]")){editing="";draw();return}
+    const gen=e.target.closest("[data-ggen]"),clr=e.target.closest("[data-gclear]");
+    if(!gen&&!clr)return;
+    if(clr&&!clr.dataset.armed){clr.dataset.armed="1";clr.textContent="한 번 더 누르면 해제";return}
+    const g=(gen||clr).dataset[gen?"ggen":"gclear"];const code=gen?randomCode():"";
+    try{await tracked(call("setGradeCode",S.team,g,code));codes={...codes,[g]:code};draw();toast(code?`${GL[g]} 담임 번호를 만들었어요`:`${GL[g]} 담임 번호를 해제했어요`)}
+    catch(err){alertBox("번호를 저장하지 못했어요",err.message)}
+  });
+}
+/* ---------- v2 도구 ---------- */
+const MEMO_SVG='<svg viewBox="0 0 24 24"><path d="M5 4.5h11l3 3v12H5z"/><path d="M8 10h8M8 13.5h8M8 17h5"/></svg>';
+const PHONE_SVG='<svg viewBox="0 0 24 24"><path d="M6.6 3.5h3l1.4 4-2 1.5a11 11 0 005.9 5.9l1.5-2 4 1.4v3a2 2 0 01-2.2 2A16 16 0 014.6 5.7a2 2 0 012-2.2z"/></svg>';
+const rosterModeOf=p=>p.active!==false?"active":(p.leftType==="졸업"?"grad":"removed");
+const memoOf=(k,id)=>((attOf(k).m||{})[id]||"");
+function telOfP(p){const B=S.book;if(!B||B.team!==S.team||!B.contacts)return "";const c=B.contacts[p.id]||{};const v=String(p.group==="T"?(c.phone||""):(c.parentPhone||c.phone||"")).replace(/[^0-9+]/g,"");return v.length>=9?v:""}
+function relabel(){
+  const tb=document.querySelector('[data-tab="talent"]');
+  if(tb){const n=[...tb.childNodes].filter(x=>x.nodeType===3).pop();if(n)n.nodeValue=S.view==="dept"?TL():"달란트"}
+  const L=TL();if(L==="달란트"||S.view!=="dept")return;
+  const root=document.querySelector("#view");if(!root)return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
+  while((n=w.nextNode()))if(n.nodeValue.indexOf("달란트")>=0)n.nodeValue=n.nodeValue.split("달란트").join(L);
+  root.querySelectorAll("[aria-label]").forEach(el=>{const a=el.getAttribute("aria-label");if(a.indexOf("달란트")>=0)el.setAttribute("aria-label",a.split("달란트").join(L))});
+}
+function alertBox(title,msg){
+  const ov=document.createElement("div");ov.className="overlay";ov.style.alignItems="center";
+  ov.innerHTML=`<div class="sheet" role="alertdialog" aria-label="${esc(title)}" style="border-radius:20px;max-width:420px;margin:0 16px"><h3>${esc(title)}</h3><p style="margin:6px 0 0;font-size:15px;line-height:1.6">${esc(msg)}</p><div class="actions"><div class="spacer"></div><button class="btn primary" data-close>확인</button></div></div>`;
+  document.body.appendChild(ov);ov.querySelector("[data-close]").focus();
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+}
+function openMemo(id){
+  const p=S.people.get(id);if(!p)return;const k=S.date;const cur=memoOf(k,id);
+  const d=parseKey(k);const presets=["감기·아픔","가족 여행","집안 행사","시험·학원","늦잠","연락 안 됨","다른 예배 참석"];
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="출결 메모"><h3>${esc(p.name)} 출결 메모</h3>
+    <p class="muted" style="margin:0;font-size:14px">${d.getMonth()+1}월 ${d.getDate()}일 주일 · ${isOn(k,id)?"출석":"결석"}</p>
+    <div class="chipset">${presets.map(x=>`<button type="button" data-preset="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+    <div class="form"><label class="full">메모 (결석 이유 등)<textarea id="f-memo" maxlength="300" placeholder="예: 감기로 결석, 다음 주 출석 예정">${esc(cur)}</textarea></label></div>
+    <div class="actions">${cur?`<button type="button" class="btn danger" data-clearmemo>지우기</button>`:""}<div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
+  document.body.appendChild(ov);const ta=ov.querySelector("#f-memo");
+  const save=v=>{ov.remove();writeAtt(k,{m:{[id]:v}});toast(v?"메모를 저장했어요":"메모를 지웠어요")};
+  ov.addEventListener("click",e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    const pr=e.target.closest("[data-preset]");if(pr){ta.value=ta.value?ta.value+", "+pr.dataset.preset:pr.dataset.preset;ta.focus();return}
+    if(e.target.closest("[data-clearmemo]"))save("");
+  });
+  ov.querySelector("form").addEventListener("submit",e=>{e.preventDefault();save(ta.value.trim())});
+}
+function openTalentRename(){
+  const cur=TL();const presets=["달란트","전화심방","심방","칭찬 스티커","암송"];
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="항목 이름 바꾸기"><h3>항목 이름 바꾸기</h3>
+    <p class="muted" style="margin:0;font-size:14px">출결메모 화면의 숫자 칸과 탭, 통계에 이 이름이 나와요. 이 부서에만 적용돼요.</p>
+    <div class="chipset">${presets.map(x=>`<button type="button" data-tl="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+    <div class="form"><label class="full">이름 (10자까지)<input id="f-tl" maxlength="10" value="${esc(cur)}"></label></div>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
+  document.body.appendChild(ov);const inp=ov.querySelector("#f-tl");
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();const t=e.target.closest("[data-tl]");if(t){inp.value=t.dataset.tl;inp.focus()}});
+  ov.querySelector("form").addEventListener("submit",async e=>{
+    e.preventDefault();const v=inp.value.trim();if(!v)return;ov.remove();
+    S.settings={...(S.settings||{}),[S.team]:{...((S.settings||{})[S.team]||{}),talentLabel:v}};render();
+    try{await tracked(call("setTeamSetting",S.team,"talentLabel",v));toast(`항목 이름을 "${v}"(으)로 바꿨어요`)}catch(err){alertBox("저장하지 못했어요",err.message);load()}
+  });
+}
+/* ---- 엑셀 ---- */
+const XCOLS=["이름","반","분반","생일(MM/DD)","직분(교사)","새친구(Y)","메모","보호자","부모 연락처","연락처(학생·교사)","주소"];
+let xlsxP=null;
+function loadXLSX(){if(typeof XLSX!=="undefined")return Promise.resolve();return xlsxP||(xlsxP=new Promise((res,rej)=>{const el=document.createElement("script");el.src="https:/"+"/cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";el.onload=()=>res();el.onerror=()=>{xlsxP=null;rej(new Error("엑셀 도구를 불러오지 못했어요"))};document.head.appendChild(el)}))}
+async function needXLSX(){try{await loadXLSX()}catch(_){}if(typeof XLSX==="undefined"){alertBox("엑셀 기능을 불러오지 못했어요","인터넷 연결을 확인하고 앱을 새로 고친 뒤 다시 시도해 주세요.");return false}return true}
+async function ensureContacts(){if(!S.book||S.book.team!==S.team){S.book=null;await loadContacts()}return (S.book&&S.book.contacts)||{}}
+function saveWorkbook(wb,name){try{XLSX.writeFile(wb,name);toast("파일을 내려받았어요")}catch(e){alertBox("파일을 내려받지 못했어요","이 브라우저에서 내려받기가 막혀 있을 수 있어요. Chrome이나 Safari로 열어 다시 시도해 주세요. ("+e.message+")")}}
+async function downloadTemplate(){
+  if(!await needXLSX())return;const C=await ensureContacts();
+  const gi=g=>{const i=GROUPS.findIndex(x=>x[0]===g);return i<0?99:i};
+  const ps=activePeople("all").sort((a,b)=>gi(a.group)-gi(b.group)||(a.section||"").localeCompare(b.section||"")||a.name.localeCompare(b.name,"ko"));
+  const T=p=>p.group==="T";
+  const FX=isFlex(S.team);const cols=FX?[...XCOLS.slice(0,2),"나이",...XCOLS.slice(2)]:XCOLS;
+  const rows=ps.map(p=>{const c=C[p.id]||{};return [p.name,GL[p.group]||p.group,...(FX?[ageLabel(p)]:[]),secOf(p)||"",p.birthday||"",T(p)?p.role||"":"",p.isNew?"Y":"",p.note||"",T(p)?"":c.guardian||"",T(p)?"":c.parentPhone||"",c.phone||"",c.address||""]});
+  if(!rows.length)rows.push(["홍길동(예시)",GROUPS[0][1],...(FX?[TEAMS[S.team].groups[0][1]]:[]),"","03/15","","Y","예시 줄은 지우고 쓰세요","홍엄마","010-0000-0000","","서울시 중구"]);
+  const groupNames=GROUPS.filter(g=>g[0]!=="T").map(g=>g[1]).join(", ");
+  const guide=[["교육팀 출석부 명단 양식 — "+TEAMS[S.team].label],[""],
+    ["· '명단' 시트에 한 사람당 한 줄씩 적어 주세요. 첫 줄(머리글)은 지우지 마세요."],
+    ["· 반: "+groupNames+" 중 하나. 선생님은 '교사'라고 적어요."+(FX?" 반을 아직 안 정했으면 비워 두거나 '미배정'.":"")],
+    ...(FX?[["· 나이: "+TEAMS[S.team].groups.map(g=>g[1]).join(", ")+" 중 하나 (반과 따로예요)."]]:[]),
+    ["· 분반: A, B, C, D (없으면 비워 두세요)."],
+    ["· 생일: 03/15 처럼 월/일. 3/15, 3월 15일로 적어도 03/15로 맞춰 저장돼요."],
+    ["· 직분: 선생님만 (예: 부장, 총무, 교사). 학생 줄은 비워 두세요."],
+    ["· 새친구면 Y."],
+    ["· 보호자·부모 연락처: 학생만. 연락처(학생·교사): 학생 본인 번호, 선생님은 선생님 번호."],
+    ["· 이미 있는 사람(이름과 반이 같은 사람)은 내용이 고쳐지고, 없는 사람은 새로 추가돼요."],
+    ["· 빈 칸은 원래 값을 그대로 둬요. 파일에서 줄을 지워도 앱에서는 지워지지 않아요 (삭제는 앱 명단에서)."],
+    ["· 담임 번호로 올리면 우리 반 학생만 들어가요. 교사 줄은 팀 관리자만 올릴 수 있어요."],
+    ["· 다 적은 뒤 앱 [명단 → 엑셀 → 올리기]로 이 파일을 올리세요."]];
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([cols,...rows]);ws["!cols"]=(FX?[12,8,6,6,10,10,8,24,10,15,17,34]:[12,8,6,10,10,8,24,10,15,17,34]).map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws,"명단");XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(guide),"안내");
+  saveWorkbook(wb,`${TEAMS[S.team].short}_명단양식.xlsx`);
+}
+function uploadRoster(){
+  loadXLSX().catch(()=>{}); // 파일을 고르는 동안 엑셀 도구를 미리 받아 둔다
+  const inp=document.createElement("input");inp.type="file";inp.accept=".xlsx,.xls,.csv";
+  inp.onchange=async()=>{
+    const f=inp.files&&inp.files[0];if(!f)return;if(!await needXLSX())return;
+    let rows=[];
+    try{const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});const ws=wb.Sheets["명단"]||wb.Sheets[wb.SheetNames[0]];
+      const raw=XLSX.utils.sheet_to_json(ws,{defval:"",raw:false});
+      const pick=(r,...keys)=>{for(const k of Object.keys(r)){const kk=k.replace(/\s/g,"");if(keys.some(x=>kk.indexOf(x)===0))return String(r[k]).trim()}return ""};
+      rows=raw.map(r=>({name:pick(r,"이름"),group:pick(r,"반","학년"),age:pick(r,"나이"),section:pick(r,"분반"),birthday:pick(r,"생일"),role:pick(r,"직분"),isNew:pick(r,"새친구"),note:pick(r,"메모"),guardian:pick(r,"보호자"),parentPhone:pick(r,"부모"),phone:pick(r,"연락처","학생연락처","학생"),address:pick(r,"주소")})).filter(r=>r.name||r.group);
+      rows.forEach(r=>{const bd=normBirthday(r.birthday);if(bd!==null)r.birthday=bd;else r.badBd=true});
+    }catch(e){alertBox("파일을 읽지 못했어요","엑셀(.xlsx) 파일인지 확인해 주세요. ("+e.message+")");return}
+    if(!rows.length){alertBox("올릴 내용이 없어요","'명단' 시트에 이름과 반을 적었는지 확인해 주세요.");return}
+    const names=new Set(activePeople("all").map(p=>p.name+"|"+(GL[p.group]||"")));
+    const upd=rows.filter(r=>names.has(r.name+"|"+r.group.replace(/\s/g,""))).length;
+    const ov=document.createElement("div");ov.className="overlay";
+    ov.innerHTML=`<div class="sheet" role="dialog" aria-label="엑셀 명단 올리기"><h3>${esc(TEAMS[S.team].label)} 명단 올리기</h3>
+      <p style="margin:6px 0 0;font-size:15px">모두 <b>${rows.length}줄</b> · 새로 추가 약 <b>${rows.length-upd}명</b> · 고침 약 <b>${upd}명</b></p>
+      ${rows.some(r=>r.badBd)?`<p class="err" style="font-size:13px;margin:6px 0 0">생일 형식이 03/15가 아닌 줄이 있어요: ${rows.filter(r=>r.badBd).slice(0,5).map(r=>esc(r.name)+"("+esc(r.birthday)+")").join(", ")}${rows.filter(r=>r.badBd).length>5?" …":""}. 그대로 저장되지만 생일 목록에는 안 나와요.</p>`:""}
+      <p class="muted" style="font-size:13px;margin:6px 0 0">이름과 반이 같은 사람은 고치고, 없으면 새로 추가해요. 연락처·주소도 함께 저장돼요. 지우는 사람은 없어요.</p>
+      <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" id="impGo">적용</button></div></div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener("click",async e=>{
+      if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+      const go=e.target.closest("#impGo");if(!go||go.disabled)return;go.disabled=true;go.textContent="적용 중…";
+      try{const r=await tracked(call("importRoster",S.team,rows));ov.remove();S.book=null;await load();
+        alertBox("명단을 적용했어요",`새로 추가 ${r.created}명, 고침 ${r.updated}명`+(r.skipped.length?` · 건너뜀 ${r.skipped.length}줄 (`+r.skipped.slice(0,5).map(x=>x.row+"번째 줄: "+x.reason).join(" / ")+(r.skipped.length>5?" …":"")+")":""))}
+      catch(err){go.disabled=false;go.textContent="적용";alertBox("적용하지 못했어요",err.message)}
+    });
+  };
+  inp.click();
+}
+async function exportAll(){
+  if(!await needXLSX())return;const C=await ensureContacts();
+  const ps=activePeople("all");const keys=[...S.att.keys()].filter(k=>k.slice(0,4)===S.date.slice(0,4)).sort();
+  const used=keys.filter(k=>{const a=S.att.get(k);return Object.keys(a.p||{}).length||Object.keys(a.t||{}).length||Object.keys(a.m||{}).length});
+  const cols=used.length?used:keys.filter(k=>k<=S.date).slice(-1);
+  const label=k=>Number(k.slice(5,7))+"/"+Number(k.slice(8));
+  const wb=XLSX.utils.book_new();
+  const roster=[["이름","반","분반","구분","생일","새친구","상태","메모","보호자","부모 연락처","학생 연락처","주소"]].concat([...S.people.values()].filter(p=>teamOf(p)===S.team).map(p=>{const c=C[p.id]||{};return [p.name,GL[p.group]||p.group,secOf(p)||"",p.group==="T"?"교사":"학생",p.birthday||"",p.isNew?"Y":"",p.active===false?(p.leftType==="졸업"?"졸업":"제적"):"출석",p.note||"",c.guardian||"",c.parentPhone||"",c.phone||"",c.address||""]}));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(roster),"명단");
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["이름","반","출석 합계",...cols.map(label)]].concat(ps.map(p=>[p.name,classLabel(p),cols.filter(k=>isOn(k,p.id)).length,...cols.map(k=>isOn(k,p.id)?1:"")]))),"출석");
+  if(talentOn()){const wsum=p=>cols.reduce((a,k)=>a+talentOf(k,p.id),0),tot=p=>Math.max(0,wsum(p)+talentAdj(p));
+    const tp=ps.filter(p=>p.group!=="T").sort((a,b)=>tot(b)-tot(a)||a.name.localeCompare(b.name,"ko"));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["이름","반","누적","주일 합계","직접 조정",...cols.map(label)]].concat(tp.map(p=>[p.name,classLabel(p),tot(p),wsum(p),talentAdj(p)||"",...cols.map(k=>talentOf(k,p.id)||"")]))),TL().slice(0,28));}
+  {const ok=p=>/^\d{1,2}\/\d{1,2}$/.test(p.birthday||""),md=p=>p.birthday.split("/").map(Number);
+    const bp=ps.filter(ok).sort((a,b)=>md(a)[0]-md(b)[0]||md(a)[1]-md(b)[1]||a.name.localeCompare(b.name,"ko"));
+    const miss=ps.filter(p=>!ok(p));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["월","일","이름","반","구분","생일","음력"]].concat(bp.map(p=>[md(p)[0],md(p)[1],p.name,classLabel(p),p.group==="T"?"교사":"학생",p.birthday,p.lunar||""]),miss.length?[[],["생일 미등록"]].concat(miss.map(p=>["","",p.name,classLabel(p),p.group==="T"?"교사":"학생",p.birthday||""])):[])),"생일");}
+  const memos=[["날짜","이름","반","출석","메모"]];cols.forEach(k=>{const m=(S.att.get(k)||{}).m||{};Object.keys(m).forEach(id=>{const p=S.people.get(id);if(p&&m[id])memos.push([k,p.name,classLabel(p),isOn(k,id)?"출석":"결석",m[id]])})});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(memos),"출결메모");
+  {let E=S.ev;if(!E||E.team!==S.team||E.error){try{const d=await call("events",S.team);E={team:S.team,list:d.events||[]}}catch(_){E={list:[]}}}
+    const y=S.date.slice(0,4),DOW="일월화수목금토";
+    const evs=E.list.filter(ev=>String(ev.date).slice(0,4)===y).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+    const ws=XLSX.utils.aoa_to_sheet([["날짜","요일","일정","메모","공유 문서"]].concat(evs.map(ev=>[ev.date,DOW[parseKey(ev.date).getDay()],ev.title||"",ev.memo||"",(ev.files||[]).map(f=>f.name).join(", ")])));
+    ws["!cols"]=[11,5,28,40,36].map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,ws,"일정");}
+  const stat=[["반","재적","기준 주일("+label(S.date)+") 출석","출석률","누적 출석","평균 출석률"]];
+  GROUPS.forEach(([g,gl])=>{const gp=activePeople(g);if(!gp.length)return;const on=gp.filter(p=>isOn(S.date,p.id)).length;const tot=gp.reduce((a,p)=>a+cols.filter(k=>k<=S.date&&isOn(k,p.id)).length,0);const wk=cols.filter(k=>k<=S.date).length;stat.push([gl,gp.length,on,gp.length?Math.round(on/gp.length*100)+"%":"-",tot,gp.length&&wk?Math.round(tot/(gp.length*wk)*100)+"%":"-"])});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(stat),"통계");
+  saveWorkbook(wb,`${TEAMS[S.team].short}_출석부_${S.date}.xlsx`);
+}
+/* ---- 일정 ---- */
+async function loadEvents(){
+  if(S.evLoading)return;S.evLoading=true;const team=S.team;
+  try{const d=await call("events",team);S.ev={team,list:d.events||[],canEdit:!!d.canEdit}}catch(e){S.ev={team,list:[],canEdit:false,error:e.message}}
+  S.evLoading=false;if(S.tab==="schedule")render();
+}
+/* ---- 자료실 ---- */
+async function loadLib(){
+  if(S.libLoading)return;S.libLoading=true;const team=S.team;
+  try{const d=await call("libList",team);S.lib={team,files:d.files||[],canEdit:!!d.canEdit}}catch(e){S.lib={team,files:[],canEdit:false,error:e.message}}
+  S.libLoading=false;if(S.tab==="schedule")render();
+}
+function renderLibrary(){
+  const L=S.lib;if(!L||L.team!==S.team){if(!S.libLoading)setTimeout(loadLib,0);return `<div class="empty">자료실을 불러오는 중…</div>`}
+  if(L.error)return `<div class="notice">${esc(L.error)}</div>`;
+  let h=`<h2 class="sec">${esc(TEAMS[S.team].label)} 자료실</h2><p class="muted" style="font-size:13px;margin:-4px 0 10px">일정과 상관없이 부서에서 함께 쓰는 파일이에요. 공과 교재, 연락망, 양식 등을 올려 두세요.</p>`;
+  if(L.canEdit)h+=`<div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><select id="f-lvis" aria-label="공개 범위" style="height:38px;border:1px solid var(--line);border-radius:10px;background:var(--ground);padding:0 8px;color:var(--ink)"><option value="all">전체 보기</option><option value="admin">관리자만 보기</option></select><button class="btn primary" id="libAdd">+ 파일 올리기 (10MB까지)</button><span class="muted" style="font-size:12px;flex-basis:100%">전체 보기: 담임도 볼 수 있어요 · 관리자만 보기: 팀 관리자와 총관리자만</span></div>`;
+  h+=L.files.length?`<div class="card" style="padding:4px 12px">${L.files.map(f=>`<div class="file-row"><span class="nm">${f.vis==="admin"?`<span class="vis-badge">관리자만</span>`:""}${esc(f.name)}<br><span class="muted" style="font-size:12px">${f.size?Math.max(1,Math.round(f.size/1024))+"KB · ":""}${esc(f.updated||"")}${f.by?" · "+esc(f.by):""}</span></span><button class="btn primary" data-lview="${f.id}">보기</button><button class="btn" data-ldl="${f.id}">내려받기</button>${L.canEdit?`<button class="btn" data-lvis="${f.id}" data-v="${f.vis==="admin"?"all":"admin"}">${f.vis==="admin"?"전체 공개로":"관리자만으로"}</button><button class="btn" data-lrep="${f.id}">바꾸기</button><button class="btn danger" data-ldel="${f.id}">삭제</button>`:""}</div>`).join("")}</div>`
+    :`<div class="empty">${L.canEdit?"아직 올린 파일이 없어요. 위에서 파일을 올려 보세요.":"아직 올린 파일이 없어요."}</div>`;
+  if(!L.canEdit)h+=`<p class="muted" style="font-size:12px;margin-top:14px">파일 올리기와 수정은 팀 관리자가 할 수 있어요.</p>`;
+  return h;
+}
+function libPick(replaceId){
+  const vis=replaceId?"":((document.querySelector("#f-lvis")||{}).value||"all");
+  const inp=document.createElement("input");inp.type="file";
+  inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;if(f.size>10*1024*1024){alertBox("파일이 너무 커요","10MB까지 올릴 수 있어요.");return}
+    try{toast("올리는 중…");const files=await tracked(call("libUpload",S.team,{name:f.name,mime:f.type,b64:await fileToB64(f),vis,replaceId:replaceId||""}));S.lib={...S.lib,files};render();toast(replaceId?"파일을 바꿨어요":"파일을 올렸어요")}
+    catch(e){alertBox("올리지 못했어요",e.message)}};
+  inp.click();
+}
+async function libAction(op,fid,v,msg){
+  try{const files=await tracked(v===null?call(op,S.team,fid):call(op,S.team,fid,v));S.lib={...S.lib,files};render();toast(msg)}catch(e){alertBox("처리하지 못했어요",e.message)}
+}
+function renderSchedule(){
+  const segHtml=`<div class="seg" style="margin-top:14px"><button data-smode="cal" aria-pressed="${S.schedMode!=="lib"}">달력</button><button data-smode="lib" aria-pressed="${S.schedMode==="lib"}">자료실</button></div>`;
+  if(S.schedMode==="lib")return segHtml+renderLibrary();
+  const E=S.ev;if(!E||E.team!==S.team){if(!S.evLoading)setTimeout(loadEvents,0);return `<div class="empty">일정을 불러오는 중…</div>`}
+  if(E.error)return `<div class="notice">${esc(E.error)}</div>`;
+  const ym=S.calMonth||S.date.slice(0,7);const [Y,M]=ym.split("-").map(Number);
+  const first=new Date(Y,M-1,1);const start=new Date(first);start.setDate(1-first.getDay());
+  const byDate={};E.list.forEach(ev=>{(byDate[ev.date]=byDate[ev.date]||[]).push(ev)});
+  const today=keyOf(new Date());const sel=S.calSel||"";
+  let cells=["일","월","화","수","목","금","토"].map((w,i)=>`<div class="wd ${i===0?"sun":""}">${w}</div>`).join("");
+  for(let i=0;i<42;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);
+    if(i%7===0&&i>=28&&d.getMonth()!==M-1)break;
+    const k=keyOf(d),sun=d.getDay()===0,evs=byDate[k]||[],max=sun?3:2;
+    cells+=`<button class="cal-cell ${sun?"sun":""} ${d.getMonth()===M-1?"":"out"} ${k===sel?"sel":""} ${k===today?"today":""}" data-cal="${k}" aria-label="${d.getMonth()+1}월 ${d.getDate()}일 일정 ${evs.length}개"><span class="dn">${d.getDate()}</span>${evs.slice(0,max).map(ev=>`<span class="ev">${esc(ev.title)}</span>`).join("")}${evs.length>max?`<span class="more">+${evs.length-max}</span>`:""}</button>`;
+  }
+  const monthList=E.list.filter(ev=>ev.date.slice(0,7)===ym).sort((a,b)=>a.date<b.date?-1:1);
+  const selList=sel?(byDate[sel]||[]):[];
+  const card=ev=>`<button class="ev-card" data-evopen="${ev.id}"><b>${esc(ev.title)}</b><span>${Number(ev.date.slice(5,7))}월 ${Number(ev.date.slice(8))}일${ev.memo?" · "+esc(ev.memo.slice(0,40)):""}${(ev.files||[]).length?" · 문서 "+ev.files.length+"개":""}</span></button>`;
+  let h=segHtml+`<div class="cal-head"><button class="arrow btn" data-calmonth="-1" aria-label="지난달">‹</button><b>${Y}년 ${M}월</b><button class="arrow btn" data-calmonth="1" aria-label="다음 달">›</button></div>
+    <div class="cal">${cells}</div>`;
+  if(sel){const sd=parseKey(sel);h+=`<h2 class="sec">${sd.getMonth()+1}월 ${sd.getDate()}일 일정</h2><div class="list">${selList.map(card).join("")||`<p class="muted" style="margin:0">일정이 없어요.</p>`}</div>`}
+  if(E.canEdit)h+=`<div style="margin-top:12px"><button class="btn primary" id="evAdd">+ ${sel?`${parseKey(sel).getMonth()+1}월 ${parseKey(sel).getDate()}일에 `:""}일정 추가</button></div>`;
+  h+=`<h2 class="sec">${M}월 전체 일정</h2><div class="list">${monthList.map(card).join("")||`<p class="muted" style="margin:0">이번 달 일정이 없어요.</p>`}</div>`;
+  if(!E.canEdit)h+=`<p class="muted" style="font-size:12px;margin-top:14px">일정 추가와 수정은 팀 관리자가 할 수 있어요. 공유 문서는 누구나 내려받을 수 있어요.</p>`;
+  return h;
+}
+function fileToB64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const s=String(r.result);res(s.slice(s.indexOf(",")+1))};r.readAsDataURL(f)})}
+async function downloadShared(fid){
+  try{toast("내려받는 중…");const d=await call("downloadFile",S.team,fid);const bin=atob(d.b64);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+    const url=URL.createObjectURL(new Blob([u8],{type:d.mime||"application/octet-stream"}));const a=document.createElement("a");a.href=url;a.download=d.name||"문서";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000)}
+  catch(e){alertBox("내려받지 못했어요",e.message)}
+}
+const CDN=()=>"https:"+"/"+"/cdn.jsdelivr.net/npm/";
+const scriptCache={};
+function loadScript(path){
+  if(scriptCache[path])return scriptCache[path];
+  scriptCache[path]=new Promise((res,rej)=>{const el=document.createElement("script");el.src=CDN()+path;el.onload=()=>res();el.onerror=()=>{delete scriptCache[path];rej(new Error("미리보기 도구를 불러오지 못했어요"))};document.head.appendChild(el)});
+  return scriptCache[path];
+}
+async function pdfLib(){
+  await loadScript("pdfjs-dist@3.11.174/build/pdf.min.js");
+  const lib=window.pdfjsLib;
+  if(!lib.GlobalWorkerOptions.workerSrc){
+    try{const code=await (await fetch(CDN()+"pdfjs-dist@3.11.174/build/pdf.worker.min.js")).text();lib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([code],{type:"text/javascript"}))}
+    catch(_){lib.GlobalWorkerOptions.workerSrc=CDN()+"pdfjs-dist@3.11.174/build/pdf.worker.min.js"}
+  }
+  return lib;
+}
+async function viewShared(fid){
+  let d;try{toast("여는 중…");d=await call("downloadFile",S.team,fid)}catch(e){alertBox("열지 못했어요",e.message);return}
+  const bin=atob(d.b64);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+  const mime=d.mime||"application/octet-stream";const name=d.name||"문서";const low=name.toLowerCase();const ext=(low.match(/[.]([a-z0-9]+)$/)||[])[1]||"";
+  const url=URL.createObjectURL(new Blob([u8],{type:mime}));
+  const kind=/^image[/]/.test(mime)?"img":(mime==="application/pdf"||ext==="pdf")?"pdf":["xlsx","xls","csv","ods"].includes(ext)?"sheet":ext==="docx"?"docx":(/^text[/]/.test(mime)||["txt","md","json"].includes(ext))?"text":"none";
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-label="${esc(name)} 미리보기" style="max-height:96%"><h3 style="word-break:break-all">${esc(name)}</h3>
+    <div id="pvBody" style="margin-top:10px"><p class="muted">미리보기를 만드는 중…</p></div>
+    <div class="actions">${kind==="pdf"||kind==="img"?`<button class="btn" data-fnew>새 창에서 열기</button>`:""}<button class="btn" data-fsave>내려받기</button><div class="spacer"></div><button class="btn primary" data-close>닫기</button></div></div>`;
+  document.body.appendChild(ov);const box=ov.querySelector("#pvBody");
+  const close=()=>{ov.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)};
+  ov.addEventListener("click",e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return close();
+    if(e.target.closest("[data-fnew]")){const w=window.open(url,"_blank");if(!w)alertBox("새 창을 열지 못했어요","[내려받기]로 받아서 열어 주세요.");return}
+    if(e.target.closest("[data-fsave]")){const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();return}
+    const st=e.target.closest("[data-sheet]");if(st&&ov._sheets){ov.querySelectorAll("[data-sheet]").forEach(b=>b.setAttribute("aria-pressed",String(b===st)));ov.querySelector("#pvSheet").innerHTML=ov._sheets[Number(st.dataset.sheet)]}
+  });
+  const frame=html=>`<div style="max-height:66vh;overflow:auto;border:1px solid var(--line);border-radius:8px;background:#fff;color:#111">${html}</div>`;
+  try{
+    if(kind==="img")box.innerHTML=`<img src="${url}" alt="${esc(name)}" style="display:block;max-width:100%;max-height:70vh;margin:0 auto;border-radius:8px">`;
+    else if(kind==="text"){let t="";try{t=new TextDecoder("utf-8").decode(u8)}catch(_){t=bin}box.innerHTML=`<pre style="white-space:pre-wrap;word-break:break-all;max-height:66vh;overflow:auto;background:var(--ground);padding:10px;border-radius:8px;margin:0;font-size:13px">${esc(t.slice(0,200000))}</pre>`}
+    else if(kind==="pdf"){
+      const lib=await pdfLib();const pdf=await lib.getDocument({data:u8}).promise;const n=Math.min(pdf.numPages,30);
+      box.innerHTML=frame(`<div id="pvPages" style="padding:8px;display:flex;flex-direction:column;gap:8px;align-items:center"></div>`)+(pdf.numPages>30?`<p class="muted" style="font-size:12px;margin:6px 0 0">앞 30쪽까지 보여요. 전체는 [내려받기]로 받아 주세요.</p>`:`<p class="muted" style="font-size:12px;margin:6px 0 0">모두 ${pdf.numPages}쪽</p>`);
+      const wrap=box.querySelector("#pvPages");const W=Math.min(box.clientWidth||600,900)-20;
+      for(let k=1;k<=n;k++){const pg=await pdf.getPage(k);const v0=pg.getViewport({scale:1});const sc=Math.max(.5,W/v0.width)*(window.devicePixelRatio>1?1.5:1);const vp=pg.getViewport({scale:sc});
+        const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;c.style.cssText="width:100%;max-width:"+W+"px;box-shadow:0 1px 4px rgba(0,0,0,.2)";wrap.appendChild(c);
+        await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;if(!document.body.contains(ov))return}
+    }
+    else if(kind==="sheet"){
+      await loadXLSX();
+      const wb=XLSX.read(u8,{type:"array"});
+      ov._sheets=wb.SheetNames.map(sn=>{const h=XLSX.utils.sheet_to_html(wb.Sheets[sn],{header:"",footer:""});return h.replace("<table","<table class=\"pv-table\"")});
+      box.innerHTML=(wb.SheetNames.length>1?`<div class="chipset" style="margin:0 0 8px">${wb.SheetNames.map((sn,k)=>`<button type="button" data-sheet="${k}" aria-pressed="${k===0}">${esc(sn)}</button>`).join("")}</div>`:"")+frame(`<div id="pvSheet">${ov._sheets[0]||""}</div>`);
+    }
+    else if(kind==="docx"){
+      await loadScript("mammoth@1.6.0/mammoth.browser.min.js");
+      const r=await window.mammoth.convertToHtml({arrayBuffer:u8.buffer});
+      box.innerHTML=frame(`<div class="pv-doc" style="padding:14px 16px;font-size:14px;line-height:1.7">${r.value||"<p>(내용이 없어요)</p>"}</div>`)+`<p class="muted" style="font-size:12px;margin:6px 0 0">글꼴·쪽 나눔은 원본과 조금 다를 수 있어요.</p>`;
+    }
+    else box.innerHTML=`<p style="margin:0;font-size:14px">${ext==="hwp"||ext==="hwpx"?"한글(hwp) 파일은":ext==="pptx"||ext==="ppt"?"파워포인트 파일은":"이 형식("+esc(ext||"파일")+")은"} 앱에서 미리 볼 수 없어요. [내려받기]로 받아서 열어 주세요.</p><p class="muted" style="font-size:12px;margin:6px 0 0">미리 보고 싶다면 PDF로 저장해서 올려 주세요.</p>`;
+  }catch(e){box.innerHTML=`<p style="margin:0;font-size:14px">미리보기를 만들지 못했어요. [내려받기]로 받아서 열어 주세요.</p><p class="muted" style="font-size:12px;margin:6px 0 0">${esc(e.message||"")}</p>`}
+}
+function openEvent(id,date){
+  const E=S.ev;if(!E)return;const ev=id?E.list.find(x=>x.id===id):{id:"",date:date||S.date,title:"",memo:"",files:[]};if(!ev)return;
+  const edit=E.canEdit;const ov=document.createElement("div");ov.className="overlay";
+  const draw=()=>{ov.innerHTML=`<form class="sheet" role="dialog" aria-label="일정"><h3>${ev.id?(edit?"일정 수정":"일정"):"새 일정"}</h3>
+    <div class="form"><label class="full">제목<input id="f-evt" maxlength="80" value="${esc(ev.title)}" ${edit?"":"readonly"} required></label>
+    <label class="full">날짜<input id="f-evd" type="date" value="${esc(ev.date)}" ${edit?"":"readonly"} required></label>
+    <label class="full">내용<textarea id="f-evm" maxlength="2000" ${edit?"":"readonly"}>${esc(ev.memo)}</textarea></label></div>
+    ${ev.id?`<h4 style="margin:16px 0 4px;font-size:15px">공유 문서</h4><div>${(ev.files||[]).map(f=>`<div class="file-row"><span class="nm">${f.vis==="admin"?`<span class="vis-badge">관리자만</span>`:""}${esc(f.name)}<br><span class="muted" style="font-size:12px">${f.size?Math.max(1,Math.round(f.size/1024))+"KB · ":""}${esc(f.updated||"")}</span></span><button type="button" class="btn primary" data-fview="${f.id}">보기</button><button type="button" class="btn" data-fdl="${f.id}">내려받기</button>${edit?`<button type="button" class="btn" data-fvis="${f.id}" data-v="${f.vis==="admin"?"all":"admin"}">${f.vis==="admin"?"전체 공개로":"관리자만으로"}</button><button type="button" class="btn" data-frep="${f.id}">바꾸기</button><button type="button" class="btn danger" data-fdel="${f.id}">삭제</button>`:""}</div>`).join("")||`<p class="muted" style="margin:4px 0">올린 문서가 없어요.</p>`}</div>
+    ${edit?`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><select id="f-fvis" aria-label="공개 범위" style="height:38px;border:1px solid var(--line);border-radius:10px;background:var(--ground);padding:0 8px;color:var(--ink)"><option value="all">전체 보기</option><option value="admin">관리자만 보기</option></select><button type="button" class="btn" id="fAdd">+ 문서 올리기 (10MB까지)</button></div><p class="muted" style="font-size:12px;margin:6px 0 0">전체 보기: 담임도 볼 수 있어요 · 관리자만 보기: 팀 관리자와 총관리자만</p>`:""}`:(edit?`<p class="muted" style="font-size:13px">저장한 뒤 공유 문서를 올릴 수 있어요.</p>`:"")}
+    <div class="actions">${ev.id&&edit?`<button type="button" class="btn danger" data-evdel>일정 삭제</button>`:""}<div class="spacer"></div><button type="button" class="btn" data-close>${edit?"취소":"닫기"}</button>${edit?`<button class="btn primary" type="submit">저장</button>`:""}</div></form>`};
+  draw();document.body.appendChild(ov);
+  const pickFile=replaceId=>{const vis=replaceId?"":((ov.querySelector("#f-fvis")||{}).value||"all");const inp=document.createElement("input");inp.type="file";inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;if(f.size>10*1024*1024){alertBox("파일이 너무 커요","10MB까지 올릴 수 있어요.");return}
+    try{toast("올리는 중…");const files=await tracked(call("uploadFile",S.team,ev.id,{name:f.name,mime:f.type,b64:await fileToB64(f),replaceId:replaceId||"",vis}));ev.files=files;const x=E.list.find(y=>y.id===ev.id);if(x)x.files=files;draw();toast(replaceId?"문서를 바꿨어요":"문서를 올렸어요")}catch(e){alertBox("올리지 못했어요",e.message)}};inp.click()};
+  ov.addEventListener("click",async e=>{
+    if(e.target===ov||e.target.closest("[data-close]")){ov.remove();render();return}
+    const fv=e.target.closest("[data-fview]");if(fv)return viewShared(fv.dataset.fview);
+    const dl=e.target.closest("[data-fdl]");if(dl)return downloadShared(dl.dataset.fdl);
+    const vb=e.target.closest("[data-fvis]");if(vb){try{const files=await tracked(call("setFileVis",S.team,ev.id,vb.dataset.fvis,vb.dataset.v));ev.files=files;const x=E.list.find(y=>y.id===ev.id);if(x)x.files=files;draw();toast(vb.dataset.v==="admin"?"관리자만 볼 수 있게 했어요":"전체 공개로 바꿨어요")}catch(err){alertBox("바꾸지 못했어요",err.message)}return}
+    const rp=e.target.closest("[data-frep]");if(rp)return pickFile(rp.dataset.frep);
+    if(e.target.closest("#fAdd"))return pickFile("");
+    const fd=e.target.closest("[data-fdel]");if(fd){if(!fd.dataset.armed){fd.dataset.armed="1";fd.textContent="한 번 더";return}
+      try{const files=await tracked(call("deleteFile",S.team,ev.id,fd.dataset.fdel));ev.files=files;const x=E.list.find(y=>y.id===ev.id);if(x)x.files=files;draw();toast("문서를 삭제했어요")}catch(err){alertBox("삭제하지 못했어요",err.message)}return}
+    const dv=e.target.closest("[data-evdel]");if(dv){if(!dv.dataset.armed){dv.dataset.armed="1";dv.textContent="한 번 더 누르면 삭제";return}
+      try{await tracked(call("deleteEvent",S.team,ev.id));E.list=E.list.filter(y=>y.id!==ev.id);ov.remove();render();toast("일정을 삭제했어요")}catch(err){alertBox("삭제하지 못했어요",err.message)}}
+  });
+  ov.addEventListener("submit",async e=>{
+    e.preventDefault();if(!edit)return;
+    const body={id:ev.id,title:ov.querySelector("#f-evt").value.trim(),date:ov.querySelector("#f-evd").value,memo:ov.querySelector("#f-evm").value};
+    if(!body.title||!body.date)return;
+    try{const saved=await tracked(call("saveEvent",S.team,body));const i=E.list.findIndex(y=>y.id===saved.id);if(i>=0)E.list[i]=saved;else E.list.push(saved);
+      const isNew=!ev.id;Object.assign(ev,saved);S.calSel=saved.date;S.calMonth=saved.date.slice(0,7);toast("일정을 저장했어요");if(isNew)draw();else{ov.remove();render()}}
+    catch(err){alertBox("저장하지 못했어요",err.message)}
+  });
+}
+/* ---- 담임 설명서 ---- */
+function openGuide(){
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<div class="sheet guide" role="dialog" aria-label="반 담임 사용 설명서"><h3>반 담임 사용 설명서</h3>
+    <p class="muted" style="margin:0;font-size:14px">팀 관리자에게 받은 <b>담임 번호</b>로 들어가면 우리 반만 보여요.</p>
+    <h4>1. 앱 설치 (처음 한 번)</h4><ol><li>주소 <b class="guide-url">팀 관리자가 알려 준 앱 주소</b> 를 열어요. 팀 관리자가 보낸 링크를 눌러도 돼요.</li><li><b>안드로이드</b>: 크롬 오른쪽 위 <b>︙</b> → <b>홈 화면에 추가</b> (또는 앱 설치)</li><li><b>아이폰</b>: 사파리 아래 <b>공유 버튼</b> → <b>홈 화면에 추가</b></li><li>카카오톡에서 열었다면 먼저 <b>다른 브라우저로 열기</b>를 눌러요.</li></ol>
+    <h4>2. 들어가기</h4><ol><li>메인에서 <b>우리 부서</b> 카드 → <b>담임 번호</b> 넣기</li><li>제목 옆에 "담임 · 2학년"처럼 보이면 성공!</li><li>내 휴대폰이면 "이 기기에서 번호 기억하기"를 켜 두세요. 다음부터 바로 들어가요.</li></ol>
+    <h4>3. 출결메모 (주일 출석)</h4><ol><li>위쪽 날짜가 오늘 주일인지 확인해요. ‹ › 로 다른 주일로 가요.</li><li><b>체크 칸</b>: 누르면 출석, 다시 누르면 취소</li><li><b>메모</b>: 결석 이유 적기 ("감기·아픔" 같은 버튼도 있어요)</li><li><b>전화</b>: 부모님(없으면 학생)에게 바로 전화</li><li>숫자 칸(달란트 등): ▲▼ 를 누르거나 숫자를 눌러 적어요. 달란트는 여기서만 줘요.</li><li><b>담임 선생님 출석</b>: 우리 반 담임 줄 바로 아래에 선생님 이름이 나와요. 거기서 선생님 출석·메모도 체크해요. (교사 명단의 이름과 담임 이름이 같아야 나와요)</li></ol>
+    <h4>4. 명단 (연락처 포함)</h4><ol><li><b>[+ 사람 추가]</b>로 새 학생을 넣어요. 연락처·주소도 같이 적을 수 있어요.</li><li>이름을 누르면 보호자·부모 연락처와 주소가 보여요. <b>[전화]</b>, <b>[복사]</b>도 여기서.</li><li><b>[수정]</b>: 사진·생일·메모·연락처·주소를 한 창에서 고쳐요.</li><li><b>[삭제]</b>: 이름을 누른 창에서 눌러요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li>사람 정보는 <b>명단 탭에서만</b> 고칠 수 있어요. 다른 탭에서는 보기만 해요.</li><li>연락처가 잠겨 있으면 명단 위쪽 <b>연락처</b> 줄의 <b>[번호 입력]</b>에 담임 번호를 넣어요.</li></ol>
+    <h4>5. 생일 · 달란트</h4><ol><li><b>생일</b>: 이번 주·이번 달·다음 달 생일. 생일이 없는 사람은 맨 아래에 모여요.</li><li><b>달란트</b>: 올해 누적 순위를 보는 화면이에요 (고치기는 출결메모에서).</li><li>달란트·생일·일정 엑셀은 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b> 파일에 들어 있어요.</li></ol>
+    <h4>6. 출석 · 제적 · 졸업</h4><ol><li>명단 위쪽 <b>[출석] [제적] [졸업]</b> 을 눌러 나눠 봐요.</li><li>더 이상 안 나오는 학생: 이름 → [수정] → 상태를 <b>제적</b>으로. 졸업한 학생은 <b>졸업</b>으로.</li><li>제적·졸업 학생은 출석 명단에서 빠지지만 기록은 그대로 남아요.</li><li>다시 나오면 [제적] 목록에서 <b>[출석으로]</b>를 눌러요.</li></ol>
+    <h4>7. 엑셀로 한 번에 (명단 · 연락처)</h4><ol><li>명단 탭 <b>엑셀</b> 줄의 <b>[양식 받기]</b>로 파일을 받아요. 지금 명단이 채워져 있어요.</li><li>'명단' 시트에 이름·반·생일·연락처·주소를 적어요. 생일은 03/15 처럼. 빈 칸은 원래 값을 그대로 둬요.</li><li><b>[올리기]</b>로 파일을 고르고 확인. 이름과 반이 같은 사람은 고쳐지고, 없는 사람은 새로 들어가요.</li><li>담임은 <b>우리 반</b> 학생만 올라가요. 파일에서 줄을 지워도 앱에서는 지워지지 않아요.</li><li>출석부 전체를 저장해 두려면 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b>를 눌러요.</li></ol>
+    <h4>8. 일정 · 공유 파일</h4><ol><li><b>일정</b> 탭 <b>[달력]</b>: 날짜를 누르면 그날 일정, 일정 카드를 누르면 공유 문서가 보여요.</li><li><b>[자료실]</b>: 공과 교재·양식 같은 부서 파일</li><li><b>[보기]</b>: 받지 않고 바로 봐요 (PDF·엑셀·워드·사진). 한글·파워포인트는 <b>[내려받기]</b>로 열어요.</li><li>일정과 파일 올리기는 팀 관리자가 해요. 올릴 파일은 팀 관리자에게 보내 주세요.</li></ol>
+    <h4>9. 반 이름 · 반 편성 (팀 관리자)</h4><ol><li>화면 위쪽 반(학년) 칩을 <b>더블클릭</b>(휴대폰은 <b>두 번 톡톡</b>)하면 그 반 이름을 바꿀 수 있어요. 예: 1학년 → 1학년 사랑반</li><li>명단 탭 <b>[반 관리]</b>·<b>[이름 바꾸기]</b>와 같은 이름이라, 한쪽에서 바꾸면 다른 쪽에도 그대로 보여요.</li><li>이름만 바뀌고 출석·담임·담임 번호는 그대로 이어져요. 담임 번호로 들어오면 바꿀 수 없어요.</li><li><b>영아교육팀</b>은 나이와 관계없이 반을 만들어요. 명단 탭 <b>[반 관리]</b>에서 반 추가·삭제·순서, <b>[반 배정]</b>에서 아이마다 반을 골라요. 나이는 사람 [수정] 창에서 따로 적어요.</li></ol>
+    <h4>10. 지켜 주세요</h4><ol><li>담임 번호와 연락처는 다른 사람에게 알려 주지 마세요.</li><li>같이 쓰는 기기면 끝난 뒤 메인의 <b>이 기기 번호 지우기</b>를 눌러요.</li><li>잘 안 되면 새로 고치거나 크롬·사파리에서 열어 보세요.</li></ol>
+    <div class="actions"><div class="spacer"></div><button class="btn primary" data-close>닫기</button></div></div>`;
+  document.body.appendChild(ov);
+  getAppUrl().then(u=>{const b=ov.querySelector(".guide-url");if(b&&u)b.textContent=u.split(":"+"/"+"/").pop().replace(/[/]$/,"")});
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+}
+/* ---------- 이력 (팀 관리자 이상) ---------- */
+const histItem=x=>`<div class="hist-item"><span class="when">${esc(x.at.slice(0,10))}<br>${esc(x.at.slice(11))}</span><span class="what"><span class="hist-kind ${x.kind==="교사"||x.kind==="담임"?"t":""}">${esc(x.kind)}</span>${x.name?`<b>${esc(x.name)}</b> `:""}${esc(x.text)}<span class="by">${esc(x.by)}</span></span></div>`;
+function yearSummary(p){
+  const years={};
+  for(const [k,a] of S.att.entries()){
+    const y=k.slice(0,4);const rec=Object.keys(a.p||{}).some(id=>{const q=S.people.get(id);return q&&teamOf(q)===teamOf(p)});
+    if(!rec)continue;const Y=years[y]||(years[y]={weeks:0,on:0,t:0,m:0});Y.weeks++;if((a.p||{})[p.id])Y.on++;Y.t+=Number((a.t||{})[p.id]||0);if((a.m||{})[p.id])Y.m++;
+  }
+  const ys=Object.keys(years).sort().reverse();
+  return ys.length?ys.map(y=>{const Y=years[y];return `<div class="yr-row"><span>${y}년</span><span class="num">출석 <b>${Y.on}</b> / ${Y.weeks}주${Y.weeks?` (${Math.round(Y.on/Y.weeks*100)}%)`:""}${p.group!=="T"&&talentOn()&&Y.t?` · ${esc(TL())} ${Y.t}`:""}${Y.m?` · 메모 ${Y.m}`:""}</span></div>`}).join(""):`<p class="muted" style="margin:4px 0">아직 출석 기록이 없어요.</p>`;
+}
+async function openHistory(id){
+  const p=S.people.get(id);if(!p)return;
+  const ov=document.createElement("div");ov.className="overlay";
+  const draw=list=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="${esc(p.name)} 이력"><h3>${esc(p.name)} 이력 <span class="muted" style="font-family:var(--body);font-size:14px">${p.group==="T"?"교사":"학생"} · ${esc(classLabel(p))}${p.active===false?(p.leftType==="졸업"?" · 졸업":" · 제적"):""}</span></h3>
+    <h4 style="margin:12px 0 4px;font-size:15px">해마다 출석</h4>${yearSummary(p)}
+    <h4 style="margin:16px 0 4px;font-size:15px">${p.group==="T"?"담임·명단 기록":"반 이동·등반 기록"}</h4>
+    <div>${list===null?`<p class="muted">불러오는 중…</p>`:list.length?list.map(histItem).join(""):`<p class="muted" style="margin:4px 0">기록이 없어요. 이력은 이 기능을 넣은 뒤부터 쌓여요.</p>`}</div>
+    <div class="actions"><div class="spacer"></div><button class="btn primary" data-close>닫기</button></div></div>`};
+  draw(null);document.body.appendChild(ov);
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+  try{draw(await call("history",S.team,id))}catch(e){ov.remove();alertBox("이력을 불러오지 못했어요",e.message)}
+}
+async function openHistoryList(){
+  const ov=document.createElement("div");ov.className="overlay";let all=null,mode="student";
+  const draw=()=>{
+    const ppl=[...S.people.values()].filter(p=>teamOf(p)===S.team&&(mode==="teacher"?p.group==="T":p.group!=="T")).sort((a,b)=>(a.active===false)-(b.active===false)||a.name.localeCompare(b.name,"ko"));
+    const cnt={},last={};(all||[]).forEach(x=>{if(x.id){cnt[x.id]=(cnt[x.id]||0)+1;if(!last[x.id])last[x.id]=x}});
+    ov.innerHTML=`<div class="sheet" role="dialog" aria-label="이력 보기"><h3>${esc(TEAMS[S.team].label)} 이력</h3>
+      <div class="seg"><button data-hmode="student" aria-pressed="${mode==="student"}">학생</button><button data-hmode="teacher" aria-pressed="${mode==="teacher"}">교사</button><button data-hmode="feed" aria-pressed="${mode==="feed"}">전체 기록</button></div>
+      <div style="margin-top:10px">${all===null?`<p class="muted">불러오는 중…</p>`:mode==="feed"?((all.length?all.slice(0,300).map(histItem).join(""):`<p class="muted">기록이 없어요.</p>`)):
+        (ppl.map(p=>`<button class="ev-card" data-hist="${p.id}" style="margin-bottom:6px"><b>${esc(p.name)} <span class="muted" style="font-size:12px;font-weight:500">${esc(classLabel(p))}${p.active===false?(p.leftType==="졸업"?" · 졸업":" · 제적"):""}</span></b><span>${last[p.id]?esc(last[p.id].at.slice(0,10)+" · "+last[p.id].text):"기록 없음"}${cnt[p.id]?" · 기록 "+cnt[p.id]+"개":""}</span></button>`).join("")||`<p class="muted">사람이 없어요.</p>`)}</div>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">이력은 이 기능을 넣은 뒤부터 쌓여요. 시트의 '이력' 탭에도 같은 내용이 있어요.</p>
+      <div class="actions"><div class="spacer"></div><button class="btn primary" data-close>닫기</button></div></div>`};
+  draw();document.body.appendChild(ov);
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();const hm=e.target.closest("[data-hmode]");if(hm){mode=hm.dataset.hmode;draw()}});
+  try{all=await call("history",S.team);draw()}catch(e){ov.remove();alertBox("이력을 불러오지 못했어요",e.message)}
+}
+async function openCall(id){
+  const p=S.people.get(id);if(!p)return;
+  if(!S.book||S.book.team!==S.team){toast("연락처를 불러오는 중…");await ensureContacts()}
+  const B=S.book||{};const allowed=(B.grades||[]).includes(p.group);
+  const c=(B.contacts||{})[p.id]||{};
+  const nums=(p.group==="T"?[["연락처",c.phone]]:[["부모",c.parentPhone],["학생",c.phone]]).filter(x=>String(x[1]||"").replace(/[^0-9]/g,"").length>=9);
+  if(!allowed){alertBox("연락처를 볼 수 없어요","이 학생의 연락처를 볼 권한이 없어요. 팀 관리자 번호나 이 반의 담임 번호로 들어와 주세요.");return}
+  if(!nums.length){alertBox("전화번호가 없어요",`${p.name}${p.group==="T"?"":"(보호자)"}의 전화번호가 없어요. 명단에서 ${p.name}을(를) 누르고 [수정]에서 번호를 넣어 주세요.`);return}
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-label="${esc(p.name)} 전화"><h3>${esc(p.name)} ${p.group==="T"?"":`<span class="muted" style="font-family:var(--body);font-size:14px">${esc(c.guardian?"보호자 "+c.guardian:classLabel(p))}</span>`}</h3>
+    ${nums.map(([k,v])=>{const d=String(v).replace(/[^0-9+]/g,"");return `<div class="call-row"><span class="k">${k}</span><span class="v num">${esc(v)}</span><a class="btn primary" href="tel:${d}" target="_blank" rel="noopener">전화</a><a class="btn" href="sms:${d}" target="_blank" rel="noopener">문자</a><button class="btn" data-copy-c="${esc(v)}">복사</button></div>`}).join("")}
+    <p class="muted" style="font-size:12px;margin:10px 0 0">[전화]를 눌러도 전화 앱이 안 열리면 [복사]한 뒤 전화 앱에 붙여 넣어 주세요.</p>
+    <div class="actions"><div class="spacer"></div><button class="btn" data-close>닫기</button></div></div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();const cp=e.target.closest("[data-copy-c]");if(cp){e.stopPropagation();navigator.clipboard.writeText(cp.dataset.copyC).then(()=>toast("번호를 복사했어요"),()=>toast("번호를 길게 눌러 복사하세요"))}});
+}
+function renderCheck(){
+  const k=S.date;const ps=activePeople(S.group);
+  /* 출석 인원·출석률은 학생만 (교사는 따로 한 줄). '교사' 칩을 고르면 교사만 */
+  const stu=S.group==="T"?ps:ps.filter(p=>p.group!=="T");const tch=S.group==="T"?[]:ps.filter(p=>p.group==="T");
+  const on=stu.filter(p=>isOn(k,p.id)).length;const pct=stu.length?Math.round(on/stu.length*100):0;
+  const talent=ps.reduce((a,p)=>a+talentOf(k,p.id),0);
+  let h=`<div class="summary"><div class="ring" style="--p:${pct}"><span class="num">${pct}%</span></div>
+    <div><div class="big num">${on}<em> / ${stu.length}명</em></div><div class="sub num">${TEAMS[S.team].short} ${S.group==="all"?"전체":GL[S.group]} 출석${talentOn()?` · 달란트 ${talent}`:""}${tch.length?` · 교사 ${tch.filter(p=>isOn(k,p.id)).length} / ${tch.length}`:""}</div></div>
+    <div class="spacer"></div>${canManageGrades()?`<button class="btn" id="gcManage3">담임 권한</button>`:""}${S.editable&&ps.length?`<button class="btn" id="markAll">${ps.every(p=>isOn(k,p.id))?"전체 해제":"전체 출석"}</button>`:""}</div>`;
+  if(!S.editable)h+=`<div class="notice">보기 권한으로 열려 있어 출석을 바꿀 수 없어요. 편집 권한이 필요하면 담당자에게 요청하세요.</div>`;
+  const groups=S.group==="all"?GROUPS.map(g=>g[0]):[S.group];
+  for(const g of groups){
+    const gp=ps.filter(p=>p.group===g);
+    if(!isClassKey(g)&&!gp.length&&S.group==="all")continue;
+    const ss=isClassKey(g)?sectionsOf(g):[];
+    h+=`<div class="group-h">${GL[g]}${ss.length?`<span class="c">${ss.join("·")}반</span>`:""}${g==="_"?`<span class="c">명단 탭 [반 배정]에서 반을 정해 주세요</span>`:""}<span class="c num">${gp.filter(p=>isOn(k,p.id)).length}/${gp.length}</span>${isClassKey(g)&&S.editable?`<button class="mini" data-split="${g}">${ss.length?"분반 수정":"분반 나누기"}</button>`:""}</div>`;
+    if(!gp.length&&!ss.length){if(isClassKey(g))h+=homeroomBar(g)+hrRows(g);h+=`<div class="group-empty">${S.ready?"등록된 사람이 없어요. 명단 탭에서 추가하세요.":"불러오는 중…"}</div>`;continue}
+    if(!ss.length){if(isClassKey(g))h+=homeroomBar(g)+hrRows(g);h+=`<div class="list">${gp.map(personRow).join("")}</div>`;continue}
+    for(const sec of ss){
+      const sp=gp.filter(p=>secOf(p)===sec);
+      h+=`<div class="sec-h"><span class="badge">${sec}반</span><span class="c num">${sp.filter(p=>isOn(k,p.id)).length}/${sp.length}</span></div>`+homeroomBar(g,sec)+hrRows(g,sec);
+      h+=sp.length?`<div class="list">${sp.map(personRow).join("")}</div>`:`<div class="group-empty">이 반에 배정된 학생이 없어요.</div>`;
+    }
+    const un=gp.filter(p=>!secOf(p));
+    if(un.length)h+=`<div class="sec-h"><span class="badge" style="background:var(--muted)">미배정</span><span class="c">"분반 수정"에서 반을 정해 주세요</span></div><div class="list">${un.map(personRow).join("")}</div>`;
+  }
+  return h;
+}
+function renderRoster(){
+  const q=S.q.trim();
+  const all=[...S.people.values()].filter(p=>teamOf(p)===S.team&&(S.group==="all"||p.group===S.group)&&!(isHomeroom()&&p.group==="T"));
+  const ps=all.filter(p=>rosterModeOf(p)===(S.rosterMode||"active")).filter(p=>!q||[p.name,p.note].some(v=>(v||"").includes(q)))
+    .sort((a,b)=>(a.active===false)-(b.active===false)||GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||a.name.localeCompare(b.name,"ko"));
+  let h=`<input class="search" id="q" type="search" placeholder="이름 검색" value="${esc(S.q)}"><div class="seg" style="margin-top:10px">${[["active","출석"],["removed","제적"],["grad","졸업"]].map(([m,l])=>`<button data-rmode="${m}" aria-pressed="${(S.rosterMode||"active")===m}">${l} ${all.filter(p=>rosterModeOf(p)===m).length}명</button>`).join("")}</div>
+    <div class="summary"><div><div class="big num">${all.filter(p=>p.active!==false).length}<em> 명 재적</em></div><div class="sub">${TEAMS[S.team].short} · ${S.group==="all"?"전체":GL[S.group]}</div></div><div class="spacer"></div>
+    ${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">담임</span><span class="none" style="font-size:13px">담임 번호를 받은 선생님은 자기 반만 관리해요</span><span class="spacer"></span><button id="gcManage2">담임 권한 관리</button></div>`:""}${canManageGrades()&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div>`:""}${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
+  for(const p of ps){
+    const tags=[p.isNew?'<span class="tag new">새친구</span>':"",p.active===false?`<span class="tag role">${p.leftType==="졸업"?"졸업":"제적"}</span>`:"",p.role?`<span class="tag role">${esc(p.role)}</span>`:""].join("");
+    h+=`<div class="row" style="${p.active===false?"opacity:.55":""}"><button class="who-wrap" data-open="${p.id}" style="padding:2px 4px">${avatar(p)}<span class="who"><b>${esc(p.name)}${p.gender?`(${esc(p.gender)})`:""} <span class="muted" style="font-size:12px;font-weight:500">${esc([classLabel(p),ageLabel(p)].filter(Boolean).join(" · "))}</span>${tags}</b>
+      <span>${esc([p.birthday&&"생일 "+p.birthday,p.note].filter(Boolean).join(" · "))}</span></span></button>${p.active===false&&S.editable?`<button class="btn" data-restore="${p.id}">출석으로</button>`:""}</div>`;
+  }
+  h+=`</div>`;if(!ps.length)h+=`<div class="empty">${S.rosterMode==="removed"?"제적한 사람이 없어요.":S.rosterMode==="grad"?"졸업한 사람이 없어요.":"찾는 사람이 없어요."}</div>`;
+  return `<div class="roster-wrap">${h}</div>`;
+}
+function yearKeys(){const y=S.date.slice(0,4);return [...S.att.keys()].filter(k=>k.startsWith(y)&&k<=S.date).sort()}
+const weeklyTalent=id=>yearKeys().reduce((s,kk)=>s+talentOf(kk,id),0);
+const talentAdj=p=>Number(((p.talentAdj||{})[S.date.slice(0,4)])||0);
+const totalTalent=p=>Math.max(0,weeklyTalent(p.id)+talentAdj(p));
+function setTotalTalent(id,v){
+  const p=S.people.get(id);if(!p||!S.editable)return;
+  const y=S.date.slice(0,4);const adj=v-weeklyTalent(id);
+  S.people.set(id,{...p,talentAdj:{...(p.talentAdj||{}),[y]:adj}});render();
+  if(S.db)enqueue("people/"+id,()=>S.db.doc("people/"+id).update({talentAdj:{[y]:adj}}));
+  toast("달란트를 고쳤어요");
+}
+function renderTalent(){
+  const ps=activePeople(S.group).filter(p=>p.group!=="T");
+  const tot=ps.reduce((a,p)=>a+totalTalent(p),0);
+  let h=`<div class="summary"><div><div class="big num">${tot}<em> 달란트</em></div><div class="sub">${TEAMS[S.team].short} ${S.group==="all"?"전체":GL[S.group]} · ${S.date.slice(0,4)}년 누적 (선택한 주일까지)</div></div></div>
+    <p class="muted" style="font-size:12px;margin:0 0 10px">달란트 현황을 보는 화면이에요. 달란트는 출석 탭에서 주고, 사람 정보는 명단 탭에서 고쳐요.</p>`;
+  if(!ps.length)return h+`<div class="empty">명단이 없어요. 명단 탭에서 추가해 주세요.</div>`;
+  const sorted=[...ps].sort((a,b)=>totalTalent(b)-totalTalent(a)||a.name.localeCompare(b.name,"ko"));
+  h+=`<div class="list">${sorted.map(p=>`<div class="row"><button class="who-wrap" data-open="${p.id}" style="padding:2px 4px">${avatar(p)}<span class="who"><b>${esc(p.name)} <span class="muted" style="font-size:12px;font-weight:500">${GL[p.group]||""}</span></b><span>이번 주 ${talentOf(S.date,p.id)}${talentAdj(p)?` · 직접 조정 ${talentAdj(p)>0?"+":""}${talentAdj(p)}`:""}</span></span></button>
+    <div class="num" style="flex:none;min-width:56px;text-align:right;font-size:18px;font-weight:700" aria-label="${esc(p.name)} 누적 달란트">${totalTalent(p)}</div></div>`).join("")}</div>`;
+  return h;
+}
+function renderStats(){
+  const k=S.date;
+  let h=`<div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px"><span class="muted" style="font-size:13px;text-align:right">자료실을 제외한 모든 메뉴의 자료는 여기서 내려받습니다</span><button class="btn" id="xlsExport" style="flex:none">엑셀로 내보내기</button></div><div class="seg"><button data-mode="week" aria-pressed="${S.statMode==="week"}">이번 주일</button><button data-mode="year" aria-pressed="${S.statMode==="year"}">${S.date.slice(0,4)}년 누적</button></div>`;
+  if(S.statMode==="week"){
+    const rows=GROUPS.map(([g,l])=>{const ps=activePeople(g);const on=ps.filter(p=>isOn(k,p.id)).length;const t=ps.reduce((a,p)=>a+talentOf(k,p.id),0);return {g,l,n:ps.length,on,t}});
+    const st=rows.filter(r=>r.g!=="T");const tr=rows.find(r=>r.g==="T")||{on:0,n:0};const sOn=st.reduce((a,r)=>a+r.on,0),sN=st.reduce((a,r)=>a+r.n,0);
+    h+=`<div class="summary"><div><div class="big num">${sOn}<em> / ${sN} ${TEAMS[S.team].unit}</em></div><div class="sub num">교사 ${tr.on} / ${tr.n}</div></div></div>
+    <div class="card bars">${rows.map(r=>`<div class="bar"><span>${r.l}</span><div class="track"><div class="fill" style="width:${r.n?r.on/r.n*100:0}%"></div></div><span class="v num">${r.on}/${r.n}</span></div>`+(r.g==="T"?"":sectionsOf(r.g).map(sec=>{const sp=activePeople(r.g).filter(p=>secOf(p)===sec);const so=sp.filter(p=>isOn(k,p.id)).length;return `<div class="bar" style="font-size:13px"><span class="muted">└ ${sec}반</span><div class="track" style="height:10px"><div class="fill" style="width:${sp.length?so/sp.length*100:0}%;opacity:.7"></div></div><span class="v num">${so}/${sp.length}</span></div>`}).join(""))).join("")}</div>
+    ${talentOn()?`<h2 class="sec">달란트 현황</h2><div class="card tablewrap"><table><thead><tr><th>반</th><th class="r">재적</th><th class="r">이번 주</th><th class="r">누적</th><th class="r">1인 평균</th></tr></thead><tbody>
+    ${st.map(r=>{const ps=activePeople(r.g);const tot=ps.reduce((a,p)=>a+totalTalent(p),0);return `<tr><td>${r.l}</td><td class="r num">${r.n}</td><td class="r num">${r.t}</td><td class="r num">${tot}</td><td class="r num">${r.n?(tot/r.n).toFixed(1):"-"}</td></tr>`}).join("")}
+    </tbody></table></div>`:""}`;
+  }else{
+    const ks=yearKeys();
+    const ps=activePeople(S.group).map(p=>({p,n:ks.filter(kk=>isOn(kk,p.id)).length,t:totalTalent(p)}))
+      .sort((a,b)=>b.n-a.n||b.t-a.t||a.p.name.localeCompare(b.p.name,"ko"));
+    const weekly=ks.map(kk=>({kk,n:[...S.people.values()].filter(p=>teamOf(p)===S.team&&p.group!=="T"&&isOn(kk,p.id)).length}));
+    const max=Math.max(1,...weekly.map(w=>w.n));
+    h+=`<p class="muted" style="font-size:13px;margin:12px 0 0">${S.date.slice(0,4)}년 1월부터 선택한 주일까지, 기록이 있는 주일 ${ks.length}번 기준</p>`;
+    if(weekly.length)h+=`<h2 class="sec">주일별 ${TEAMS[S.team].unit} 출석</h2><div class="card" style="overflow-x:auto"><svg viewBox="0 0 ${Math.max(300,weekly.length*22)} 130" style="width:100%;min-width:${Math.min(600,weekly.length*22)}px;height:130px">
+      ${weekly.map((w,i)=>{const hh=w.n/max*90;return `<rect x="${i*22+4}" y="${104-hh}" width="14" height="${hh}" rx="3" fill="var(--accent)"/><text x="${i*22+11}" y="${100-hh}" font-size="9" text-anchor="middle" fill="var(--muted)">${w.n}</text><text x="${i*22+11}" y="120" font-size="8" text-anchor="middle" fill="var(--muted)">${Number(w.kk.slice(5,7))}/${Number(w.kk.slice(8))}</text>`}).join("")}</svg></div>`;
+    h+=`<h2 class="sec">개인별 누적 ${S.group==="all"?"":"· "+GL[S.group]}</h2><div class="card tablewrap"><table><thead><tr><th>이름</th><th>반</th><th class="r">출석</th>${talentOn()?`<th class="r">달란트</th>`:""}</tr></thead><tbody>
+    ${ps.map(r=>`<tr><td>${esc(r.p.name)}</td><td class="muted">${GL[r.p.group]}</td><td class="r num">${r.n}</td>${talentOn()?`<td class="r num">${r.p.group==="T"?"-":r.t}</td>`:""}</tr>`).join("")}</tbody></table></div>`;
+  }
+  return h;
+}
+function renderBday(){
+  const d=parseKey(S.date);const m=d.getMonth()+1;
+  const ps=activePeople(S.group).filter(p=>/^\d{1,2}\/\d{1,2}$/.test(p.birthday||""));
+  const by=mm=>ps.filter(p=>Number(p.birthday.split("/")[0])===mm).sort((a,b)=>Number(a.birthday.split("/")[1])-Number(b.birthday.split("/")[1]));
+  const week=ps.filter(p=>bdInWeek(p,S.date));
+  const block=(title,list)=>`<h2 class="sec">${title}</h2>${list.length?`<div class="list">${list.map(p=>`<div class="row"><button class="who-wrap" data-open="${p.id}" style="padding:2px 4px">${avatar(p)}<span class="who"><b>${esc(p.name)} <span class="muted" style="font-size:12px;font-weight:500">${GL[p.group]}</span>${bdInWeek(p,S.date)?'<span class="tag bd">이번 주</span>':""}</b><span class="num">${esc(p.birthday)}${p.lunar?" · "+esc(p.lunar):""}</span></span></button></div>`).join("")}</div>`:`<p class="muted">없어요.</p>`}`;
+  const nm=m%12+1;
+  const missing=activePeople(S.group).filter(p=>!/^\d{1,2}\/\d{1,2}$/.test(p.birthday||""));
+  return block("이번 주 생일",week)+block(`${m}월 생일`,by(m))+block(`${nm}월 생일`,by(nm))+
+    (missing.length?`<p class="muted" style="font-size:13px;margin-top:20px">생일 미등록: ${missing.map(p=>esc(p.name)).join(", ")}</p>`:"");
+}
+const LOCK_SVG='<svg class="lock-ic" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>';
+const deptLocked=t=>!!(S.locked||{})[t];
+const canEnter=t=>!!(S.access||{})[t];
+function storedCodes(){try{return JSON.parse(localStorage.getItem("ya-codes")||"{}")}catch(_){return S._codes||{}}}
+function storeCode(t,code){S._codes={...(S._codes||{}),[t]:code};if(S.remember===false)return;const c=storedCodes();c[t]=code;try{localStorage.setItem("ya-codes",JSON.stringify(c))}catch(_){}}
+function hasStored(){try{return !!(localStorage.getItem("ya-admin")||Object.keys(JSON.parse(localStorage.getItem("ya-codes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-gcodes")||"{}")).length)}catch(_){return false}}
+function forgetDevice(){try{["ya-admin","ya-codes","ya-gcodes",BOOT_KEY].forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._codes={};S._gcodes={};S.view="home";S.book=null;load();toast("이 기기에 기억된 번호와 로그인을 지웠어요")}
+function goDept(t){S.book=null;S.ev=null;S.lib=null;S.schedMode="cal";S.calSel="";S.calMonth="";S.rosterMode="active";setTeam(t);S.view="dept";S.tab="check";try{localStorage.setItem("ya-team",S.team)}catch(_){}render();window.scrollTo(0,0)}
+function enterDept(t){if(canEnter(t))return goDept(t);openCodeSheet(t)}
+function openCodeSheet(t){
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="부서 고유번호 입력"><h3>${TEAMS[t].label}</h3>
+    <p class="muted" style="margin:0;font-size:14px">팀 관리자 번호 또는 담임 번호를 입력하세요. 담임 번호로 들어가면 자기 반만 보여요.</p>
+    <div class="form"><label class="full">번호<input id="f-code" type="password" inputmode="numeric" autocomplete="off" maxlength="8" required></label><label class="inline full"><input type="checkbox" id="f-remember" checked>이 기기에서 번호 기억하기 <span class="muted" style="font-size:12px">(여러 사람이 쓰는 기기면 끄세요)</span></label></div>
+    <p class="err" id="codeErr" hidden>번호가 맞지 않아요. 다시 확인해 주세요.</p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">들어가기</button></div></form>`;
+  document.body.appendChild(ov);
+  const inp=ov.querySelector("#f-code");inp.focus();
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+  ov.querySelector("form").addEventListener("submit",async e=>{
+    e.preventDefault();const code=inp.value.trim();
+    S.remember=!!(ov.querySelector("#f-remember")||{checked:true}).checked;let ok=false,g="";try{ok=await call("verifyCode",t,code);if(!ok)g=await call("findGradeCode",t,code)}catch(err){toast(err.message);return}
+    if(ok)storeCode(t,code);else if(g)storeGradeCode(t+"_"+g,code);
+    if(ok||g){ov.remove();await load();goDept(t);if(ok&&canManageGrades())setTimeout(openHomeroomCodes,250);toast(ok?"팀 관리자로 들어왔어요":`${TEAMS[t].short} ${Object.fromEntries(classesOf(t))[g]||""} 담임으로 들어왔어요`)}else{ov.querySelector("#codeErr").hidden=false;inp.select()}
+  });
+}
+function randomCode(){const a=new Uint32Array(1);crypto.getRandomValues(a);return String(100000+a[0]%900000)}
+async function saveDeptCode(t,code){
+  if(!S.isAdmin)return;
+  try{await call("setCode",t,code);if(code)storeCode(t,code);await load();toast(code?`${TEAMS[t].label} 고유번호를 저장했어요`:`${TEAMS[t].label} 고유번호를 해제했어요`)}
+  catch(e){alertBox("번호를 저장하지 못했어요",e.message)}
+}
+function openCodeEdit(t){
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="고유번호 직접 입력"><h3>${TEAMS[t].label} 고유번호</h3>
+    <div class="form"><label class="full">숫자 4~8자리<input id="f-newcode" inputmode="numeric" autocomplete="off" pattern="[0-9]{4,8}" maxlength="8" value="${esc(S.codes[t]||"")}" required></label></div>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
+  document.body.appendChild(ov);ov.querySelector("#f-newcode").focus();
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+  ov.querySelector("form").addEventListener("submit",e=>{e.preventDefault();const v=ov.querySelector("#f-newcode").value.trim();if(!/^[0-9]{4,8}$/.test(v))return;ov.remove();saveDeptCode(t,v)});
+}
+/* ---------- 연말 학년 등반 (부서별) ---------- */
+const SEQ=["infant","toddler","youth","teen"].flatMap(t=>TEAMS[t].groups.map(([g])=>[t,g]));
+const stepLabel=(t,g)=>`${TEAMS[t].short} ${Object.fromEntries(isFlex(t)?TEAMS[t].groups:classesOf(t))[g]||g}`;
+function nextStep(t,g){const i=SEQ.findIndex(([a,b])=>a===t&&b===g);return i<0?null:(SEQ[i+1]||"grad")}
+const promoYear=()=>Number(S.date.slice(0,4));
+const promoKey=(t,y=promoYear())=>t+"_"+y;
+const promoRec=t=>S.promos.get(promoKey(t));
+/* 등반은 실행할 때마다 따로 기록해요 (runs). 예전 기록(runs 없음)은 한 번 실행한 것으로 봐요. */
+const runsOfRec=r=>r?(r.runs||[{id:"r0",at:r.at,count:r.count,moves:r.moves||[],undone:!!r.undone}]):[];
+const liveRuns=r=>runsOfRec(r).filter(x=>!x.undone);
+const recOf=(t,y,runs)=>{const live=runs.filter(x=>!x.undone);
+  return {team:t,year:y,at:(live[live.length-1]||runs[runs.length-1]||{}).at||new Date().toISOString(),count:live.reduce((a,x)=>a+(x.count||0),0),undone:!live.length,runs}};
+const promoDone=t=>liveRuns(promoRec(t)).length>0;
+function promoHistory(t){
+  return [...S.promos.entries()].filter(([k])=>k.split("_")[0]===t).flatMap(([k,r])=>runsOfRec(r).map(x=>({...x,key:k,year:r.year||Number(k.split("_")[1])})))
+    .sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+}
+/* 등반 기준: 영아는 나이, 나머지는 반(나이·학년) */
+const stepFrom=(t,x)=>isFlex(t)?x.age:x.group;
+function planPromotion(t){
+  const y=promoYear();
+  return [...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group!=="T"&&p.promotedYear!==y)
+    .map(p=>({p,next:nextStep(t,stepFrom(t,p))})).filter(x=>x.next);
+}
+const noAgeKids=t=>isFlex(t)?[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group!=="T"&&p.promotedYear!==promoYear()&&!p.age):[];
+/* 등반 뒤 값: 영아 안에서는 나이만 올리고 반은 미배정, 유아로 가면 5세반 */
+const promoBody=(next,y)=>next==="grad"?null:isFlex(next[0])?{team:next[0],group:"_",age:next[1],promotedYear:y,section:""}:{team:next[0],group:next[1],age:"",promotedYear:y,section:""};
+const stepToLabel=next=>next==="grad"?"졸업":stepLabel(next[0],next[1])+(isFlex(next[0])?" (반 미배정)":"");
+async function writeWithRetry(ref,body){return ref.update(body)}
+async function applyMoves(list,onProgress){
+  for(const [id,body] of list){const p=S.people.get(id);if(p)S.people.set(id,{...p,...body})}
+  onProgress(0,Math.max(1,list.length));
+  try{await S.db.batch(list.map(([id,body])=>["people/"+id,body]));onProgress(list.length,Math.max(1,list.length));return []}
+  catch(e){console.error(e);toast(e.message);await load();return list.map(x=>x[0])}
+}
+const needsCode=t=>deptLocked(t)&&!S.isAdmin;
+async function codeOk(t,ov){
+  if(!needsCode(t))return true;
+  const inp=ov.querySelector("#f-pcode");const code=inp.value.trim();
+  let ok=false;try{ok=await call("verifyCode",t,code)}catch(_){}
+  if(ok)storeCode(t,code);
+  ov.querySelector("#pcodeErr").hidden=ok;if(!ok)inp.select();return ok;
+}
+function sheetShell(title,intro,body,goLabel,goCls,t){
+  return `<div class="sheet" role="dialog" aria-label="${esc(title)}"><h3>${esc(title)}</h3>
+    <p class="muted" style="margin:0;font-size:14px">${intro}</p>${body}
+    ${needsCode(t)?`<div class="form"><label class="full">${esc(TEAMS[t].label)} 고유번호 확인<input id="f-pcode" type="password" inputmode="numeric" autocomplete="off" maxlength="8"></label></div><p class="err" id="pcodeErr" hidden>고유번호가 맞지 않아요.</p>`:""}
+    <div class="progress" hidden><div></div></div><p class="muted num" id="pMsg" style="font-size:13px;margin:8px 0 0"></p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button>${goLabel?`<button type="button" class="btn ${goCls}" id="pGo">${goLabel}</button>`:""}</div></div>`;
+}
+function runSheet(ov,armText,work){
+  let running=false;
+  ov.addEventListener("click",async e=>{
+    if(!running&&(e.target===ov||e.target.closest("[data-close]")))return ov.remove();
+    const go=e.target.closest("#pGo");if(!go||running)return;
+    if(!go.dataset.armed){go.dataset.armed="1";go.textContent=armText;return}
+    running=true;go.disabled=true;
+    const t=ov.dataset.team;if(!(await codeOk(t,ov))){running=false;go.disabled=false;return}
+    ov.querySelector("[data-close]").disabled=true;
+    const bar=ov.querySelector(".progress");bar.hidden=false;const msg=ov.querySelector("#pMsg");
+    await work((d,n,label)=>{bar.firstElementChild.style.width=(d/n*100)+"%";msg.textContent=`${d} / ${n}명 ${label}`});
+    ov.remove();render();
+  });
+}
+const canPromote=t=>S.isAdmin||(((S.scope||{})[t]||{}).level==="dept"&&deptLocked(t));
+function openPromotion(t){
+  if(!S.db||!S.editable)return;if(!canPromote(t)){toast("연말 등반은 팀 관리자 이상만 할 수 있어요");return}
+  const plan=planPromotion(t);const y=promoYear();
+  const groups=new Map();
+  for(const {p,next} of plan){
+    const from=stepLabel(t,stepFrom(t,p));const to=stepToLabel(next);const k=from+"|"+to;
+    groups.set(k,{from,to,out:next==="grad"||next[0]!==t,grad:next==="grad",idx:SEQ.findIndex(([a,b])=>a===t&&b===stepFrom(t,p)),n:(groups.get(k)||{n:0}).n+1});
+  }
+  const order=[...groups.values()].sort((a,b)=>b.idx-a.idx);
+  const last=TEAMS[t].groups[TEAMS[t].groups.length-1].slice();last[1]=stepLabel(t,last[0]).slice(TEAMS[t].short.length+1);const nx=nextStep(t,last[0]);
+  const dest=nx==="grad"?"졸업 처리되어 명단에서 숨겨져요":`<b>${esc(TEAMS[nx[0]].label)} ${esc(stepLabel(nx[0],nx[1]).slice(TEAMS[nx[0]].short.length+1))}</b>(으)로 올라가요`;
+  const intro=`${esc(TEAMS[t].label)} 재적 ${plan.length}명이 ${isFlex(t)?"한 살씩":"한 학년씩"} 올라가요. ${esc(last[1])}은(는) ${dest}. 교사와 담임 지정은 그대로예요.`
+    +(isFlex(t)?`<br><b>반은 모두 미배정이 돼요.</b> 등반 뒤 [명단 → 반 배정]에서 새 반을 정해 주세요.`:"");
+  const na=noAgeKids(t);
+  const warn=(na.length?`<p class="err">나이가 적혀 있지 않은 ${na.length}명은 등반에서 빠져요: ${na.slice(0,6).map(p=>esc(p.name)).join(", ")}${na.length>6?" …":""}. 명단에서 나이를 먼저 적어 주세요.</p>`:"")+(promoDone(t)?`<p class="err">이미 ${y}년 ${esc(TEAMS[t].short)} 등반을 했어요. 지금 남은 대상은 그 뒤에 들어온 학생들이에요.</p>`:"");
+  const list=`<div class="move-list">${order.map(m=>`<div class="move ${m.grad?"grad":""}"><span>${esc(m.from)}</span><span class="arrow">→</span><span class="to"${m.out&&!m.grad?' style="color:var(--accent);font-weight:600"':""}>${esc(m.to)}</span><span class="n num">${m.n}명</span></div>`).join("")||`<p class="muted">등반할 학생이 없어요. 올해 이미 등반한 학생은 다시 올라가지 않아요.</p>`}</div>`;
+  const ov=document.createElement("div");ov.className="overlay";ov.dataset.team=t;
+  ov.innerHTML=sheetShell(`${TEAMS[t].label} ${y}년 학년 등반`,intro,warn+list,plan.length?"등반 실행":"","primary",t);
+  document.body.appendChild(ov);
+  runSheet(ov,"한 번 더 누르면 실행",async prog=>{
+    const moves=[],list=[];
+    for(const {p,next} of plan){
+      moves.push({id:p.id,team:t,group:p.group,age:p.age||"",section:p.section||"",active:p.active!==false,leftType:p.leftType||"",note:p.note||"",promotedYear:p.promotedYear??null});
+      list.push([p.id,next==="grad"?{active:false,leftType:"졸업",note:(p.note?p.note+" · ":"")+`${y}년 졸업`,promotedYear:y,section:""}:promoBody(next,y)]);
+    }
+    const failed=await applyMoves(list,(d,n)=>prog(d,n,"올리는 중…"));
+    const done=moves.filter(m=>!failed.includes(m.id));
+    const runs=runsOfRec(promoRec(t)).concat(done.length?[{id:"r"+Date.now(),at:new Date().toISOString(),count:done.length,moves:done,undone:false}]:[]);
+    const rec=recOf(t,y,runs);
+    S.promos.set(promoKey(t),rec);
+    try{await S.db.doc("promotions/"+promoKey(t)).set(rec)}catch(e){console.error(e);toast("등반 기록을 저장하지 못해 되돌리기를 쓸 수 없어요")}
+    toast(failed.length?`${plan.length-failed.length}명 등반, ${failed.length}명은 저장하지 못했어요. 다시 누르면 남은 학생만 올라가요`:`${TEAMS[t].short} ${plan.length}명 등반을 마쳤어요`);
+  });
+}
+function openUndoPromotion(t){
+  if(!S.db||!S.editable)return;if(!canPromote(t)){toast("연말 등반은 팀 관리자 이상만 할 수 있어요");return}
+  const hist=promoHistory(t).slice(0,10);
+  /* 같은 학생을 그 뒤에 다시 올린 등반이 남아 있으면, 나중 것부터 되돌려야 해요 */
+  const blocked=x=>hist.some(o=>!o.undone&&String(o.at)>String(x.at)&&(o.moves||[]).some(m=>(x.moves||[]).some(n=>n.id===m.id)));
+  const runRow=x=>{
+    const g=new Map();for(const m of x.moves||[]){const f=stepFrom(m.team,m);const nx=f?nextStep(m.team,f):null;const k=(f?stepLabel(m.team,f):classLabelOf(m.team,m.group))+" → "+(nx?stepToLabel(nx):"?");g.set(k,(g.get(k)||0)+1)}
+    const names=(x.moves||[]).map(m=>(S.people.get(m.id)||{}).name).filter(Boolean);
+    const st=x.undone?"되돌림":blocked(x)?"나중 등반을 먼저 되돌려 주세요":"";
+    return `<button type="button" class="run" data-run="${esc(x.key+"|"+x.id)}" aria-pressed="false"${x.undone||blocked(x)?" disabled":""}>
+      <span class="h"><span class="num">${new Date(x.at).toLocaleString("ko-KR",{year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"2-digit"})}</span><span class="num">${x.count}명</span><span class="st">${esc(st)}</span></span>
+      <span class="d">${[...g].map(([k,n])=>esc(k)+" "+n+"명").join(" · ")}</span>
+      ${names.length?`<span class="d">${esc(names.slice(0,6).join(", "))}${names.length>6?` 외 ${names.length-6}명`:""}</span>`:""}</button>`;
+  };
+  const body=hist.length?`<div class="move-list">${hist.map(runRow).join("")}</div>`:`<p class="muted" style="margin-top:12px">되돌릴 등반 기록이 없어요.</p>`;
+  const ov=document.createElement("div");ov.className="overlay";ov.dataset.team=t;
+  ov.innerHTML=sheetShell(`${TEAMS[t].label} 등반 되돌리기`,`최근 등반 내역에서 되돌릴 것을 골라 주세요. 그때 올린 학생들만 등반 전 반으로 돌아가요(다른 부서로 올라간 학생, 졸업 처리한 학생도 돌아와요). 등반 뒤 고친 반 정보는 등반 전 값으로 바뀌어요.`,body,hist.some(x=>!x.undone)?"되돌리기":"","danger",t);
+  document.body.appendChild(ov);
+  const go=ov.querySelector("#pGo");if(go)go.disabled=true;
+  let pick=null;
+  ov.addEventListener("click",e=>{const b=e.target.closest("[data-run]");if(!b||b.disabled||go.dataset.armed&&go.disabled)return;
+    ov.querySelectorAll("[data-run]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+    const [key,id]=b.dataset.run.split("|");pick=hist.find(x=>x.key===key&&x.id===id);
+    go.disabled=false;delete go.dataset.armed;go.textContent=`${pick.count}명 되돌리기`});
+  runSheet(ov,"한 번 더 누르면 되돌리기",async prog=>{
+    if(!pick)return;
+    const list=(pick.moves||[]).filter(m=>S.people.has(m.id)).map(m=>[m.id,{team:m.team,group:m.group,...("age" in m?{age:m.age}:{}),section:m.section||"",active:m.active,leftType:m.leftType||"",note:m.note,promotedYear:m.promotedYear??null}]);
+    const failed=await applyMoves(list,(d,n)=>prog(d,n,"되돌리는 중…"));
+    const r=S.promos.get(pick.key);const runs=runsOfRec(r).map(x=>x.id===pick.id?{...x,undone:true,undoneAt:new Date().toISOString()}:x);
+    const rec=recOf(t,pick.year,runs);S.promos.set(pick.key,rec);
+    try{await S.db.doc("promotions/"+pick.key).set(rec)}catch(e){console.error(e);toast("되돌린 기록을 저장하지 못했어요")}
+    toast(failed.length?`${failed.length}명은 되돌리지 못했어요. 명단에서 확인해 주세요`:`${pick.count}명 등반을 되돌렸어요`);
+  });
+}
+function promoStatus(t){
+  const r=promoRec(t),y=promoYear();
+  const live=liveRuns(r);const n=live.reduce((a,x)=>a+(x.count||0),0);
+  return r?`${y}년 등반 ${live.length?"완료":"되돌림"} · ${new Date(r.at).toLocaleDateString("ko-KR")}${live.length?` · ${n}명`:""}`:`${y}년 등반 전 · 대상 ${planPromotion(t).length}명`;
+}
+function promoBar(t){
+  if(!S.editable||!canManageGrades())return "";
+  return `<div class="homeroom" style="margin-top:4px"><span class="lbl">연말</span><span class="none" style="font-size:13px">${esc(promoStatus(t))}</span><span class="spacer"></span>
+    <button data-promo="${t}">학년 등반</button><button data-promo-undo="${t}" style="color:var(--danger)">되돌리기</button></div>`;
+}
+const classLabelOf=(t,g)=>g==="_"?"미배정":g==="T"?"교사":(Object.fromEntries(classesOf(t))[g]||g);
+/* 영아교육팀: 명단 탭 '반 편성' 줄 */
+function classBar(t){
+  if(!S.editable||!canPromote(t))return "";
+  if(!isFlex(t))return `<div class="homeroom" style="margin-top:4px;flex-wrap:wrap"><span class="lbl">반 이름</span><span class="none" style="font-size:13px">${esc(classesOf(t).map(x=>x[1]).join(" · "))}</span><span class="spacer"></span><button data-class-edit="${t}">이름 바꾸기</button></div>`;
+  const n=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group==="_").length;
+  return `<div class="homeroom" style="margin-top:4px;flex-wrap:wrap"><span class="lbl">반 편성</span><span class="none" style="font-size:13px">${esc(classesOf(t).map(x=>x[1]).join(" · "))}${n?` · <b style="color:var(--danger)">미배정 ${n}명</b>`:""}</span><span class="spacer"></span><button data-class-edit="${t}">반 관리</button><button data-class-assign="${t}">반 배정</button></div>`;
+}
+function openClassEdit(t){
+  if(!canPromote(t)){toast("반 편성은 팀 관리자 이상만 할 수 있어요");return}
+  let list=classesOf(t).map(x=>[x[0],x[1]]);const FX=isFlex(t);const orig=Object.fromEntries(TEAMS[t].groups);
+  const cnt=g=>[...S.people.values()].filter(p=>teamOf(p)===t&&p.group===g).length;
+  const ov=document.createElement("div");ov.className="overlay";
+  const draw=()=>{ov.innerHTML=`<form class="sheet" role="dialog" aria-label="${FX?"반 관리":"반 이름 바꾸기"}"><h3>${esc(TEAMS[t].label)} ${FX?"반 관리":"반 이름 바꾸기"}</h3>
+    <p class="muted" style="margin:0;font-size:14px">${FX?"나이와 관계없이 반을 만들어요. 반 이름을 바꾸거나 순서를 바꿀 수 있고, 반을 없애면 그 반 아이들은 <b>미배정</b>이 돼요(그 반 담임·담임 번호도 지워져요).":"화면과 시트에 보이는 반 이름만 바뀌어요(예: 1학년 → 1학년 사랑반). 순서와 연말 등반은 그대로이고, 출석·담임·담임 번호도 그대로 이어져요."}</p>
+    <div class="admin-list card" style="margin-top:12px">${list.map(([k,l],i)=>`<div class="admin-row">${FX?"":`<span class="muted" style="font-size:12px;min-width:40px">${esc(orig[k]||"")}</span>`}<input data-ci="${i}" value="${esc(l)}" maxlength="12" aria-label="${i+1}번째 반 이름" style="flex:1;min-width:0;height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:var(--surface);color:var(--ink);font:inherit"><span class="muted num" style="font-size:12px;min-width:34px;text-align:right">${k?cnt(k)+"명":"새 반"}</span>${FX?`<button type="button" class="btn" data-cup="${i}" aria-label="위로" ${i?"":"disabled"}>↑</button><button type="button" class="btn" data-cdel="${i}" aria-label="${esc(l)} 없애기" style="color:var(--danger)">×</button>`:""}</div>`).join("")}</div>
+    ${FX?`<div style="margin-top:8px"><button type="button" class="btn" data-cadd>+ 반 추가</button></div>`:""}
+    <p class="err" id="cErr" hidden></p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`};
+  const sync=()=>ov.querySelectorAll("[data-ci]").forEach(el=>{list[+el.dataset.ci][1]=el.value});
+  draw();document.body.appendChild(ov);
+  ov.addEventListener("click",e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    const up=e.target.closest("[data-cup]"),del=e.target.closest("[data-cdel]");
+    if(up){sync();const i=+up.dataset.cup;[list[i-1],list[i]]=[list[i],list[i-1]];draw();return}
+    if(del){sync();const i=+del.dataset.cdel;const k=list[i][0];
+      if(list.length<2){toast("반은 하나 이상 있어야 해요");return}
+      if(k&&cnt(k)&&!del.dataset.armed){del.dataset.armed="1";del.textContent=`${cnt(k)}명 미배정으로`;return}
+      list.splice(i,1);draw();return}
+    if(e.target.closest("[data-cadd]")){sync();if(list.length>=20){toast("반은 20개까지 만들 수 있어요");return}list.push(["",""]);draw();const ins=ov.querySelectorAll("[data-ci]");ins[ins.length-1].focus()}
+  });
+  ov.addEventListener("submit",async e=>{
+    e.preventDefault();sync();const err=ov.querySelector("#cErr");
+    const names=list.map(x=>x[1].trim());
+    const bad=names.findIndex(n=>!n)>=0?"반 이름을 모두 적어 주세요":names.some(n=>n==="교사"||n==="미배정")?"'교사', '미배정'은 반 이름으로 쓸 수 없어요":new Set(names).size<names.length?"반 이름이 겹쳐요":"";
+    if(bad){err.textContent=bad;err.hidden=false;return}
+    const btn=ov.querySelector('[type="submit"]');btn.disabled=true;
+    try{const r=await tracked(call("setClasses",t,list.map(([k,l])=>[k,l.trim()])));ov.remove();await load();toast(r&&r.unassigned?`반을 저장했어요. ${r.unassigned}명은 미배정이 됐어요`:"반을 저장했어요")}
+    catch(x){btn.disabled=false;err.textContent=x.message;err.hidden=false}
+  });
+}
+/* 칩(학년·반)을 더블클릭(휴대폰은 두 번 톡톡)해서 이름 바꾸기. 반 관리와 같은 저장(setClasses)을 써요. */
+const canRenameClass=g=>S.view==="dept"&&S.editable&&isClassKey(g)&&g!=="all"&&canPromote(S.team);
+function openClassRename(t,g){
+  if(!canRenameClass(g)||document.querySelector('[data-rename-sheet]'))return;
+  const cls=classesOf(t).map(x=>[x[0],x[1]]);const cur=cls.find(x=>x[0]===g);if(!cur)return;
+  const orig=isFlex(t)?"":(Object.fromEntries(TEAMS[t].groups)[g]||"");
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="반 이름 바꾸기" data-rename-sheet><h3>${esc(TEAMS[t].short)} ${esc(cur[1])} 이름 바꾸기</h3>
+    <p class="muted" style="margin:0;font-size:14px">${orig&&orig!==cur[1]?`원래 이름: ${esc(orig)} · `:""}이름만 바뀌고 출석·담임·담임 번호는 그대로 이어져요. [반 관리]에 있는 이름과 같은 거예요.</p>
+    <div class="form"><label class="full">반 이름<input id="f-cname" value="${esc(cur[1])}" maxlength="12" required autocomplete="off"></label></div>
+    <p class="err" id="cnErr" hidden></p>
+    <div class="actions">${orig&&orig!==cur[1]?`<button type="button" class="btn" data-reset>원래 이름으로</button>`:""}<div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
+  document.body.appendChild(ov);const inp=ov.querySelector("#f-cname");inp.focus();inp.select();
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();if(e.target.closest("[data-reset]")){inp.value=orig;ov.querySelector("form").requestSubmit()}});
+  ov.addEventListener("submit",async e=>{
+    e.preventDefault();const err=ov.querySelector("#cnErr");const v=inp.value.trim();
+    const bad=!v?"반 이름을 적어 주세요":(v==="교사"||v==="미배정")?"'교사', '미배정'은 반 이름으로 쓸 수 없어요":cls.some(([k,l])=>k!==g&&l===v)?"다른 반과 이름이 겹쳐요":"";
+    if(bad){err.textContent=bad;err.hidden=false;return}
+    if(v===cur[1]){ov.remove();return}
+    const btn=ov.querySelector('[type="submit"]');btn.disabled=true;
+    try{await tracked(call("setClasses",t,cls.map(([k,l])=>[k,k===g?v:l])));ov.remove();await load();toast(`반 이름을 "${v}"(으)로 바꿨어요`)}
+    catch(x){btn.disabled=false;err.textContent=x.message;err.hidden=false}
+  });
+}
+/* 같은 칩을 0.4초 안에 두 번 누르면 더블클릭 (칩은 누를 때마다 다시 그려져서 브라우저 dblclick이 안 잡혀요) */
+let chipLast={g:"",at:0};
+function chipDouble(g){const now=Date.now();const dbl=chipLast.g===g&&now-chipLast.at<400;chipLast=dbl?{g:"",at:0}:{g,at:now};return dbl}
+function openClassAssign(t){
+  if(!canPromote(t)){toast("반 배정은 팀 관리자 이상만 할 수 있어요");return}
+  const cls=classesOf(t);const order=g=>{const i=cls.findIndex(x=>x[0]===g);return g==="_"?-1:i<0?99:i};
+  const ages=Object.fromEntries(TEAMS[t].groups.map(([a],i)=>[a,i]));
+  const ps=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group!=="T")
+    .sort((a,b)=>order(a.group)-order(b.group)||(ages[a.age]??99)-(ages[b.age]??99)||a.name.localeCompare(b.name,"ko"));
+  const opts=g=>[["_","미배정"],...cls].map(([k,l])=>`<option value="${k}" ${g===k?"selected":""}>${esc(l)}</option>`).join("");
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="반 배정"><h3>${esc(TEAMS[t].label)} 반 배정</h3>
+    <p class="muted" style="margin:0;font-size:14px">아이마다 반을 골라 주세요. 나이와 관계없이 넣을 수 있어요. 반을 바꾸면 분반은 풀려요.</p>
+    <div class="admin-list card" style="margin-top:12px;max-height:52vh;overflow:auto">${ps.map(p=>`<div class="admin-row"><b style="flex:1;min-width:0">${esc(p.name)} <span class="muted" style="font-size:12px;font-weight:500">${esc(ageLabel(p)||"나이 모름")}</span></b><select data-as="${p.id}" aria-label="${esc(p.name)} 반" style="height:38px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;padding:0 8px">${opts(p.group)}</select></div>`).join("")||`<p class="muted">재적 아이가 없어요.</p>`}</div>
+    <p class="muted num" id="asMsg" style="font-size:13px;margin:8px 0 0"></p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
+  document.body.appendChild(ov);
+  const changes=()=>[...ov.querySelectorAll("[data-as]")].filter(el=>(S.people.get(el.dataset.as)||{}).group!==el.value);
+  ov.addEventListener("change",()=>{const n=changes().length;ov.querySelector("#asMsg").textContent=n?`${n}명 반이 바뀌어요`:""});
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+  ov.addEventListener("submit",async e=>{
+    e.preventDefault();const ch=changes();if(!ch.length){ov.remove();return}
+    ov.querySelector('[type="submit"]').disabled=true;
+    const list=ch.map(el=>[el.dataset.as,{group:el.value,section:""}]);
+    const failed=await applyMoves(list,()=>{});ov.remove();render();
+    toast(failed.length?"반 배정을 저장하지 못했어요. 다시 시도해 주세요":`${list.length}명 반을 저장했어요`);
+  });
+}
+const PROMO_TEAMS=["infant","toddler","youth","teen"];
+function renderPromoAdmin(){
+  return `<details class="fold" data-fold="promo"${S.fold.promo?" open":""}><summary><h2 class="sec">연말 학년 등반</h2><span class="fold-sum">${promoYear()}년 · 완료 ${PROMO_TEAMS.filter(promoDone).length}곳 / 대상 ${PROMO_TEAMS.length}곳</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">부서마다 따로 진행해요. 각 부서 명단 탭에서도 부서 관리자가 고유번호를 확인한 뒤 실행할 수 있어요. 맨 위 학년은 다음 부서로 올라가고(영아 4세→유아 5세, 유아 7세→유소년, 6학년→중고등 중1), 고3은 졸업해요.</p>
+    <div class="card admin-list">${PROMO_TEAMS.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">${esc(promoStatus(t))}</span><button class="btn" data-promo="${t}">등반</button><button class="btn danger" data-promo-undo="${t}">되돌리기</button></div>`).join("")}</div></details>`;
+}
+function openAdminLogin(){
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="관리자 로그인"><h3>관리자 로그인</h3>
+    <p class="muted" style="margin:0;font-size:14px">${S.adminSet?"구글 시트의 _설정 탭 B1에 적어 둔 관리자 비밀번호를 입력하세요.":"아직 관리자 비밀번호가 없어요. 구글 시트의 _설정 탭(숨김) B1 칸에 비밀번호를 적은 뒤 다시 시도하세요."}</p>
+    <div class="form"><label class="full">관리자 비밀번호<input id="f-admin" type="password" autocomplete="current-password" required></label></div>
+    <p class="err" id="adminErr" hidden>비밀번호가 맞지 않아요.</p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">로그인</button></div></form>`;
+  document.body.appendChild(ov);ov.querySelector("#f-admin").focus();
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+  ov.querySelector("form").addEventListener("submit",async e=>{
+    e.preventDefault();const pw=ov.querySelector("#f-admin").value;
+    const r=await call("adminLogin",pw).catch(err=>({ok:false,error:err.message}));
+    if(r.ok){try{localStorage.setItem("ya-admin",pw)}catch(_){}S._admin=pw;ov.remove();await load();toast("관리자로 로그인했어요")}
+    else{const el=ov.querySelector("#adminErr");el.textContent=r.configured===false?"시트에 관리자 비밀번호가 아직 없어요.":"비밀번호가 맞지 않아요.";el.hidden=false}
+  });
+}
+/* ---------- 홈 화면에 바로가기 ---------- */
+let deferredInstall=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstall=e;if(S.view==="home")render()});
+function device(){
+  const ua=navigator.userAgent||"";
+  const ios=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
+  const android=/Android/i.test(ua);
+  const inapp=/KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|Whale\/.*inapp|DaumApps|everytimeApp|BAND[/]/i.test(ua);
+  const kakao=/KAKAOTALK/i.test(ua);
+  const samsung=/SamsungBrowser/i.test(ua);
+  const iosChrome=ios&&/CriOS/i.test(ua);
+  return {ios,android,inapp,kakao,samsung,iosChrome,mobile:ios||android};
+}
+function isStandalone(){try{return window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true||(window.top&&window.top.navigator&&window.top.navigator.standalone===true)}catch(_){return false}}
+function showA2hs(){if(isStandalone())return false;try{return localStorage.getItem("ya-a2hs-hide")!=="1"}catch(_){return true}}
+let appUrl="";
+function getAppUrl(){return appUrl?Promise.resolve(appUrl):call("appUrl").then(u=>(appUrl=u||"")).catch(()=>"")}
+async function openA2hs(){
+  const d=device();const url=await getAppUrl();
+  let title="홈 화면에 추가하기",steps="";
+  if(d.inapp){
+    title="먼저 기본 브라우저로 열어 주세요";
+    steps=d.ios?`<li>지금은 ${d.kakao?"카카오톡":"앱"} 안의 브라우저라 홈 화면에 추가할 수 없어요.</li><li>오른쪽 아래(또는 위) <b>공유 · ⋯</b> 버튼 → <b>Safari로 열기</b>를 누르세요.</li><li>Safari에서 열리면 이 버튼을 다시 눌러 안내를 따라 하세요.</li>`
+      :`<li>지금은 ${d.kakao?"카카오톡":"앱"} 안의 브라우저라 홈 화면에 추가할 수 없어요.</li><li>오른쪽 위 <b>⋮</b> → <b>다른 브라우저로 열기</b>(또는 Chrome으로 열기)를 누르세요.</li><li>Chrome에서 열리면 이 버튼을 다시 눌러 안내를 따라 하세요.</li>`;
+  }else if(d.ios){
+    steps=d.iosChrome
+      ?`<li>주소창 오른쪽 <b>공유 버튼(□↑)</b>을 누르세요.</li><li>목록에서 <b>홈 화면에 추가</b>를 누르세요. 안 보이면 Safari로 열어서 해 주세요.</li><li>이름을 <b>신당중앙교회</b>로 바꾸고 <b>추가</b>를 누르세요.</li>`
+      :`<li>Safari 아래쪽 가운데 <b>공유 버튼(□↑)</b>을 누르세요.</li><li>목록을 위로 올려 <b>홈 화면에 추가</b>를 누르세요.</li><li>이름을 <b>신당중앙교회</b>로 바꾸고 오른쪽 위 <b>추가</b>를 누르세요.</li>`;
+  }else if(d.android){
+    steps=d.samsung
+      ?`<li>아래쪽 <b>≡ 메뉴</b>를 누르세요.</li><li><b>현재 페이지 추가 → 홈 화면</b>을 누르세요.</li><li>이름을 <b>신당중앙교회</b>로 바꾸고 <b>추가</b>를 누르세요.</li>`
+      :`<li>Chrome 오른쪽 위 <b>⋮</b>를 누르세요.</li><li>메뉴에서 <b>홈 화면에 추가</b>, <b>앱 설치</b>, <b>설치 바로가기 만들기</b> 중 보이는 것을 누르세요. (Chrome 버전마다 이름이 달라요)</li><li>이름을 <b>신당중앙교회</b>로 바꾸고 <b>추가</b>(또는 <b>설치</b>·<b>만들기</b>)를 누르세요.</li><li>홈 화면에 아이콘이 안 보이면 앱 목록을 확인하고, 아이콘을 길게 눌러 홈 화면으로 옮기세요.</li>`;
+  }else{
+    title="휴대폰에서 추가해 주세요";
+    steps=`<li>홈 화면 바로가기는 휴대폰에서 만들어요. 아래 주소를 휴대폰으로 보내 열어 주세요.</li><li>컴퓨터에서는 Chrome <b>⋮ → 전송, 저장, 공유 → 바로가기 만들기</b>(또는 <b>설치 바로가기 만들기</b>)를 누르고, <b>창으로 열기</b>에 체크한 뒤 <b>만들기</b>를 누르면 바탕화면에 앱 아이콘이 생겨요.</li>`;
+  }
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-label="홈 화면에 추가"><h3>${title}</h3>
+    ${deferredInstall?`<p class="muted" style="margin:4px 0 0;font-size:14px">이 브라우저는 바로 설치할 수 있어요.</p><div class="actions" style="margin-top:10px"><button class="btn primary" id="a2hsInstall">바로 설치하기</button></div>`:""}
+    <ol class="steps">${steps}</ol>
+    ${url?`<div class="urlbox"><code>${esc(url)}</code><button class="btn" id="a2hsCopy">주소 복사</button></div>
+    ${d.android&&d.inapp?`<div class="actions" style="margin-top:8px"><a class="btn" href="intent:\/\/${esc(url.replace(/^https?:[/][/]/,""))}#Intent;scheme=https;package=com.android.chrome;end" target="_top">Chrome으로 열기</a></div>`:""}`:""}
+    <p class="muted" style="font-size:12px;margin:12px 0 0">홈 화면 아이콘은 구글 기본 모양으로 보일 수 있어요. 이름은 추가할 때 바꿀 수 있어요.</p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>닫기</button></div></div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener("click",async e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    if(e.target.closest("#a2hsCopy")){try{await navigator.clipboard.writeText(url);toast("주소를 복사했어요")}catch(_){const c=ov.querySelector(".urlbox code");const r=document.createRange();r.selectNodeContents(c);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);toast("주소를 길게 눌러 복사하세요")}return}
+    if(e.target.closest("#a2hsInstall")&&deferredInstall){deferredInstall.prompt();const r=await deferredInstall.userChoice.catch(()=>null);deferredInstall=null;ov.remove();if(r&&r.outcome==="accepted")toast("홈 화면에 추가했어요");render()}
+  });
+}
+function renderHome(){
+  const k=S.date;
+  let h=`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>부서를 선택해 들어가세요.</p></div><div class="dept-grid">`;
+  for(const [t,x] of Object.entries(TEAMS)){
+    const ps=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group!=="T");
+    const on=ps.filter(p=>isOn(k,p.id)).length;const open=canEnter(t);
+    h+=`<button class="dept" data-enter="${t}"><span class="top"><span class="name">${x.label}</span>${deptLocked(t)&&!canEnter(t)?`<span class="lock">${LOCK_SVG}번호</span>`:""}</span>
+      <span class="range">${(isFlex(t)?x.groups:classesOf(t))[0][1]} ~ ${(isFlex(t)?x.groups:classesOf(t))[x.groups.length-1][1]}</span>
+      <span class="stat num">${!S.ready?"불러오는 중…":open?`${((S.scope||{})[t]||{}).level==="grade"?"내 반":"재적"} ${ps.length}명 · 출석 ${on}명`:`재적 ${(S.counts||{})[t]||0}명 · 번호 입력 후 확인`}</span></button>`;
+  }
+  h+=`</div>`;
+  h+=`<div class="a2hs"><svg viewBox="0 0 24 24"><path d="M5 4.5h9a3 3 0 013 3v12H8a3 3 0 01-3-3z"/><path d="M5 16.5a3 3 0 013-3h9"/><path d="M9 8h5M9 11h3"/></svg>
+    <div class="tx"><b>반 담임 사용 설명서</b><span>담임 번호로 들어가 출석·메모·전화하는 방법</span></div><button class="btn" id="guideOpen">보기</button></div>`;
+  if(showA2hs())h+=`<div class="a2hs"><svg viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.2"/><path d="M12 8.5v6M9 11.5h6"/><path d="M10.5 18.5h3"/></svg>
+    <div class="tx"><b>홈 화면에 바로가기 추가</b><span>휴대폰 홈 화면에 아이콘을 만들어 앱처럼 열어요</span></div>
+    <button class="btn primary" id="a2hsOpen">추가하기</button><button class="x" id="a2hsHide" aria-label="이 안내 닫기">×</button></div>`;
+  if(S.isAdmin){
+    h+=`<details class="fold" data-fold="codes"${S.fold.codes?" open":""}><summary><h2 class="sec">팀별 관리자 번호</h2><span class="fold-sum">${Object.keys(TEAMS).length}개 부서 중 ${Object.keys(TEAMS).filter(deptLocked).length}곳 설정</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">팀 관리자(중간관리자)에게 이 번호를 주면 그 부서 전체를 관리하고, 반별 담임에게 담임 번호를 줄 수 있어요. 번호가 없는 부서는 누구나 들어갈 수 있어요. 이 칸은 관리자로 로그인한 사람에게만 보여요.</p>
+      <div class="card admin-list">${Object.entries(TEAMS).map(([t,x])=>{const code=S.codes[t]||"";const set=deptLocked(t);
+        return `<div class="admin-row"><b>${x.label}</b><span class="code num ${code?"":"none"}">${code?esc(code):set?"설정됨":"번호 없음 (누구나 입장)"}</span>
+          ${code?`<button class="btn" data-copy-code="${esc(code)}">복사</button>`:""}<button class="btn" data-code-gen="${t}">${set?"새 번호":"번호 만들기"}</button><button class="btn" data-code-edit="${t}">직접 입력</button>${set?`<button class="btn danger" data-code-clear="${t}">해제</button>`:""}</div>`}).join("")}</div></details>`+renderPromoAdmin();
+  }
+  h+=`<div style="margin-top:28px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="adminIn">관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
+  return h;
+}
+function render(){
+  if(S.view==="dept"&&!canEnter(S.team))S.view="home";
+  renderTeams();
+  {const tt=document.querySelector('[data-tab="talent"]');if(tt)tt.hidden=!talentOn();if(S.tab==="talent"&&!talentOn())S.tab="check";}
+  if(S.view==="home"){$("#view").innerHTML=renderHome();return}
+  setTeam(S.team);renderDate();renderChips();
+  const v=$("#view");const ae=document.activeElement;const focusQ=ae&&ae.id==="q";const pos=focusQ?ae.selectionStart:0;
+  const tvAttr=ae&&ae.dataset?(ae.dataset.tv?"tv":ae.dataset.total?"total":null):null;const tvId=tvAttr&&ae.dataset[tvAttr],tvVal=tvId?ae.value:null;
+  v.innerHTML=S.tab==="schedule"?renderSchedule():S.tab==="check"?renderCheck():S.tab==="roster"?renderRoster():S.tab==="stats"?renderStats():S.tab==="talent"?renderTalent():renderBday();
+  if(focusQ){const q=$("#q");q.focus();q.setSelectionRange(pos,pos)}
+  if(tvId){const el=v.querySelector(`[data-${tvAttr}="${tvId}"]`);if(el){el.value=tvVal;el.focus()}}
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.dataset.tab===S.tab?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));relabel();if((S.tab==="check"||S.tab==="roster")&&(!S.book||S.book.team!==S.team)&&!S.bookLoading)setTimeout(loadContacts,0);
+}
+
+/* ---------- person sheet ---------- */
+const FIELDS=[["name","이름"],["group","반"],["age","나이"],["section","분반"],["birthday","생일 (MM/DD)"],["role","직분"],["note","메모"]];
+function openPerson(id){
+  const p=id?S.people.get(id):{name:"",team:S.team,group:S.group!=="all"?S.group:GROUPS[0][0],isNew:true,active:true};
+  if(!p)return;
+  const view=id&&!openPerson.edit;
+  // 사람 정보 수정·삭제는 명단 탭에서만 (다른 탭에서는 보기만)
+  const canEditHere=S.editable&&S.tab==="roster";
+  const ov=document.createElement("div");ov.className="overlay";
+  if(view){
+    const ks=yearKeys();const n=ks.filter(kk=>isOn(kk,p.id)).length;const t=totalTalent(p);
+    ov.innerHTML=`<div class="sheet" role="dialog" aria-label="${esc(p.name)}"><div class="sheet-head">${avatar(p,"lg")}<div><h3>${esc(p.name)} <span class="muted" style="font-family:var(--body);font-size:14px">${GL[p.group]||""}${p.gender?" · "+esc(p.gender):""}${ageLabel(p)?" · "+ageLabel(p):""}${p.role?" · "+esc(p.role):""}</span></h3>
+      <div class="muted num" style="font-size:13px">${S.date.slice(0,4)}년 출석 ${n}회${p.group==="T"||!talentOn()?"":" · 달란트 "+t}${p.birthday?" · 생일 "+esc(p.birthday):""}</div></div></div>
+      <div class="contact">${p.note?`<div><span class="k">메모</span><span class="v">${esc(p.note)}</span></div>`:""}</div><div id="pv-contact">${contactLines(p)}</div>
+      <div class="actions">${canManageGrades()?`<button class="btn" data-hist="${p.id}">이력</button>`:""}<div class="spacer"></div>${canEditHere?`<button type="button" class="btn danger" data-del>삭제</button>`:""}<button class="btn" data-close>닫기</button>${canEditHere?`<button class="btn primary" data-edit>수정</button>`:""}</div></div>`;
+  }else{
+    ov.innerHTML=`<form class="sheet" role="dialog" aria-label="사람 정보" id="pform"><h3>${id?"정보 수정":"새 사람 추가"}</h3><div class="form">
+      <div class="photo-field"><span id="ph-prev">${avatar(p,"lg")}</span><div class="btns">
+        <label class="btn" for="f-photo" style="display:inline-flex;align-items:center;color:var(--ink);font-size:13px">사진 선택</label>
+        <input type="file" id="f-photo" accept="image/\*">
+        <button type="button" class="btn danger" id="ph-del" ${safePhoto(p.photo)?"":"hidden"}>사진 삭제</button></div></div>
+      ${FIELDS.map(([f,l])=>f==="team"?`<label>${l}<select id="f-team" name="team">${Object.entries(TEAMS).filter(([t])=>!isHomeroom()||t===S.team).map(([t,x])=>`<option value="${t}" ${teamOf(p)===t?"selected":""}>${x.label}</option>`).join("")}</select></label>`
+        :f==="section"?`<label>${l}<select id="f-section" name="section">${[""].concat(sectionsOfKey(teamOf(p),p.group)).map(v=>`<option value="${v}" ${(secOf(p)||"")===v?"selected":""}>${v?v+"반":"없음"}</option>`).join("")}</select></label>`
+        :f==="age"?(isFlex(teamOf(p))?`<label>${l}<select id="f-age" name="age"><option value="">모름</option>${TEAMS[teamOf(p)].groups.map(([a,al])=>`<option value="${a}" ${p.age===a?"selected":""}>${al}</option>`).join("")}</select></label>`:"")
+        :f==="group"?`<label>${l}<select id="f-group" name="group">${pickGroupsOf(teamOf(p)).filter(([g])=>!isHomeroom()||myScope().grades.includes(g)).map(([g,gl])=>`<option value="${g}" ${p.group===g?"selected":""}>${gl}</option>`).join("")}</select></label>`
+        :f==="note"?`<label class="full">${l}<textarea id="f-${f}" name="${f}">${esc(p[f])}</textarea></label>`
+        :f==="name"?`<label>${l}<span class="name-sex"><input id="f-name" name="name" value="${esc(p.name)}" required><select id="f-gender" name="gender" aria-label="성별"><option value="">성별</option><option value="남" ${p.gender==="남"?"selected":""}>남</option><option value="여" ${p.gender==="여"?"selected":""}>여</option></select></span></label>`
+        :`<label>${l}<input id="f-${f}" name="${f}" value="${esc(p[f])}"></label>`).join("")}
+      <label class="inline full"><input type="checkbox" id="f-isNew" name="isNew" ${p.isNew?"checked":""}>새친구</label>
+      ${id?`<label class="full">상태<select id="f-status" name="status"><option value="재적" ${p.active!==false?"selected":""}>출석</option><option value="제적" ${p.active===false&&p.leftType!=="졸업"?"selected":""}>제적 (목록에서 숨김)</option><option value="졸업" ${p.active===false&&p.leftType==="졸업"?"selected":""}>졸업 (목록에서 숨김)</option></select></label>`:""}
+      </div><div id="pc-box"></div><div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
+  }
+  document.body.appendChild(ov);
+  if(view&&!(S.book&&S.book.team===S.team)){const q=loadContacts();if(q)q.then(()=>{const box=ov.querySelector("#pv-contact");if(ov.isConnected&&box)box.innerHTML=contactLines(p)})}
+  const close=()=>{ov.remove();openPerson.edit=false};
+  ov.addEventListener("click",async e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return close();
+    const c=e.target.closest("[data-copy]");
+    if(c){try{await navigator.clipboard.writeText(c.dataset.copy);toast("복사했어요")}catch(_){toast("길게 눌러 직접 복사하세요")}return}
+    if(e.target.closest("[data-edit]")){close();openPerson.edit=true;openPerson(id);return}
+    const del=e.target.closest("[data-del]");
+    if(del){
+      if(!del.dataset.armed){del.dataset.armed="1";del.textContent="한 번 더 누르면 삭제";return}
+      S.people.delete(id);render();close();
+      if(S.db)enqueue("people/"+id,()=>S.db.doc("people/"+id).delete());toast("삭제했어요");
+    }
+  });
+  const form=ov.querySelector("form");
+  let photo=safePhoto(p.photo);
+  const fPhoto=ov.querySelector("#f-photo");
+  if(fPhoto){
+    const showPrev=()=>{ov.querySelector("#ph-prev").innerHTML=avatar({...p,name:form.querySelector("#f-name").value||p.name,photo},"lg");ov.querySelector("#ph-del").hidden=!photo};
+    fPhoto.addEventListener("change",async()=>{const file=fPhoto.files&&fPhoto.files[0];if(!file)return;
+      try{photo=await resizeImage(file);showPrev()}catch(_){toast("이 사진은 열 수 없어요. JPG나 PNG로 다시 골라 주세요")}fPhoto.value=""});
+    ov.querySelector("#ph-del").addEventListener("click",()=>{photo="";showPrev()});
+  }
+  const tSel=ov.querySelector("#f-team");
+  const refreshSec=()=>{const ss=ov.querySelector("#f-section");if(!ss)return;const t=tSel?tSel.value:teamOf(p),g=ov.querySelector("#f-group").value;ss.innerHTML=[""].concat(sectionsOfKey(t,g)).map(v=>`<option value="${v}">${v?v+"반":"없음"}</option>`).join("")};
+  if(tSel)tSel.addEventListener("change",()=>{ov.querySelector("#f-group").innerHTML=pickGroupsOf(tSel.value).map(([g,gl])=>`<option value="${g}">${gl}</option>`).join("");refreshSec()});
+  const gSel=ov.querySelector("#f-group");if(gSel)gSel.addEventListener("change",refreshSec);
+  // 연락처·주소 (예전 주소록 탭을 명단으로 합쳤어요)
+  const pcBox=ov.querySelector("#pc-box");let pcShown=false;
+  const drawContact=()=>{
+    if(!pcBox)return;const g=gSel?gSel.value:p.group;
+    if(!bookReady()){pcBox.innerHTML=S.bookLoading?`<p class="muted" style="font-size:13px;margin:12px 0 0">연락처를 불러오는 중…</p>`:"";pcShown=false;return}
+    if(!canContact(g)){pcBox.innerHTML=`<p class="muted" style="font-size:13px;margin:12px 0 0">이 반의 연락처·주소는 권한이 있는 사람만 고칠 수 있어요.</p>`;pcShown=false;return}
+    const keep=k=>{const el=pcBox.querySelector("#c-"+k);return el?el.value:((id&&S.book.contacts[id])||{})[k]||""};
+    const c={guardian:keep("guardian"),parentPhone:keep("parentPhone"),phone:keep("phone"),address:keep("address")};const T=g==="T";
+    pcBox.innerHTML=`<h4 class="pc-h">연락처 · 주소</h4><div class="form">
+      ${T?"":`<label>보호자<input id="c-guardian" value="${esc(c.guardian)}"></label><label>부모 연락처<input id="c-parentPhone" inputmode="tel" value="${esc(c.parentPhone)}"></label>`}
+      <label class="${T?"full":""}">${T?"연락처":"학생 연락처"}<input id="c-phone" inputmode="tel" value="${esc(c.phone)}"></label>
+      <label class="full">주소<textarea id="c-address">${esc(c.address)}</textarea></label></div>`;
+    pcShown=true;
+  };
+  drawContact();if(gSel)gSel.addEventListener("change",drawContact);
+  if(!bookReady()&&!(S.book&&S.book.team===S.team)){const q=loadContacts();if(q)q.then(()=>{if(ov.isConnected)drawContact()});drawContact()}
+  if(form)form.addEventListener("submit",e=>{
+    e.preventDefault();const fd=new FormData(form);
+    const body={...(id?p:{}),active:true};["phone","parentPhone","guardian","address","lunar"].forEach(k=>delete body[k]);
+    FIELDS.forEach(([f])=>body[f]=(fd.get(f)||"").toString().trim());if(!sectionsOfKey(body.team||S.team,body.group).includes(body.section))body.section="";
+    body.gender=["남","여"].includes(fd.get("gender"))?fd.get("gender"):"";body.isNew=fd.get("isNew")==="on";body.photo=photo;if(id){const st=fd.get("status")||"재적";body.active=st==="재적";body.leftType=st==="재적"?"":st}body.team=id?teamOf(p):S.team;
+    if(!body.name)return;
+    if(body.birthday!==(p.birthday||"")){const bd=normBirthday(body.birthday);if(bd===null){toast("생일은 03/15처럼 월/일로 적어 주세요");ov.querySelector("#f-birthday").focus();return}body.birthday=bd}
+    let contact=null;
+    if(pcShown&&canContact(body.group)){const v=k=>{const el=pcBox.querySelector("#c-"+k);return el?el.value.trim():""};
+      contact={phone:v("phone"),parentPhone:body.group==="T"?"":v("parentPhone"),guardian:body.group==="T"?"":v("guardian"),address:v("address")};
+      const old=(id&&S.book.contacts[id])||{phone:"",parentPhone:"",guardian:"",address:""};
+      if(["phone","parentPhone","guardian","address"].every(k=>(old[k]||"")===contact[k]))contact=null;}
+    delete body.id;
+    const nid=id||("p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+    if(body.order==null)body.order=999;
+    S.people.set(nid,{...body,id:nid});render();close();
+    if(S.db)enqueue("people/"+nid,()=>S.db.doc("people/"+nid).set(body));
+    if(contact){S.book.contacts[nid]=contact;const bk=S.book;
+      // 명단 저장이 끝난 뒤에 연락처를 저장해요 (같은 줄에 이어서)
+      enqueue("people/"+nid,()=>tracked(call("saveContact",nid,contact)).catch(err=>{toast(err.message);if(S.book===bk)S.book=null;render()}));}
+    toast("저장했어요");
+  });
+}
+
+/* ---------- events ---------- */
+document.addEventListener("toggle",e=>{const f=e.target;if(f.dataset&&f.dataset.fold)S.fold[f.dataset.fold]=f.open},true);
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-toggle]");if(t)return togglePresent(t.dataset.toggle);
+  const tl=e.target.closest("[data-t]");if(tl)return bumpTalent(tl.dataset.t,Number(tl.dataset.d));
+  const ep=e.target.closest("[data-edit-person]");if(ep){openPerson.edit=true;openPerson(ep.dataset.editPerson);openPerson.edit=false;return}
+  const o=e.target.closest("[data-open]");if(o){openPerson.edit=false;return openPerson(o.dataset.open)}
+  const gc=e.target.closest("[data-gcode]");if(gc)return openGradeCodeEntry(gc.dataset.gcode);
+  if(e.target.closest("#gcManage")||e.target.closest("#gcManage2")||e.target.closest("#gcManage3"))return openHomeroomCodes();
+  const cc2=e.target.closest("[data-copy-c]");if(cc2){navigator.clipboard.writeText(cc2.dataset.copyC).then(()=>toast("복사했어요"),()=>toast("길게 눌러 복사하세요"));return}
+  const hr=e.target.closest("[data-homeroom]");if(hr)return openHomeroom(hr.dataset.homeroom,hr.dataset.sec||"");
+  const sp=e.target.closest("[data-split]");if(sp)return openSplit(sp.dataset.split);
+  const tg=e.target.closest("#talentToggle");
+  if(tg){const next=!talentOn();
+    if(!next&&!tg.dataset.armed){tg.dataset.armed="1";tg.textContent="한 번 더 누르면 숨겨요";return}
+    S.settings={...(S.settings||{}),[S.team]:{...((S.settings||{})[S.team]||{}),talent:next}};render();
+    tracked(call("setTeamSetting",S.team,"talent",next)).then(()=>toast(next?"달란트를 다시 사용해요":"이 부서는 달란트를 숨겼어요. 기록은 지우지 않아요")).catch(err=>{toast(err.message);load()});
+    return}
+  if(e.target.closest("#brandTitle")&&S.view!=="home"){S.view="home";render();window.scrollTo(0,0);return}
+  const rm=e.target.closest("[data-rmode]");if(rm){S.rosterMode=rm.dataset.rmode;render();return}
+  const rs=e.target.closest("[data-restore]");if(rs){const id=rs.dataset.restore;const p=S.people.get(id);if(p){S.people.set(id,{...p,active:true,leftType:""});render();enqueue("people/"+id,()=>S.db.doc("people/"+id).update({active:true,leftType:""}));toast(p.name+"님을 출석으로 되돌렸어요")}return}
+  const mm=e.target.closest("[data-memo]");if(mm)return openMemo(mm.dataset.memo);
+  const ca=e.target.closest("[data-call]");if(ca)return openCall(ca.dataset.call);
+  if(e.target.closest("#talentRename"))return openTalentRename();
+  if(e.target.closest("#xlsTpl"))return downloadTemplate();
+  if(e.target.closest("#xlsUp"))return uploadRoster();
+  if(e.target.closest("#xlsExport"))return exportAll();
+  if(e.target.closest("#guideOpen"))return openGuide();
+  const hs=e.target.closest("[data-hist]");if(hs)return openHistory(hs.dataset.hist);
+  if(e.target.closest("#histAll"))return openHistoryList();
+  const sm=e.target.closest("[data-smode]");if(sm){S.schedMode=sm.dataset.smode;render();return}
+  if(e.target.closest("#libAdd"))return libPick("");
+  const lv=e.target.closest("[data-lview]");if(lv)return viewShared(lv.dataset.lview);
+  const ld=e.target.closest("[data-ldl]");if(ld)return downloadShared(ld.dataset.ldl);
+  const lr=e.target.closest("[data-lrep]");if(lr)return libPick(lr.dataset.lrep);
+  const lvis=e.target.closest("[data-lvis]");if(lvis){libAction("libVis",lvis.dataset.lvis,lvis.dataset.v,lvis.dataset.v==="admin"?"관리자만 볼 수 있게 했어요":"전체 공개로 바꿨어요");return}
+  const ldel=e.target.closest("[data-ldel]");if(ldel){if(!ldel.dataset.armed){ldel.dataset.armed="1";ldel.textContent="한 번 더";return}libAction("libDelete",ldel.dataset.ldel,null,"파일을 삭제했어요");return}
+  const cm=e.target.closest("[data-calmonth]");if(cm){const [y,m]=(S.calMonth||S.date.slice(0,7)).split("-").map(Number);const d=new Date(y,m-1+Number(cm.dataset.calmonth),1);S.calMonth=d.getFullYear()+"-"+pad(d.getMonth()+1);render();return}
+  const cc3=e.target.closest("[data-cal]");if(cc3){S.calSel=cc3.dataset.cal;render();return}
+  const eo=e.target.closest("[data-evopen]");if(eo)return openEvent(eo.dataset.evopen);
+  if(e.target.closest("#evAdd"))return openEvent("",S.calSel||S.date);
+  if(e.target.closest("#a2hsOpen"))return openA2hs();
+  if(e.target.closest("#a2hsHide")){try{localStorage.setItem("ya-a2hs-hide","1")}catch(_){}render();toast("안내를 닫았어요. 관리자 로그인 옆 버튼으로 다시 열 수 있어요");return}
+  if(e.target.closest("#a2hsAgain")){try{localStorage.removeItem("ya-a2hs-hide")}catch(_){}return openA2hs()}
+  const fg=e.target.closest("#forgetCodes");if(fg){if(!fg.dataset.armed){fg.dataset.armed="1";fg.textContent="한 번 더 누르면 지워요";return}return forgetDevice()}
+  if(e.target.closest("#adminIn"))return openAdminLogin();
+  if(e.target.closest("#adminOut")){try{localStorage.removeItem("ya-admin")}catch(_){}S._admin="";load();toast("로그아웃했어요");return}
+  const pu=e.target.closest("[data-promo-undo]");if(pu)return openUndoPromotion(pu.dataset.promoUndo);
+  const cEd=e.target.closest("[data-class-edit]");if(cEd)return openClassEdit(cEd.dataset.classEdit);
+  const cAs=e.target.closest("[data-class-assign]");if(cAs)return openClassAssign(cAs.dataset.classAssign);
+  const po=e.target.closest("[data-promo]");if(po)return openPromotion(po.dataset.promo);
+  const en=e.target.closest("[data-enter]");if(en)return enterDept(en.dataset.enter);
+  if(e.target.closest("#homeBtn")){S.view="home";render();window.scrollTo(0,0);return}
+  const cg=e.target.closest("[data-code-gen]");if(cg)return saveDeptCode(cg.dataset.codeGen,randomCode());
+  const ce=e.target.closest("[data-code-edit]");if(ce)return openCodeEdit(ce.dataset.codeEdit);
+  const cc=e.target.closest("[data-code-clear]");if(cc){if(!cc.dataset.armed){cc.dataset.armed="1";cc.textContent="한 번 더 누르면 해제";return}return saveDeptCode(cc.dataset.codeClear,"")}
+  const cp=e.target.closest("[data-copy-code]");if(cp){navigator.clipboard.writeText(cp.dataset.copyCode).then(()=>toast("번호를 복사했어요"),()=>toast("번호를 길게 눌러 복사하세요"));return}
+  const g=e.target.closest("[data-g]");if(g&&g.closest("#chips")&&chipDouble(g.dataset.g)&&canRenameClass(g.dataset.g)){openClassRename(S.team,g.dataset.g);return}if(g){S.group=g.dataset.g;try{localStorage.setItem("ya-group",S.group)}catch(_){}render();return}
+  const tab=e.target.closest("[data-tab]");if(tab){S.tab=tab.dataset.tab;render();window.scrollTo(0,0);return}
+  const md=e.target.closest("[data-mode]");if(md){S.statMode=md.dataset.mode;render();return}
+  if(e.target.closest("#markAll"))return markAll(S.group);
+  if(e.target.closest("#addP")){openPerson.edit=true;openPerson(null);openPerson.edit=false}
+});
+/* 명단 이름 검색: 검색칸은 그대로 두고 아래 목록만 바꿔요.
+   (화면 전체를 다시 그리면 검색칸이 새로 만들어져 한글 조합이 끊기고 "ㄱㅣㅁ"처럼 풀어져 쳐져요) */
+function refreshRosterList(){
+  const wrap=$("#view .roster-wrap"),q=wrap&&wrap.querySelector("#q");if(!q)return render();
+  const tmp=document.createElement("div");tmp.innerHTML=renderRoster();
+  const nw=tmp.querySelector(".roster-wrap"),nq=nw&&nw.querySelector("#q");if(!nq)return render();
+  while(q.nextSibling)q.nextSibling.remove();
+  const frag=document.createDocumentFragment();while(nq.nextSibling)frag.appendChild(nq.nextSibling);
+  wrap.appendChild(frag);relabel();
+}
+document.addEventListener("input",e=>{if(e.target.id==="q"){S.q=e.target.value;refreshRosterList()}});
+document.addEventListener("change",e=>{
+  const id=e.target.dataset&&e.target.dataset.tv;if(!id)return;
+  if(!S.editable){render();return}
+  const v=Math.max(0,Math.floor(Number(e.target.value)||0));e.target.value=v;
+  if(v!==talentOf(S.date,id)){clearTimeout(talentTimers[S.date+id]);writeAtt(S.date,{t:{[id]:v}})}
+});
+document.addEventListener("change",e=>{
+  const id=e.target.dataset&&e.target.dataset.total;if(!id)return;
+  const v=Math.max(0,Math.floor(Number(e.target.value)||0));e.target.value=v;
+  const p=S.people.get(id);if(p&&v!==totalTalent(p))setTotalTalent(id,v);
+});
+document.addEventListener("focusin",e=>{if(e.target.dataset&&(e.target.dataset.tv||e.target.dataset.total))e.target.select()});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&(e.target.dataset.tv||e.target.dataset.total))e.target.blur()});
+$("#prev").onclick=()=>{const d=parseKey(S.date);d.setDate(d.getDate()-7);if(d<START){toast("기록은 2027년 1월 3일부터 시작해요");return}S.date=keyOf(d);render()};
+$("#next").onclick=()=>{const d=parseKey(S.date);d.setDate(d.getDate()+7);S.date=keyOf(d);render()};
+$("#datePick").onchange=e=>{if(e.target.value){S.date=keyOf(toSunday(parseKey(e.target.value)));render()}};
+
+/* ---------- data (Google Apps Script) ---------- */
+function AUTH(){let admin=S._admin||"",codes={...(S._codes||{})},gcodes={...(S._gcodes||{})};try{admin=localStorage.getItem("ya-admin")||admin;codes={...codes,...(JSON.parse(localStorage.getItem("ya-codes")||"null")||{})};gcodes={...gcodes,...(JSON.parse(localStorage.getItem("ya-gcodes")||"null")||{})}}catch(_){}return{admin,codes,gcodes}}
+let pending=0;
+// GitHub 페이지에서 열면 google.script.run 이 없으므로 웹앱 주소(doPost)로 직접 보낸다.
+const API_URL="https:"+"/"+"/script.google.com/macros/s/AKfycbxAIzrJ4PjqNm4lo-1iC88RjRV56JTSkug5moMo_a-x7Im4v98XxCZ0Z-Gm0Y2FaUGt/exec";
+const HAS_GS=typeof google!=="undefined"&&!!(google.script&&google.script.run);
+async function callFetch(op,args){
+  let t;
+  try{const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({op,auth:AUTH(),args}),redirect:"follow"});
+    if(!r.ok)throw new Error("HTTP "+r.status);t=await r.text()}
+  catch(e){throw new Error("연결하지 못했어요. 인터넷 연결을 확인해 주세요")}
+  let x;try{x=JSON.parse(t)}catch(_){throw new Error("서버 응답을 읽지 못했어요")}
+  if(!x.ok)throw new Error(x.error);return x.data;
+}
+function call(op,...args){
+  if(!HAS_GS)return callFetch(op,args);
+  return new Promise((res,rej)=>{
+    google.script.run.withSuccessHandler(r=>{let x;try{x=JSON.parse(r)}catch(_){return rej(new Error("서버 응답을 읽지 못했어요"))}x.ok?res(x.data):rej(new Error(x.error))})
+      .withFailureHandler(e=>rej(new Error((e&&e.message)||"연결하지 못했어요. 인터넷 연결을 확인해 주세요")))
+      .api(op,AUTH(),...args);
+  });
+}
+function tracked(p){pending++;$("#sync").textContent="저장 중…";return p.finally(()=>{pending--;if(!pending)$("#sync").textContent="구글 시트에 저장됨"})}
+S.db={
+  doc(path){return{
+    update:b=>tracked(call("write","update",path,b)),
+    set:b=>tracked(call("write","set",path,b)),
+    delete:()=>tracked(call("write","delete",path)),
+    get:async()=>({exists:true}),
+  }},
+  batch:list=>tracked(call("batch",list)),
+};
+let autoDate=true,loading=null;
+function applyBoot(d){
+  S.isAdmin=!!d.isAdmin;S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
+  S.scope=d.scope||{};S.settings=d.settings||{};S.people=new Map((d.people||[]).map(p=>[p.id,p]));setTeam(S.team);
+  S.att=new Map(Object.entries(d.att||{}));
+  S.classes=new Map(Object.entries(d.classes||{}));
+  S.promos=new Map(Object.entries(d.promos||{}));
+  if(autoDate&&realSunday()<START&&S.date===START_KEY){autoDate=false;const ks=[...S.att.keys()].filter(k=>k>=START_KEY&&Object.keys(S.att.get(k).p||{}).length).sort();if(ks.length)S.date=ks.pop()}
+  S.ready=true;
+}
+const BOOT_KEY="ya-boot-v1";
+function saveBootCache(d){if(S.remember===false)return;try{localStorage.setItem(BOOT_KEY,JSON.stringify(d))}catch(_){try{localStorage.removeItem(BOOT_KEY)}catch(__){}}}
+function useBootCache(){try{const d=JSON.parse(localStorage.getItem(BOOT_KEY)||"null");if(!d)return;applyBoot(d);render();hideBootLoader();$("#sync").textContent="최신 내용 확인 중…"}catch(_){}}
+function hideBootLoader(){const el=$("#bootLoader");if(!el)return;el.classList.add("out");setTimeout(()=>el.remove(),300)}
+function slowNotice(show,msg){
+  let el=document.getElementById("slowBox");
+  if(!show){if(el)el.remove();return}
+  if(!el){el=document.createElement("div");el.id="slowBox";el.className="notice";el.style.cssText="margin:12px 16px;max-width:608px";document.querySelector(".app").insertBefore(el,document.querySelector("#view"))}
+  el.innerHTML=`<b>${esc(msg)}</b><br>· 처음 열 때는 10초쯤 걸릴 수 있어요.<br>· 카카오톡 안에서 열었다면 Chrome이나 Safari로 열어 보세요.<br>· 구글 계정 여러 개에 로그인된 브라우저라면 시크릿 창에서 열어 보세요.<div style="margin-top:8px"><button class="btn" id="retryLoad">다시 시도</button></div>`;
+}
+async function load(){
+  if(loading)return loading;
+  const slow=setTimeout(()=>{if(!S.ready){slowNotice(true,"구글 시트에서 불러오는 데 시간이 걸리고 있어요.");hideBootLoader()}},12000);
+  const slowMsg=setTimeout(()=>{if(!S.ready&&$("#bootMsg"))$("#bootMsg").textContent="조금만 기다려 주세요. 처음 열 때는 시간이 걸려요…"},5000);
+  loading=call("boot").then(d=>{applyBoot(d);saveBootCache(d);slowNotice(false);$("#sync").textContent="구글 시트에 저장됨";render();hideBootLoader()})
+    .catch(e=>{console.error(e);$("#sync").textContent="연결 안 됨";if(!S.ready){slowNotice(true,"불러오지 못했어요: "+e.message);hideBootLoader()}else toast(e.message)})
+    .finally(()=>{clearTimeout(slow);clearTimeout(slowMsg);loading=null});
+  return loading;
+}
+document.addEventListener("click",e=>{if(e.target.closest("#retryLoad")){$("#sync").textContent="불러오는 중…";loading=null;load()}});
+render();useBootCache();load();
+setInterval(()=>{
+  if(document.hidden||pending||document.querySelector(".overlay"))return;
+  const a=document.activeElement;if(a&&a.dataset&&(a.dataset.tv||a.dataset.total))return;
+  if(a&&a.id==="q")return; // 이름 검색 중에는 새로 불러오지 않아요 (한글 입력이 끊기지 않게)
+  load();
+},25000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)load()});
+</script>
+
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
 </script>
 </body>
 </html>
