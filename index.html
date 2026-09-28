@@ -535,6 +535,9 @@ const sectionsOfKey=(t,g)=>{const x=classOfKey(t,g).sections;return Array.isArra
 const sectionsOf=g=>sectionsOfKey(S.team,g);
 const secOf=p=>{const ss=sectionsOfKey(teamOf(p),p.group);return ss.includes(p.section)?p.section:""};
 const classLabel=p=>(GL[p.group]||"")+(secOf(p)?" "+secOf(p)+"반":"");
+/* 나이로 반을 나누는 부서(영아)는 명단에 "3세 · 2세반"처럼 나이 먼저, 반 이름 뒤에 "반" */
+const banOf=p=>{const l=classLabel(p);return ageLabel(p)&&l&&p.group!=="_"&&!/반$/.test(l)?l+"반":l};
+const ageClassLabel=p=>[ageLabel(p),banOf(p)].filter(Boolean).join(" · ");
 const homeroomOf=(g,sec)=>{const c=classOf(g);return (sec?(c.teachers||{})[sec]:c.teacher)||""};
 /* 담임은 여러 명일 수 있어요. 저장은 "김은혜, 박요한"처럼 쉼표로 이어서 한 칸에 */
 const hrNames=v=>[...new Set(String(v||"").split(/\s*[,，]\s*/).map(x=>x.trim()).filter(Boolean))];
@@ -1163,7 +1166,7 @@ function renderRoster(){
     ${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">담임</span><span class="none" style="font-size:13px">담임 번호를 받은 선생님은 자기 반만 관리해요</span><span class="spacer"></span><button id="gcManage2">담임 권한 관리</button></div>`:""}${canManageGrades()&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div>`:""}${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
   for(const p of ps){
     const tags=[p.isNew?'<span class="tag new">새친구</span>':"",p.active===false?`<span class="tag role">${p.leftType==="졸업"?"졸업":"제적"}</span>`:"",p.role?`<span class="tag role">${esc(p.role)}</span>`:""].join("");
-    h+=`<div class="row${p.group==="T"?" tch":""}" style="${p.active===false?"opacity:.55":""}"><button class="who-wrap" data-open="${p.id}" style="padding:2px 4px">${avatar(p)}<span class="who"><b>${esc(p.name)}${p.gender?`(${esc(p.gender)})`:""} <span class="muted" style="font-size:12px;font-weight:500">${esc([classLabel(p),ageLabel(p)].filter(Boolean).join(" · "))}</span>${tags}</b>
+    h+=`<div class="row${p.group==="T"?" tch":""}" style="${p.active===false?"opacity:.55":""}"><button class="who-wrap" data-open="${p.id}" style="padding:2px 4px">${avatar(p)}<span class="who"><b>${esc(p.name)}${p.gender?`(${esc(p.gender)})`:""} <span class="muted" style="font-size:12px;font-weight:500">${esc(ageClassLabel(p))}</span>${tags}</b>
       <span>${esc([p.birthday&&"생일 "+p.birthday,p.note].filter(Boolean).join(" · "))}</span></span></button>${p.active===false&&S.editable?`<button class="btn" data-restore="${p.id}">출석으로</button>`:""}</div>`;
   }
   h+=`</div>`;if(!ps.length)h+=`<div class="empty">${S.rosterMode==="removed"?"제적한 사람이 없어요.":S.rosterMode==="grad"?"졸업한 사람이 없어요.":"찾는 사람이 없어요."}</div>`;
@@ -1628,7 +1631,7 @@ function openPerson(id){
   const ov=document.createElement("div");ov.className="overlay";
   if(view){
     const ks=yearKeys();const n=ks.filter(kk=>isOn(kk,p.id)).length;const t=totalTalent(p);
-    ov.innerHTML=`<div class="sheet" role="dialog" aria-label="${esc(p.name)}"><div class="sheet-head">${avatar(p,"lg")}<div><h3>${esc(p.name)} <span class="muted" style="font-family:var(--body);font-size:14px">${GL[p.group]||""}${p.gender?" · "+esc(p.gender):""}${ageLabel(p)?" · "+ageLabel(p):""}${p.role?" · "+esc(p.role):""}</span></h3>
+    ov.innerHTML=`<div class="sheet" role="dialog" aria-label="${esc(p.name)}"><div class="sheet-head">${avatar(p,"lg")}<div><h3>${esc(p.name)} <span class="muted" style="font-family:var(--body);font-size:14px">${esc(ageLabel(p)?ageClassLabel(p):GL[p.group]||"")}${p.gender?" · "+esc(p.gender):""}${p.role?" · "+esc(p.role):""}</span></h3>
       <div class="muted num" style="font-size:13px">${S.date.slice(0,4)}년 출석 ${n}회${p.group==="T"||!talentOn()?"":" · 달란트 "+t}${p.birthday?" · 생일 "+esc(p.birthday):""}</div></div></div>
       <div class="contact">${p.note?`<div><span class="k">메모</span><span class="v">${esc(p.note)}</span></div>`:""}</div><div id="pv-contact">${contactLines(p)}</div>
       <div class="actions">${canManageGrades()?`<button class="btn" data-hist="${p.id}">이력</button>`:""}<div class="spacer"></div>${canEditHere?`<button type="button" class="btn danger" data-del>삭제</button>`:""}<button class="btn" data-close>닫기</button>${canEditHere?`<button class="btn primary" data-edit>수정</button>`:""}</div></div>`;
