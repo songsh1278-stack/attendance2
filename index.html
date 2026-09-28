@@ -342,7 +342,8 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 @media (prefers-reduced-motion:reduce){.boot-loader .spin{animation-duration:2.5s}}
 .toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:8px 14px;border-radius:99px;font-size:13px;z-index:30}
 .notice{background:var(--gold-soft);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px}
-.form label.c2{grid-column:2}
+#pform .form{grid-template-columns:1fr}
+#pform .form label.full{grid-column:auto}
 .form label .rep-chk{display:inline-flex;align-items:center;gap:4px;margin-left:auto;font-size:12px;font-weight:600;color:var(--accent)}
 .form label .rep-chk input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 .form .pc-rep{justify-content:space-between}
@@ -1053,7 +1054,7 @@ function openGuide(){
     <h4>1. 앱 설치 (처음 한 번)</h4><ol><li>주소 <b class="guide-url">팀 관리자가 알려 준 앱 주소</b> 를 열어요. 팀 관리자가 보낸 링크를 눌러도 돼요.</li><li><b>안드로이드</b>: 크롬 오른쪽 위 <b>︙</b> → <b>홈 화면에 추가</b> (또는 앱 설치)</li><li><b>아이폰</b>: 사파리 아래 <b>공유 버튼</b> → <b>홈 화면에 추가</b></li><li>카카오톡에서 열었다면 먼저 <b>다른 브라우저로 열기</b>를 눌러요.</li></ol>
     <h4>2. 들어가기</h4><ol><li>메인에서 <b>우리 부서</b> 카드 → <b>담임 번호</b> 넣기</li><li>제목 옆에 "담임 · 2학년"처럼 보이면 성공!</li><li>내 휴대폰이면 "이 기기에서 번호 기억하기"를 켜 두세요. 다음부터 바로 들어가요.</li></ol>
     <h4>3. 출결메모 (주일 출석)</h4><ol><li>위쪽 날짜가 오늘 주일인지 확인해요. ‹ › 로 다른 주일로 가요.</li><li><b>체크 칸</b>: 누르면 출석, 다시 누르면 취소</li><li><b>메모</b>: 결석 이유 적기 ("감기·아픔" 같은 버튼도 있어요)</li><li><b>전화</b>: 누르면 그 학생의 <b>대표전화</b>로 바로 걸려요. 대표전화는 학생마다 명단 [수정]에서 <b>[대표]</b>에 체크한 번호예요. 체크하지 않았으면 영아·유아부는 부모님, 유소년·중고등부는 학생 번호예요 (없으면 다른 번호). 컴퓨터에서는 번호 창이 떠요.</li><li>숫자 칸(달란트 등): ▲▼ 를 누르거나 숫자를 눌러 적어요. 달란트는 여기서만 줘요.</li><li><b>담임 선생님 출석</b>: 우리 반 담임 줄 바로 아래에 선생님 이름이 <b>연보라색 줄</b>로 나와요. 거기서 선생님 출석·메모도 체크해요. (교사 명단의 이름과 담임 이름이 같아야 나와요)</li></ol>
-    <h4>4. 명단 (연락처 포함)</h4><ol><li><b>[+ 사람 추가]</b>로 새 학생을 넣어요. 연락처·주소도 같이 적을 수 있어요.</li><li>이름을 누르면 보호자·부모 연락처와 주소가 보여요. <b>[전화]</b>, <b>[복사]</b>도 여기서.</li><li><b>[수정]</b>: 사진·반·생일·메모·연락처·주소를 한 창에서 고쳐요. 왼쪽 칸 이름·보호자, 오른쪽 칸 반·생일·부모 연락처 순서예요.</li><li><b>[삭제]</b>: 이름을 누른 창에서 눌러요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li>사람 정보는 <b>명단 탭에서만</b> 고칠 수 있어요. 다른 탭에서는 보기만 해요.</li><li><b>대표전화</b>: [수정]에서 부모 연락처·학생 연락처 옆 <b>[대표]</b> 중 하나에 체크하고 저장해요. 출결메모의 <b>[전화]</b>를 누르면 그 번호로 바로 걸려요. 이름을 누른 창에서 전화기 아이콘을 눌러 바꿀 수도 있어요.</li><li>명단에서 <b>연보라색</b> 줄은 선생님이에요.</li><li>연락처가 잠겨 있으면 명단 위쪽 <b>연락처</b> 줄의 <b>[번호 입력]</b>에 담임 번호를 넣어요.</li></ol>
+    <h4>4. 명단 (연락처 포함)</h4><ol><li><b>[+ 사람 추가]</b>로 새 학생을 넣어요. 연락처·주소도 같이 적을 수 있어요.</li><li>이름을 누르면 보호자·부모 연락처와 주소가 보여요. <b>[전화]</b>, <b>[복사]</b>도 여기서.</li><li><b>[수정]</b>: 사진·반·생일·메모·연락처·주소를 한 창에서 위에서 아래로 차례대로 고쳐요.</li><li><b>[삭제]</b>: 이름을 누른 창에서 눌러요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li>사람 정보는 <b>명단 탭에서만</b> 고칠 수 있어요. 다른 탭에서는 보기만 해요.</li><li><b>대표전화</b>: [수정]에서 부모 연락처·학생 연락처 옆 <b>[대표]</b> 중 하나에 체크하고 저장해요. 출결메모의 <b>[전화]</b>를 누르면 그 번호로 바로 걸려요. 이름을 누른 창에서 전화기 아이콘을 눌러 바꿀 수도 있어요.</li><li>명단에서 <b>연보라색</b> 줄은 선생님이에요.</li><li>연락처가 잠겨 있으면 명단 위쪽 <b>연락처</b> 줄의 <b>[번호 입력]</b>에 담임 번호를 넣어요.</li></ol>
     <h4>5. 생일 · 달란트</h4><ol><li><b>생일</b>: 이번 주·이번 달·다음 달 생일. 생일이 없는 사람은 맨 아래에 모여요.</li><li><b>달란트</b>: 올해 누적 순위를 보는 화면이에요 (고치기는 출결메모에서).</li><li>달란트·생일·일정 엑셀은 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b> 파일에 들어 있어요.</li></ol>
     <h4>6. 출석 · 제적 · 졸업</h4><ol><li>명단 위쪽 <b>[출석] [제적] [졸업]</b> 을 눌러 나눠 봐요.</li><li>더 이상 안 나오는 학생: 이름 → [수정] → 상태를 <b>제적</b>으로. 졸업한 학생은 <b>졸업</b>으로.</li><li>제적·졸업 학생은 출석 명단에서 빠지지만 기록은 그대로 남아요.</li><li>다시 나오면 [제적] 목록에서 <b>[출석으로]</b>를 눌러요.</li></ol>
     <h4>7. 엑셀로 한 번에 (명단 · 연락처)</h4><ol><li>명단 탭 <b>엑셀</b> 줄의 <b>[양식 받기]</b>로 파일을 받아요. 지금 명단이 채워져 있어요.</li><li>'명단' 시트에 이름·반·생일·연락처·주소를 적어요. 생일은 03/15 처럼. 빈 칸은 원래 값을 그대로 둬요.</li><li><b>[올리기]</b>로 파일을 고르고 확인. 이름과 반이 같은 사람은 고쳐지고, 없는 사람은 새로 들어가요.</li><li>담임은 <b>우리 반</b> 학생만 올라가요. 파일에서 줄을 지워도 앱에서는 지워지지 않아요.</li><li>출석부 전체를 저장해 두려면 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b>를 눌러요.</li></ol>
@@ -1616,8 +1617,8 @@ function render(){
 
 /* ---------- person sheet ---------- */
 const FIELDS=[["name","이름"],["group","반"],["age","나이"],["section","분반"],["birthday","생일 (MM/DD)"],["role","직분"],["note","메모"]];
-/* 수정 창 순서: 반·생일은 늘 오른쪽 칸 (나이가 있으면 직분을 생일 앞으로) */
-const formFields=t=>(isFlex(t)?["name","group","age","section","role","birthday","note"]:["name","group","section","birthday","role","note"]).map(f=>FIELDS.find(x=>x[0]===f));
+/* 수정 창은 한 줄에 한 칸씩 세로로 */
+const formFields=()=>FIELDS;
 function openPerson(id){
   const p=id?S.people.get(id):{name:"",team:S.team,group:S.group!=="all"?S.group:GROUPS[0][0],isNew:true,active:true};
   if(!p)return;
@@ -1640,10 +1641,10 @@ function openPerson(id){
       ${formFields(teamOf(p)).map(([f,l])=>f==="team"?`<label>${l}<select id="f-team" name="team">${Object.entries(TEAMS).filter(([t])=>!isHomeroom()||t===S.team).map(([t,x])=>`<option value="${t}" ${teamOf(p)===t?"selected":""}>${x.label}</option>`).join("")}</select></label>`
         :f==="section"?`<label>${l}<select id="f-section" name="section">${[""].concat(sectionsOfKey(teamOf(p),p.group)).map(v=>`<option value="${v}" ${(secOf(p)||"")===v?"selected":""}>${v?v+"반":"없음"}</option>`).join("")}</select></label>`
         :f==="age"?(isFlex(teamOf(p))?`<label>${l}<select id="f-age" name="age"><option value="">모름</option>${TEAMS[teamOf(p)].groups.map(([a,al])=>`<option value="${a}" ${p.age===a?"selected":""}>${al}</option>`).join("")}</select></label>`:"")
-        :f==="group"?`<label class="c2">${l}<select id="f-group" name="group">${pickGroupsOf(teamOf(p)).filter(([g])=>!isHomeroom()||myScope().grades.includes(g)).map(([g,gl])=>`<option value="${g}" ${p.group===g?"selected":""}>${gl}</option>`).join("")}</select></label>`
+        :f==="group"?`<label>${l}<select id="f-group" name="group">${pickGroupsOf(teamOf(p)).filter(([g])=>!isHomeroom()||myScope().grades.includes(g)).map(([g,gl])=>`<option value="${g}" ${p.group===g?"selected":""}>${gl}</option>`).join("")}</select></label>`
         :f==="note"?`<label class="full">${l}<textarea id="f-${f}" name="${f}">${esc(p[f])}</textarea></label>`
         :f==="name"?`<label>${l}<span class="name-sex"><input id="f-name" name="name" value="${esc(p.name)}" required><select id="f-gender" name="gender" aria-label="성별"><option value="">성별</option><option value="남" ${p.gender==="남"?"selected":""}>남</option><option value="여" ${p.gender==="여"?"selected":""}>여</option></select></span></label>`
-        :`<label${f==="birthday"?' class="c2"':""}>${l}<input id="f-${f}" name="${f}" value="${esc(p[f])}"></label>`).join("")}
+        :`<label>${l}<input id="f-${f}" name="${f}" value="${esc(p[f])}"></label>`).join("")}
       <label class="inline full"><input type="checkbox" id="f-isNew" name="isNew" ${p.isNew?"checked":""}>새친구</label>
       ${id?`<label class="full">상태<select id="f-status" name="status"><option value="재적" ${p.active!==false?"selected":""}>출석</option><option value="제적" ${p.active===false&&p.leftType!=="졸업"?"selected":""}>제적 (목록에서 숨김)</option><option value="졸업" ${p.active===false&&p.leftType==="졸업"?"selected":""}>졸업 (목록에서 숨김)</option></select></label>`:""}
       </div><div id="pc-box"></div><div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
@@ -1691,7 +1692,7 @@ function openPerson(id){
     const PC=!T&&personCallOn(id?teamOf(p):S.team);if(PC&&!repSel)repSel=callFirstOf(g,id?teamOf(p):S.team,id);
     const repIc=v=>PC?`<span class="rep-chk"><input type="checkbox" data-rep-pick="${v}" ${repSel===v?"checked":""} aria-label="${v==="parent"?"부모":"학생"} 번호를 대표전화로">대표</span>`:"";
     pcBox.innerHTML=`<h4 class="pc-h">연락처 · 주소</h4><div class="form">
-      ${T?"":`<label>보호자<input id="c-guardian" value="${esc(c.guardian)}"></label><label class="c2"><span class="pc-rep">부모 연락처${repIc("parent")}</span><input id="c-parentPhone" inputmode="tel" value="${esc(c.parentPhone)}"></label>`}
+      ${T?"":`<label>보호자<input id="c-guardian" value="${esc(c.guardian)}"></label><label><span class="pc-rep">부모 연락처${repIc("parent")}</span><input id="c-parentPhone" inputmode="tel" value="${esc(c.parentPhone)}"></label>`}
       <label class="${T?"full":""}"><span class="pc-rep">${T?"연락처":"학생 연락처"}${T?"":repIc("student")}</span><input id="c-phone" inputmode="tel" value="${esc(c.phone)}"></label>
       ${PC?`<p class="muted full" style="font-size:12px;margin:0">[대표]에 체크한 번호로 [전화]를 누르면 바로 걸려요.</p>`:""}
       <label class="full">주소<textarea id="c-address">${esc(c.address)}</textarea></label></div>`;
