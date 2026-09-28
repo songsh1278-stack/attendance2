@@ -25,7 +25,7 @@
 :root{
   --ground:#F1F5F2; --surface:#FFFFFF; --sunk:#E6ECE8; --line:#D5DED9;
   --ink:#17302B; --muted:#5F726D; --accent:#18856B; --accent-ink:#FFFFFF; --accent-soft:#D4EDE4;
-  --gold:#C98A0E; --gold-soft:#FBEFD2; --new:#B4476A; --new-soft:#F8E1E9; --danger:#B3261E;
+  --gold:#C98A0E; --gold-soft:#FBEFD2; --teacher:#F1EAFC; --teacher-line:#D9C9F2; --new:#B4476A; --new-soft:#F8E1E9; --danger:#B3261E;
   --shadow:0 1px 2px rgba(23,48,43,.06),0 4px 14px rgba(23,48,43,.06);
   --display:"Jua","IBM Plex Sans KR",system-ui,sans-serif;
   --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
@@ -35,7 +35,7 @@
     color-scheme:dark;
     --ground:#0F1614; --surface:#18221F; --sunk:#202C28; --line:#2C3A35;
     --ink:#E3EDE9; --muted:#93A7A1; --accent:#3BC49C; --accent-ink:#06231B; --accent-soft:#173B31;
-    --gold:#F0BD4B; --gold-soft:#3A2E12; --new:#EE8AAB; --new-soft:#3D1D29; --danger:#F2867E;
+    --gold:#F0BD4B; --gold-soft:#3A2E12; --teacher:#251E33; --teacher-line:#40345A; --new:#EE8AAB; --new-soft:#3D1D29; --danger:#F2867E;
     --shadow:0 1px 2px rgba(0,0,0,.3);
   }
 }
@@ -43,7 +43,7 @@
   color-scheme:dark;
   --ground:#0F1614; --surface:#18221F; --sunk:#202C28; --line:#2C3A35;
   --ink:#E3EDE9; --muted:#93A7A1; --accent:#3BC49C; --accent-ink:#06231B; --accent-soft:#173B31;
-  --gold:#F0BD4B; --gold-soft:#3A2E12; --new:#EE8AAB; --new-soft:#3D1D29; --danger:#F2867E;
+  --gold:#F0BD4B; --gold-soft:#3A2E12; --teacher:#251E33; --teacher-line:#40345A; --new:#EE8AAB; --new-soft:#3D1D29; --danger:#F2867E;
   --shadow:0 1px 2px rgba(0,0,0,.3);
 }
 *{box-sizing:border-box}
@@ -127,6 +127,12 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .bline .k{width:52px;flex:none;font-size:12px;color:var(--muted)}
 .bline .v{flex:1;min-width:120px;user-select:text;word-break:break-all}
 .bline .none{color:var(--muted);font-size:13px}
+.rep-tel{flex:none;width:24px;height:24px;display:grid;place-items:center;border-radius:7px;border:1px dashed var(--line);background:transparent;color:var(--muted);padding:0;opacity:.55}
+.bline .rep-tel{padding:0;border:1px dashed var(--line);background:transparent;color:var(--muted)}
+.rep-tel svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rep-tel.on,.bline .rep-tel.on{opacity:1;border:1px solid var(--accent);color:var(--accent);background:var(--surface)}
+button.rep-tel{cursor:pointer}
+.pc-rep{display:flex;align-items:center;gap:6px}
 .bline a,.bline button{font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--accent);border-radius:8px;padding:3px 8px;text-decoration:none}
 .a2hs{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
 .a2hs svg{width:34px;height:34px;flex:none;stroke:var(--accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -203,6 +209,8 @@ nav.tabs button{font-size:11px;white-space:nowrap}
 .list{display:flex;flex-direction:column;gap:8px}
 .row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 10px 8px 8px;transition:background .15s,border-color .15s}
 .row.on{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+.row.tch{background:var(--teacher);border-color:var(--teacher-line)}
+.row.tch.on{background:color-mix(in srgb,var(--teacher) 55%,var(--accent-soft));border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
 .check{flex:none;width:48px;height:48px;border-radius:12px;border:2px solid var(--line);background:var(--ground);display:grid;place-items:center}
 .check svg{width:26px;height:26px;opacity:0;transform:scale(.6);transition:.15s}
 .row.on .check{background:var(--accent);border-color:var(--accent)}
@@ -334,7 +342,10 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 @media (prefers-reduced-motion:reduce){.boot-loader .spin{animation-duration:2.5s}}
 .toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:8px 14px;border-radius:99px;font-size:13px;z-index:30}
 .notice{background:var(--gold-soft);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px}
-@media (max-width:380px){.form{grid-template-columns:1fr}}
+.form label.c2{grid-column:2}
+.form label .rep-chk{display:inline-flex;align-items:center;gap:4px;margin-left:auto;font-size:12px;font-weight:600;color:var(--accent)}
+.form label .rep-chk input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
+.form .pc-rep{justify-content:space-between}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -391,9 +402,20 @@ const S={promos:new Map(),view:"home",depts:new Map(),codes:{},isAdmin:false,peo
 function setTeam(t){S.team=TEAMS[t]?t:"youth";const sc=(S.scope||{})[S.team];GROUPS=groupsOf(S.team).filter(([g])=>!sc||sc.level!=="grade"||sc.grades.includes(g));GL=Object.fromEntries(groupsOf(S.team));if(S.group!=="all"&&!GROUPS.some(x=>x[0]===S.group))S.group="all"}
 const TL=(t=S.team)=>((S.settings||{})[t]||{}).talentLabel||"달란트";
 const talentOn=(t=S.team)=>((S.settings||{})[t]||{}).talent!==false;
-/* 전화 우선순위: 영아·유아는 부모 먼저, 유소년·중고등은 학생 먼저 (부서 설정에서 바꿀 수 있음) */
-const callFirst=(t=S.team)=>{const v=((S.settings||{})[t]||{}).callFirst;return v==="parent"||v==="student"?v:(t==="infant"||t==="toddler"?"parent":"student")};
-const studentNums=(c,t=S.team)=>{const P=["부모",c.parentPhone],K=["학생",c.phone];return callFirst(t)==="parent"?[P,K]:[K,P]};
+/* 대표전화: 학생마다 [수정]에서 체크한 번호. 정하지 않았으면 영아·유아는 부모, 그 외는 학생 */
+const CALL_CHOICE_TEAMS=["youth"];
+const callChoiceOn=(t=S.team)=>CALL_CHOICE_TEAMS.includes(t);
+const callFirst=(t=S.team)=>{if(t==="infant"||t==="toddler")return "parent";if(!callChoiceOn(t))return "student";const v=((S.settings||{})[t]||{}).callFirst;return v==="parent"||v==="student"?v:"student"};
+const classCallFirst=(g,t=S.team)=>{if(!callChoiceOn(t))return "";const v=(((S.settings||{})[t]||{}).callFirstByClass||{})[g];return v==="parent"||v==="student"?v:""};
+const personCallOn=()=>true;
+const personCallFirst=(id,t=S.team)=>{if(!id||!personCallOn(t))return "";const v=(((S.settings||{})[t]||{}).callFirstByPerson||{})[id];return v==="parent"||v==="student"?v:""};
+const callFirstOf=(g,t=S.team,id)=>personCallFirst(id,t)||classCallFirst(g,t)||callFirst(t);
+const studentNums=(c,t=S.team,g,id)=>{const P=["부모",c.parentPhone],K=["학생",c.phone];return callFirstOf(g,t,id)==="parent"?[P,K]:[K,P]};
+/* 번호 순서는 늘 부모 → 학생, 대표전화 쪽에 전화기 아이콘이 가요 */
+const fixedNums=c=>[["부모",c.parentPhone,"parent"],["학생",c.phone,"student"]];
+function setPersonCall(p,next){const t=teamOf(p);const cur=(S.settings||{})[t]||{};
+  S.settings={...(S.settings||{}),[t]:{...cur,callFirstByPerson:{...(cur.callFirstByPerson||{}),[p.id]:next}}};
+  return tracked(call("setPersonCallFirst",p.id,next))}
 const myScope=()=>(S.scope||{})[S.team]||{level:"dept",grades:[]};
 const isHomeroom=()=>myScope().level==="grade";
 const canManageGrades=()=>S.isAdmin||(myScope().level==="dept"&&deptLocked(S.team));
@@ -496,7 +518,7 @@ function personRow(p){
   const k=S.date,on=isOn(k,p.id),t=talentOf(k,p.id);
   const tags=[p.isNew?'<span class="tag new">새친구</span>':"",bdInWeek(p,k)?'<span class="tag bd">생일주간</span>':"",p.group==="T"&&p.role?`<span class="tag role">${esc(p.role)}</span>`:""].join("");
   const sub=[ageLabel(p),p.birthday?"생일 "+p.birthday:"",p.note||""].filter(Boolean).join(" · ");
-  return `<div class="row ${on?"on":""}">
+  return `<div class="row ${on?"on":""}${p.group==="T"?" tch":""}">
     <button class="who-wrap" data-open="${p.id}">${avatar(p)}<span class="who"><b>${esc(p.name)}${tags}</b><span>${esc(sub)}</span>${memoOf(k,p.id)?`<span class="memo-line">${esc(memoOf(k,p.id))}</span>`:""}</span></button>
     <div class="act-box"><button class="icon-btn big tel ${telOfP(p)?"":"nonum"}" data-call="${p.id}" aria-label="${esc(p.name)} 전화 걸기">${PHONE_SVG}</button><div class="act-lbl">전화</div></div>
     <div class="act-box"><button class="icon-btn big ${memoOf(k,p.id)?"has":""}" data-memo="${p.id}" aria-label="${esc(p.name)} 출결 메모">${MEMO_SVG}</button><div class="act-lbl ${memoOf(k,p.id)?"memo":""}">메모</div></div>
@@ -619,9 +641,10 @@ function loadContacts(){
 const bookReady=()=>S.book&&S.book.team===S.team&&!S.book.error;
 const canContact=g=>bookReady()&&S.book.grades.includes(g);
 const telOf=v=>String(v||"").replace(/[^0-9+]/g,"");
-function bookLine(k,v,tel){
-  if(!v)return `<div class="bline"><span class="k">${k}</span><span class="v none">없음</span></div>`;
-  return `<div class="bline"><span class="k">${k}</span><span class="v num">${esc(v)}</span>${tel&&telOf(v).length>=9?`<a href="tel:${telOf(v)}">전화</a>`:""}<button data-copy-c="${esc(v)}">복사</button></div>`;
+function bookLine(k,v,tel,rep){
+  const ic=rep==="rep"?`<span class="rep-tel on" title="대표전화" aria-label="대표전화">${PHONE_SVG}</span>`:rep?`<button class="rep-tel" data-rep-set="${esc(rep)}" data-rep-v="${k==="부모"?"parent":"student"}" title="대표전화로 정하기" aria-label="${k} 번호를 대표전화로 정하기">${PHONE_SVG}</button>`:"";
+  if(!v)return `<div class="bline">${ic}<span class="k">${k}</span><span class="v none">없음</span></div>`;
+  return `<div class="bline">${ic}<span class="k">${k}</span><span class="v num">${esc(v)}</span>${tel&&telOf(v).length>=9?`<a href="tel:${telOf(v)}">전화</a>`:""}<button data-copy-c="${esc(v)}">복사</button></div>`;
 }
 /* 생일은 MM/DD로 맞춰 저장해요 (3/5, 0305, 3월 5일 → 03/05) */
 function normBirthday(v){
@@ -644,7 +667,7 @@ function contactLines(p){
   if(!bookReady())return S.bookLoading?`<p class="muted" style="font-size:13px;margin:10px 0 0">연락처를 불러오는 중…</p>`:"";
   if(!canContact(p.group))return `<p class="muted" style="font-size:13px;margin:10px 0 0">연락처·주소는 이 반의 담임 번호가 있어야 보여요.</p>`;
   const c=S.book.contacts[p.id]||{};
-  return `<div class="bcard" style="margin-top:12px">${p.group==="T"?bookLine("연락처",c.phone,true):bookLine("보호자",c.guardian,false)+studentNums(c,teamOf(p)).map(([k,v])=>bookLine(k,v,true)).join("")}${bookLine("주소",c.address,false)}
+  return `<div class="bcard" style="margin-top:12px">${p.group==="T"?bookLine("연락처",c.phone,true):bookLine("보호자",c.guardian,false)+(()=>{const r=callFirstOf(p.group,teamOf(p),p.id);return fixedNums(c).map(([k,v,w])=>bookLine(k,v,true,w===r?"rep":(personCallOn(teamOf(p))&&S.editable?p.id:""))).join("")})()}${bookLine("주소",c.address,false)}
     <p class="muted" style="font-size:11px;margin:6px 0 0">연락처와 주소는 캡처하거나 다른 곳에 옮기지 말아 주세요.</p></div>`;
 }
 function openGradeCodeEntry(g){
@@ -717,7 +740,7 @@ const MEMO_SVG='<svg viewBox="0 0 24 24"><path d="M5 4.5h11l3 3v12H5z"/><path d=
 const PHONE_SVG='<svg viewBox="0 0 24 24"><path d="M6.6 3.5h3l1.4 4-2 1.5a11 11 0 005.9 5.9l1.5-2 4 1.4v3a2 2 0 01-2.2 2A16 16 0 014.6 5.7a2 2 0 012-2.2z"/></svg>';
 const rosterModeOf=p=>p.active!==false?"active":(p.leftType==="졸업"?"grad":"removed");
 const memoOf=(k,id)=>((attOf(k).m||{})[id]||"");
-function telOfP(p){const B=S.book;if(!B||B.team!==S.team||!B.contacts)return "";const c=B.contacts[p.id]||{};const v=(p.group==="T"?[c.phone]:studentNums(c).map(x=>x[1])).map(x=>String(x||"").replace(/[^0-9+]/g,"")).find(x=>x.length>=9);return v||""}
+function telOfP(p){const B=S.book;if(!B||B.team!==S.team||!B.contacts)return "";const c=B.contacts[p.id]||{};const v=(p.group==="T"?[c.phone]:studentNums(c,S.team,p.group,p.id).map(x=>x[1])).map(x=>String(x||"").replace(/[^0-9+]/g,"")).find(x=>x.length>=9);return v||""}
 function relabel(){
   const tb=document.querySelector('[data-tab="talent"]');
   if(tb){const n=[...tb.childNodes].filter(x=>x.nodeType===3).pop();if(n)n.nodeValue=S.view==="dept"?TL():"달란트"}
@@ -1029,8 +1052,8 @@ function openGuide(){
     <p class="muted" style="margin:0;font-size:14px">팀 관리자에게 받은 <b>담임 번호</b>로 들어가면 우리 반만 보여요.</p>
     <h4>1. 앱 설치 (처음 한 번)</h4><ol><li>주소 <b class="guide-url">팀 관리자가 알려 준 앱 주소</b> 를 열어요. 팀 관리자가 보낸 링크를 눌러도 돼요.</li><li><b>안드로이드</b>: 크롬 오른쪽 위 <b>︙</b> → <b>홈 화면에 추가</b> (또는 앱 설치)</li><li><b>아이폰</b>: 사파리 아래 <b>공유 버튼</b> → <b>홈 화면에 추가</b></li><li>카카오톡에서 열었다면 먼저 <b>다른 브라우저로 열기</b>를 눌러요.</li></ol>
     <h4>2. 들어가기</h4><ol><li>메인에서 <b>우리 부서</b> 카드 → <b>담임 번호</b> 넣기</li><li>제목 옆에 "담임 · 2학년"처럼 보이면 성공!</li><li>내 휴대폰이면 "이 기기에서 번호 기억하기"를 켜 두세요. 다음부터 바로 들어가요.</li></ol>
-    <h4>3. 출결메모 (주일 출석)</h4><ol><li>위쪽 날짜가 오늘 주일인지 확인해요. ‹ › 로 다른 주일로 가요.</li><li><b>체크 칸</b>: 누르면 출석, 다시 누르면 취소</li><li><b>메모</b>: 결석 이유 적기 ("감기·아픔" 같은 버튼도 있어요)</li><li><b>전화</b>: 영아·유아부는 부모님, 유소년·중고등부는 학생 번호가 먼저 나와요 (없으면 다른 번호). 순서는 팀 관리자가 명단 탭 [설정] 줄에서 바꿀 수 있어요.</li><li>숫자 칸(달란트 등): ▲▼ 를 누르거나 숫자를 눌러 적어요. 달란트는 여기서만 줘요.</li><li><b>담임 선생님 출석</b>: 우리 반 담임 줄 바로 아래에 선생님 이름이 나와요. 거기서 선생님 출석·메모도 체크해요. (교사 명단의 이름과 담임 이름이 같아야 나와요)</li></ol>
-    <h4>4. 명단 (연락처 포함)</h4><ol><li><b>[+ 사람 추가]</b>로 새 학생을 넣어요. 연락처·주소도 같이 적을 수 있어요.</li><li>이름을 누르면 보호자·부모 연락처와 주소가 보여요. <b>[전화]</b>, <b>[복사]</b>도 여기서.</li><li><b>[수정]</b>: 사진·생일·메모·연락처·주소를 한 창에서 고쳐요.</li><li><b>[삭제]</b>: 이름을 누른 창에서 눌러요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li>사람 정보는 <b>명단 탭에서만</b> 고칠 수 있어요. 다른 탭에서는 보기만 해요.</li><li>연락처가 잠겨 있으면 명단 위쪽 <b>연락처</b> 줄의 <b>[번호 입력]</b>에 담임 번호를 넣어요.</li></ol>
+    <h4>3. 출결메모 (주일 출석)</h4><ol><li>위쪽 날짜가 오늘 주일인지 확인해요. ‹ › 로 다른 주일로 가요.</li><li><b>체크 칸</b>: 누르면 출석, 다시 누르면 취소</li><li><b>메모</b>: 결석 이유 적기 ("감기·아픔" 같은 버튼도 있어요)</li><li><b>전화</b>: 영아·유아부는 부모님, 유소년·중고등부는 학생 번호가 먼저 나와요 (없으면 다른 번호). 영아·유아부는 늘 부모님, 중고등부는 늘 학생 번호예요. 유소년부만 팀 관리자가 부서 전체로, 담임 선생님이 자기 반만 명단 탭 [전화] 줄에서 바꿀 수 있어요.</li><li>숫자 칸(달란트 등): ▲▼ 를 누르거나 숫자를 눌러 적어요. 달란트는 여기서만 줘요.</li><li><b>담임 선생님 출석</b>: 우리 반 담임 줄 바로 아래에 선생님 이름이 나와요. 거기서 선생님 출석·메모도 체크해요. (교사 명단의 이름과 담임 이름이 같아야 나와요)</li></ol>
+    <h4>4. 명단 (연락처 포함)</h4><ol><li><b>[+ 사람 추가]</b>로 새 학생을 넣어요. 연락처·주소도 같이 적을 수 있어요.</li><li>이름을 누르면 보호자·부모 연락처와 주소가 보여요. <b>[전화]</b>, <b>[복사]</b>도 여기서.</li><li><b>[수정]</b>: 사진·생일·메모·연락처·주소를 한 창에서 고쳐요.</li><li><b>[삭제]</b>: 이름을 누른 창에서 눌러요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li>사람 정보는 <b>명단 탭에서만</b> 고칠 수 있어요. 다른 탭에서는 보기만 해요.</li><li><b>대표전화</b>: [수정]에서 부모·학생 연락처 중 <b>[대표]</b>에 체크한 번호로, 출석 화면의 <b>[전화]</b>를 누르면 바로 걸려요. 이름을 누른 창에서 전화기 아이콘을 눌러 바꿀 수도 있어요.</li><li>연락처가 잠겨 있으면 명단 위쪽 <b>연락처</b> 줄의 <b>[번호 입력]</b>에 담임 번호를 넣어요.</li></ol>
     <h4>5. 생일 · 달란트</h4><ol><li><b>생일</b>: 이번 주·이번 달·다음 달 생일. 생일이 없는 사람은 맨 아래에 모여요.</li><li><b>달란트</b>: 올해 누적 순위를 보는 화면이에요 (고치기는 출결메모에서).</li><li>달란트·생일·일정 엑셀은 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b> 파일에 들어 있어요.</li></ol>
     <h4>6. 출석 · 제적 · 졸업</h4><ol><li>명단 위쪽 <b>[출석] [제적] [졸업]</b> 을 눌러 나눠 봐요.</li><li>더 이상 안 나오는 학생: 이름 → [수정] → 상태를 <b>제적</b>으로. 졸업한 학생은 <b>졸업</b>으로.</li><li>제적·졸업 학생은 출석 명단에서 빠지지만 기록은 그대로 남아요.</li><li>다시 나오면 [제적] 목록에서 <b>[출석으로]</b>를 눌러요.</li></ol>
     <h4>7. 엑셀로 한 번에 (명단 · 연락처)</h4><ol><li>명단 탭 <b>엑셀</b> 줄의 <b>[양식 받기]</b>로 파일을 받아요. 지금 명단이 채워져 있어요.</li><li>'명단' 시트에 이름·반·생일·연락처·주소를 적어요. 생일은 03/15 처럼. 빈 칸은 원래 값을 그대로 둬요.</li><li><b>[올리기]</b>로 파일을 고르고 확인. 이름과 반이 같은 사람은 고쳐지고, 없는 사람은 새로 들어가요.</li><li>담임은 <b>우리 반</b> 학생만 올라가요. 파일에서 줄을 지워도 앱에서는 지워지지 않아요.</li><li>출석부 전체를 저장해 두려면 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b>를 눌러요.</li></ol>
@@ -1085,12 +1108,17 @@ async function openCall(id){
   if(!S.book||S.book.team!==S.team){toast("연락처를 불러오는 중…");await ensureContacts()}
   const B=S.book||{};const allowed=(B.grades||[]).includes(p.group);
   const c=(B.contacts||{})[p.id]||{};
-  const nums=(p.group==="T"?[["연락처",c.phone]]:studentNums(c)).filter(x=>String(x[1]||"").replace(/[^0-9]/g,"").length>=9);
+  const nums=(p.group==="T"?[["연락처",c.phone,"t"]]:fixedNums(c)).filter(x=>String(x[1]||"").replace(/[^0-9]/g,"").length>=9);
+  const repW=p.group==="T"?"t":(nums.find(x=>x[2]===callFirstOf(p.group,S.team,p.id))||nums[0]||[])[2];
   if(!allowed){alertBox("연락처를 볼 수 없어요","이 학생의 연락처를 볼 권한이 없어요. 팀 관리자 번호나 이 반의 담임 번호로 들어와 주세요.");return}
   if(!nums.length){alertBox("전화번호가 없어요",`${p.name}${p.group==="T"?"":"(보호자)"}의 전화번호가 없어요. 명단에서 ${p.name}을(를) 누르고 [수정]에서 번호를 넣어 주세요.`);return}
+  // 휴대폰에서는 대표전화로 바로 걸어요 (컴퓨터에서는 번호 창을 보여 줘요)
+  if(matchMedia("(pointer:coarse)").matches){const [k,v]=nums.find(x=>x[2]===repW)||nums[0];
+    const a=document.createElement("a");a.href="tel:"+String(v).replace(/[^0-9+]/g,"");a.target="_blank";a.rel="noopener";document.body.appendChild(a);a.click();a.remove();
+    toast(`${p.name} ${p.group==="T"?"":k+" "}번호로 전화를 걸어요`);return}
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<div class="sheet" role="dialog" aria-label="${esc(p.name)} 전화"><h3>${esc(p.name)} ${p.group==="T"?"":`<span class="muted" style="font-family:var(--body);font-size:14px">${esc(c.guardian?"보호자 "+c.guardian:classLabel(p))}</span>`}</h3>
-    ${nums.map(([k,v],i)=>{const d=String(v).replace(/[^0-9+]/g,"");return `<div class="call-row"><span class="k">${k}</span><span class="v num">${esc(v)}</span><a class="btn${i?"":" primary"}" href="tel:${d}" target="_blank" rel="noopener">전화</a><a class="btn" href="sms:${d}" target="_blank" rel="noopener">문자</a><button class="btn" data-copy-c="${esc(v)}">복사</button></div>`}).join("")}
+    ${nums.map(([k,v,w])=>{const d=String(v).replace(/[^0-9+]/g,"");const on=w===repW;return `<div class="call-row">${p.group==="T"?"":on?`<span class="rep-tel on" title="대표전화" aria-label="대표전화">${PHONE_SVG}</span>`:`<span class="rep-tel" style="visibility:hidden"></span>`}<span class="k">${k}</span><span class="v num">${esc(v)}</span><a class="btn${on?" primary":""}" href="tel:${d}" target="_blank" rel="noopener">전화</a><a class="btn" href="sms:${d}" target="_blank" rel="noopener">문자</a><button class="btn" data-copy-c="${esc(v)}">복사</button></div>`}).join("")}
     <p class="muted" style="font-size:12px;margin:10px 0 0">[전화]를 눌러도 전화 앱이 안 열리면 [복사]한 뒤 전화 앱에 붙여 넣어 주세요.</p>
     <div class="actions"><div class="spacer"></div><button class="btn" data-close>닫기</button></div></div>`;
   document.body.appendChild(ov);
@@ -1131,10 +1159,10 @@ function renderRoster(){
     .sort((a,b)=>(a.active===false)-(b.active===false)||GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||a.name.localeCompare(b.name,"ko"));
   let h=`<input class="search" id="q" type="search" placeholder="이름 검색" value="${esc(S.q)}"><div class="seg" style="margin-top:10px">${[["active","출석"],["removed","제적"],["grad","졸업"]].map(([m,l])=>`<button data-rmode="${m}" aria-pressed="${(S.rosterMode||"active")===m}">${l} ${all.filter(p=>rosterModeOf(p)===m).length}명</button>`).join("")}</div>
     <div class="summary"><div><div class="big num">${all.filter(p=>p.active!==false).length}<em> 명 재적</em></div><div class="sub">${TEAMS[S.team].short} · ${S.group==="all"?"전체":GL[S.group]}</div></div><div class="spacer"></div>
-    ${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">담임</span><span class="none" style="font-size:13px">담임 번호를 받은 선생님은 자기 반만 관리해요</span><span class="spacer"></span><button id="gcManage2">담임 권한 관리</button></div>`:""}${canManageGrades()&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${canManageGrades()&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">전화</span><span class="none" style="font-size:13px">${callFirst()==="parent"?"부모님 번호 먼저":"학생 번호 먼저"} 걸어요</span><span class="spacer"></span><button id="callFirstToggle">${callFirst()==="parent"?"학생 먼저로":"부모님 먼저로"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div>`:""}${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
+    ${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">담임</span><span class="none" style="font-size:13px">담임 번호를 받은 선생님은 자기 반만 관리해요</span><span class="spacer"></span><button id="gcManage2">담임 권한 관리</button></div>`:""}${canManageGrades()&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div>`:""}${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
   for(const p of ps){
     const tags=[p.isNew?'<span class="tag new">새친구</span>':"",p.active===false?`<span class="tag role">${p.leftType==="졸업"?"졸업":"제적"}</span>`:"",p.role?`<span class="tag role">${esc(p.role)}</span>`:""].join("");
-    h+=`<div class="row" style="${p.active===false?"opacity:.55":""}"><button class="who-wrap" data-open="${p.id}" style="padding:2px 4px">${avatar(p)}<span class="who"><b>${esc(p.name)}${p.gender?`(${esc(p.gender)})`:""} <span class="muted" style="font-size:12px;font-weight:500">${esc([classLabel(p),ageLabel(p)].filter(Boolean).join(" · "))}</span>${tags}</b>
+    h+=`<div class="row${p.group==="T"?" tch":""}" style="${p.active===false?"opacity:.55":""}"><button class="who-wrap" data-open="${p.id}" style="padding:2px 4px">${avatar(p)}<span class="who"><b>${esc(p.name)}${p.gender?`(${esc(p.gender)})`:""} <span class="muted" style="font-size:12px;font-weight:500">${esc([classLabel(p),ageLabel(p)].filter(Boolean).join(" · "))}</span>${tags}</b>
       <span>${esc([p.birthday&&"생일 "+p.birthday,p.note].filter(Boolean).join(" · "))}</span></span></button>${p.active===false&&S.editable?`<button class="btn" data-restore="${p.id}">출석으로</button>`:""}</div>`;
   }
   h+=`</div>`;if(!ps.length)h+=`<div class="empty">${S.rosterMode==="removed"?"제적한 사람이 없어요.":S.rosterMode==="grad"?"졸업한 사람이 없어요.":"찾는 사람이 없어요."}</div>`;
@@ -1588,6 +1616,8 @@ function render(){
 
 /* ---------- person sheet ---------- */
 const FIELDS=[["name","이름"],["group","반"],["age","나이"],["section","분반"],["birthday","생일 (MM/DD)"],["role","직분"],["note","메모"]];
+/* 수정 창 순서: 반·생일은 늘 오른쪽 칸 (나이가 있으면 직분을 생일 앞으로) */
+const formFields=t=>(isFlex(t)?["name","group","age","section","role","birthday","note"]:["name","group","section","birthday","role","note"]).map(f=>FIELDS.find(x=>x[0]===f));
 function openPerson(id){
   const p=id?S.people.get(id):{name:"",team:S.team,group:S.group!=="all"?S.group:GROUPS[0][0],isNew:true,active:true};
   if(!p)return;
@@ -1607,13 +1637,13 @@ function openPerson(id){
         <label class="btn" for="f-photo" style="display:inline-flex;align-items:center;color:var(--ink);font-size:13px">사진 선택</label>
         <input type="file" id="f-photo" accept="image/\*">
         <button type="button" class="btn danger" id="ph-del" ${safePhoto(p.photo)?"":"hidden"}>사진 삭제</button></div></div>
-      ${FIELDS.map(([f,l])=>f==="team"?`<label>${l}<select id="f-team" name="team">${Object.entries(TEAMS).filter(([t])=>!isHomeroom()||t===S.team).map(([t,x])=>`<option value="${t}" ${teamOf(p)===t?"selected":""}>${x.label}</option>`).join("")}</select></label>`
+      ${formFields(teamOf(p)).map(([f,l])=>f==="team"?`<label>${l}<select id="f-team" name="team">${Object.entries(TEAMS).filter(([t])=>!isHomeroom()||t===S.team).map(([t,x])=>`<option value="${t}" ${teamOf(p)===t?"selected":""}>${x.label}</option>`).join("")}</select></label>`
         :f==="section"?`<label>${l}<select id="f-section" name="section">${[""].concat(sectionsOfKey(teamOf(p),p.group)).map(v=>`<option value="${v}" ${(secOf(p)||"")===v?"selected":""}>${v?v+"반":"없음"}</option>`).join("")}</select></label>`
         :f==="age"?(isFlex(teamOf(p))?`<label>${l}<select id="f-age" name="age"><option value="">모름</option>${TEAMS[teamOf(p)].groups.map(([a,al])=>`<option value="${a}" ${p.age===a?"selected":""}>${al}</option>`).join("")}</select></label>`:"")
-        :f==="group"?`<label>${l}<select id="f-group" name="group">${pickGroupsOf(teamOf(p)).filter(([g])=>!isHomeroom()||myScope().grades.includes(g)).map(([g,gl])=>`<option value="${g}" ${p.group===g?"selected":""}>${gl}</option>`).join("")}</select></label>`
+        :f==="group"?`<label class="c2">${l}<select id="f-group" name="group">${pickGroupsOf(teamOf(p)).filter(([g])=>!isHomeroom()||myScope().grades.includes(g)).map(([g,gl])=>`<option value="${g}" ${p.group===g?"selected":""}>${gl}</option>`).join("")}</select></label>`
         :f==="note"?`<label class="full">${l}<textarea id="f-${f}" name="${f}">${esc(p[f])}</textarea></label>`
         :f==="name"?`<label>${l}<span class="name-sex"><input id="f-name" name="name" value="${esc(p.name)}" required><select id="f-gender" name="gender" aria-label="성별"><option value="">성별</option><option value="남" ${p.gender==="남"?"selected":""}>남</option><option value="여" ${p.gender==="여"?"selected":""}>여</option></select></span></label>`
-        :`<label>${l}<input id="f-${f}" name="${f}" value="${esc(p[f])}"></label>`).join("")}
+        :`<label${f==="birthday"?' class="c2"':""}>${l}<input id="f-${f}" name="${f}" value="${esc(p[f])}"></label>`).join("")}
       <label class="inline full"><input type="checkbox" id="f-isNew" name="isNew" ${p.isNew?"checked":""}>새친구</label>
       ${id?`<label class="full">상태<select id="f-status" name="status"><option value="재적" ${p.active!==false?"selected":""}>출석</option><option value="제적" ${p.active===false&&p.leftType!=="졸업"?"selected":""}>제적 (목록에서 숨김)</option><option value="졸업" ${p.active===false&&p.leftType==="졸업"?"selected":""}>졸업 (목록에서 숨김)</option></select></label>`:""}
       </div><div id="pc-box"></div><div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
@@ -1647,16 +1677,23 @@ function openPerson(id){
   if(tSel)tSel.addEventListener("change",()=>{ov.querySelector("#f-group").innerHTML=pickGroupsOf(tSel.value).map(([g,gl])=>`<option value="${g}">${gl}</option>`).join("");refreshSec()});
   const gSel=ov.querySelector("#f-group");if(gSel)gSel.addEventListener("change",refreshSec);
   // 연락처·주소 (예전 주소록 탭을 명단으로 합쳤어요)
-  const pcBox=ov.querySelector("#pc-box");let pcShown=false;
+  const pcBox=ov.querySelector("#pc-box");let pcShown=false;let repSel="";
+  if(pcBox)pcBox.addEventListener("change",e=>{const b=e.target.closest("[data-rep-pick]");if(!b)return;
+    // 한쪽만 체크돼요. 체크를 풀면 다른 쪽이 대표가 돼요
+    repSel=b.checked?b.dataset.repPick:(b.dataset.repPick==="parent"?"student":"parent");
+    pcBox.querySelectorAll("[data-rep-pick]").forEach(x=>x.checked=x.dataset.repPick===repSel)});
   const drawContact=()=>{
     if(!pcBox)return;const g=gSel?gSel.value:p.group;
     if(!bookReady()){pcBox.innerHTML=S.bookLoading?`<p class="muted" style="font-size:13px;margin:12px 0 0">연락처를 불러오는 중…</p>`:"";pcShown=false;return}
     if(!canContact(g)){pcBox.innerHTML=`<p class="muted" style="font-size:13px;margin:12px 0 0">이 반의 연락처·주소는 권한이 있는 사람만 고칠 수 있어요.</p>`;pcShown=false;return}
     const keep=k=>{const el=pcBox.querySelector("#c-"+k);return el?el.value:((id&&S.book.contacts[id])||{})[k]||""};
     const c={guardian:keep("guardian"),parentPhone:keep("parentPhone"),phone:keep("phone"),address:keep("address")};const T=g==="T";
+    const PC=!T&&personCallOn(id?teamOf(p):S.team);if(PC&&!repSel)repSel=callFirstOf(g,id?teamOf(p):S.team,id);
+    const repIc=v=>PC?`<span class="rep-chk"><input type="checkbox" data-rep-pick="${v}" ${repSel===v?"checked":""} aria-label="${v==="parent"?"부모":"학생"} 번호를 대표전화로">대표</span>`:"";
     pcBox.innerHTML=`<h4 class="pc-h">연락처 · 주소</h4><div class="form">
-      ${T?"":`<label>보호자<input id="c-guardian" value="${esc(c.guardian)}"></label><label>부모 연락처<input id="c-parentPhone" inputmode="tel" value="${esc(c.parentPhone)}"></label>`}
-      <label class="${T?"full":""}">${T?"연락처":"학생 연락처"}<input id="c-phone" inputmode="tel" value="${esc(c.phone)}"></label>
+      ${T?"":`<label>보호자<input id="c-guardian" value="${esc(c.guardian)}"></label><label class="c2"><span class="pc-rep">부모 연락처${repIc("parent")}</span><input id="c-parentPhone" inputmode="tel" value="${esc(c.parentPhone)}"></label>`}
+      <label class="${T?"full":""}"><span class="pc-rep">${T?"연락처":"학생 연락처"}${T?"":repIc("student")}</span><input id="c-phone" inputmode="tel" value="${esc(c.phone)}"></label>
+      ${PC?`<p class="muted full" style="font-size:12px;margin:0">[대표]에 체크한 번호로 [전화]를 누르면 바로 걸려요.</p>`:""}
       <label class="full">주소<textarea id="c-address">${esc(c.address)}</textarea></label></div>`;
     pcShown=true;
   };
@@ -1679,6 +1716,8 @@ function openPerson(id){
     if(body.order==null)body.order=999;
     S.people.set(nid,{...body,id:nid});render();close();
     if(S.db)enqueue("people/"+nid,()=>S.db.doc("people/"+nid).set(body));
+    const repTeam=body.team;if(pcShown&&repSel&&body.group!=="T"&&personCallOn(repTeam)&&canContact(body.group)&&repSel!==callFirstOf(body.group,repTeam,id)){const np={...body,id:nid};
+      if(id)setPersonCall(np,repSel).catch(err=>{toast(err.message);load()});else{const rs=repSel;enqueue("people/"+nid,()=>setPersonCall(np,rs).catch(err=>{toast(err.message);load()}))}}
     if(contact){S.book.contacts[nid]=contact;const bk=S.book;
       // 명단 저장이 끝난 뒤에 연락처를 저장해요 (같은 줄에 이어서)
       enqueue("people/"+nid,()=>tracked(call("saveContact",nid,contact)).catch(err=>{toast(err.message);if(S.book===bk)S.book=null;render()}));}
@@ -1704,9 +1743,9 @@ document.addEventListener("click",e=>{
     S.settings={...(S.settings||{}),[S.team]:{...((S.settings||{})[S.team]||{}),talent:next}};render();
     tracked(call("setTeamSetting",S.team,"talent",next)).then(()=>toast(next?"달란트를 다시 사용해요":"이 부서는 달란트를 숨겼어요. 기록은 지우지 않아요")).catch(err=>{toast(err.message);load()});
     return}
-  if(e.target.closest("#callFirstToggle")){const next=callFirst()==="parent"?"student":"parent";
-    S.settings={...(S.settings||{}),[S.team]:{...((S.settings||{})[S.team]||{}),callFirst:next}};render();
-    tracked(call("setTeamSetting",S.team,"callFirst",next)).then(()=>toast(next==="parent"?"전화할 때 부모님 번호를 먼저 걸어요":"전화할 때 학생 번호를 먼저 걸어요")).catch(err=>{toast(err.message);load()});
+  const rps=e.target.closest("[data-rep-set]");if(rps){const p=S.people.get(rps.dataset.repSet);if(!p)return;const next=rps.dataset.repV;
+    setPersonCall(p,next).then(()=>toast(`${p.name} 대표전화를 ${next==="parent"?"부모님":"학생"} 번호로 정했어요`)).catch(err=>{toast(err.message);load()});
+    render();const box=document.querySelector("#pv-contact");if(box)box.innerHTML=contactLines(p);
     return}
   if(e.target.closest("#brandTitle")&&S.view!=="home"){S.view="home";render();window.scrollTo(0,0);return}
   const rm=e.target.closest("[data-rmode]");if(rm){S.rosterMode=rm.dataset.rmode;render();return}
