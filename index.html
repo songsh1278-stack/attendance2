@@ -91,7 +91,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.danger{color:var(--danger)}
 
-.group-h{display:flex;align-items:baseline;gap:8px;margin-block:18px 8px;font-family:var(--display);font-size:18px}
+.group-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin-block:18px 8px;font-family:var(--display);font-size:18px}
 .group-h .c{font-family:var(--body);font-size:13px;color:var(--muted)}
 .homeroom{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:8px 12px;margin-bottom:8px;font-size:14px}
 .homeroom .lbl{font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:1px 8px;flex:none}
@@ -1164,7 +1164,15 @@ function renderRoster(){
   let h=`<input class="search" id="q" type="search" placeholder="이름 검색" value="${esc(S.q)}"><div class="seg" style="margin-top:10px">${[["active","출석"],["removed","제적"],["grad","졸업"]].map(([m,l])=>`<button data-rmode="${m}" aria-pressed="${(S.rosterMode||"active")===m}">${l} ${all.filter(p=>rosterModeOf(p)===m).length}명</button>`).join("")}</div>
     <div class="summary"><div><div class="big num">${all.filter(p=>p.active!==false).length}<em> 명 재적</em></div><div class="sub">${TEAMS[S.team].short} · ${S.group==="all"?"전체":GL[S.group]}</div></div><div class="spacer"></div>
     ${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">담임</span><span class="none" style="font-size:13px">담임 번호를 받은 선생님은 자기 반만 관리해요</span><span class="spacer"></span><button id="gcManage2">담임 권한 관리</button></div>`:""}${canManageGrades()&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div>`:""}${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
+  /* 반(학년)마다 제목 줄과 인원. 영아처럼 나이가 따로 있으면 나이별 인원도 */
+  const ageCnt=list=>{if(!isFlex(S.team))return "";const m=new Map();list.forEach(p=>{if(p.group==="T")return;const a=ageLabel(p)||"나이 모름";m.set(a,(m.get(a)||0)+1)});
+    return [...m].sort((x,y)=>(parseInt(x[0])||99)-(parseInt(y[0])||99)).map(([a,n])=>`${a} ${n}명`).join(" · ")};
+  if(isFlex(S.team)&&ps.some(p=>p.group!=="T"))h+=`<div class="homeroom" style="margin-top:4px"><span class="lbl">나이별</span><span class="none num" style="font-size:13px">${esc(ageCnt(ps))}</span></div>`;
+  let curG=null;
   for(const p of ps){
+    if(p.group!==curG){curG=p.group;const gp=ps.filter(x=>x.group===curG);const ss=isClassKey(curG)?sectionsOf(curG):[];
+      const secTxt=ss.length?ss.map(sc=>`${sc}반 ${gp.filter(x=>secOf(x)===sc).length}`).join(" · "):"";
+      h+=`</div><div class="group-h">${esc(isFlex(S.team)&&isClassKey(curG)&&!/반$/.test(GL[curG]||"")?GL[curG]+"반":GL[curG]||curG)}<span class="c num" style="color:var(--ink);font-weight:600">${gp.length}명</span>${secTxt?`<span class="c num">${secTxt}</span>`:""}${isFlex(S.team)&&curG!=="T"&&ageCnt(gp)?`<span class="c num">${esc(ageCnt(gp))}</span>`:""}</div><div class="list">`}
     const tags=[p.isNew?'<span class="tag new">새친구</span>':"",p.active===false?`<span class="tag role">${p.leftType==="졸업"?"졸업":"제적"}</span>`:"",p.role?`<span class="tag role">${esc(p.role)}</span>`:""].join("");
     h+=`<div class="row${p.group==="T"?" tch":""}" style="${p.active===false?"opacity:.55":""}"><button class="who-wrap" data-open="${p.id}" style="padding:2px 4px">${avatar(p)}<span class="who"><b>${esc(p.name)}${p.gender?`(${esc(p.gender)})`:""} <span class="muted" style="font-size:12px;font-weight:500">${esc(ageClassLabel(p))}</span>${tags}</b>
       <span>${esc([p.birthday&&"생일 "+p.birthday,p.note].filter(Boolean).join(" · "))}</span></span></button>${p.active===false&&S.editable?`<button class="btn" data-restore="${p.id}">출석으로</button>`:""}</div>`;
