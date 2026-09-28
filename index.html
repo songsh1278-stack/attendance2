@@ -386,17 +386,16 @@ const TEAMS={
 };
 const teamOf=p=>p.team||"youth";
 /* 영아교육팀은 나이와 관계없이 반을 편성해요. 반 목록은 부서 설정(classes), 나이는 사람마다 따로(age).
-   반을 아직 안 정한 아이는 "_"(미배정). 유아·유소년·중고등은 반 = 나이·학년 그대로. */
+   아이는 늘 어느 한 반에 속해요(미배정 없음). 유아·유소년·중고등은 반 = 나이·학년 그대로. */
 const FLEX_TEAMS=["infant"];
 const isFlex=t=>FLEX_TEAMS.includes(t);
 /* 반 이름: 영아는 반 목록 전체를, 나머지 부서는 나이·학년 순서는 그대로 두고 이름만 바꿔요 */
 const classesOf=t=>{const c=((S.settings||{})[t]||{}).classes;
   if(isFlex(t))return Array.isArray(c)&&c.length?c:TEAMS[t].groups;
   const nm=Object.fromEntries((Array.isArray(c)?c:[]).filter(x=>x&&x[1]));return TEAMS[t].groups.map(([k,l])=>[k,nm[k]||l])};
-const hasUnassigned=t=>[...S.people.values()].some(p=>teamOf(p)===t&&p.group==="_");
-const groupsOf=t=>[...classesOf(t),...(isFlex(t)&&hasUnassigned(t)?[["_","미배정"]]:[]),["T","교사"]];
-const pickGroupsOf=t=>[...classesOf(t),...(isFlex(t)?[["_","미배정"]]:[]),["T","교사"]];
-const isClassKey=g=>g!=="T"&&g!=="_";
+const groupsOf=t=>[...classesOf(t),["T","교사"]];
+const pickGroupsOf=groupsOf;
+const isClassKey=g=>g!=="T";
 const ageLabel=p=>isFlex(teamOf(p))&&p.group!=="T"&&p.age?(Object.fromEntries(TEAMS[teamOf(p)].groups.concat(...FLEX_TEAMS.map(t=>TEAMS[t].groups)))[p.age]||""):"";
 let GROUPS,GL;
 const S={promos:new Map(),view:"home",depts:new Map(),codes:{},isAdmin:false,people:new Map(),att:new Map(),classes:new Map(),date:null,team:"youth",group:"all",tab:"check",q:"",statMode:"week",db:null,ready:false,editable:true,fold:{}};
@@ -538,7 +537,7 @@ const sectionsOf=g=>sectionsOfKey(S.team,g);
 const secOf=p=>{const ss=sectionsOfKey(teamOf(p),p.group);return ss.includes(p.section)?p.section:""};
 const classLabel=p=>(GL[p.group]||"")+(secOf(p)?" "+secOf(p)+"반":"");
 /* 나이로 반을 나누는 부서(영아)는 명단에 "3세 · 2세반"처럼 나이 먼저, 반 이름 뒤에 "반" */
-const banOf=p=>{const l=classLabel(p);return ageLabel(p)&&l&&p.group!=="_"&&!/반$/.test(l)?l+"반":l};
+const banOf=p=>{const l=classLabel(p);return ageLabel(p)&&l&&!/반$/.test(l)?l+"반":l};
 const ageClassLabel=p=>[ageLabel(p),banOf(p)].filter(Boolean).join(" · ");
 const homeroomOf=(g,sec)=>{const c=classOf(g);return (sec?(c.teachers||{})[sec]:c.teacher)||""};
 /* 담임은 여러 명일 수 있어요. 저장은 "김은혜, 박요한"처럼 쉼표로 이어서 한 칸에 */
@@ -814,7 +813,7 @@ async function downloadTemplate(){
   const groupNames=GROUPS.filter(g=>g[0]!=="T").map(g=>g[1]).join(", ");
   const guide=[["교육팀 출석부 명단 양식 — "+TEAMS[S.team].label],[""],
     ["· '명단' 시트에 한 사람당 한 줄씩 적어 주세요. 첫 줄(머리글)은 지우지 마세요."],
-    ["· 반: "+groupNames+" 중 하나. 선생님은 '교사'라고 적어요."+(FX?" 반을 아직 안 정했으면 비워 두거나 '미배정'.":"")],
+    ["· 반: "+groupNames+" 중 하나. 선생님은 '교사'라고 적어요."],
     ...(FX?[["· 나이: "+TEAMS[S.team].groups.map(g=>g[1]).join(", ")+" 중 하나 (반과 따로예요)."]]:[]),
     ["· 분반: A, B, C, D (없으면 비워 두세요)."],
     ["· 생일: 03/15 처럼 월/일. 3/15, 3월 15일로 적어도 03/15로 맞춰 저장돼요."],
@@ -1145,7 +1144,7 @@ function renderCheck(){
     const gp=ps.filter(p=>p.group===g);
     if(!isClassKey(g)&&!gp.length&&S.group==="all")continue;
     const ss=isClassKey(g)?sectionsOf(g):[];
-    h+=`<div class="group-h">${GL[g]}${ss.length?`<span class="c">${ss.join("·")}반</span>`:""}${g==="_"?`<span class="c">명단 탭 [반 배정]에서 반을 정해 주세요</span>`:""}<span class="c num">${gp.filter(p=>isOn(k,p.id)).length}/${gp.length}</span>${isClassKey(g)&&S.editable?`<button class="mini" data-split="${g}">${ss.length?"분반 수정":"분반 나누기"}</button>`:""}</div>`;
+    h+=`<div class="group-h">${GL[g]}${ss.length?`<span class="c">${ss.join("·")}반</span>`:""}<span class="c num">${gp.filter(p=>isOn(k,p.id)).length}/${gp.length}</span>${isClassKey(g)&&S.editable?`<button class="mini" data-split="${g}">${ss.length?"분반 수정":"분반 나누기"}</button>`:""}</div>`;
     if(!gp.length&&!ss.length){if(isClassKey(g))h+=homeroomBar(g)+hrRows(g);h+=`<div class="group-empty">${S.ready?"등록된 사람이 없어요. 명단 탭에서 추가하세요.":"불러오는 중…"}</div>`;continue}
     if(!ss.length){if(isClassKey(g))h+=homeroomBar(g)+hrRows(g);h+=`<div class="list">${gp.map(personRow).join("")}</div>`;continue}
     for(const sec of ss){
@@ -1308,9 +1307,9 @@ function planPromotion(t){
     .map(p=>({p,next:nextStep(t,stepFrom(t,p))})).filter(x=>x.next);
 }
 const noAgeKids=t=>isFlex(t)?[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group!=="T"&&p.promotedYear!==promoYear()&&!p.age):[];
-/* 등반 뒤 값: 영아 안에서는 나이만 올리고 반은 미배정, 유아로 가면 5세반 */
-const promoBody=(next,y)=>next==="grad"?null:isFlex(next[0])?{team:next[0],group:"_",age:next[1],promotedYear:y,section:""}:{team:next[0],group:next[1],age:"",promotedYear:y,section:""};
-const stepToLabel=next=>next==="grad"?"졸업":stepLabel(next[0],next[1])+(isFlex(next[0])?" (반 미배정)":"");
+/* 등반 뒤 값: 영아 안에서는 나이만 올리고 반·분반은 그대로, 유아로 가면 5세반 */
+const promoBody=(next,y)=>next==="grad"?null:isFlex(next[0])?{team:next[0],age:next[1],promotedYear:y}:{team:next[0],group:next[1],age:"",promotedYear:y,section:""};
+const stepToLabel=next=>next==="grad"?"졸업":stepLabel(next[0],next[1]);
 async function writeWithRetry(ref,body){return ref.update(body)}
 async function applyMoves(list,onProgress){
   for(const [id,body] of list){const p=S.people.get(id);if(p)S.people.set(id,{...p,...body})}
@@ -1360,7 +1359,7 @@ function openPromotion(t){
   const last=TEAMS[t].groups[TEAMS[t].groups.length-1].slice();last[1]=stepLabel(t,last[0]).slice(TEAMS[t].short.length+1);const nx=nextStep(t,last[0]);
   const dest=nx==="grad"?"졸업 처리되어 명단에서 숨겨져요":`<b>${esc(TEAMS[nx[0]].label)} ${esc(stepLabel(nx[0],nx[1]).slice(TEAMS[nx[0]].short.length+1))}</b>(으)로 올라가요`;
   const intro=`${esc(TEAMS[t].label)} 재적 ${plan.length}명이 ${isFlex(t)?"한 살씩":"한 학년씩"} 올라가요. ${esc(last[1])}은(는) ${dest}. 교사와 담임 지정은 그대로예요.`
-    +(isFlex(t)?`<br><b>반은 모두 미배정이 돼요.</b> 등반 뒤 [명단 → 반 배정]에서 새 반을 정해 주세요.`:"");
+    +(isFlex(t)?`<br>반은 그대로예요. 새 반이 필요하면 등반 뒤 [명단 → 반 배정]에서 옮겨 주세요.`:"");
   const na=noAgeKids(t);
   const warn=(na.length?`<p class="err">나이가 적혀 있지 않은 ${na.length}명은 등반에서 빠져요: ${na.slice(0,6).map(p=>esc(p.name)).join(", ")}${na.length>6?" …":""}. 명단에서 나이를 먼저 적어 주세요.</p>`:"")+(promoDone(t)?`<p class="err">이미 ${y}년 ${esc(TEAMS[t].short)} 등반을 했어요. 지금 남은 대상은 그 뒤에 들어온 학생들이에요.</p>`:"");
   const list=`<div class="move-list">${order.map(m=>`<div class="move ${m.grad?"grad":""}"><span>${esc(m.from)}</span><span class="arrow">→</span><span class="to"${m.out&&!m.grad?' style="color:var(--accent);font-weight:600"':""}>${esc(m.to)}</span><span class="n num">${m.n}명</span></div>`).join("")||`<p class="muted">등반할 학생이 없어요. 올해 이미 등반한 학생은 다시 올라가지 않아요.</p>`}</div>`;
@@ -1426,21 +1425,20 @@ function promoBar(t){
   return `<div class="homeroom" style="margin-top:4px"><span class="lbl">연말</span><span class="none" style="font-size:13px">${esc(promoStatus(t))}</span><span class="spacer"></span>
     <button data-promo="${t}">학년 등반</button><button data-promo-undo="${t}" style="color:var(--danger)">되돌리기</button></div>`;
 }
-const classLabelOf=(t,g)=>g==="_"?"미배정":g==="T"?"교사":(Object.fromEntries(classesOf(t))[g]||g);
+const classLabelOf=(t,g)=>g==="T"?"교사":(Object.fromEntries(classesOf(t))[g]||g);
 /* 영아교육팀: 명단 탭 '반 편성' 줄 */
 function classBar(t){
   if(!S.editable||!canPromote(t))return "";
   if(!isFlex(t))return `<div class="homeroom" style="margin-top:4px;flex-wrap:wrap"><span class="lbl">반 이름</span><span class="none" style="font-size:13px">${esc(classesOf(t).map(x=>x[1]).join(" · "))}</span><span class="spacer"></span><button data-class-edit="${t}">이름 바꾸기</button></div>`;
-  const n=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group==="_").length;
-  return `<div class="homeroom" style="margin-top:4px;flex-wrap:wrap"><span class="lbl">반 편성</span><span class="none" style="font-size:13px">${esc(classesOf(t).map(x=>x[1]).join(" · "))}${n?` · <b style="color:var(--danger)">미배정 ${n}명</b>`:""}</span><span class="spacer"></span><button data-class-edit="${t}">반 관리</button><button data-class-assign="${t}">반 배정</button></div>`;
+  return `<div class="homeroom" style="margin-top:4px;flex-wrap:wrap"><span class="lbl">반 편성</span><span class="none" style="font-size:13px">${esc(classesOf(t).map(x=>x[1]).join(" · "))}</span><span class="spacer"></span><button data-class-edit="${t}">반 관리</button><button data-class-assign="${t}">반 배정</button></div>`;
 }
 function openClassEdit(t){
   if(!canPromote(t)){toast("반 편성은 팀 관리자 이상만 할 수 있어요");return}
   let list=classesOf(t).map(x=>[x[0],x[1]]);const FX=isFlex(t);const orig=Object.fromEntries(TEAMS[t].groups);
-  const cnt=g=>[...S.people.values()].filter(p=>teamOf(p)===t&&p.group===g).length;
+  const cnt=g=>[...S.people.values()].filter(p=>teamOf(p)===t&&p.group===g&&p.active!==false).length;
   const ov=document.createElement("div");ov.className="overlay";
   const draw=()=>{ov.innerHTML=`<form class="sheet" role="dialog" aria-label="${FX?"반 관리":"반 이름 바꾸기"}"><h3>${esc(TEAMS[t].label)} ${FX?"반 관리":"반 이름 바꾸기"}</h3>
-    <p class="muted" style="margin:0;font-size:14px">${FX?"나이와 관계없이 반을 만들어요. 반 이름을 바꾸거나 순서를 바꿀 수 있고, 반을 없애면 그 반 아이들은 <b>미배정</b>이 돼요(그 반 담임·담임 번호도 지워져요).":"화면과 시트에 보이는 반 이름만 바뀌어요(예: 1학년 → 1학년 사랑반). 순서와 연말 등반은 그대로이고, 출석·담임·담임 번호도 그대로 이어져요."}</p>
+    <p class="muted" style="margin:0;font-size:14px">${FX?"나이와 관계없이 반을 만들어요. 반 이름을 바꾸거나 순서를 바꿀 수 있고, 아이가 있는 반은 먼저 [반 배정]에서 아이들을 다른 반으로 옮긴 뒤 없앨 수 있어요(그 반 담임·담임 번호도 지워져요).":"화면과 시트에 보이는 반 이름만 바뀌어요(예: 1학년 → 1학년 사랑반). 순서와 연말 등반은 그대로이고, 출석·담임·담임 번호도 그대로 이어져요."}</p>
     <div class="admin-list card" style="margin-top:12px">${list.map(([k,l],i)=>`<div class="admin-row">${FX?"":`<span class="muted" style="font-size:12px;min-width:40px">${esc(orig[k]||"")}</span>`}<input data-ci="${i}" value="${esc(l)}" maxlength="12" aria-label="${i+1}번째 반 이름" style="flex:1;min-width:0;height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:var(--surface);color:var(--ink);font:inherit"><span class="muted num" style="font-size:12px;min-width:34px;text-align:right">${k?cnt(k)+"명":"새 반"}</span>${FX?`<button type="button" class="btn" data-cup="${i}" aria-label="위로" ${i?"":"disabled"}>↑</button><button type="button" class="btn" data-cdel="${i}" aria-label="${esc(l)} 없애기" style="color:var(--danger)">×</button>`:""}</div>`).join("")}</div>
     ${FX?`<div style="margin-top:8px"><button type="button" class="btn" data-cadd>+ 반 추가</button></div>`:""}
     <p class="err" id="cErr" hidden></p>
@@ -1453,7 +1451,7 @@ function openClassEdit(t){
     if(up){sync();const i=+up.dataset.cup;[list[i-1],list[i]]=[list[i],list[i-1]];draw();return}
     if(del){sync();const i=+del.dataset.cdel;const k=list[i][0];
       if(list.length<2){toast("반은 하나 이상 있어야 해요");return}
-      if(k&&cnt(k)&&!del.dataset.armed){del.dataset.armed="1";del.textContent=`${cnt(k)}명 미배정으로`;return}
+      if(k&&cnt(k)){toast(`${list[i][1]||"이 반"}에 ${cnt(k)}명이 있어요. 먼저 [반 배정]에서 옮겨 주세요`);return}
       list.splice(i,1);draw();return}
     if(e.target.closest("[data-cadd]")){sync();if(list.length>=20){toast("반은 20개까지 만들 수 있어요");return}list.push(["",""]);draw();const ins=ov.querySelectorAll("[data-ci]");ins[ins.length-1].focus()}
   });
@@ -1463,7 +1461,7 @@ function openClassEdit(t){
     const bad=names.findIndex(n=>!n)>=0?"반 이름을 모두 적어 주세요":names.some(n=>n==="교사"||n==="미배정")?"'교사', '미배정'은 반 이름으로 쓸 수 없어요":new Set(names).size<names.length?"반 이름이 겹쳐요":"";
     if(bad){err.textContent=bad;err.hidden=false;return}
     const btn=ov.querySelector('[type="submit"]');btn.disabled=true;
-    try{const r=await tracked(call("setClasses",t,list.map(([k,l])=>[k,l.trim()])));ov.remove();await load();toast(r&&r.unassigned?`반을 저장했어요. ${r.unassigned}명은 미배정이 됐어요`:"반을 저장했어요")}
+    try{await tracked(call("setClasses",t,list.map(([k,l])=>[k,l.trim()])));ov.remove();await load();toast("반을 저장했어요")}
     catch(x){btn.disabled=false;err.textContent=x.message;err.hidden=false}
   });
 }
@@ -1496,11 +1494,11 @@ let chipLast={g:"",at:0};
 function chipDouble(g){const now=Date.now();const dbl=chipLast.g===g&&now-chipLast.at<400;chipLast=dbl?{g:"",at:0}:{g,at:now};return dbl}
 function openClassAssign(t){
   if(!canPromote(t)){toast("반 배정은 팀 관리자 이상만 할 수 있어요");return}
-  const cls=classesOf(t);const order=g=>{const i=cls.findIndex(x=>x[0]===g);return g==="_"?-1:i<0?99:i};
+  const cls=classesOf(t);const order=g=>{const i=cls.findIndex(x=>x[0]===g);return i<0?99:i};
   const ages=Object.fromEntries(TEAMS[t].groups.map(([a],i)=>[a,i]));
   const ps=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group!=="T")
     .sort((a,b)=>order(a.group)-order(b.group)||(ages[a.age]??99)-(ages[b.age]??99)||a.name.localeCompare(b.name,"ko"));
-  const opts=g=>[["_","미배정"],...cls].map(([k,l])=>`<option value="${k}" ${g===k?"selected":""}>${esc(l)}</option>`).join("");
+  const opts=g=>cls.map(([k,l])=>`<option value="${k}" ${g===k?"selected":""}>${esc(l)}</option>`).join("");
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="반 배정"><h3>${esc(TEAMS[t].label)} 반 배정</h3>
     <p class="muted" style="margin:0;font-size:14px">아이마다 반을 골라 주세요. 나이와 관계없이 넣을 수 있어요. 반을 바꾸면 분반은 풀려요.</p>
