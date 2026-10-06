@@ -900,6 +900,8 @@ async function loadEvents(){
   catch(e){if(!S.ev||S.ev.team!==team)S.ev={team,list:[],canEdit:false,error:e.message}}
   S.evLoading=false;if(S.tab==="schedule")render();
 }
+/* 일정 → 자료실 → 재정보고 순서로 하나씩 미리 불러와요 (서버에 요청이 한꺼번에 몰리지 않게) */
+function preloadSched(){return loadEvents().then(()=>loadLib()).then(()=>loadFin()).catch(()=>{})}
 /* ---- 재정보고 (양식 내려받기 + 작성한 파일 메일로 보내기) ---- */
 async function loadFin(){
   if(S.finLoading||!canManageGrades())return;S.finLoading=true;const team=S.team;
@@ -1322,7 +1324,7 @@ function goDept(t){S.book=null;
   S.schedMode="cal";S.calSel="";S.calMonth="";S.rosterMode="active";setTeam(t);S.view="dept";S.tab="check";
   try{localStorage.setItem("ya-team",S.team)}catch(_){}
   render();window.scrollTo(0,0);
-  setTimeout(()=>{loadEvents();loadLib();loadFin()},300);
+  setTimeout(()=>{preloadSched()},300);
 }
 function enterDept(t){if(canEnter(t))return goDept(t);openCodeSheet(t)}
 function openCodeSheet(t){
@@ -1976,16 +1978,22 @@ let pending=0;
 // GitHub 페이지에서 열면 google.script.run 이 없으므로 웹앱 주소(doPost)로 직접 보낸다.
 const API_URL="https:"+"/"+"/script.google.com/macros/s/AKfycbxAIzrJ4PjqNm4lo-1iC88RjRV56JTSkug5moMo_a-x7Im4v98XxCZ0Z-Gm0Y2FaUGt/exec";
 const HAS_GS=typeof google!=="undefined"&&!!(google.script&&google.script.run);
+/* 읽기만 하는 요청은 연결이 끊기면 자동으로 두 번 더 시도해요 (저장 요청은 중복될 수 있어 다시 보내지 않아요) */
+const READ_OPS=new Set(["boot","events","libList","finInfo","contacts","appUrl","history","gradeCodes","verifyCode","findGradeCode","verifyGradeCode","downloadFile"]);
 async function callFetch(op,args){
-  let t;
-  try{const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({op,auth:AUTH(),args}),redirect:"follow"});
+  let t;const ac=typeof AbortController!=="undefined"?new AbortController():null;const tm=ac?setTimeout(()=>ac.abort(),60000):0;
+  try{const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({op,auth:AUTH(),args}),redirect:"follow",signal:ac?ac.signal:undefined});
     if(!r.ok)throw new Error("HTTP "+r.status);t=await r.text()}
-  catch(e){throw new Error("연결하지 못했어요. 인터넷 연결을 확인해 주세요")}
-  let x;try{x=JSON.parse(t)}catch(_){throw new Error("서버 응답을 읽지 못했어요")}
+  catch(e){const er=new Error(navigator.onLine===false?"인터넷에 연결되어 있지 않아요. 연결을 확인해 주세요":"서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요");er.net=true;throw er}
+  finally{clearTimeout(tm)}
+  let x;try{x=JSON.parse(t)}catch(_){const er=new Error("서버 응답을 읽지 못했어요");er.net=true;throw er}
   if(!x.ok)throw new Error(x.error);return x.data;
 }
+async function callFetchRetry(op,args){
+  for(let i=0;;i++){try{return await callFetch(op,args)}catch(e){if(!e.net||!READ_OPS.has(op)||i>=2)throw e;await new Promise(r=>setTimeout(r,1500*(i+1)))}}
+}
 function call(op,...args){
-  if(!HAS_GS)return callFetch(op,args);
+  if(!HAS_GS)return callFetchRetry(op,args);
   return new Promise((res,rej)=>{
     google.script.run.withSuccessHandler(r=>{let x;try{x=JSON.parse(r)}catch(_){return rej(new Error("서버 응답을 읽지 못했어요"))}x.ok?res(x.data):rej(new Error(x.error))})
       .withFailureHandler(e=>rej(new Error((e&&e.message)||"연결하지 못했어요. 인터넷 연결을 확인해 주세요")))
@@ -2022,25 +2030,25 @@ function slowNotice(show,msg){
   if(!el){el=document.createElement("div");el.id="slowBox";el.className="notice";el.style.cssText="margin:12px 16px;max-width:608px";document.querySelector(".app").insertBefore(el,document.querySelector("#view"))}
   el.innerHTML=`<b>${esc(msg)}</b><br>· 처음 열 때는 10초쯤 걸릴 수 있어요.<br>· 카카오톡 안에서 열었다면 Chrome이나 Safari로 열어 보세요.<br>· 구글 계정 여러 개에 로그인된 브라우저라면 시크릿 창에서 열어 보세요.<div style="margin-top:8px"><button class="btn" id="retryLoad">다시 시도</button></div>`;
 }
-async function load(){
+async function load(quiet){
   if(loading)return loading;
   const slow=setTimeout(()=>{if(!S.ready){slowNotice(true,"구글 시트에서 불러오는 데 시간이 걸리고 있어요.");hideBootLoader()}},12000);
   const slowMsg=setTimeout(()=>{if(!S.ready&&$("#bootMsg"))$("#bootMsg").textContent="조금만 기다려 주세요. 처음 열 때는 시간이 걸려요…"},5000);
   loading=call("boot").then(d=>{applyBoot(d);saveBootCache(d);slowNotice(false);$("#sync").textContent="구글 시트에 저장됨";render();hideBootLoader()})
-    .catch(e=>{console.error(e);$("#sync").textContent="연결 안 됨";if(!S.ready){slowNotice(true,"불러오지 못했어요: "+e.message);hideBootLoader()}else toast(e.message)})
+    .catch(e=>{console.error(e);$("#sync").textContent=S.ready?"연결 안 됨 · 자동 재시도":"연결 안 됨";if(!S.ready){slowNotice(true,"불러오지 못했어요: "+e.message);hideBootLoader()}else if(!quiet)toast(e.message)})
     .finally(()=>{clearTimeout(slow);clearTimeout(slowMsg);loading=null});
   return loading;
 }
 document.addEventListener("click",e=>{if(e.target.closest("#retryLoad")){$("#sync").textContent="불러오는 중…";loading=null;load()}});
 render();useBootCache();load();
-if(S.view==="dept")setTimeout(()=>{loadEvents();loadLib();loadFin()},1500);
+if(S.view==="dept")setTimeout(()=>{preloadSched()},1500);
 setInterval(()=>{
   if(document.hidden||pending||document.querySelector(".overlay"))return;
   const a=document.activeElement;if(a&&a.dataset&&(a.dataset.tv||a.dataset.total))return;
   if(a&&a.id==="q")return;if(a&&a.id&&a.id.indexOf("f-fin-")===0)return; // 이름 검색 중에는 새로 불러오지 않아요 (한글 입력이 끊기지 않게)
-  load();
-},25000);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)load()});
+  load(true);
+},40000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)load(true)});
 </script>
 
 <script>
