@@ -900,94 +900,22 @@ async function loadEvents(){
   catch(e){if(!S.ev||S.ev.team!==team)S.ev={team,list:[],canEdit:false,error:e.message}}
   S.evLoading=false;if(S.tab==="schedule")render();
 }
-/* 일정 → 자료실 → 재정보고 순서로 하나씩 미리 불러와요 (서버에 요청이 한꺼번에 몰리지 않게) */
-function preloadSched(){return loadEvents().then(()=>loadLib()).then(()=>loadFin()).catch(()=>{})}
-/* ---- 재정보고 (양식 내려받기 + 작성한 파일 메일로 보내기) ---- */
-async function loadFin(){
-  if(S.finLoading||!canManageGrades())return;S.finLoading=true;const team=S.team;
-  try{const d=await call("finInfo",team);S.fin={team,...d};wrC("ya-fin-"+team,S.fin)}
-  catch(e){if(!S.fin||S.fin.team!==team)S.fin={team,error:e.message}}
-  S.finLoading=false;if(S.tab==="schedule"&&S.schedMode==="fin")render();
-}
-/* 보낼 파일 후보: 자료실 엑셀의 온라인 작성본, 재정보고 양식, 자료실에 올린 파일 (내 컴퓨터 파일은 쓰지 않아요) */
-function finChoices(F){
-  const L=(S.lib&&S.lib.team===S.team&&S.lib.files)||[];const c=[];
-  L.forEach(x=>{if(x.doc)c.push(["doc:"+x.id,"온라인 작성본 · "+x.name]) });
-  if(F.tpl)c.push(["tpl","재정보고 양식 · "+F.tpl.name]);
-  L.forEach(x=>c.push(["lib:"+x.id,"자료실 · "+x.name]));
-  c.push(["upload","내 컴퓨터에서 파일 고르기"]);
-  return c;
-}
-function finSelOf(F){const c=finChoices(F);const v=(S.finForm||{})["f-fin-file"];return c.some(x=>x[0]===v)?v:(c[0]||[""])[0]}
-function renderFinance(){
-  const F=S.fin;if(!F||F.team!==S.team){if(!S.finLoading)setTimeout(loadFin,0);return `<div class="empty">재정보고를 불러오는 중…</div>`}
-  if(F.error)return `<div class="notice">${esc(F.error)}</div>`;
-  if((!S.lib||S.lib.team!==S.team)&&!S.libLoading)setTimeout(loadLib,0);
-  const T=F.tpl,fm=S.finForm||{},y=S.date.slice(0,4);
-  const val=(k,d)=>esc(fm[k]!==undefined?fm[k]:d);
-  const kb=n=>n?Math.max(1,Math.round(n/1024))+"KB · ":"";
-  let h=`<h2 class="sec">${esc(TEAMS[S.team].label)} 재정보고</h2><p class="muted" style="font-size:13px;margin:-4px 0 10px">팀 관리자만 볼 수 있어요. 양식을 올려 두고, 작성한 파일을 바로 메일로 보내요. 내려받지 않고 온라인으로 작성하려면 자료실에서 엑셀 파일의 [온라인 작성]을 누르세요.</p>`;
-  h+=`<div class="card"><b>1. 재정보고 양식 (원본 파일)</b>`+(T?`<div class="file-row"><span class="nm">${esc(T.name)}<br><span class="muted" style="font-size:12px">${kb(T.size)}${esc(T.updated||"")}</span></span><button class="btn primary" data-ldl="${T.id}">내려받기</button><button class="btn" data-lview="${T.id}">보기</button></div>`:`<p class="muted" style="margin:8px 0 0;font-size:14px">아직 올려 둔 양식이 없어요. 아래 버튼으로 양식 파일을 올려 주세요.</p>`)
-    +`<div style="margin-top:10px"><button class="btn" id="finTplUp">${T?"양식 바꾸기":"+ 양식 올리기 (10MB까지)"}</button>${T?` <button class="btn danger" id="finTplDel">양식 삭제</button>`:""}</div></div>`;
-  const ch=finChoices(F),sel=finSelOf(F);
-  const desc=sel==="upload"?"내 컴퓨터나 휴대폰에서 고른 파일을 보내요.":sel.indexOf("doc:")===0?"자료실 엑셀의 온라인 작성본(구글 시트)을 엑셀(.xlsx) 파일로 바꿔 보내요. 보내는 순간의 내용이에요.":sel==="tpl"?"올려 둔 양식 파일(원본)을 그대로 보내요. 엑셀에서 고쳐 [양식 바꾸기]로 올렸다면 그 내용이 담겨요.":sel?"자료실에 올려 둔 파일을 그대로 보내요.":"";
-  h+=`<div class="card" style="margin-top:12px"><b>2. 메일로 보내기</b>
-    <div class="form" style="grid-template-columns:1fr">
-      <label>보낼 파일 (올려 둔 파일 또는 내 컴퓨터 파일)${ch.length?`<select id="f-fin-file">${ch.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?"selected":""}>${esc(l)}</option>`).join("")}</select><span class="muted" style="font-size:13px;font-weight:400">${desc}</span>`:""}</label>
-      ${sel==="upload"?`<label>파일<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button type="button" class="btn" id="finFilePick">파일 고르기</button><span class="muted" style="font-size:13px;font-weight:400;word-break:break-all">${S.finFile?esc(S.finFile.name)+" · "+Math.max(1,Math.round(S.finFile.size/1024))+"KB":"보낼 파일을 골라 주세요 (10MB까지)"}</span></span></label>`:""}
-      <label>받는 메일 주소 <span style="font-weight:400">(여러 명이면 쉼표로, 5명까지)</span><input id="f-fin-to" type="text" inputmode="email" autocomplete="off" placeholder="예: abc@gmail.com" value="${val("f-fin-to",F.to||"")}"></label>
-      <label>제목<input id="f-fin-sub" maxlength="150" value="${val("f-fin-sub",`${y}년 ${TEAMS[S.team].label} 재정보고`)}"></label>
-      <label>내용 (선택)<textarea id="f-fin-body" maxlength="2000" placeholder="예: ${new Date().getMonth()+1}월 재정보고서를 보냅니다.">${val("f-fin-body","")}</textarea></label>
-    </div>
-    <div class="actions"><div class="spacer"></div><button class="btn primary" id="finSend">메일 보내기</button></div>
-    <p class="muted" style="font-size:12px;margin:8px 0 0">보내는 사람은 이 앱을 만든 구글 계정으로 표시돼요. 보낸 기록은 이력에 남아요.</p></div>`;
-  return h;
-}
-function finPickFile(){
-  const inp=document.createElement("input");inp.type="file";
-  inp.onchange=()=>{const f=inp.files&&inp.files[0];if(!f)return;if(f.size>10*1024*1024){alertBox("파일이 너무 커요","10MB까지 보낼 수 있어요.");return}S.finFile=f;render()};
-  inp.click();
-}
-function finPickTpl(){
-  const inp=document.createElement("input");inp.type="file";inp.accept=".xlsm,.xlsx,.xls";
-  inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;if(f.size>10*1024*1024){alertBox("파일이 너무 커요","10MB까지 올릴 수 있어요.");return}
-    try{toast("올리는 중…");const tpl=await tracked(call("finTplUpload",S.team,{name:f.name,mime:f.type,b64:await fileToB64(f)}));S.fin={...S.fin,tpl};wrC("ya-fin-"+S.team,S.fin);render();toast("양식을 올렸어요")}
-    catch(e){alertBox("올리지 못했어요",e.message)}};
-  inp.click();
-}
-async function finSendNow(btn){
-  const F=S.fin,fm=S.finForm||{},sel=finSelOf(F);
-  const to=String(fm["f-fin-to"]!==undefined?fm["f-fin-to"]:(F.to||"")).trim();
-  const list=to.split(/[,;\s]+/).filter(Boolean);
-  const lf=S.finFile;
-  if(sel==="upload"&&!lf)return alertBox("보낼 파일을 골라 주세요","[파일 고르기]로 보낼 파일을 골라 주세요.");
-  if(!list.length)return alertBox("받는 메일 주소를 적어 주세요","");
-  const bad=list.find(x=>!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x));
-  if(bad)return alertBox("메일 주소를 확인해 주세요",`"${bad}" 은(는) 올바른 메일 주소가 아니에요.`);
-  if(list.length>5)return alertBox("받는 사람이 너무 많아요","한 번에 5명까지 보낼 수 있어요.");
-  if(!btn.dataset.armed){btn.dataset.armed="1";btn.textContent="한 번 더 누르면 보내요";return}
-  btn.disabled=true;btn.textContent="보내는 중…";
-  try{
-    const r=await tracked(call("finSend",S.team,{src:sel==="upload"?"upload":sel==="tpl"?"tpl":sel.indexOf("doc:")===0?"doc":"lib",fileId:sel.indexOf(":")>0?sel.slice(sel.indexOf(":")+1):"",name:lf?lf.name:"",mime:lf?lf.type:"",b64:sel==="upload"?await fileToB64(lf):"",to:list.join(", "),subject:fm["f-fin-sub"]!==undefined?fm["f-fin-sub"]:`${S.date.slice(0,4)}년 ${TEAMS[S.team].label} 재정보고`,body:fm["f-fin-body"]||""}));
-    S.fin={...S.fin,to:r.to};wrC("ya-fin-"+S.team,S.fin);S.finFile=null;S.finForm={"f-fin-to":r.to,"f-fin-file":sel};render();
-    alertBox("메일을 보냈어요",`${r.to} 로 "${r.name}" 파일을 보냈어요.`);
-  }catch(e){render();alertBox("보내지 못했어요",e.message)}
-}
+/* 일정 → 자료실 순서로 하나씩 미리 불러와요 (서버에 요청이 한꺼번에 몰리지 않게) */
+function preloadSched(){return loadEvents().then(()=>loadLib()).catch(()=>{})}
 /* ---- 자료실 ---- */
 async function loadLib(){
   if(S.libLoading)return;S.libLoading=true;const team=S.team;
-  try{const d=await call("libList",team);S.lib={team,files:d.files||[],canEdit:!!d.canEdit};wrC("ya-lib-"+team,S.lib)}
+  try{const d=await call("libList",team);S.lib={team,files:d.files||[],canEdit:!!d.canEdit,admin:!!d.admin};wrC("ya-lib-"+team,S.lib)}
   catch(e){if(!S.lib||S.lib.team!==team)S.lib={team,files:[],canEdit:false,error:e.message}}
   S.libLoading=false;if(S.tab==="schedule")render();
 }
 function renderLibrary(){
   const L=S.lib;if(!L||L.team!==S.team){if(!S.libLoading)setTimeout(loadLib,0);return `<div class="empty">자료실을 불러오는 중…</div>`}
   if(L.error)return `<div class="notice">${esc(L.error)}</div>`;
-  let h=`<h2 class="sec">${esc(TEAMS[S.team].label)} 자료실</h2><p class="muted" style="font-size:13px;margin:-4px 0 10px">일정과 상관없이 부서에서 함께 쓰는 파일이에요. 공과 교재, 연락망, 양식 등을 올려 두세요.${L.canEdit?" 엑셀 파일은 [온라인 작성]을 누르면 내려받지 않고 구글 시트로 열어 고칠 수 있어요(엑셀 매크로는 작동하지 않아요). 작성본 링크는 밖으로 알리지 마세요.":""}</p>`;
-  if(L.canEdit)h+=`<div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><select id="f-lvis" aria-label="공개 범위" style="height:38px;border:1px solid var(--line);border-radius:10px;background:var(--ground);padding:0 8px;color:var(--ink)"><option value="all">전체 보기</option><option value="admin">관리자만 보기</option></select><button class="btn primary" id="libAdd">+ 파일 올리기 (10MB까지)</button><span class="muted" style="font-size:12px;flex-basis:100%">전체 보기: 담임도 볼 수 있어요 · 관리자만 보기: 팀 관리자와 총관리자만</span></div>`;
-  h+=L.files.length?`<div class="card" style="padding:4px 12px">${L.files.map(f=>`<div class="file-row"><span class="nm">${f.vis==="admin"?`<span class="vis-badge">관리자만</span>`:""}${esc(f.name)}<br><span class="muted" style="font-size:12px">${f.size?Math.max(1,Math.round(f.size/1024))+"KB · ":""}${esc(f.updated||"")}${f.by?" · "+esc(f.by):""}${f.doc?" · 온라인 작성본 있음":""}</span></span><button class="btn primary" data-lview="${f.id}">보기</button><button class="btn" data-ldl="${f.id}">내려받기</button>${L.canEdit&&/[.](xlsx|xlsm|xls)$/i.test(f.name)?(f.doc?`<a class="btn primary" href="${esc(f.doc.url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">작성본 열기</a><button class="btn" data-ldoc="${f.id}">작성본 새로</button>`:`<button class="btn" data-ldoc="${f.id}">온라인 작성</button>`):""}${L.canEdit?`<button class="btn" data-lvis="${f.id}" data-v="${f.vis==="admin"?"all":"admin"}">${f.vis==="admin"?"전체 공개로":"관리자만으로"}</button><button class="btn" data-lrep="${f.id}">바꾸기</button><button class="btn danger" data-ldel="${f.id}">삭제</button>`:""}</div>`).join("")}</div>`
-    :`<div class="empty">${L.canEdit?"아직 올린 파일이 없어요. 위에서 파일을 올려 보세요.":"아직 올린 파일이 없어요."}</div>`;
-  if(!L.canEdit)h+=`<p class="muted" style="font-size:12px;margin-top:14px">파일 올리기와 수정은 팀 관리자가 할 수 있어요.</p>`;
+  let h=`<h2 class="sec">${esc(TEAMS[S.team].label)} 자료실</h2><p class="muted" style="font-size:13px;margin:-4px 0 10px">일정과 상관없이 부서에서 함께 쓰는 파일이에요. 담임 선생님도 올리고 바꾸고 지울 수 있고, [보내기]로 문자·카카오톡·메일로 전할 수 있어요.${L.admin?" 엑셀 파일은 [온라인 작성]을 누르면 내려받지 않고 구글 시트로 열어 고칠 수 있어요(엑셀 매크로는 작동하지 않아요). 작성본 링크는 밖으로 알리지 마세요.":""}</p>`;
+  if(L.canEdit)h+=`<div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">${L.admin?`<select id="f-lvis" aria-label="공개 범위" style="height:38px;border:1px solid var(--line);border-radius:10px;background:var(--ground);padding:0 8px;color:var(--ink)"><option value="all">전체 보기</option><option value="admin">관리자만 보기</option></select>`:""}<button class="btn primary" id="libAdd">+ 파일 올리기 (10MB까지)</button>${L.admin?`<span class="muted" style="font-size:12px;flex-basis:100%">전체 보기: 담임도 볼 수 있어요 · 관리자만 보기: 팀 관리자와 총관리자만</span>`:""}</div>`;
+  h+=L.files.length?`<div class="card" style="padding:4px 12px">${L.files.map(f=>`<div class="file-row"><span class="nm">${f.vis==="admin"?`<span class="vis-badge">관리자만 보기</span>`:""}${esc(f.name)}<br><span class="muted" style="font-size:12px">${f.size?Math.max(1,Math.round(f.size/1024))+"KB · ":""}${esc(f.updated||"")}${f.by?" · "+esc(f.by):""}${f.doc?" · 온라인 작성본 있음":""}</span></span><button class="btn primary" data-lview="${f.id}">미리보기</button><button class="btn" data-ldl="${f.id}">내려받기</button><button class="btn" data-lsend="${f.id}">보내기</button>${L.admin&&/[.](xlsx|xlsm|xls)$/i.test(f.name)?(f.doc?`<a class="btn primary" href="${esc(f.doc.url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">작성본 열기</a><button class="btn" data-ldoc="${f.id}">작성본 새로</button>`:`<button class="btn" data-ldoc="${f.id}">온라인 작성</button>`):""}${L.admin?`<button class="btn" data-lvis="${f.id}" data-v="${f.vis==="admin"?"all":"admin"}">${f.vis==="admin"?"전체 공개로":"관리자만 보기로"}</button>`:""}<button class="btn" data-lrep="${f.id}">바꾸기</button><button class="btn danger" data-ldel="${f.id}">삭제</button></div>`).join("")}</div>`
+    :`<div class="empty">아직 올린 파일이 없어요. 위에서 파일을 올려 보세요.</div>`;
   return h;
 }
 function libPick(replaceId){
@@ -1001,10 +929,46 @@ function libPick(replaceId){
 async function libAction(op,fid,v,msg){
   try{const files=await tracked(v===null?call(op,S.team,fid):call(op,S.team,fid,v));S.lib={...S.lib,files};wrC("ya-lib-"+S.team,S.lib);render();toast(msg)}catch(e){alertBox("처리하지 못했어요",e.message)}
 }
+function b64ToU8(b64){const bin=atob(b64);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u}
+function openSend(fid){
+  const f=((S.lib||{}).files||[]).find(x=>x.id===fid);if(!f)return;
+  const pre=navigator.share?call("downloadFile",S.team,fid):null;if(pre)pre.catch(()=>{}); // 카카오톡 공유를 바로 열 수 있게 미리 받아 둬요
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="파일 보내기"><h3>보내기</h3>
+    <p class="muted" style="margin:0;font-size:14px;word-break:break-all">${esc(f.name)}</p>
+    <div class="form"><label class="full">전할 말 (선택)<textarea id="f-smsg" maxlength="500" placeholder="예: 이번 주 공과 교재예요"></textarea></label></div>
+    <div class="actions" style="flex-wrap:wrap"><button type="button" class="btn" data-snd="sms">문자로 보내기</button><button type="button" class="btn" data-snd="kakao">카카오톡으로 보내기</button></div>
+    <div class="form"><label class="full">메일 주소 (여러 명은 쉼표로, 5명까지)<input id="f-to" inputmode="email" autocomplete="off"></label>
+    ${f.doc?`<label class="inline full"><input type="checkbox" id="f-usedoc">온라인 작성본(엑셀로 변환)을 보내기</label>`:""}</div>
+    <p class="err" id="sndErr" hidden></p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>닫기</button><button class="btn primary" type="submit">메일로 보내기</button></div>
+    <p class="muted" style="font-size:12px;margin:10px 0 0">문자: 파일은 비공개라 파일 이름과 앱 주소를 문자로 보내요. 카카오톡: 휴대폰에서 파일을 직접 공유해요. 메일: 파일이 첨부돼요.</p></form>`;
+  document.body.appendChild(ov);
+  const msg=()=>ov.querySelector("#f-smsg").value.trim();
+  ov.addEventListener("click",async e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    const b=e.target.closest("[data-snd]");if(!b)return;
+    if(b.dataset.snd==="sms"){
+      const url=await getAppUrl();const text=(msg()?msg()+"\n":"")+`[${f.name}] 파일은 신당중앙교회 출석부 앱 자료실에서 확인하세요.`+(url?"\n"+url:"");
+      const a=document.createElement("a");a.href="sms:?&body="+encodeURIComponent(text);document.body.appendChild(a);a.click();a.remove();return}
+    try{
+      const text=msg()||f.name;
+      if(pre){const d=await pre;const file=new File([b64ToU8(d.b64)],d.name||f.name,{type:d.mime||f.mime||"application/octet-stream"});
+        if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text});return}
+        await navigator.share({text:text+"\n(파일은 앱 자료실에서 받아 주세요)"});return}
+      await navigator.clipboard.writeText(text);
+      alertBox("이 기기에서는 파일을 바로 공유할 수 없어요","[내려받기]로 파일을 받은 뒤 카카오톡에서 보내 주세요. 전할 말은 복사해 뒀어요.");
+    }catch(err){if(err&&err.name!=="AbortError")alertBox("공유하지 못했어요",err.message||"다시 시도해 주세요")}
+  });
+  ov.addEventListener("submit",async e=>{
+    e.preventDefault();const er=ov.querySelector("#sndErr");const btn=ov.querySelector('[type="submit"]');btn.disabled=true;er.hidden=true;
+    try{const r=await tracked(call("libMail",S.team,{fileId:fid,to:ov.querySelector("#f-to").value,msg:msg(),doc:!!(ov.querySelector("#f-usedoc")||{}).checked}));ov.remove();alertBox("메일을 보냈어요",`${r.to} 로 "${r.name}" 파일을 보냈어요.`)}
+    catch(x){btn.disabled=false;er.textContent=x.message;er.hidden=false}
+  });
+}
 function renderSchedule(){
-  const segHtml=`<div class="seg" style="margin-top:14px"><button data-smode="cal" aria-pressed="${!S.schedMode||S.schedMode==="cal"||(S.schedMode==="fin"&&!canManageGrades())}">달력</button><button data-smode="lib" aria-pressed="${S.schedMode==="lib"}">자료실</button>${canManageGrades()?`<button data-smode="fin" aria-pressed="${S.schedMode==="fin"}">재정보고</button>`:""}</div>`;
+  const segHtml=`<div class="seg" style="margin-top:14px"><button data-smode="cal" aria-pressed="${!S.schedMode||S.schedMode==="cal"}">달력</button><button data-smode="lib" aria-pressed="${S.schedMode==="lib"}">자료실</button></div>`;
   if(S.schedMode==="lib")return segHtml+renderLibrary();
-  if(S.schedMode==="fin"&&canManageGrades())return segHtml+renderFinance();
   const E=S.ev;if(!E||E.team!==S.team){if(!S.evLoading)setTimeout(loadEvents,0);return `<div class="empty">일정을 불러오는 중…</div>`}
   if(E.error)return `<div class="notice">${esc(E.error)}</div>`;
   const ym=S.calMonth||S.date.slice(0,7);const [Y,M]=ym.split("-").map(Number);
@@ -1102,7 +1066,7 @@ function openEvent(id,date){
     <div class="form"><label class="full">제목<input id="f-evt" maxlength="80" value="${esc(ev.title)}" ${edit?"":"readonly"} required></label>
     <label class="full">날짜<input id="f-evd" type="date" value="${esc(ev.date)}" ${edit?"":"readonly"} required></label>
     <label class="full">내용<textarea id="f-evm" maxlength="2000" ${edit?"":"readonly"}>${esc(ev.memo)}</textarea></label></div>
-    ${ev.id?`<h4 style="margin:16px 0 4px;font-size:15px">공유 문서</h4><div>${(ev.files||[]).map(f=>`<div class="file-row"><span class="nm">${f.vis==="admin"?`<span class="vis-badge">관리자만</span>`:""}${esc(f.name)}<br><span class="muted" style="font-size:12px">${f.size?Math.max(1,Math.round(f.size/1024))+"KB · ":""}${esc(f.updated||"")}</span></span><button type="button" class="btn primary" data-fview="${f.id}">보기</button><button type="button" class="btn" data-fdl="${f.id}">내려받기</button>${edit?`<button type="button" class="btn" data-fvis="${f.id}" data-v="${f.vis==="admin"?"all":"admin"}">${f.vis==="admin"?"전체 공개로":"관리자만으로"}</button><button type="button" class="btn" data-frep="${f.id}">바꾸기</button><button type="button" class="btn danger" data-fdel="${f.id}">삭제</button>`:""}</div>`).join("")||`<p class="muted" style="margin:4px 0">올린 문서가 없어요.</p>`}</div>
+    ${ev.id?`<h4 style="margin:16px 0 4px;font-size:15px">공유 문서</h4><div>${(ev.files||[]).map(f=>`<div class="file-row"><span class="nm">${f.vis==="admin"?`<span class="vis-badge">관리자만 보기</span>`:""}${esc(f.name)}<br><span class="muted" style="font-size:12px">${f.size?Math.max(1,Math.round(f.size/1024))+"KB · ":""}${esc(f.updated||"")}</span></span><button type="button" class="btn primary" data-fview="${f.id}">미리보기</button><button type="button" class="btn" data-fdl="${f.id}">내려받기</button>${edit?`<button type="button" class="btn" data-fvis="${f.id}" data-v="${f.vis==="admin"?"all":"admin"}">${f.vis==="admin"?"전체 공개로":"관리자만 보기로"}</button><button type="button" class="btn" data-frep="${f.id}">바꾸기</button><button type="button" class="btn danger" data-fdel="${f.id}">삭제</button>`:""}</div>`).join("")||`<p class="muted" style="margin:4px 0">올린 문서가 없어요.</p>`}</div>
     ${edit?`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><select id="f-fvis" aria-label="공개 범위" style="height:38px;border:1px solid var(--line);border-radius:10px;background:var(--ground);padding:0 8px;color:var(--ink)"><option value="all">전체 보기</option><option value="admin">관리자만 보기</option></select><button type="button" class="btn" id="fAdd">+ 문서 올리기 (10MB까지)</button></div><p class="muted" style="font-size:12px;margin:6px 0 0">전체 보기: 담임도 볼 수 있어요 · 관리자만 보기: 팀 관리자와 총관리자만</p>`:""}`:(edit?`<p class="muted" style="font-size:13px">저장한 뒤 공유 문서를 올릴 수 있어요.</p>`:"")}
     <div class="actions">${ev.id&&edit?`<button type="button" class="btn danger" data-evdel>일정 삭제</button>`:""}<div class="spacer"></div><button type="button" class="btn" data-close>${edit?"취소":"닫기"}</button>${edit?`<button class="btn primary" type="submit">저장</button>`:""}</div></form>`};
   draw();document.body.appendChild(ov);
@@ -1141,7 +1105,7 @@ function openGuide(){
     <h4>5. 생일 · 달란트</h4><ol><li><b>생일</b>: 이번 주·이번 달·다음 달 생일. 생일이 없는 사람은 맨 아래에 모여요.</li><li><b>달란트</b>: 올해 누적 순위를 보는 화면이에요 (고치기는 출결메모에서).</li><li>달란트·생일·일정 엑셀은 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b> 파일에 들어 있어요.</li></ol>
     <h4>6. 출석 · 제적 · 졸업</h4><ol><li>명단 위쪽 <b>[출석] [제적] [졸업]</b> 을 눌러 나눠 봐요.</li><li>더 이상 안 나오는 학생: 이름 → [수정] → 상태를 <b>제적</b>으로. 졸업한 학생은 <b>졸업</b>으로.</li><li>제적·졸업 학생은 출석 명단에서 빠지지만 기록은 그대로 남아요.</li><li>다시 나오면 [제적] 목록에서 <b>[출석으로]</b>를 눌러요.</li></ol>
     <h4>7. 엑셀로 한 번에 (명단 · 연락처)</h4><ol><li>명단 탭 <b>엑셀</b> 줄의 <b>[양식 받기]</b>로 파일을 받아요. 지금 명단이 채워져 있어요.</li><li>'명단' 시트에 이름·반·생일·연락처·주소를 적어요. 생일은 03/15 처럼. 빈 칸은 원래 값을 그대로 둬요.</li><li><b>[올리기]</b>로 파일을 고르고 확인. 이름과 반이 같은 사람은 고쳐지고, 없는 사람은 새로 들어가요.</li><li>담임은 <b>우리 반</b> 학생만 올라가요. 파일에서 줄을 지워도 앱에서는 지워지지 않아요.</li><li>출석부 전체를 저장해 두려면 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b>를 눌러요.</li></ol>
-    <h4>8. 일정 · 공유 파일</h4><ol><li><b>일정</b> 탭 <b>[달력]</b>: 날짜를 누르면 그날 일정, 일정 카드를 누르면 공유 문서가 보여요.</li><li><b>[자료실]</b>: 공과 교재·양식 같은 부서 파일</li><li><b>[보기]</b>: 받지 않고 바로 봐요 (PDF·엑셀·워드·사진). 한글·파워포인트는 <b>[내려받기]</b>로 열어요.</li><li>일정과 파일 올리기는 팀 관리자가 해요. 올릴 파일은 팀 관리자에게 보내 주세요.</li><li><b>[재정보고]</b>: 양식을 내려받아 작성한 뒤, 팀 관리자가 받는 메일 주소를 적고 파일을 골라 [메일 보내기]로 바로 보내요.</li></ol>
+    <h4>8. 일정 · 공유 파일</h4><ol><li><b>일정</b> 탭 <b>[달력]</b>: 날짜를 누르면 그날 일정, 일정 카드를 누르면 공유 문서가 보여요.</li><li><b>[자료실]</b>: 공과 교재·양식 같은 부서 파일</li><li><b>[미리보기]</b>: 받지 않고 바로 봐요 (PDF·엑셀·워드·사진). 한글·파워포인트는 <b>[내려받기]</b>로 열어요.</li><li>일정 등록은 팀 관리자가 해요. 자료실에는 담임도 파일을 올리고 바꾸고 지울 수 있어요.</li><li><b>[보내기]</b>: 자료실 파일을 문자·카카오톡·메일로 전해요.</li></ol>
     <h4>9. 반 이름 · 반 편성 (팀 관리자)</h4><ol><li>화면 위쪽 반(학년) 칩을 <b>더블클릭</b>(휴대폰은 <b>두 번 톡톡</b>)하면 그 반 이름을 바꿀 수 있어요. 예: 1학년 → 1학년 사랑반</li><li>명단 탭 <b>[반 관리]</b>·<b>[이름 바꾸기]</b>와 같은 이름이라, 한쪽에서 바꾸면 다른 쪽에도 그대로 보여요.</li><li>이름만 바뀌고 출석·담임·담임 번호는 그대로 이어져요. 담임 번호로 들어오면 바꿀 수 없어요.</li><li><b>영아교육팀</b>은 나이와 관계없이 반을 만들어요. 명단 탭 <b>[반 관리]</b>에서 반 추가·삭제·순서, <b>[반 배정]</b>에서 아이마다 반을 골라요. 나이는 사람 [수정] 창에서 따로 적어요.</li></ol>
     <h4>10. 지켜 주세요</h4><ol><li>담임 번호와 연락처는 다른 사람에게 알려 주지 마세요.</li><li>같이 쓰는 기기면 끝난 뒤 메인의 <b>이 기기 번호 지우기</b>를 눌러요.</li><li>잘 안 되면 새로 고치거나 크롬·사파리에서 열어 보세요.</li></ol>
     <div class="actions"><div class="spacer"></div><button class="btn primary" data-close>닫기</button></div></div>`;
@@ -1326,9 +1290,9 @@ const canEnter=t=>!!(S.access||{})[t];
 function storedCodes(){try{return JSON.parse(localStorage.getItem("ya-codes")||"{}")}catch(_){return S._codes||{}}}
 function storeCode(t,code){S._codes={...(S._codes||{}),[t]:code};if(S.remember===false)return;const c=storedCodes();c[t]=code;try{localStorage.setItem("ya-codes",JSON.stringify(c))}catch(_){}}
 function hasStored(){try{return !!(localStorage.getItem("ya-admin")||Object.keys(JSON.parse(localStorage.getItem("ya-codes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-gcodes")||"{}")).length)}catch(_){return false}}
-function forgetDevice(){try{["ya-admin","ya-codes","ya-gcodes",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t,"ya-fin-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._codes={};S._gcodes={};S.view="home";S.book=null;load();toast("이 기기에 기억된 번호와 로그인을 지웠어요")}
+function forgetDevice(){try{["ya-admin","ya-codes","ya-gcodes",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._codes={};S._gcodes={};S.view="home";S.book=null;load();toast("이 기기에 기억된 번호와 로그인을 지웠어요")}
 function goDept(t){S.book=null;
-  S.ev=rdC("ya-ev-"+t);S.lib=rdC("ya-lib-"+t);S.fin=rdC("ya-fin-"+t);S.finFile=null;S.finForm=null;
+  S.ev=rdC("ya-ev-"+t);S.lib=rdC("ya-lib-"+t);
   S.schedMode="cal";S.calSel="";S.calMonth="";S.rosterMode="active";setTeam(t);S.view="dept";S.tab="check";
   try{localStorage.setItem("ya-team",S.team)}catch(_){}
   render();window.scrollTo(0,0);
@@ -1910,11 +1874,7 @@ document.addEventListener("click",e=>{
   if(e.target.closest("#histAll"))return openHistoryList();
   const sm=e.target.closest("[data-smode]");if(sm){S.schedMode=sm.dataset.smode;render();return}
   if(e.target.closest("#libAdd"))return libPick("");
-  if(e.target.closest("#finTplUp"))return finPickTpl();
-  if(e.target.closest("#finFilePick"))return finPickFile();
-  const ftd=e.target.closest("#finTplDel");if(ftd){if(!ftd.dataset.armed){ftd.dataset.armed="1";ftd.textContent="한 번 더 누르면 삭제";return}
-    tracked(call("finTplDelete",S.team)).then(()=>{S.fin={...S.fin,tpl:null};wrC("ya-fin-"+S.team,S.fin);render();toast("양식을 삭제했어요")}).catch(err=>alertBox("삭제하지 못했어요",err.message));return}
-  const fsd=e.target.closest("#finSend");if(fsd)return finSendNow(fsd);
+  const ls=e.target.closest("[data-lsend]");if(ls)return openSend(ls.dataset.lsend);
   const lv=e.target.closest("[data-lview]");if(lv)return viewShared(lv.dataset.lview);
   const ld=e.target.closest("[data-ldl]");if(ld)return downloadShared(ld.dataset.ldl);
   const ldoc=e.target.closest("[data-ldoc]");if(ldoc){const id=ldoc.dataset.ldoc;const cur=((S.lib.files||[]).find(x=>x.id===id)||{}).doc;
@@ -1963,7 +1923,7 @@ function refreshRosterList(){
   const frag=document.createDocumentFragment();while(nq.nextSibling)frag.appendChild(nq.nextSibling);
   wrap.appendChild(frag);relabel();
 }
-document.addEventListener("input",e=>{if(e.target.id&&e.target.id.indexOf("f-fin-")===0)S.finForm={...(S.finForm||{}),[e.target.id]:e.target.value};if(e.target.id==="q"){S.q=e.target.value;refreshRosterList()}});
+document.addEventListener("input",e=>{if(e.target.id==="q"){S.q=e.target.value;refreshRosterList()}});
 document.addEventListener("change",e=>{
   const id=e.target.dataset&&e.target.dataset.tv;if(!id)return;
   if(!S.editable){render();return}
@@ -1988,7 +1948,7 @@ let pending=0;
 const API_URL="https:"+"/"+"/script.google.com/macros/s/AKfycbxAIzrJ4PjqNm4lo-1iC88RjRV56JTSkug5moMo_a-x7Im4v98XxCZ0Z-Gm0Y2FaUGt/exec";
 const HAS_GS=typeof google!=="undefined"&&!!(google.script&&google.script.run);
 /* 읽기만 하는 요청은 연결이 끊기면 자동으로 두 번 더 시도해요 (저장 요청은 중복될 수 있어 다시 보내지 않아요) */
-const READ_OPS=new Set(["boot","events","libList","finInfo","contacts","appUrl","history","gradeCodes","verifyCode","findGradeCode","verifyGradeCode","downloadFile"]);
+const READ_OPS=new Set(["boot","events","libList","contacts","appUrl","history","gradeCodes","verifyCode","findGradeCode","verifyGradeCode","downloadFile"]);
 async function callFetch(op,args){
   let t;const ac=typeof AbortController!=="undefined"?new AbortController():null;const tm=ac?setTimeout(()=>ac.abort(),60000):0;
   try{const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({op,auth:AUTH(),args}),redirect:"follow",signal:ac?ac.signal:undefined});
@@ -2054,7 +2014,7 @@ if(S.view==="dept")setTimeout(()=>{preloadSched()},1500);
 setInterval(()=>{
   if(document.hidden||pending||document.querySelector(".overlay"))return;
   const a=document.activeElement;if(a&&a.dataset&&(a.dataset.tv||a.dataset.total))return;
-  if(a&&a.id==="q")return;if(a&&a.id&&a.id.indexOf("f-fin-")===0)return; // 이름 검색 중에는 새로 불러오지 않아요 (한글 입력이 끊기지 않게)
+  if(a&&a.id==="q")return; // 이름 검색 중에는 새로 불러오지 않아요 (한글 입력이 끊기지 않게)
   load(true);
 },40000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)load(true)});
