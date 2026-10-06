@@ -915,6 +915,7 @@ function finChoices(F){
   L.forEach(x=>{if(x.doc)c.push(["doc:"+x.id,"온라인 작성본 · "+x.name]) });
   if(F.tpl)c.push(["tpl","재정보고 양식 · "+F.tpl.name]);
   L.forEach(x=>c.push(["lib:"+x.id,"자료실 · "+x.name]));
+  c.push(["upload","내 컴퓨터에서 파일 고르기"]);
   return c;
 }
 function finSelOf(F){const c=finChoices(F);const v=(S.finForm||{})["f-fin-file"];return c.some(x=>x[0]===v)?v:(c[0]||[""])[0]}
@@ -929,10 +930,11 @@ function renderFinance(){
   h+=`<div class="card"><b>1. 재정보고 양식 (원본 파일)</b>`+(T?`<div class="file-row"><span class="nm">${esc(T.name)}<br><span class="muted" style="font-size:12px">${kb(T.size)}${esc(T.updated||"")}</span></span><button class="btn primary" data-ldl="${T.id}">내려받기</button><button class="btn" data-lview="${T.id}">보기</button></div>`:`<p class="muted" style="margin:8px 0 0;font-size:14px">아직 올려 둔 양식이 없어요. 아래 버튼으로 양식 파일을 올려 주세요.</p>`)
     +`<div style="margin-top:10px"><button class="btn" id="finTplUp">${T?"양식 바꾸기":"+ 양식 올리기 (10MB까지)"}</button>${T?` <button class="btn danger" id="finTplDel">양식 삭제</button>`:""}</div></div>`;
   const ch=finChoices(F),sel=finSelOf(F);
-  const desc=sel.indexOf("doc:")===0?"자료실 엑셀의 온라인 작성본(구글 시트)을 엑셀(.xlsx) 파일로 바꿔 보내요. 보내는 순간의 내용이에요.":sel==="tpl"?"올려 둔 양식 파일(원본)을 그대로 보내요. 엑셀에서 고쳐 [양식 바꾸기]로 올렸다면 그 내용이 담겨요.":sel?"자료실에 올려 둔 파일을 그대로 보내요.":"";
+  const desc=sel==="upload"?"내 컴퓨터나 휴대폰에서 고른 파일을 보내요.":sel.indexOf("doc:")===0?"자료실 엑셀의 온라인 작성본(구글 시트)을 엑셀(.xlsx) 파일로 바꿔 보내요. 보내는 순간의 내용이에요.":sel==="tpl"?"올려 둔 양식 파일(원본)을 그대로 보내요. 엑셀에서 고쳐 [양식 바꾸기]로 올렸다면 그 내용이 담겨요.":sel?"자료실에 올려 둔 파일을 그대로 보내요.":"";
   h+=`<div class="card" style="margin-top:12px"><b>2. 메일로 보내기</b>
     <div class="form" style="grid-template-columns:1fr">
-      <label>보낼 파일 (올려 둔 파일 중에서 고르기)${ch.length?`<select id="f-fin-file">${ch.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?"selected":""}>${esc(l)}</option>`).join("")}</select><span class="muted" style="font-size:13px;font-weight:400">${desc}</span>`:`<span class="muted" style="font-size:13px;font-weight:400">보낼 파일이 없어요. 위에서 양식을 올리거나 자료실에 파일을 올려 주세요.</span>`}</label>
+      <label>보낼 파일 (올려 둔 파일 또는 내 컴퓨터 파일)${ch.length?`<select id="f-fin-file">${ch.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?"selected":""}>${esc(l)}</option>`).join("")}</select><span class="muted" style="font-size:13px;font-weight:400">${desc}</span>`:""}</label>
+      ${sel==="upload"?`<label>파일<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button type="button" class="btn" id="finFilePick">파일 고르기</button><span class="muted" style="font-size:13px;font-weight:400;word-break:break-all">${S.finFile?esc(S.finFile.name)+" · "+Math.max(1,Math.round(S.finFile.size/1024))+"KB":"보낼 파일을 골라 주세요 (10MB까지)"}</span></span></label>`:""}
       <label>받는 메일 주소 <span style="font-weight:400">(여러 명이면 쉼표로, 5명까지)</span><input id="f-fin-to" type="text" inputmode="email" autocomplete="off" placeholder="예: abc@gmail.com" value="${val("f-fin-to",F.to||"")}"></label>
       <label>제목<input id="f-fin-sub" maxlength="150" value="${val("f-fin-sub",`${y}년 ${TEAMS[S.team].label} 재정보고`)}"></label>
       <label>내용 (선택)<textarea id="f-fin-body" maxlength="2000" placeholder="예: ${new Date().getMonth()+1}월 재정보고서를 보냅니다.">${val("f-fin-body","")}</textarea></label>
@@ -940,6 +942,11 @@ function renderFinance(){
     <div class="actions"><div class="spacer"></div><button class="btn primary" id="finSend">메일 보내기</button></div>
     <p class="muted" style="font-size:12px;margin:8px 0 0">보내는 사람은 이 앱을 만든 구글 계정으로 표시돼요. 보낸 기록은 이력에 남아요.</p></div>`;
   return h;
+}
+function finPickFile(){
+  const inp=document.createElement("input");inp.type="file";
+  inp.onchange=()=>{const f=inp.files&&inp.files[0];if(!f)return;if(f.size>10*1024*1024){alertBox("파일이 너무 커요","10MB까지 보낼 수 있어요.");return}S.finFile=f;render()};
+  inp.click();
 }
 function finPickTpl(){
   const inp=document.createElement("input");inp.type="file";inp.accept=".xlsm,.xlsx,.xls";
@@ -952,7 +959,8 @@ async function finSendNow(btn){
   const F=S.fin,fm=S.finForm||{},sel=finSelOf(F);
   const to=String(fm["f-fin-to"]!==undefined?fm["f-fin-to"]:(F.to||"")).trim();
   const list=to.split(/[,;\s]+/).filter(Boolean);
-  if(!sel)return alertBox("보낼 파일이 없어요","양식을 올리거나 자료실에 파일을 올린 뒤 골라 주세요.");
+  const lf=S.finFile;
+  if(sel==="upload"&&!lf)return alertBox("보낼 파일을 골라 주세요","[파일 고르기]로 보낼 파일을 골라 주세요.");
   if(!list.length)return alertBox("받는 메일 주소를 적어 주세요","");
   const bad=list.find(x=>!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x));
   if(bad)return alertBox("메일 주소를 확인해 주세요",`"${bad}" 은(는) 올바른 메일 주소가 아니에요.`);
@@ -960,8 +968,8 @@ async function finSendNow(btn){
   if(!btn.dataset.armed){btn.dataset.armed="1";btn.textContent="한 번 더 누르면 보내요";return}
   btn.disabled=true;btn.textContent="보내는 중…";
   try{
-    const r=await tracked(call("finSend",S.team,{src:sel==="tpl"?"tpl":sel.indexOf("doc:")===0?"doc":"lib",fileId:sel.indexOf(":")>0?sel.slice(sel.indexOf(":")+1):"",to:list.join(", "),subject:fm["f-fin-sub"]!==undefined?fm["f-fin-sub"]:`${S.date.slice(0,4)}년 ${TEAMS[S.team].label} 재정보고`,body:fm["f-fin-body"]||""}));
-    S.fin={...S.fin,to:r.to};wrC("ya-fin-"+S.team,S.fin);S.finForm={"f-fin-to":r.to,"f-fin-file":sel};render();
+    const r=await tracked(call("finSend",S.team,{src:sel==="upload"?"upload":sel==="tpl"?"tpl":sel.indexOf("doc:")===0?"doc":"lib",fileId:sel.indexOf(":")>0?sel.slice(sel.indexOf(":")+1):"",name:lf?lf.name:"",mime:lf?lf.type:"",b64:sel==="upload"?await fileToB64(lf):"",to:list.join(", "),subject:fm["f-fin-sub"]!==undefined?fm["f-fin-sub"]:`${S.date.slice(0,4)}년 ${TEAMS[S.team].label} 재정보고`,body:fm["f-fin-body"]||""}));
+    S.fin={...S.fin,to:r.to};wrC("ya-fin-"+S.team,S.fin);S.finFile=null;S.finForm={"f-fin-to":r.to,"f-fin-file":sel};render();
     alertBox("메일을 보냈어요",`${r.to} 로 "${r.name}" 파일을 보냈어요.`);
   }catch(e){render();alertBox("보내지 못했어요",e.message)}
 }
@@ -1903,6 +1911,7 @@ document.addEventListener("click",e=>{
   const sm=e.target.closest("[data-smode]");if(sm){S.schedMode=sm.dataset.smode;render();return}
   if(e.target.closest("#libAdd"))return libPick("");
   if(e.target.closest("#finTplUp"))return finPickTpl();
+  if(e.target.closest("#finFilePick"))return finPickFile();
   const ftd=e.target.closest("#finTplDel");if(ftd){if(!ftd.dataset.armed){ftd.dataset.armed="1";ftd.textContent="한 번 더 누르면 삭제";return}
     tracked(call("finTplDelete",S.team)).then(()=>{S.fin={...S.fin,tpl:null};wrC("ya-fin-"+S.team,S.fin);render();toast("양식을 삭제했어요")}).catch(err=>alertBox("삭제하지 못했어요",err.message));return}
   const fsd=e.target.closest("#finSend");if(fsd)return finSendNow(fsd);
