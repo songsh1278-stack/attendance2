@@ -914,7 +914,7 @@ function renderLibrary(){
   if(L.error)return `<div class="notice">${esc(L.error)}</div>`;
   let h=`<h2 class="sec">${esc(TEAMS[S.team].label)} 자료실</h2><p class="muted" style="font-size:13px;margin:-4px 0 10px">일정과 상관없이 부서에서 함께 쓰는 파일이에요. 담임 선생님도 올리고 지울 수 있고, [보내기]로 메일로 전할 수 있어요.${L.admin?" 엑셀 파일은 [온라인 작성]을 누르면 내려받지 않고 구글 시트로 열어 고칠 수 있어요(엑셀 매크로는 작동하지 않아요). 작성본 링크는 밖으로 알리지 마세요.":""}</p>`;
   if(L.canEdit)h+=`<div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">${L.admin?`<select id="f-lvis" aria-label="공개 범위" style="height:38px;border:1px solid var(--line);border-radius:10px;background:var(--ground);padding:0 8px;color:var(--ink)"><option value="all">전체 보기</option><option value="admin">관리자만 보기</option></select>`:""}<button class="btn primary" id="libAdd">+ 파일 올리기 (10MB까지)</button>${L.admin?`<span class="muted" style="font-size:12px;flex-basis:100%">전체 보기: 담임도 볼 수 있어요 · 관리자만 보기: 팀 관리자와 총관리자만</span>`:""}</div>`;
-  h+=L.files.length?`<div class="card" style="padding:4px 12px">${L.files.map(f=>`<div class="file-row"><span class="nm">${f.vis==="admin"?`<span class="vis-badge">관리자만 보기</span>`:""}${esc(f.name)}<br><span class="muted" style="font-size:12px">${f.size?Math.max(1,Math.round(f.size/1024))+"KB · ":""}${esc(f.updated||"")}${f.by?" · "+esc(f.by):""}${f.doc?" · 온라인 작성본 있음":""}</span></span><button class="btn primary" data-lview="${f.id}">미리보기</button><button class="btn" data-ldl="${f.id}">내려받기</button><button class="btn" data-lsend="${f.id}">보내기</button>${L.admin&&/[.](xlsx|xlsm|xls)$/i.test(f.name)?(f.doc?`<a class="btn primary" href="${esc(f.doc.url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">작성본 열기</a>`:`<button class="btn" data-ldoc="${f.id}">온라인 작성</button>`):""}${L.admin?`<button class="btn" data-lvis="${f.id}" data-v="${f.vis==="admin"?"all":"admin"}">${f.vis==="admin"?"전체 공개로":"관리자만 보기로"}</button>`:""}<button class="btn danger" data-ldel="${f.id}">삭제</button></div>`).join("")}</div>`
+  h+=L.files.length?`<div class="card" style="padding:4px 12px">${L.files.map(f=>`<div class="file-row"><span class="nm">${f.vis==="admin"?`<span class="vis-badge">관리자만 보기</span>`:""}${esc(f.name)}<br><span class="muted" style="font-size:12px">${f.size?Math.max(1,Math.round(f.size/1024))+"KB · ":""}${esc(f.updated||"")}${f.by?" · "+esc(f.by):""}${f.doc?" · 작성본 내용이 자동 반영돼요":""}</span></span><button class="btn primary" data-lview="${f.id}">미리보기</button><button class="btn" data-ldl="${f.id}">내려받기</button><button class="btn" data-lsend="${f.id}">보내기</button>${L.admin&&/[.](xlsx|xlsm|xls)$/i.test(f.name)?(f.doc?`<a class="btn primary" href="${esc(f.doc.url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">열기/수정</a>`:`<button class="btn" data-ldoc="${f.id}">온라인 작성</button>`):""}${L.admin?`<button class="btn" data-lvis="${f.id}" data-v="${f.vis==="admin"?"all":"admin"}">${f.vis==="admin"?"전체 공개로":"관리자만 보기로"}</button>`:""}<button class="btn danger" data-ldel="${f.id}">삭제</button></div>`).join("")}</div>`
     :`<div class="empty">아직 올린 파일이 없어요. 위에서 파일을 올려 보세요.</div>`;
   return h;
 }
@@ -936,14 +936,14 @@ function openSend(fid){
     <p class="muted" style="margin:0;font-size:14px;word-break:break-all">${esc(f.name)}</p>
     <div class="form"><label class="full">메일 주소 (여러 명은 쉼표로, 5명까지)<input id="f-to" inputmode="email" autocomplete="off"></label>
     <label class="full">전할 말 (선택)<textarea id="f-smsg" maxlength="500" placeholder="예: 이번 주 공과 교재예요"></textarea></label>
-    ${f.doc?`<label class="inline full"><input type="checkbox" id="f-usedoc">온라인 작성본(엑셀로 변환)을 보내기</label>`:""}</div>
+</div>
     <p class="err" id="sndErr" hidden></p>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>닫기</button><button class="btn primary" type="submit">메일로 보내기</button></div></form>`;
   document.body.appendChild(ov);
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
   ov.addEventListener("submit",async e=>{
     e.preventDefault();const er=ov.querySelector("#sndErr");const btn=ov.querySelector('[type="submit"]');btn.disabled=true;er.hidden=true;
-    try{const r=await tracked(call("libMail",S.team,{fileId:fid,to:ov.querySelector("#f-to").value,msg:ov.querySelector("#f-smsg").value.trim(),doc:!!(ov.querySelector("#f-usedoc")||{}).checked}));ov.remove();alertBox("메일을 보냈어요",`${r.to} 로 "${r.name}" 파일을 보냈어요.`)}
+    try{const r=await tracked(call("libMail",S.team,{fileId:fid,to:ov.querySelector("#f-to").value,msg:ov.querySelector("#f-smsg").value.trim()}));ov.remove();alertBox("메일을 보냈어요",`${r.to} 로 "${r.name}" 파일을 보냈어요.`)}
     catch(x){btn.disabled=false;er.textContent=x.message;er.hidden=false}
   });
 }
