@@ -907,10 +907,10 @@ async function loadFin(){
   catch(e){if(!S.fin||S.fin.team!==team)S.fin={team,error:e.message}}
   S.finLoading=false;if(S.tab==="schedule"&&S.schedMode==="fin")render();
 }
-/* 보낼 파일 후보: 온라인 작성본, 재정보고 양식, 자료실에 올린 파일 (내 컴퓨터 파일은 쓰지 않아요) */
+/* 보낼 파일 후보: 자료실 엑셀의 온라인 작성본, 재정보고 양식, 자료실에 올린 파일 (내 컴퓨터 파일은 쓰지 않아요) */
 function finChoices(F){
   const L=(S.lib&&S.lib.team===S.team&&S.lib.files)||[];const c=[];
-  if(F.doc)c.push(["doc","온라인 작성본 (구글 시트 → 엑셀로 변환)"]);
+  L.forEach(x=>{if(x.doc)c.push(["doc:"+x.id,"온라인 작성본 · "+x.name]) });
   if(F.tpl)c.push(["tpl","재정보고 양식 · "+F.tpl.name]);
   L.forEach(x=>c.push(["lib:"+x.id,"자료실 · "+x.name]));
   return c;
@@ -920,19 +920,15 @@ function renderFinance(){
   const F=S.fin;if(!F||F.team!==S.team){if(!S.finLoading)setTimeout(loadFin,0);return `<div class="empty">재정보고를 불러오는 중…</div>`}
   if(F.error)return `<div class="notice">${esc(F.error)}</div>`;
   if((!S.lib||S.lib.team!==S.team)&&!S.libLoading)setTimeout(loadLib,0);
-  const T=F.tpl,D=F.doc,fm=S.finForm||{},y=S.date.slice(0,4);
+  const T=F.tpl,fm=S.finForm||{},y=S.date.slice(0,4);
   const val=(k,d)=>esc(fm[k]!==undefined?fm[k]:d);
   const kb=n=>n?Math.max(1,Math.round(n/1024))+"KB · ":"";
-  let h=`<h2 class="sec">${esc(TEAMS[S.team].label)} 재정보고</h2><p class="muted" style="font-size:13px;margin:-4px 0 10px">팀 관리자만 볼 수 있어요. 양식을 올려 두고, 온라인으로 작성한 뒤 바로 메일로 보내요.</p>`;
+  let h=`<h2 class="sec">${esc(TEAMS[S.team].label)} 재정보고</h2><p class="muted" style="font-size:13px;margin:-4px 0 10px">팀 관리자만 볼 수 있어요. 양식을 올려 두고, 작성한 파일을 바로 메일로 보내요. 내려받지 않고 온라인으로 작성하려면 자료실에서 엑셀 파일의 [온라인 작성]을 누르세요.</p>`;
   h+=`<div class="card"><b>1. 재정보고 양식 (원본 파일)</b>`+(T?`<div class="file-row"><span class="nm">${esc(T.name)}<br><span class="muted" style="font-size:12px">${kb(T.size)}${esc(T.updated||"")}</span></span><button class="btn primary" data-ldl="${T.id}">내려받기</button><button class="btn" data-lview="${T.id}">보기</button></div>`:`<p class="muted" style="margin:8px 0 0;font-size:14px">아직 올려 둔 양식이 없어요. 아래 버튼으로 양식 파일을 올려 주세요.</p>`)
     +`<div style="margin-top:10px"><button class="btn" id="finTplUp">${T?"양식 바꾸기":"+ 양식 올리기 (10MB까지)"}</button>${T?` <button class="btn danger" id="finTplDel">양식 삭제</button>`:""}</div></div>`;
-  h+=`<div class="card" style="margin-top:12px"><b>2. 내려받지 않고 온라인으로 작성 (구글 시트)</b>
-    <p class="muted" style="font-size:13px;margin:6px 0 0">양식으로 구글 시트 작성본을 만들어 바로 열고 고쳐요. 고치면 자동으로 저장돼요. <b>엑셀 매크로(정렬·잠금 버튼 등)는 구글 시트에서 작동하지 않아요.</b> 작성본은 링크를 아는 사람이면 열 수 있으니 링크를 다른 사람에게 알리지 마세요.</p>`
-    +(D?`<div class="file-row"><span class="nm">${esc(D.name)}<br><span class="muted" style="font-size:12px">${esc(D.created||"")}${D.shared===false?" · 공유가 막혀 내 계정으로만 열려요":""}</span></span><a class="btn primary" href="${esc(D.url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">작성본 열기</a></div>`:"")
-    +(T?`<div style="margin-top:10px"><button class="btn" id="finDocMake">${D?"양식으로 새로 만들기":"작성본 만들기"}</button></div>`:`<p class="muted" style="font-size:13px;margin:8px 0 0">먼저 위에서 양식을 올려 주세요.</p>`)+`</div>`;
   const ch=finChoices(F),sel=finSelOf(F);
-  const desc=sel==="doc"?"구글 시트 작성본을 엑셀(.xlsx) 파일로 바꿔 보내요. 보내는 순간의 내용이에요.":sel==="tpl"?"올려 둔 양식 파일(원본)을 그대로 보내요. 엑셀에서 고쳐 [양식 바꾸기]로 올렸다면 그 내용이 담겨요.":sel?"자료실에 올려 둔 파일을 그대로 보내요.":"";
-  h+=`<div class="card" style="margin-top:12px"><b>3. 메일로 보내기</b>
+  const desc=sel.indexOf("doc:")===0?"자료실 엑셀의 온라인 작성본(구글 시트)을 엑셀(.xlsx) 파일로 바꿔 보내요. 보내는 순간의 내용이에요.":sel==="tpl"?"올려 둔 양식 파일(원본)을 그대로 보내요. 엑셀에서 고쳐 [양식 바꾸기]로 올렸다면 그 내용이 담겨요.":sel?"자료실에 올려 둔 파일을 그대로 보내요.":"";
+  h+=`<div class="card" style="margin-top:12px"><b>2. 메일로 보내기</b>
     <div class="form" style="grid-template-columns:1fr">
       <label>보낼 파일 (올려 둔 파일 중에서 고르기)${ch.length?`<select id="f-fin-file">${ch.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?"selected":""}>${esc(l)}</option>`).join("")}</select><span class="muted" style="font-size:13px;font-weight:400">${desc}</span>`:`<span class="muted" style="font-size:13px;font-weight:400">보낼 파일이 없어요. 위에서 양식을 올리거나 자료실에 파일을 올려 주세요.</span>`}</label>
       <label>받는 메일 주소 <span style="font-weight:400">(여러 명이면 쉼표로, 5명까지)</span><input id="f-fin-to" type="text" inputmode="email" autocomplete="off" placeholder="예: abc@gmail.com" value="${val("f-fin-to",F.to||"")}"></label>
@@ -962,7 +958,7 @@ async function finSendNow(btn){
   if(!btn.dataset.armed){btn.dataset.armed="1";btn.textContent="한 번 더 누르면 보내요";return}
   btn.disabled=true;btn.textContent="보내는 중…";
   try{
-    const r=await tracked(call("finSend",S.team,{src:sel==="doc"||sel==="tpl"?sel:"lib",fileId:sel.indexOf("lib:")===0?sel.slice(4):"",to:list.join(", "),subject:fm["f-fin-sub"]!==undefined?fm["f-fin-sub"]:`${S.date.slice(0,4)}년 ${TEAMS[S.team].label} 재정보고`,body:fm["f-fin-body"]||""}));
+    const r=await tracked(call("finSend",S.team,{src:sel==="tpl"?"tpl":sel.indexOf("doc:")===0?"doc":"lib",fileId:sel.indexOf(":")>0?sel.slice(sel.indexOf(":")+1):"",to:list.join(", "),subject:fm["f-fin-sub"]!==undefined?fm["f-fin-sub"]:`${S.date.slice(0,4)}년 ${TEAMS[S.team].label} 재정보고`,body:fm["f-fin-body"]||""}));
     S.fin={...S.fin,to:r.to};wrC("ya-fin-"+S.team,S.fin);S.finForm={"f-fin-to":r.to,"f-fin-file":sel};render();
     alertBox("메일을 보냈어요",`${r.to} 로 "${r.name}" 파일을 보냈어요.`);
   }catch(e){render();alertBox("보내지 못했어요",e.message)}
@@ -977,9 +973,9 @@ async function loadLib(){
 function renderLibrary(){
   const L=S.lib;if(!L||L.team!==S.team){if(!S.libLoading)setTimeout(loadLib,0);return `<div class="empty">자료실을 불러오는 중…</div>`}
   if(L.error)return `<div class="notice">${esc(L.error)}</div>`;
-  let h=`<h2 class="sec">${esc(TEAMS[S.team].label)} 자료실</h2><p class="muted" style="font-size:13px;margin:-4px 0 10px">일정과 상관없이 부서에서 함께 쓰는 파일이에요. 공과 교재, 연락망, 양식 등을 올려 두세요.</p>`;
+  let h=`<h2 class="sec">${esc(TEAMS[S.team].label)} 자료실</h2><p class="muted" style="font-size:13px;margin:-4px 0 10px">일정과 상관없이 부서에서 함께 쓰는 파일이에요. 공과 교재, 연락망, 양식 등을 올려 두세요.${L.canEdit?" 엑셀 파일은 [온라인 작성]을 누르면 내려받지 않고 구글 시트로 열어 고칠 수 있어요(엑셀 매크로는 작동하지 않아요). 작성본 링크는 밖으로 알리지 마세요.":""}</p>`;
   if(L.canEdit)h+=`<div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><select id="f-lvis" aria-label="공개 범위" style="height:38px;border:1px solid var(--line);border-radius:10px;background:var(--ground);padding:0 8px;color:var(--ink)"><option value="all">전체 보기</option><option value="admin">관리자만 보기</option></select><button class="btn primary" id="libAdd">+ 파일 올리기 (10MB까지)</button><span class="muted" style="font-size:12px;flex-basis:100%">전체 보기: 담임도 볼 수 있어요 · 관리자만 보기: 팀 관리자와 총관리자만</span></div>`;
-  h+=L.files.length?`<div class="card" style="padding:4px 12px">${L.files.map(f=>`<div class="file-row"><span class="nm">${f.vis==="admin"?`<span class="vis-badge">관리자만</span>`:""}${esc(f.name)}<br><span class="muted" style="font-size:12px">${f.size?Math.max(1,Math.round(f.size/1024))+"KB · ":""}${esc(f.updated||"")}${f.by?" · "+esc(f.by):""}</span></span><button class="btn primary" data-lview="${f.id}">보기</button><button class="btn" data-ldl="${f.id}">내려받기</button>${L.canEdit?`<button class="btn" data-lvis="${f.id}" data-v="${f.vis==="admin"?"all":"admin"}">${f.vis==="admin"?"전체 공개로":"관리자만으로"}</button><button class="btn" data-lrep="${f.id}">바꾸기</button><button class="btn danger" data-ldel="${f.id}">삭제</button>`:""}</div>`).join("")}</div>`
+  h+=L.files.length?`<div class="card" style="padding:4px 12px">${L.files.map(f=>`<div class="file-row"><span class="nm">${f.vis==="admin"?`<span class="vis-badge">관리자만</span>`:""}${esc(f.name)}<br><span class="muted" style="font-size:12px">${f.size?Math.max(1,Math.round(f.size/1024))+"KB · ":""}${esc(f.updated||"")}${f.by?" · "+esc(f.by):""}${f.doc?" · 온라인 작성본 있음":""}</span></span><button class="btn primary" data-lview="${f.id}">보기</button><button class="btn" data-ldl="${f.id}">내려받기</button>${L.canEdit&&/[.](xlsx|xlsm|xls)$/i.test(f.name)?(f.doc?`<a class="btn primary" href="${esc(f.doc.url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">작성본 열기</a><button class="btn" data-ldoc="${f.id}">작성본 새로</button>`:`<button class="btn" data-ldoc="${f.id}">온라인 작성</button>`):""}${L.canEdit?`<button class="btn" data-lvis="${f.id}" data-v="${f.vis==="admin"?"all":"admin"}">${f.vis==="admin"?"전체 공개로":"관리자만으로"}</button><button class="btn" data-lrep="${f.id}">바꾸기</button><button class="btn danger" data-ldel="${f.id}">삭제</button>`:""}</div>`).join("")}</div>`
     :`<div class="empty">${L.canEdit?"아직 올린 파일이 없어요. 위에서 파일을 올려 보세요.":"아직 올린 파일이 없어요."}</div>`;
   if(!L.canEdit)h+=`<p class="muted" style="font-size:12px;margin-top:14px">파일 올리기와 수정은 팀 관리자가 할 수 있어요.</p>`;
   return h;
@@ -1905,15 +1901,15 @@ document.addEventListener("click",e=>{
   const sm=e.target.closest("[data-smode]");if(sm){S.schedMode=sm.dataset.smode;render();return}
   if(e.target.closest("#libAdd"))return libPick("");
   if(e.target.closest("#finTplUp"))return finPickTpl();
-  const fdm=e.target.closest("#finDocMake");if(fdm){
-    if(S.fin&&S.fin.doc&&!fdm.dataset.armed){fdm.dataset.armed="1";fdm.textContent="한 번 더 누르면 지금 작성본을 지우고 새로 만들어요";return}
-    fdm.disabled=true;fdm.textContent="만드는 중… (20초쯤 걸려요)";
-    tracked(call("finDocCreate",S.team)).then(doc=>{S.fin={...S.fin,doc};wrC("ya-fin-"+S.team,S.fin);S.finForm={...(S.finForm||{}),"f-fin-file":"doc"};render();toast("작성본을 만들었어요")}).catch(err=>{render();alertBox("만들지 못했어요",err.message)});return}
   const ftd=e.target.closest("#finTplDel");if(ftd){if(!ftd.dataset.armed){ftd.dataset.armed="1";ftd.textContent="한 번 더 누르면 삭제";return}
     tracked(call("finTplDelete",S.team)).then(()=>{S.fin={...S.fin,tpl:null};wrC("ya-fin-"+S.team,S.fin);render();toast("양식을 삭제했어요")}).catch(err=>alertBox("삭제하지 못했어요",err.message));return}
   const fsd=e.target.closest("#finSend");if(fsd)return finSendNow(fsd);
   const lv=e.target.closest("[data-lview]");if(lv)return viewShared(lv.dataset.lview);
   const ld=e.target.closest("[data-ldl]");if(ld)return downloadShared(ld.dataset.ldl);
+  const ldoc=e.target.closest("[data-ldoc]");if(ldoc){const id=ldoc.dataset.ldoc;const cur=((S.lib.files||[]).find(x=>x.id===id)||{}).doc;
+    if(cur&&!ldoc.dataset.armed){ldoc.dataset.armed="1";ldoc.textContent="한 번 더 누르면 새로 만들어요";return}
+    ldoc.disabled=true;ldoc.textContent="만드는 중… (20초쯤)";
+    tracked(call("libDoc",S.team,id)).then(doc=>{S.lib={...S.lib,files:S.lib.files.map(x=>x.id===id?{...x,doc}:x)};wrC("ya-lib-"+S.team,S.lib);render();toast("온라인 작성본을 만들었어요")}).catch(err=>{render();alertBox("만들지 못했어요",err.message)});return}
   const lr=e.target.closest("[data-lrep]");if(lr)return libPick(lr.dataset.lrep);
   const lvis=e.target.closest("[data-lvis]");if(lvis){libAction("libVis",lvis.dataset.lvis,lvis.dataset.v,lvis.dataset.v==="admin"?"관리자만 볼 수 있게 했어요":"전체 공개로 바꿨어요");return}
   const ldel=e.target.closest("[data-ldel]");if(ldel){if(!ldel.dataset.armed){ldel.dataset.armed="1";ldel.textContent="한 번 더";return}libAction("libDelete",ldel.dataset.ldel,null,"파일을 삭제했어요");return}
