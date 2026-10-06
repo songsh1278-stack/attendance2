@@ -907,26 +907,32 @@ async function loadFin(){
   catch(e){if(!S.fin||S.fin.team!==team)S.fin={team,error:e.message}}
   S.finLoading=false;if(S.tab==="schedule"&&S.schedMode==="fin")render();
 }
+const finSrcOf=F=>{const x=S.finSrc;if(x==="doc"&&F.doc)return x;if(x==="tpl"&&F.tpl)return x;if(x==="upload")return x;return F.doc?"doc":F.tpl?"tpl":"upload"};
 function renderFinance(){
   const F=S.fin;if(!F||F.team!==S.team){if(!S.finLoading)setTimeout(loadFin,0);return `<div class="empty">재정보고를 불러오는 중…</div>`}
   if(F.error)return `<div class="notice">${esc(F.error)}</div>`;
-  const T=F.tpl,fm=S.finForm||{},y=S.date.slice(0,4);
+  const T=F.tpl,D=F.doc,fm=S.finForm||{},y=S.date.slice(0,4),src=finSrcOf(F);
   const val=(k,d)=>esc(fm[k]!==undefined?fm[k]:d);
-  let h=`<h2 class="sec">${esc(TEAMS[S.team].label)} 재정보고</h2><p class="muted" style="font-size:13px;margin:-4px 0 10px">양식을 내려받아 작성한 뒤, 받는 메일 주소를 적고 바로 보내요.</p>`;
-  h+=`<div class="card"><b>1. 재정보고 양식</b>`+(T?`<div class="file-row"><span class="nm">${esc(T.name)}<br><span class="muted" style="font-size:12px">${T.size?Math.max(1,Math.round(T.size/1024))+"KB · ":""}${esc(T.updated||"")}</span></span><button class="btn primary" data-ldl="${T.id}">양식 내려받기</button><button class="btn" data-lview="${T.id}">보기</button></div>`:`<p class="muted" style="margin:8px 0 0;font-size:14px">아직 올려 둔 양식이 없어요.${F.canEdit?" 아래 버튼으로 양식 파일을 올려 주세요.":" 팀 관리자가 양식을 올리면 여기서 내려받을 수 있어요."}</p>`)
-    +(F.canEdit?`<div style="margin-top:10px"><button class="btn" id="finTplUp">${T?"양식 바꾸기":"+ 양식 올리기 (10MB까지)"}</button>${T?` <button class="btn danger" id="finTplDel">양식 삭제</button>`:""}</div>`:"")+`</div>`;
-  if(F.canSend){
-    const f=S.finFile;
-    h+=`<div class="card" style="margin-top:12px"><b>2. 작성한 파일 메일로 보내기</b>
-      <div class="form" style="grid-template-columns:1fr">
-        <label>받는 메일 주소 <span style="font-weight:400">(여러 명이면 쉼표로, 5명까지)</span><input id="f-fin-to" type="text" inputmode="email" autocomplete="off" placeholder="예: abc@gmail.com" value="${val("f-fin-to",F.to||"")}"></label>
-        <label>제목<input id="f-fin-sub" maxlength="150" value="${val("f-fin-sub",`${y}년 ${TEAMS[S.team].label} 재정보고`)}"></label>
-        <label>내용 (선택)<textarea id="f-fin-body" maxlength="2000" placeholder="예: ${new Date().getMonth()+1}월 재정보고서를 보냅니다.">${val("f-fin-body","")}</textarea></label>
-        <label>보낼 파일<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button type="button" class="btn" id="finFilePick">파일 고르기</button><span class="muted" style="font-size:13px;font-weight:400;word-break:break-all">${f?esc(f.name)+" · "+Math.max(1,Math.round(f.size/1024))+"KB":"작성한 재정보고 파일을 골라 주세요"}</span></span></label>
-      </div>
-      <div class="actions"><div class="spacer"></div><button class="btn primary" id="finSend">메일 보내기</button></div>
-      <p class="muted" style="font-size:12px;margin:8px 0 0">보내는 사람은 이 앱을 만든 구글 계정으로 표시돼요. 보낸 기록은 이력에 남아요.</p></div>`;
-  }else h+=`<p class="muted" style="font-size:12px;margin-top:14px">메일 보내기는 팀 관리자가 할 수 있어요. 양식은 누구나 내려받을 수 있어요.</p>`;
+  const kb=n=>n?Math.max(1,Math.round(n/1024))+"KB · ":"";
+  let h=`<h2 class="sec">${esc(TEAMS[S.team].label)} 재정보고</h2><p class="muted" style="font-size:13px;margin:-4px 0 10px">팀 관리자만 볼 수 있어요. 양식을 올려 두고, 온라인으로 작성한 뒤 바로 메일로 보내요.</p>`;
+  h+=`<div class="card"><b>1. 재정보고 양식 (원본 파일)</b>`+(T?`<div class="file-row"><span class="nm">${esc(T.name)}<br><span class="muted" style="font-size:12px">${kb(T.size)}${esc(T.updated||"")}</span></span><button class="btn primary" data-ldl="${T.id}">내려받기</button><button class="btn" data-lview="${T.id}">보기</button></div>`:`<p class="muted" style="margin:8px 0 0;font-size:14px">아직 올려 둔 양식이 없어요. 아래 버튼으로 양식 파일을 올려 주세요.</p>`)
+    +`<div style="margin-top:10px"><button class="btn" id="finTplUp">${T?"양식 바꾸기":"+ 양식 올리기 (10MB까지)"}</button>${T?` <button class="btn danger" id="finTplDel">양식 삭제</button>`:""}</div></div>`;
+  h+=`<div class="card" style="margin-top:12px"><b>2. 내려받지 않고 온라인으로 작성 (구글 시트)</b>
+    <p class="muted" style="font-size:13px;margin:6px 0 0">양식으로 구글 시트 작성본을 만들어 바로 열고 고쳐요. 고치면 자동으로 저장돼요. <b>엑셀 매크로(정렬·잠금 버튼 등)는 구글 시트에서 작동하지 않아요.</b> 작성본은 링크를 아는 사람이면 열 수 있으니 링크를 다른 사람에게 알리지 마세요.</p>`
+    +(D?`<div class="file-row"><span class="nm">${esc(D.name)}<br><span class="muted" style="font-size:12px">${esc(D.created||"")}${D.shared===false?" · 공유가 막혀 내 계정으로만 열려요":""}</span></span><a class="btn primary" href="${esc(D.url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">작성본 열기</a></div>`:"")
+    +(T?`<div style="margin-top:10px"><button class="btn" id="finDocMake">${D?"양식으로 새로 만들기":"작성본 만들기"}</button></div>`:`<p class="muted" style="font-size:13px;margin:8px 0 0">먼저 위에서 양식을 올려 주세요.</p>`)+`</div>`;
+  const f=S.finFile;
+  const desc={doc:"구글 시트 작성본을 엑셀(.xlsx) 파일로 바꿔 보내요. 보내는 순간의 내용이에요.",tpl:"올려 둔 양식 파일(원본)을 그대로 보내요. 엑셀에서 고쳐 [양식 바꾸기]로 올렸다면 그 내용이 담겨요.",upload:""}[src];
+  h+=`<div class="card" style="margin-top:12px"><b>3. 메일로 보내기</b>
+    <div class="form" style="grid-template-columns:1fr">
+      <label>보낼 파일<span class="chips" style="margin-top:0">${D?`<button type="button" class="chip" data-finsrc="doc" aria-pressed="${src==="doc"}">온라인 작성본</button>`:""}${T?`<button type="button" class="chip" data-finsrc="tpl" aria-pressed="${src==="tpl"}">올려 둔 양식 파일</button>`:""}<button type="button" class="chip" data-finsrc="upload" aria-pressed="${src==="upload"}">내 컴퓨터 파일</button></span></label>
+      ${src==="upload"?`<label>파일<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button type="button" class="btn" id="finFilePick">파일 고르기</button><span class="muted" style="font-size:13px;font-weight:400;word-break:break-all">${f?esc(f.name)+" · "+Math.max(1,Math.round(f.size/1024))+"KB":"보낼 파일을 골라 주세요"}</span></span></label>`:`<p class="muted" style="font-size:13px;margin:0">${desc}</p>`}
+      <label>받는 메일 주소 <span style="font-weight:400">(여러 명이면 쉼표로, 5명까지)</span><input id="f-fin-to" type="text" inputmode="email" autocomplete="off" placeholder="예: abc@gmail.com" value="${val("f-fin-to",F.to||"")}"></label>
+      <label>제목<input id="f-fin-sub" maxlength="150" value="${val("f-fin-sub",`${y}년 ${TEAMS[S.team].label} 재정보고`)}"></label>
+      <label>내용 (선택)<textarea id="f-fin-body" maxlength="2000" placeholder="예: ${new Date().getMonth()+1}월 재정보고서를 보냅니다.">${val("f-fin-body","")}</textarea></label>
+    </div>
+    <div class="actions"><div class="spacer"></div><button class="btn primary" id="finSend">메일 보내기</button></div>
+    <p class="muted" style="font-size:12px;margin:8px 0 0">보내는 사람은 이 앱을 만든 구글 계정으로 표시돼요. 보낸 기록은 이력에 남아요.</p></div>`;
   return h;
 }
 function finPickTpl(){
@@ -942,20 +948,20 @@ function finPickFile(){
   inp.click();
 }
 async function finSendNow(btn){
-  const F=S.fin,fm=S.finForm||{},f=S.finFile;
+  const F=S.fin,fm=S.finForm||{},f=S.finFile,src=finSrcOf(F);
   const to=String(fm["f-fin-to"]!==undefined?fm["f-fin-to"]:(F.to||"")).trim();
   const list=to.split(/[,;\s]+/).filter(Boolean);
   if(!list.length)return alertBox("받는 메일 주소를 적어 주세요","");
   const bad=list.find(x=>!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x));
   if(bad)return alertBox("메일 주소를 확인해 주세요",`"${bad}" 은(는) 올바른 메일 주소가 아니에요.`);
   if(list.length>5)return alertBox("받는 사람이 너무 많아요","한 번에 5명까지 보낼 수 있어요.");
-  if(!f)return alertBox("보낼 파일을 골라 주세요","[파일 고르기]로 작성한 재정보고 파일을 골라 주세요.");
+  if(src==="upload"&&!f)return alertBox("보낼 파일을 골라 주세요","[파일 고르기]로 보낼 파일을 골라 주세요.");
   if(!btn.dataset.armed){btn.dataset.armed="1";btn.textContent="한 번 더 누르면 보내요";return}
   btn.disabled=true;btn.textContent="보내는 중…";
   try{
-    const r=await tracked(call("finSend",S.team,{to:list.join(", "),subject:fm["f-fin-sub"]!==undefined?fm["f-fin-sub"]:`${S.date.slice(0,4)}년 ${TEAMS[S.team].label} 재정보고`,body:fm["f-fin-body"]||"",name:f.name,mime:f.type,b64:await fileToB64(f)}));
+    const r=await tracked(call("finSend",S.team,{src,to:list.join(", "),subject:fm["f-fin-sub"]!==undefined?fm["f-fin-sub"]:`${S.date.slice(0,4)}년 ${TEAMS[S.team].label} 재정보고`,body:fm["f-fin-body"]||"",name:f?f.name:"",mime:f?f.type:"",b64:src==="upload"?await fileToB64(f):""}));
     S.fin={...S.fin,to:r.to};wrC("ya-fin-"+S.team,S.fin);S.finFile=null;S.finForm={"f-fin-to":r.to};render();
-    alertBox("메일을 보냈어요",`${r.to} 로 "${f.name}" 파일을 보냈어요.`);
+    alertBox("메일을 보냈어요",`${r.to} 로 "${r.name}" 파일을 보냈어요.`);
   }catch(e){render();alertBox("보내지 못했어요",e.message)}
 }
 /* ---- 자료실 ---- */
@@ -1896,6 +1902,11 @@ document.addEventListener("click",e=>{
   const sm=e.target.closest("[data-smode]");if(sm){S.schedMode=sm.dataset.smode;render();return}
   if(e.target.closest("#libAdd"))return libPick("");
   if(e.target.closest("#finTplUp"))return finPickTpl();
+  const fsr=e.target.closest("[data-finsrc]");if(fsr){S.finSrc=fsr.dataset.finsrc;render();return}
+  const fdm=e.target.closest("#finDocMake");if(fdm){
+    if(S.fin&&S.fin.doc&&!fdm.dataset.armed){fdm.dataset.armed="1";fdm.textContent="한 번 더 누르면 지금 작성본을 지우고 새로 만들어요";return}
+    fdm.disabled=true;fdm.textContent="만드는 중… (20초쯤 걸려요)";
+    tracked(call("finDocCreate",S.team)).then(doc=>{S.fin={...S.fin,doc};wrC("ya-fin-"+S.team,S.fin);S.finSrc="doc";render();toast("작성본을 만들었어요")}).catch(err=>{render();alertBox("만들지 못했어요",err.message)});return}
   const ftd=e.target.closest("#finTplDel");if(ftd){if(!ftd.dataset.armed){ftd.dataset.armed="1";ftd.textContent="한 번 더 누르면 삭제";return}
     tracked(call("finTplDelete",S.team)).then(()=>{S.fin={...S.fin,tpl:null};wrC("ya-fin-"+S.team,S.fin);render();toast("양식을 삭제했어요")}).catch(err=>alertBox("삭제하지 못했어요",err.message));return}
   if(e.target.closest("#finFilePick"))return finPickFile();
