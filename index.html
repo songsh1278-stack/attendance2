@@ -147,6 +147,7 @@ button.rep-tel{cursor:pointer}
 .role-badge{display:inline-block;vertical-align:middle;margin-left:8px;font-family:var(--body);font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:2px 9px}
 .brand h1{font-size:clamp(17px,4.8vw,24px)}
 #brandTitle{cursor:pointer}
+#sync{padding:8px 0 8px 12px;-webkit-user-select:none;user-select:none}
 nav.tabs button{font-size:11px;white-space:nowrap}
 .icon-btn{flex:none;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--muted);padding:0;text-decoration:none}
 .icon-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -891,15 +892,19 @@ async function exportAll(){
   saveWorkbook(wb,`${TEAMS[S.team].short}_출석부_${S.date}.xlsx`);
 }
 /* ---- 일정 ---- */
+const rdC=k=>{try{return JSON.parse(localStorage.getItem(k)||"null")}catch(_){return null}};
+const wrC=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}};
 async function loadEvents(){
   if(S.evLoading)return;S.evLoading=true;const team=S.team;
-  try{const d=await call("events",team);S.ev={team,list:d.events||[],canEdit:!!d.canEdit}}catch(e){S.ev={team,list:[],canEdit:false,error:e.message}}
+  try{const d=await call("events",team);S.ev={team,list:d.events||[],canEdit:!!d.canEdit};wrC("ya-ev-"+team,S.ev)}
+  catch(e){if(!S.ev||S.ev.team!==team)S.ev={team,list:[],canEdit:false,error:e.message}}
   S.evLoading=false;if(S.tab==="schedule")render();
 }
 /* ---- 자료실 ---- */
 async function loadLib(){
   if(S.libLoading)return;S.libLoading=true;const team=S.team;
-  try{const d=await call("libList",team);S.lib={team,files:d.files||[],canEdit:!!d.canEdit}}catch(e){S.lib={team,files:[],canEdit:false,error:e.message}}
+  try{const d=await call("libList",team);S.lib={team,files:d.files||[],canEdit:!!d.canEdit};wrC("ya-lib-"+team,S.lib)}
+  catch(e){if(!S.lib||S.lib.team!==team)S.lib={team,files:[],canEdit:false,error:e.message}}
   S.libLoading=false;if(S.tab==="schedule")render();
 }
 function renderLibrary(){
@@ -916,12 +921,12 @@ function libPick(replaceId){
   const vis=replaceId?"":((document.querySelector("#f-lvis")||{}).value||"all");
   const inp=document.createElement("input");inp.type="file";
   inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;if(f.size>10*1024*1024){alertBox("파일이 너무 커요","10MB까지 올릴 수 있어요.");return}
-    try{toast("올리는 중…");const files=await tracked(call("libUpload",S.team,{name:f.name,mime:f.type,b64:await fileToB64(f),vis,replaceId:replaceId||""}));S.lib={...S.lib,files};render();toast(replaceId?"파일을 바꿨어요":"파일을 올렸어요")}
+    try{toast("올리는 중…");const files=await tracked(call("libUpload",S.team,{name:f.name,mime:f.type,b64:await fileToB64(f),vis,replaceId:replaceId||""}));S.lib={...S.lib,files};wrC("ya-lib-"+S.team,S.lib);render();toast(replaceId?"파일을 바꿨어요":"파일을 올렸어요")}
     catch(e){alertBox("올리지 못했어요",e.message)}};
   inp.click();
 }
 async function libAction(op,fid,v,msg){
-  try{const files=await tracked(v===null?call(op,S.team,fid):call(op,S.team,fid,v));S.lib={...S.lib,files};render();toast(msg)}catch(e){alertBox("처리하지 못했어요",e.message)}
+  try{const files=await tracked(v===null?call(op,S.team,fid):call(op,S.team,fid,v));S.lib={...S.lib,files};wrC("ya-lib-"+S.team,S.lib);render();toast(msg)}catch(e){alertBox("처리하지 못했어요",e.message)}
 }
 function renderSchedule(){
   const segHtml=`<div class="seg" style="margin-top:14px"><button data-smode="cal" aria-pressed="${S.schedMode!=="lib"}">달력</button><button data-smode="lib" aria-pressed="${S.schedMode==="lib"}">자료실</button></div>`;
@@ -1030,7 +1035,7 @@ function openEvent(id,date){
   const pickFile=replaceId=>{const vis=replaceId?"":((ov.querySelector("#f-fvis")||{}).value||"all");const inp=document.createElement("input");inp.type="file";inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;if(f.size>10*1024*1024){alertBox("파일이 너무 커요","10MB까지 올릴 수 있어요.");return}
     try{toast("올리는 중…");const files=await tracked(call("uploadFile",S.team,ev.id,{name:f.name,mime:f.type,b64:await fileToB64(f),replaceId:replaceId||"",vis}));ev.files=files;const x=E.list.find(y=>y.id===ev.id);if(x)x.files=files;draw();toast(replaceId?"문서를 바꿨어요":"문서를 올렸어요")}catch(e){alertBox("올리지 못했어요",e.message)}};inp.click()};
   ov.addEventListener("click",async e=>{
-    if(e.target===ov||e.target.closest("[data-close]")){ov.remove();render();return}
+    if(e.target===ov||e.target.closest("[data-close]")){ov.remove();wrC("ya-ev-"+S.team,S.ev);render();return}
     const fv=e.target.closest("[data-fview]");if(fv)return viewShared(fv.dataset.fview);
     const dl=e.target.closest("[data-fdl]");if(dl)return downloadShared(dl.dataset.fdl);
     const vb=e.target.closest("[data-fvis]");if(vb){try{const files=await tracked(call("setFileVis",S.team,ev.id,vb.dataset.fvis,vb.dataset.v));ev.files=files;const x=E.list.find(y=>y.id===ev.id);if(x)x.files=files;draw();toast(vb.dataset.v==="admin"?"관리자만 볼 수 있게 했어요":"전체 공개로 바꿨어요")}catch(err){alertBox("바꾸지 못했어요",err.message)}return}
@@ -1039,14 +1044,14 @@ function openEvent(id,date){
     const fd=e.target.closest("[data-fdel]");if(fd){if(!fd.dataset.armed){fd.dataset.armed="1";fd.textContent="한 번 더";return}
       try{const files=await tracked(call("deleteFile",S.team,ev.id,fd.dataset.fdel));ev.files=files;const x=E.list.find(y=>y.id===ev.id);if(x)x.files=files;draw();toast("문서를 삭제했어요")}catch(err){alertBox("삭제하지 못했어요",err.message)}return}
     const dv=e.target.closest("[data-evdel]");if(dv){if(!dv.dataset.armed){dv.dataset.armed="1";dv.textContent="한 번 더 누르면 삭제";return}
-      try{await tracked(call("deleteEvent",S.team,ev.id));E.list=E.list.filter(y=>y.id!==ev.id);ov.remove();render();toast("일정을 삭제했어요")}catch(err){alertBox("삭제하지 못했어요",err.message)}}
+      try{await tracked(call("deleteEvent",S.team,ev.id));E.list=E.list.filter(y=>y.id!==ev.id);wrC("ya-ev-"+S.team,E);ov.remove();render();toast("일정을 삭제했어요")}catch(err){alertBox("삭제하지 못했어요",err.message)}}
   });
   ov.addEventListener("submit",async e=>{
     e.preventDefault();if(!edit)return;
     const body={id:ev.id,title:ov.querySelector("#f-evt").value.trim(),date:ov.querySelector("#f-evd").value,memo:ov.querySelector("#f-evm").value};
     if(!body.title||!body.date)return;
     try{const saved=await tracked(call("saveEvent",S.team,body));const i=E.list.findIndex(y=>y.id===saved.id);if(i>=0)E.list[i]=saved;else E.list.push(saved);
-      const isNew=!ev.id;Object.assign(ev,saved);S.calSel=saved.date;S.calMonth=saved.date.slice(0,7);toast("일정을 저장했어요");if(isNew)draw();else{ov.remove();render()}}
+      const isNew=!ev.id;Object.assign(ev,saved);S.calSel=saved.date;S.calMonth=saved.date.slice(0,7);wrC("ya-ev-"+S.team,E);toast("일정을 저장했어요");if(isNew)draw();else{ov.remove();render()}}
     catch(err){alertBox("저장하지 못했어요",err.message)}
   });
 }
@@ -1166,7 +1171,7 @@ function renderRoster(){
     <div class="summary"><div>${(()=>{const act=all.filter(p=>p.active!==false),st=act.filter(p=>p.group!=="T").length,tc=act.length-st;
       /* 학생과 교사를 따로 세요 (교사 칩을 고르면 교사만) */
       return S.group==="T"?`<div class="big num">${tc}<em> 명 교사</em></div>`:`<div class="big num">${st}<em> 명 학생</em>${tc?`<em style="margin-left:10px">교사 </em>${tc}<em> 명</em>`:""}</div>`})()}<div class="sub">${TEAMS[S.team].short} · ${S.group==="all"?"전체":GL[S.group]} · 재적</div></div><div class="spacer"></div>
-    ${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">담임</span><span class="none" style="font-size:13px">담임 번호를 받은 선생님은 자기 반만 관리해요</span><span class="spacer"></span><button id="gcManage2">담임 권한 관리</button></div>`:""}${canManageGrades()&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div>`:""}${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
+    ${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">담임</span><span class="none" style="font-size:13px">담임 번호를 받은 선생님은 자기 반만 관리해요</span><span class="spacer"></span><button id="gcManage2">담임 권한 관리</button></div>`:""}${canManageGrades()&&deptLocked(S.team)?`<div class="homeroom" style="margin-top:4px"><span class="lbl">관리번호</span><span class="none" style="font-size:13px">내 팀 관리자 번호를 바꿔요</span><span class="spacer"></span><button data-mycode="${S.team}">번호 변경</button></div>`:""}${canManageGrades()&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div>`:""}${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
   /* 반(학년)마다 제목 줄과 인원. 영아처럼 나이가 따로 있으면 나이별 인원도 */
   const ageCnt=list=>{if(!isFlex(S.team))return "";const m=new Map();list.forEach(p=>{if(p.group==="T")return;const a=ageLabel(p)||"나이 모름";m.set(a,(m.get(a)||0)+1)});
     return [...m].sort((x,y)=>(parseInt(x[0])||99)-(parseInt(y[0])||99)).map(([a,n])=>`${a} ${n}명`).join(" · ")};
@@ -1247,8 +1252,14 @@ const canEnter=t=>!!(S.access||{})[t];
 function storedCodes(){try{return JSON.parse(localStorage.getItem("ya-codes")||"{}")}catch(_){return S._codes||{}}}
 function storeCode(t,code){S._codes={...(S._codes||{}),[t]:code};if(S.remember===false)return;const c=storedCodes();c[t]=code;try{localStorage.setItem("ya-codes",JSON.stringify(c))}catch(_){}}
 function hasStored(){try{return !!(localStorage.getItem("ya-admin")||Object.keys(JSON.parse(localStorage.getItem("ya-codes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-gcodes")||"{}")).length)}catch(_){return false}}
-function forgetDevice(){try{["ya-admin","ya-codes","ya-gcodes",BOOT_KEY].forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._codes={};S._gcodes={};S.view="home";S.book=null;load();toast("이 기기에 기억된 번호와 로그인을 지웠어요")}
-function goDept(t){S.book=null;S.ev=null;S.lib=null;S.schedMode="cal";S.calSel="";S.calMonth="";S.rosterMode="active";setTeam(t);S.view="dept";S.tab="check";try{localStorage.setItem("ya-team",S.team)}catch(_){}render();window.scrollTo(0,0)}
+function forgetDevice(){try{["ya-admin","ya-codes","ya-gcodes",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._codes={};S._gcodes={};S.view="home";S.book=null;load();toast("이 기기에 기억된 번호와 로그인을 지웠어요")}
+function goDept(t){S.book=null;
+  S.ev=rdC("ya-ev-"+t);S.lib=rdC("ya-lib-"+t);
+  S.schedMode="cal";S.calSel="";S.calMonth="";S.rosterMode="active";setTeam(t);S.view="dept";S.tab="check";
+  try{localStorage.setItem("ya-team",S.team)}catch(_){}
+  render();window.scrollTo(0,0);
+  setTimeout(()=>{loadEvents();loadLib()},300);
+}
 function enterDept(t){if(canEnter(t))return goDept(t);openCodeSheet(t)}
 function openCodeSheet(t){
   const ov=document.createElement("div");ov.className="overlay";
@@ -1524,6 +1535,52 @@ function renderPromoAdmin(){
   return `<details class="fold" data-fold="promo"${S.fold.promo?" open":""}><summary><h2 class="sec">연말 학년 등반</h2><span class="fold-sum">${promoYear()}년 연말 · 완료 ${PROMO_TEAMS.filter(promoDone).length}곳 / 대상 ${PROMO_TEAMS.length}곳</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">부서마다 따로 진행해요. 각 부서 명단 탭에서도 부서 관리자가 고유번호를 확인한 뒤 실행할 수 있어요. 맨 위 학년은 다음 부서로 올라가고(영아 4세→유아 5세, 유아 7세→유소년, 6학년→중고등 중1), 고3은 졸업해요.</p>
     <div class="card admin-list">${PROMO_TEAMS.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">${esc(promoStatus(t))}</span><button class="btn" data-promo="${t}">등반</button><button class="btn danger" data-promo-undo="${t}">되돌리기</button></div>`).join("")}</div></details>`;
 }
+/* ---------- 팀관리자 로그인 · 내 관리번호 변경 ---------- */
+function openTeamAdminLogin(){
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="팀관리자 로그인"><h3>팀관리자 로그인</h3>
+    <p class="muted" style="margin:0;font-size:14px">부서를 고르고 팀 관리자 번호를 입력하세요. 로그인한 뒤 명단 탭이나 메인 화면에서 내 관리번호를 바꿀 수 있어요.</p>
+    <div class="form"><label class="full">부서<select id="f-tat">${Object.entries(TEAMS).map(([t,x])=>`<option value="${t}">${x.label}</option>`).join("")}</select></label>
+    <label class="full">팀 관리자 번호<input id="f-tac" type="password" inputmode="numeric" autocomplete="off" maxlength="8" required></label>
+    <label class="inline full"><input type="checkbox" id="f-tar" checked>이 기기에서 번호 기억하기 <span class="muted" style="font-size:12px">(여러 사람이 쓰는 기기면 끄세요)</span></label></div>
+    <p class="err" id="taErr" hidden></p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">로그인</button></div></form>`;
+  document.body.appendChild(ov);const inp=ov.querySelector("#f-tac");inp.focus();
+  const err=m=>{const el=ov.querySelector("#taErr");el.textContent=m;el.hidden=false;inp.select()};
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+  ov.querySelector("form").addEventListener("submit",async e=>{
+    e.preventDefault();const t=ov.querySelector("#f-tat").value,code=inp.value.trim();
+    if(!deptLocked(t)){err("이 부서는 아직 팀 관리자 번호가 없어요. 총관리자에게 번호를 만들어 달라고 해 주세요.");return}
+    S.remember=!!ov.querySelector("#f-tar").checked;
+    let ok=false,g="";try{ok=await call("verifyCode",t,code);if(!ok)g=await call("findGradeCode",t,code)}catch(x){err(x.message);return}
+    if(!ok){err(g?"담임 번호예요. 메인 화면에서 부서 카드를 눌러 입력해 주세요.":"번호가 맞지 않아요. 다시 확인해 주세요.");return}
+    storeCode(t,code);ov.remove();await load();goDept(t);toast(`${TEAMS[t].label} 팀 관리자로 들어왔어요`);
+  });
+}
+function openMyCode(t){
+  if(!TEAMS[t]||!deptLocked(t)||!(S.isAdmin||((S.scope||{})[t]||{}).level==="dept")){toast("팀 관리자로 로그인한 뒤에 바꿀 수 있어요");return}
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="관리번호 변경"><h3>${TEAMS[t].label} 관리번호 변경</h3>
+    <p class="muted" style="margin:0;font-size:14px">팀 관리자 본인 번호를 바꿔요. 바꾼 뒤에는 새 번호로 들어와야 하고, 다른 기기에 저장된 예전 번호는 쓸 수 없어요. 다른 부서·담임 번호와 같으면 안 돼요.</p>
+    <div class="form"><label class="full">새 번호 (숫자 4~8자리)<input id="f-mc1" type="password" inputmode="numeric" autocomplete="off" maxlength="8" required></label>
+    <label class="full">새 번호 한 번 더<input id="f-mc2" type="password" inputmode="numeric" autocomplete="off" maxlength="8" required></label></div>
+    <p class="err" id="mcErr" hidden></p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">변경</button></div></form>`;
+  document.body.appendChild(ov);const a=ov.querySelector("#f-mc1"),b=ov.querySelector("#f-mc2");a.focus();
+  const err=m=>{const el=ov.querySelector("#mcErr");el.textContent=m;el.hidden=false};
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+  ov.querySelector("form").addEventListener("submit",async e=>{
+    e.preventDefault();const v=a.value.trim();
+    if(!/^[0-9]{4,8}$/.test(v)){err("번호는 숫자 4~8자리로 적어 주세요");return}
+    if(v!==b.value.trim()){err("두 번호가 달라요. 다시 확인해 주세요");b.select();return}
+    const btn=ov.querySelector('[type="submit"]');btn.disabled=true;
+    try{await tracked(call("changeTeamCode",t,v))}catch(x){btn.disabled=false;err(x.message);return}
+    // 이 기기에 저장된 번호도 새 번호로 바꿔요 (안 바꾸면 다음 새로고침 때 로그아웃돼요)
+    S._codes={...(S._codes||{}),[t]:v};
+    try{const c=JSON.parse(localStorage.getItem("ya-codes")||"{}");if(t in c){c[t]=v;localStorage.setItem("ya-codes",JSON.stringify(c))}}catch(_){}
+    ov.remove();S.book=null;await load();toast("관리번호를 바꿨어요");
+  });
+}
 function openAdminLogin(){
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="관리자 로그인"><h3>관리자 로그인</h3>
@@ -1613,7 +1670,9 @@ function renderHome(){
         return `<div class="admin-row"><b>${x.label}</b><span class="code num ${code?"":"none"}">${code?esc(code):set?"설정됨":"번호 없음 (누구나 입장)"}</span>
           ${code?`<button class="btn" data-copy-code="${esc(code)}">복사</button>`:""}<button class="btn" data-code-gen="${t}">${set?"새 번호":"번호 만들기"}</button><button class="btn" data-code-edit="${t}">직접 입력</button>${set?`<button class="btn danger" data-code-clear="${t}">해제</button>`:""}</div>`}).join("")}</div></details>`+renderPromoAdmin();
   }
-  h+=`<div style="margin-top:28px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="adminIn">관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
+  {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
+    if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`}
+  h+=`<div style="margin-top:28px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   return h;
 }
 function render(){
@@ -1790,6 +1849,9 @@ document.addEventListener("click",e=>{
   if(e.target.closest("#a2hsHide")){try{localStorage.setItem("ya-a2hs-hide","1")}catch(_){}render();toast("안내를 닫았어요. 관리자 로그인 옆 버튼으로 다시 열 수 있어요");return}
   if(e.target.closest("#a2hsAgain")){try{localStorage.removeItem("ya-a2hs-hide")}catch(_){}return openA2hs()}
   const fg=e.target.closest("#forgetCodes");if(fg){if(!fg.dataset.armed){fg.dataset.armed="1";fg.textContent="한 번 더 누르면 지워요";return}return forgetDevice()}
+  const mcb=e.target.closest("[data-mycode]");if(mcb)return openMyCode(mcb.dataset.mycode);
+  if(e.target.closest("#teamAdminIn"))return openTeamAdminLogin();
+  if(e.target.closest("#sync")){if(S.isAdmin){toast("이미 총관리자로 로그인되어 있어요");return}return openAdminLogin()}
   if(e.target.closest("#adminIn"))return openAdminLogin();
   if(e.target.closest("#adminOut")){try{localStorage.removeItem("ya-admin")}catch(_){}S._admin="";load();toast("로그아웃했어요");return}
   const pu=e.target.closest("[data-promo-undo]");if(pu)return openUndoPromotion(pu.dataset.promoUndo);
@@ -1899,6 +1961,7 @@ async function load(){
 }
 document.addEventListener("click",e=>{if(e.target.closest("#retryLoad")){$("#sync").textContent="불러오는 중…";loading=null;load()}});
 render();useBootCache();load();
+if(S.view==="dept")setTimeout(()=>{loadEvents();loadLib()},1500);
 setInterval(()=>{
   if(document.hidden||pending||document.querySelector(".overlay"))return;
   const a=document.activeElement;if(a&&a.dataset&&(a.dataset.tv||a.dataset.total))return;
