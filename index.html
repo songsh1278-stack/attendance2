@@ -1732,7 +1732,6 @@ function renderAdminSummary(){
     <div class="datebar" style="margin:0 0 12px"><button class="arrow" data-adate="-7" aria-label="지난 주일">‹</button>
     <div class="date"><strong class="num">${d.getMonth()+1}월 ${d.getDate()}일 주일</strong></div>
     <button class="arrow" data-adate="7" aria-label="다음 주일">›</button></div>
-    <div class="bars">${rows.map(r=>`<div class="bar"><span>${r.label.replace("교육팀","")}</span><div class="track"><div class="fill" style="width:${r.n?r.on/r.n*100:0}%"></div></div><span class="v num">${r.on}/${r.n}</span></div>`).join("")}</div>
     <div class="summary" style="margin-bottom:0"><div><div class="big num">${sum("on")}<em> / ${sum("n")}명</em></div><div class="sub num">학생 전체${sum("n")?" · "+Math.round(sum("on")/sum("n")*100)+"%":""} · 교사 ${sum("ton")} / ${sum("tn")}</div></div></div>
     <table style="margin-top:10px"><thead><tr><th>부서</th><th class="r">학생</th><th class="r">교사</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.label}</td><td class="r num">${r.on}/${r.n}</td><td class="r num">${r.ton}/${r.tn}</td></tr>`).join("")}</tbody></table></div>`;
 }
