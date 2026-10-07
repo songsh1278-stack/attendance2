@@ -446,12 +446,40 @@ const isOn=(k,id)=>!!(attOf(k).p||{})[id];
 const talentOf=(k,id)=>Number((attOf(k).t||{})[id]||0);
 /* 생일은 "YY/MM/DD" 또는 연도 없는 "MM/DD" 둘 다 받아요. [월,일]만 꺼내요 */
 const bdMD=v=>{const m=String(v||"").trim().match(/^(?:(\d{2})\/)?(\d{1,2})\/(\d{1,2})$/);return m?[Number(m[2]),Number(m[3])]:null};
-function bdInWeek(p,k){
-  const md0=bdMD(p.birthday);if(!md0)return false;
-  const [m,d]=md0;const s=parseKey(k);
-  for(let i=0;i<7;i++){const x=new Date(s);x.setDate(s.getDate()+i);if(x.getMonth()+1===m&&x.getDate()===d)return true}
-  return false;
+const lunarCache={};
+function lunarMap(y){
+  if(lunarCache[y])return lunarCache[y];
+  const map={};
+  try{
+    const f=new Intl.DateTimeFormat("en-u-ca-chinese",{month:"numeric",day:"numeric"});
+    for(let d=new Date(y,0,1);d.getFullYear()===y;d.setDate(d.getDate()+1)){
+      let lm="",ld="";
+      f.formatToParts(d).forEach(x=>{if(x.type==="month")lm=x.value;else if(x.type==="day")ld=x.value});
+      if(!lm||/[^0-9]/.test(lm))continue; /* 윤달은 건너뜀 */
+      const key=Number(lm)+"/"+Number(ld);
+      (map[key]=map[key]||[]).push([d.getMonth()+1,d.getDate()]);
+    }
+  }catch(_){}
+  return lunarCache[y]=map;
 }
+/* y년에 생일이 오는 양력 [월,일] 목록 (양력 생일은 하나, 음력 생일은 달력으로 계산) */
+function bdDates(p,y){
+  const md=bdMD(p.birthday);if(!md)return [];
+  if(!p.lunar)return [md];
+  const M=lunarMap(y);
+  return M[md[0]+"/"+md[1]]||(md[1]===30?M[md[0]+"/29"]:null)||[];
+}
+/* 생일 표시: 연도 없이 적었으면 날짜만, 음력이면 앞에 "음력" */
+const bdText=p=>(p.lunar?"음력 ":"")+(p.birthday||"");
+function bdWeekHit(p,k){
+  if(!bdMD(p.birthday))return null;
+  const s=parseKey(k);
+  for(let i=0;i<7;i++){const x=new Date(s);x.setDate(s.getDate()+i);
+    const hit=bdDates(p,x.getFullYear()).find(([m,d])=>m===x.getMonth()+1&&d===x.getDate());
+    if(hit)return [hit[0],hit[1],i]}
+  return null;
+}
+const bdInWeek=(p,k)=>!!bdWeekHit(p,k);
 
 /* ---------- writes ---------- */
 const queues={};
@@ -522,7 +550,7 @@ const CHECK_SVG='<svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-li
 function personRow(p){
   const k=S.date,on=isOn(k,p.id),t=talentOf(k,p.id);
   const tags=[p.isNew?'<span class="tag new">새친구</span>':"",bdInWeek(p,k)?'<span class="tag bd">생일주간</span>':"",p.group==="T"&&p.role?`<span class="tag role">${esc(p.role)}</span>`:""].join("");
-  const sub=[ageLabel(p),p.birthday?"생일 "+p.birthday:"",p.note||""].filter(Boolean).join(" · ");
+  const sub=[ageLabel(p),p.birthday?"생일 "+bdText(p):"",p.note||""].filter(Boolean).join(" · ");
   return `<div class="row ${on?"on":""}${p.group==="T"?" tch":""}">
     <button class="who-wrap" data-open="${p.id}">${avatar(p)}<span class="who"><b>${esc(p.name)}${tags}</b><span>${esc(sub)}</span>${memoOf(k,p.id)?`<span class="memo-line">${esc(memoOf(k,p.id))}</span>`:""}</span></button>
     <div class="act-box"><button class="icon-btn big tel ${telOfP(p)?"":"nonum"}" data-call="${p.id}" aria-label="${esc(p.name)} 전화 걸기">${PHONE_SVG}</button><div class="act-lbl">전화</div></div>
@@ -801,7 +829,7 @@ function openTalentRename(){
   });
 }
 /* ---- 엑셀 ---- */
-const XCOLS=["이름","반","분반","생일(YY/MM/DD)","직분(교사)","새친구(Y)","메모","보호자","부모 연락처","연락처(학생·교사)","주소"];
+const XCOLS=["이름","반","분반","생일(YY/MM/DD)","음력(Y)","직분(교사)","새친구(Y)","메모","보호자","부모 연락처","연락처(학생·교사)","주소"];
 let xlsxP=null;
 function loadXLSX(){if(typeof XLSX!=="undefined")return Promise.resolve();return xlsxP||(xlsxP=new Promise((res,rej)=>{const el=document.createElement("script");el.src="https:/"+"/cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";el.onload=()=>res();el.onerror=()=>{xlsxP=null;rej(new Error("엑셀 도구를 불러오지 못했어요"))};document.head.appendChild(el)}))}
 async function needXLSX(){try{await loadXLSX()}catch(_){}if(typeof XLSX==="undefined"){alertBox("엑셀 기능을 불러오지 못했어요","인터넷 연결을 확인하고 앱을 새로 고친 뒤 다시 시도해 주세요.");return false}return true}
@@ -813,8 +841,8 @@ async function downloadTemplate(){
   const ps=activePeople("all").sort((a,b)=>gi(a.group)-gi(b.group)||(a.section||"").localeCompare(b.section||"")||a.name.localeCompare(b.name,"ko"));
   const T=p=>p.group==="T";
   const FX=isFlex(S.team);const cols=FX?[...XCOLS.slice(0,2),"나이",...XCOLS.slice(2)]:XCOLS;
-  const rows=ps.map(p=>{const c=C[p.id]||{};return [p.name,GL[p.group]||p.group,...(FX?[ageLabel(p)]:[]),secOf(p)||"",p.birthday||"",T(p)?p.role||"":"",p.isNew?"Y":"",p.note||"",T(p)?"":c.guardian||"",T(p)?"":c.parentPhone||"",c.phone||"",c.address||""]});
-  if(!rows.length)rows.push(["홍길동(예시)",GROUPS[0][1],...(FX?[TEAMS[S.team].groups[0][1]]:[]),"","15/03/15","","Y","예시 줄은 지우고 쓰세요","홍엄마","010-0000-0000","","서울시 중구"]);
+  const rows=ps.map(p=>{const c=C[p.id]||{};return [p.name,GL[p.group]||p.group,...(FX?[ageLabel(p)]:[]),secOf(p)||"",p.birthday||"",p.lunar?"Y":"",T(p)?p.role||"":"",p.isNew?"Y":"",p.note||"",T(p)?"":c.guardian||"",T(p)?"":c.parentPhone||"",c.phone||"",c.address||""]});
+  if(!rows.length)rows.push(["홍길동(예시)",GROUPS[0][1],...(FX?[TEAMS[S.team].groups[0][1]]:[]),"","15/03/15","","","Y","예시 줄은 지우고 쓰세요","홍엄마","010-0000-0000","","서울시 중구"]);
   const groupNames=GROUPS.filter(g=>g[0]!=="T").map(g=>g[1]).join(", ");
   const guide=[["교육팀 출석부 명단 양식 — "+TEAMS[S.team].label],[""],
     ["· '명단' 시트에 한 사람당 한 줄씩 적어 주세요. 첫 줄(머리글)은 지우지 마세요."],
@@ -822,6 +850,7 @@ async function downloadTemplate(){
     ...(FX?[["· 나이: "+TEAMS[S.team].groups.map(g=>g[1]).join(", ")+" 중 하나 (반과 따로예요)."]]:[]),
     ["· 분반: A, B, C, D (없으면 비워 두세요)."],
     ["· 생일: 15/03/15 처럼 연/월/일(연도 두 자리). 2015-3-15, 15.3.15로 적어도 맞춰 저장돼요. 연도 없이 03/15만 적어도 돼요."],
+    ["· 음력: 음력 생일이면 Y (연도는 생략해도 돼요)."],
     ["· 직분: 선생님만 (예: 부장, 총무, 교사). 학생 줄은 비워 두세요."],
     ["· 새친구면 Y."],
     ["· 보호자·부모 연락처: 학생만. 연락처(학생·교사): 학생 본인 번호, 선생님은 선생님 번호."],
@@ -830,7 +859,7 @@ async function downloadTemplate(){
     ["· 담임 번호로 올리면 우리 반 학생만 들어가요. 교사 줄은 팀 관리자만 올릴 수 있어요."],
     ["· 다 적은 뒤 앱 [명단 → 엑셀 → 올리기]로 이 파일을 올리세요."]];
   const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.aoa_to_sheet([cols,...rows]);ws["!cols"]=(FX?[12,8,6,6,10,10,8,24,10,15,17,34]:[12,8,6,10,10,8,24,10,15,17,34]).map(w=>({wch:w}));
+  const ws=XLSX.utils.aoa_to_sheet([cols,...rows]);ws["!cols"]=(FX?[12,8,6,6,10,6,10,8,24,10,15,17,34]:[12,8,6,10,6,10,8,24,10,15,17,34]).map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb,ws,"명단");XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(guide),"안내");
   saveWorkbook(wb,`${TEAMS[S.team].short}_명단양식.xlsx`);
 }
@@ -843,12 +872,12 @@ function uploadRoster(){
     try{const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});const ws=wb.Sheets["명단"]||wb.Sheets[wb.SheetNames[0]];
       const raw=XLSX.utils.sheet_to_json(ws,{defval:"",raw:false});
       const pick=(r,...keys)=>{for(const k of Object.keys(r)){const kk=k.replace(/\s/g,"");if(keys.some(x=>kk.indexOf(x)===0))return String(r[k]).trim()}return ""};
-      rows=raw.map(r=>({name:pick(r,"이름"),group:pick(r,"반","학년"),age:pick(r,"나이"),section:pick(r,"분반"),birthday:pick(r,"생일"),role:pick(r,"직분"),isNew:pick(r,"새친구"),note:pick(r,"메모"),guardian:pick(r,"보호자"),parentPhone:pick(r,"부모"),phone:pick(r,"연락처","학생연락처","학생"),address:pick(r,"주소")})).filter(r=>r.name||r.group);
+      rows=raw.map(r=>({name:pick(r,"이름"),group:pick(r,"반","학년"),age:pick(r,"나이"),section:pick(r,"분반"),birthday:pick(r,"생일"),lunar:pick(r,"음력"),role:pick(r,"직분"),isNew:pick(r,"새친구"),note:pick(r,"메모"),guardian:pick(r,"보호자"),parentPhone:pick(r,"부모"),phone:pick(r,"연락처","학생연락처","학생"),address:pick(r,"주소")})).filter(r=>r.name||r.group);
       rows.forEach(r=>{const bd=normBirthday(r.birthday);if(bd!==null)r.birthday=bd;else r.badBd=true});
     }catch(e){alertBox("파일을 읽지 못했어요","엑셀(.xlsx) 파일인지 확인해 주세요. ("+e.message+")");return}
     if(!rows.length){alertBox("올릴 내용이 없어요","'명단' 시트에 이름과 반을 적었는지 확인해 주세요.");return}
     const C=await ensureContacts();
-    const F=["name","group","age","section","birthday","role","isNew","note","guardian","parentPhone","phone","address"];
+    const F=["name","group","age","section","birthday","lunar","role","isNew","note","guardian","parentPhone","phone","address"];
     const ph=x=>[x.phone,x.parentPhone].map(v=>String(v||"").replace(/[^0-9]/g,"")).filter(v=>v.length>=7);
     const sh=(a,b)=>a.some(v=>b.includes(v));
     const sbd=(a,b)=>{a=String(a||"").trim();b=String(b||"").trim();if(!a||!b||a.slice(-5)!==b.slice(-5))return false;const ya=a.length>5?a.slice(0,2):"",yb=b.length>5?b.slice(0,2):"";return !ya||!yb||ya===yb};
@@ -885,16 +914,16 @@ async function exportAll(){
   const cols=used.length?used:keys.filter(k=>k<=S.date).slice(-1);
   const label=k=>Number(k.slice(5,7))+"/"+Number(k.slice(8));
   const wb=XLSX.utils.book_new();
-  const roster=[["이름","반","분반","구분","생일","새친구","상태","메모","보호자","부모 연락처","학생 연락처","주소"]].concat([...S.people.values()].filter(p=>teamOf(p)===S.team).map(p=>{const c=C[p.id]||{};return [p.name,GL[p.group]||p.group,secOf(p)||"",p.group==="T"?"교사":"학생",p.birthday||"",p.isNew?"Y":"",p.active===false?(p.leftType==="졸업"?"졸업":"제적"):"출석",p.note||"",c.guardian||"",c.parentPhone||"",c.phone||"",c.address||""]}));
+  const roster=[["이름","반","분반","구분","생일","음력","새친구","상태","메모","보호자","부모 연락처","학생 연락처","주소"]].concat([...S.people.values()].filter(p=>teamOf(p)===S.team).map(p=>{const c=C[p.id]||{};return [p.name,GL[p.group]||p.group,secOf(p)||"",p.group==="T"?"교사":"학생",p.birthday||"",p.lunar?"Y":"",p.isNew?"Y":"",p.active===false?(p.leftType==="졸업"?"졸업":"제적"):"출석",p.note||"",c.guardian||"",c.parentPhone||"",c.phone||"",c.address||""]}));
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(roster),"명단");
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["이름","반","출석 합계",...cols.map(label)]].concat(ps.map(p=>[p.name,classLabel(p),cols.filter(k=>isOn(k,p.id)).length,...cols.map(k=>isOn(k,p.id)?1:"")]))),"출석");
   if(talentOn()){const wsum=p=>cols.reduce((a,k)=>a+talentOf(k,p.id),0),tot=p=>Math.max(0,wsum(p)+talentAdj(p));
     const tp=ps.filter(p=>p.group!=="T").sort((a,b)=>tot(b)-tot(a)||a.name.localeCompare(b.name,"ko"));
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["이름","반","누적","주일 합계","직접 조정",...cols.map(label)]].concat(tp.map(p=>[p.name,classLabel(p),tot(p),wsum(p),talentAdj(p)||"",...cols.map(k=>talentOf(k,p.id)||"")]))),TL().slice(0,28));}
-  {const ok=p=>!!bdMD(p.birthday),md=p=>bdMD(p.birthday);
-    const bp=ps.filter(ok).sort((a,b)=>md(a)[0]-md(b)[0]||md(a)[1]-md(b)[1]||a.name.localeCompare(b.name,"ko"));
-    const miss=ps.filter(p=>!ok(p));
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["월","일","이름","반","구분","생일","음력"]].concat(bp.map(p=>[md(p)[0],md(p)[1],p.name,classLabel(p),p.group==="T"?"교사":"학생",p.birthday,p.lunar||""]),miss.length?[[],["생일 미등록"]].concat(miss.map(p=>["","",p.name,classLabel(p),p.group==="T"?"교사":"학생",p.birthday||""])):[])),"생일");}
+  {const yy=Number(S.date.slice(0,4));
+    const bp=ps.flatMap(p=>bdDates(p,yy).map(([m,d])=>({p,m,d}))).sort((a,b)=>a.m-b.m||a.d-b.d||a.p.name.localeCompare(b.p.name,"ko"));
+    const miss=ps.filter(p=>!bdMD(p.birthday));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["월","일","이름","반","구분","생일","음력"]].concat(bp.map(({p,m,d})=>[m,d,p.name,classLabel(p),p.group==="T"?"교사":"학생",p.birthday,p.lunar?"음력":""]),miss.length?[[],["생일 미등록"]].concat(miss.map(p=>["","",p.name,classLabel(p),p.group==="T"?"교사":"학생",p.birthday||""])):[])),"생일");}
   const memos=[["날짜","이름","반","출석","메모"]];cols.forEach(k=>{const m=(S.att.get(k)||{}).m||{};Object.keys(m).forEach(id=>{const p=S.people.get(id);if(p&&m[id])memos.push([k,p.name,classLabel(p),isOn(k,id)?"출석":"결석",m[id]])})});
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(memos),"출결메모");
   {let E=S.ev;if(!E||E.team!==S.team||E.error){try{const d=await call("events",S.team);E={team:S.team,list:d.events||[]}}catch(_){E={list:[]}}}
@@ -1090,7 +1119,7 @@ function openGuide(){
     <h4>2. 들어가기</h4><ol><li>메인에서 <b>우리 부서</b> 카드 → <b>담임 번호</b> 넣기</li><li>제목 옆에 "담임 · 2학년"처럼 보이면 성공!</li><li>내 휴대폰이면 "이 기기에서 번호 기억하기"를 켜 두세요. 다음부터 바로 들어가요.</li></ol>
     <h4>3. 출결메모 (주일 출석)</h4><ol><li>위쪽 날짜가 오늘 주일인지 확인해요. ‹ › 로 다른 주일로 가요.</li><li><b>체크 칸</b>: 누르면 출석, 다시 누르면 취소</li><li><b>메모</b>: 결석 이유 적기 ("감기·아픔" 같은 버튼도 있어요)</li><li><b>전화</b>: 누르면 그 학생의 <b>대표전화</b>로 바로 걸려요. 대표전화는 학생마다 명단 [수정]에서 <b>[대표]</b>에 체크한 번호예요. 체크하지 않았으면 영아·유아부는 부모님, 유소년·중고등부는 학생 번호예요 (없으면 다른 번호). 컴퓨터에서는 번호 창이 떠요.</li><li>숫자 칸(달란트 등): ▲▼ 를 누르거나 숫자를 눌러 적어요. 달란트는 여기서만 줘요.</li><li><b>담임 선생님 출석</b>: 우리 반 담임 줄 바로 아래에 선생님 이름이 <b>연보라색 줄</b>로 나와요. 거기서 선생님 출석·메모도 체크해요. (교사 명단의 이름과 담임 이름이 같아야 나와요)</li></ol>
     <h4>4. 명단 (연락처 포함)</h4><ol><li><b>[+ 사람 추가]</b>로 새 학생을 넣어요. 연락처·주소도 같이 적을 수 있어요.</li><li>이름을 누르면 보호자·부모 연락처와 주소가 보여요. <b>[전화]</b>, <b>[복사]</b>도 여기서.</li><li><b>[수정]</b>: 사진·반·생일·메모·연락처·주소를 한 창에서 위에서 아래로 차례대로 고쳐요.</li><li><b>[삭제]</b>: 이름을 누른 창에서 눌러요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li>사람 정보는 <b>명단 탭에서만</b> 고칠 수 있어요. 다른 탭에서는 보기만 해요.</li><li><b>대표전화</b>: [수정]에서 부모 연락처·학생 연락처 옆 <b>[대표]</b> 중 하나에 체크하고 저장해요. 출결메모의 <b>[전화]</b>를 누르면 그 번호로 바로 걸려요. 이름을 누른 창에서 전화기 아이콘을 눌러 바꿀 수도 있어요.</li><li>명단에서 <b>연보라색</b> 줄은 선생님이에요.</li><li>연락처가 잠겨 있으면 명단 위쪽 <b>연락처</b> 줄의 <b>[번호 입력]</b>에 담임 번호를 넣어요.</li></ol>
-    <h4>5. 생일 · 달란트</h4><ol><li><b>생일</b>: 이번 주·이번 달·다음 달 생일. 생일이 없는 사람은 맨 아래에 모여요.</li><li><b>달란트</b>: 올해 누적 순위를 보는 화면이에요 (고치기는 출결메모에서).</li><li>달란트·생일·일정 엑셀은 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b> 파일에 들어 있어요.</li></ol>
+    <h4>5. 생일 · 달란트</h4><ol><li><b>생일</b>: 이번 주·이번 달·다음 달 생일. 생일이 없는 사람은 맨 아래에 모여요. 음력 생일은 [수정]에서 "음력 생일"에 체크하면 그 해 양력 날짜로 바꿔 보여 줘요. 연도 없이 3/15처럼 날짜만 적어도 돼요.</li><li><b>달란트</b>: 올해 누적 순위를 보는 화면이에요 (고치기는 출결메모에서).</li><li>달란트·생일·일정 엑셀은 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b> 파일에 들어 있어요.</li></ol>
     <h4>6. 출석 · 제적 · 졸업</h4><ol><li>명단 위쪽 <b>[출석] [제적] [졸업]</b> 을 눌러 나눠 봐요.</li><li>더 이상 안 나오는 학생: 이름 → [수정] → 상태를 <b>제적</b>으로. 졸업한 학생은 <b>졸업</b>으로.</li><li>제적·졸업 학생은 출석 명단에서 빠지지만 기록은 그대로 남아요.</li><li>다시 나오면 [제적] 목록에서 <b>[출석으로]</b>를 눌러요.</li></ol>
     <h4>7. 엑셀로 한 번에 (명단 · 연락처)</h4><ol><li>명단 탭 <b>엑셀</b> 줄의 <b>[양식 받기]</b>로 파일을 받아요. 지금 명단이 채워져 있어요.</li><li>'명단' 시트에 이름·반·생일·연락처·주소를 적어요. 생일은 15/03/15 처럼(연도 생략 가능). 빈 칸은 원래 값을 그대로 둬요.</li><li><b>[올리기]</b>로 파일을 고르고 확인. 이름·생일·연락처가 같은 사람은 같은 사람으로 보고 기존 정보 위에 덮어써요(없으면 이름과 반이 같은 사람). 없는 사람은 새로 들어가요.</li><li>담임은 <b>우리 반</b> 학생만 올라가요. 파일에서 줄을 지워도 앱에서는 지워지지 않아요.</li><li>출석부 전체를 저장해 두려면 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b>를 눌러요.</li></ol>
     <h4>8. 일정 · 자료실</h4><ol><li><b>일정</b> 탭 <b>[달력]</b>: 날짜를 누르면 그날 일정과 내용이 보여요. 일정 등록과 수정은 팀 관리자가 해요(날짜를 두 번 누르면 바로 등록·수정 창이 열려요).</li><li><b>[자료실]</b>: 공과 교재·양식·연락망처럼 부서에서 함께 쓰는 파일이에요. 일정과는 따로예요.</li><li><b>[+ 파일 올리기]</b>: 담임도 올릴 수 있어요 (10MB까지). 담임이 올린 파일은 부서의 담임 모두가 볼 수 있어요.</li><li><b>[삭제]</b>: 담임도 지울 수 있어요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li><b>[미리보기]</b>: 받지 않고 바로 봐요 (PDF·엑셀·워드·사진·텍스트). 한글·파워포인트는 <b>[내려받기]</b>로 열어요.</li><li><b>[보내기]</b>: 자료실 파일을 메일로 전해요. 받는 주소는 쉼표로 5명까지 적을 수 있고, 전할 말도 함께 보낼 수 있어요.</li><li><b>[관리자만 보기]</b> 표시가 붙은 파일은 팀 관리자와 총관리자만 볼 수 있어서 담임 화면에는 나오지 않아요.</li><li><b>[온라인 작성]</b>과 <b>[열기/수정]</b>(팀 관리자): 엑셀·워드·파워포인트·텍스트·CSV 파일을 내려받지 않고 구글 시트·문서·슬라이드로 열어 고쳐요. 고친 내용은 미리보기·내려받기·메일에 바로 반영돼요. 이 버튼과 공개 범위 바꾸기는 팀 관리자만 쓸 수 있어요.</li><li>작성본 링크는 밖으로 알리지 마세요.</li></ol>
@@ -1239,7 +1268,7 @@ function renderRoster(){
       h+=`</div><div class="group-h">${esc(isFlex(S.team)&&isClassKey(curG)&&!/반$/.test(GL[curG]||"")?GL[curG]+"반":GL[curG]||curG)}<span class="c num" style="color:var(--ink);font-weight:600">${gp.length}명</span>${secTxt?`<span class="c num">${secTxt}</span>`:""}${isFlex(S.team)&&curG!=="T"&&ageCnt(gp)?`<span class="c num">${esc(ageCnt(gp))}</span>`:""}</div><div class="list">`}
     const tags=[p.isNew?'<span class="tag new">새친구</span>':"",p.active===false?`<span class="tag role">${p.leftType==="졸업"?"졸업":"제적"}</span>`:"",p.role?`<span class="tag role">${esc(p.role)}</span>`:""].join("");
     h+=`<div class="row${p.group==="T"?" tch":""}" style="${p.active===false?"opacity:.55":""}"><button class="who-wrap" data-open="${p.id}" style="padding:2px 4px">${avatar(p)}<span class="who"><b>${esc(p.name)}${p.gender?`(${esc(p.gender)})`:""} <span class="muted" style="font-size:12px;font-weight:500">${esc(ageClassLabel(p))}</span>${tags}</b>
-      <span>${esc([p.birthday&&"생일 "+p.birthday,p.note].filter(Boolean).join(" · "))}</span></span></button>${p.active===false&&S.editable?`<button class="btn" data-restore="${p.id}">출석으로</button>`:""}</div>`;
+      <span>${esc([p.birthday&&"생일 "+bdText(p),p.note].filter(Boolean).join(" · "))}</span></span></button>${p.active===false&&S.editable?`<button class="btn" data-restore="${p.id}">출석으로</button>`:""}</div>`;
   }
   h+=`</div>`;if(!ps.length)h+=`<div class="empty">${S.rosterMode==="removed"?"제적한 사람이 없어요.":S.rosterMode==="grad"?"졸업한 사람이 없어요.":"찾는 사람이 없어요."}</div>`;
   return `<div class="roster-wrap">${h}</div>`;
@@ -1292,14 +1321,14 @@ function renderStats(){
   return h;
 }
 function renderBday(){
-  const d=parseKey(S.date);const m=d.getMonth()+1;
+  const d=parseKey(S.date);const m=d.getMonth()+1,y=d.getFullYear();
   const ps=activePeople(S.group).filter(p=>bdMD(p.birthday));
-  const by=mm=>ps.filter(p=>bdMD(p.birthday)[0]===mm).sort((a,b)=>bdMD(a.birthday)[1]-bdMD(b.birthday)[1]);
-  const week=ps.filter(p=>bdInWeek(p,S.date));
-  const block=(title,list)=>`<h2 class="sec">${title}</h2>${list.length?`<div class="list">${list.map(p=>`<div class="row"><button class="who-wrap" data-open="${p.id}" style="padding:2px 4px">${avatar(p)}<span class="who"><b>${esc(p.name)} <span class="muted" style="font-size:12px;font-weight:500">${GL[p.group]}</span>${bdInWeek(p,S.date)?'<span class="tag bd">이번 주</span>':""}</b><span class="num">${esc(p.birthday)}${p.lunar?" · "+esc(p.lunar):""}</span></span></button></div>`).join("")}</div>`:`<p class="muted">없어요.</p>`}`;
+  const by=(mm,yy)=>ps.flatMap(p=>bdDates(p,yy).filter(x=>x[0]===mm).map(x=>({p,m:x[0],d:x[1]}))).sort((a,b)=>a.d-b.d||a.p.name.localeCompare(b.p.name,"ko"));
+  const week=ps.flatMap(p=>{const hit=bdWeekHit(p,S.date);return hit?[{p,m:hit[0],d:hit[1],i:hit[2]}]:[]}).sort((a,b)=>a.i-b.i||a.p.name.localeCompare(b.p.name,"ko"));
+  const block=(title,list)=>`<h2 class="sec">${title}</h2>${list.length?`<div class="list">${list.map(({p,m:mm,d:dd})=>`<div class="row"><button class="who-wrap" data-open="${p.id}" style="padding:2px 4px">${avatar(p)}<span class="who"><b>${esc(p.name)} <span class="muted" style="font-size:12px;font-weight:500">${GL[p.group]}</span>${bdInWeek(p,S.date)?'<span class="tag bd">이번 주</span>':""}</b><span class="num">${esc(bdText(p))}${p.lunar?` · 양력 ${mm}/${dd}`:""}</span></span></button></div>`).join("")}</div>`:`<p class="muted">없어요.</p>`}`;
   const nm=m%12+1;
   const missing=activePeople(S.group).filter(p=>!bdMD(p.birthday));
-  return block("이번 주 생일",week)+block(`${m}월 생일`,by(m))+block(`${nm}월 생일`,by(nm))+
+  return block("이번 주 생일",week)+block(`${m}월 생일`,by(m,y))+block(`${nm}월 생일`,by(nm,m===12?y+1:y))+
     (missing.length?`<p class="muted" style="font-size:13px;margin-top:20px">생일 미등록: ${missing.map(p=>esc(p.name)).join(", ")}</p>`:"");
 }
 const LOCK_SVG='<svg class="lock-ic" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>';
@@ -1790,7 +1819,7 @@ function openPerson(id){
   if(view){
     const ks=yearKeys();const n=ks.filter(kk=>isOn(kk,p.id)).length;const t=totalTalent(p);
     ov.innerHTML=`<div class="sheet" role="dialog" aria-label="${esc(p.name)}"><div class="sheet-head">${avatar(p,"lg")}<div><h3>${esc(p.name)} <span class="muted" style="font-family:var(--body);font-size:14px">${esc(ageLabel(p)?ageClassLabel(p):GL[p.group]||"")}${p.gender?" · "+esc(p.gender):""}${p.role?" · "+esc(p.role):""}</span></h3>
-      <div class="muted num" style="font-size:13px">${S.date.slice(0,4)}년 출석 ${n}회${p.group==="T"||!talentOn()?"":" · 달란트 "+t}${p.birthday?" · 생일 "+esc(p.birthday):""}</div></div></div>
+      <div class="muted num" style="font-size:13px">${S.date.slice(0,4)}년 출석 ${n}회${p.group==="T"||!talentOn()?"":" · 달란트 "+t}${p.birthday?" · 생일 "+esc(bdText(p)):""}</div></div></div>
       <div class="contact">${p.note?`<div><span class="k">메모</span><span class="v">${esc(p.note)}</span></div>`:""}</div><div id="pv-contact">${contactLines(p)}</div>
       <div class="actions">${canManageGrades()?`<button class="btn" data-hist="${p.id}">이력</button>`:""}<div class="spacer"></div>${canEditHere?`<button type="button" class="btn danger" data-del>삭제</button>`:""}<button class="btn" data-close>닫기</button>${canEditHere?`<button class="btn primary" data-edit>수정</button>`:""}</div></div>`;
   }else{
@@ -1803,6 +1832,7 @@ function openPerson(id){
         :f==="section"?`<label>${l}<select id="f-section" name="section">${[""].concat(sectionsOfKey(teamOf(p),p.group)).map(v=>`<option value="${v}" ${(secOf(p)||"")===v?"selected":""}>${v?v+"반":"없음"}</option>`).join("")}</select></label>`
         :f==="age"?(isFlex(teamOf(p))?`<label>${l}<select id="f-age" name="age"><option value="">모름</option>${TEAMS[teamOf(p)].groups.map(([a,al])=>`<option value="${a}" ${p.age===a?"selected":""}>${al}</option>`).join("")}</select></label>`:"")
         :f==="group"?`<label>${l}<select id="f-group" name="group">${pickGroupsOf(teamOf(p)).filter(([g])=>!isHomeroom()||myScope().grades.includes(g)).map(([g,gl])=>`<option value="${g}" ${p.group===g?"selected":""}>${gl}</option>`).join("")}</select></label>`
+        :f==="birthday"?`<label>${l}<input id="f-birthday" name="birthday" value="${esc(p.birthday)}" placeholder="연도 없이 3/15도 돼요"></label><label class="inline full"><input type="checkbox" id="f-lunar" name="lunar" ${p.lunar?"checked":""}>음력 생일</label>`
         :f==="note"?`<label class="full">${l}<textarea id="f-${f}" name="${f}">${esc(p[f])}</textarea></label>`
         :f==="name"?`<label>${l}<span class="name-sex"><input id="f-name" name="name" value="${esc(p.name)}" required><select id="f-gender" name="gender" aria-label="성별"><option value="">성별</option><option value="남" ${p.gender==="남"?"selected":""}>남</option><option value="여" ${p.gender==="여"?"selected":""}>여</option></select></span></label>`
         :`<label>${l}<input id="f-${f}" name="${f}" value="${esc(p[f])}"></label>`).join("")}
@@ -1865,7 +1895,7 @@ function openPerson(id){
     e.preventDefault();const fd=new FormData(form);
     const body={...(id?p:{}),active:true};["phone","parentPhone","guardian","address","lunar"].forEach(k=>delete body[k]);
     FIELDS.forEach(([f])=>body[f]=(fd.get(f)||"").toString().trim());if(!sectionsOfKey(body.team||S.team,body.group).includes(body.section))body.section="";
-    body.gender=["남","여"].includes(fd.get("gender"))?fd.get("gender"):"";body.isNew=fd.get("isNew")==="on";body.photo=photo;if(id){const st=fd.get("status")||"재적";body.active=st==="재적";body.leftType=st==="재적"?"":st}body.team=id?teamOf(p):S.team;
+    body.gender=["남","여"].includes(fd.get("gender"))?fd.get("gender"):"";body.lunar=fd.get("lunar")==="on"&&!!body.birthday;body.isNew=fd.get("isNew")==="on";body.photo=photo;if(id){const st=fd.get("status")||"재적";body.active=st==="재적";body.leftType=st==="재적"?"":st}body.team=id?teamOf(p):S.team;
     if(!body.name)return;
     if(body.birthday!==(p.birthday||"")){const bd=normBirthday(body.birthday);if(bd===null){toast("생일은 15/03/15처럼 연/월/일로 적어 주세요 (연도는 생략 가능)");ov.querySelector("#f-birthday").focus();return}body.birthday=bd}
     let contact=null;
