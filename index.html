@@ -1720,6 +1720,22 @@ async function openA2hs(){
     if(e.target.closest("#a2hsInstall")&&deferredInstall){deferredInstall.prompt();const r=await deferredInstall.userChoice.catch(()=>null);deferredInstall=null;ov.remove();if(r&&r.outcome==="accepted")toast("홈 화면에 추가했어요");render()}
   });
 }
+function renderAdminSummary(){
+  const k=S.date,d=parseKey(k);
+  const rows=Object.entries(TEAMS).map(([t,x])=>{
+    const all=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false);
+    const st=all.filter(p=>p.group!=="T"),tc=all.filter(p=>p.group==="T");
+    return {label:x.label,n:st.length,on:st.filter(p=>isOn(k,p.id)).length,tn:tc.length,ton:tc.filter(p=>isOn(k,p.id)).length};
+  });
+  const sum=f=>rows.reduce((a,r)=>a+r[f],0);
+  return `<h2 class="sec">부서별 출석 현황</h2><div class="card">
+    <div class="datebar" style="margin:0 0 12px"><button class="arrow" data-adate="-7" aria-label="지난 주일">‹</button>
+    <div class="date"><strong class="num">${d.getMonth()+1}월 ${d.getDate()}일 주일</strong></div>
+    <button class="arrow" data-adate="7" aria-label="다음 주일">›</button></div>
+    <div class="bars">${rows.map(r=>`<div class="bar"><span>${r.label.replace("교육팀","")}</span><div class="track"><div class="fill" style="width:${r.n?r.on/r.n*100:0}%"></div></div><span class="v num">${r.on}/${r.n}</span></div>`).join("")}</div>
+    <div class="summary" style="margin-bottom:0"><div><div class="big num">${sum("on")}<em> / ${sum("n")}명</em></div><div class="sub num">학생 전체${sum("n")?" · "+Math.round(sum("on")/sum("n")*100)+"%":""} · 교사 ${sum("ton")} / ${sum("tn")}</div></div></div>
+    <table style="margin-top:10px"><thead><tr><th>부서</th><th class="r">학생</th><th class="r">교사</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.label}</td><td class="r num">${r.on}/${r.n}</td><td class="r num">${r.ton}/${r.tn}</td></tr>`).join("")}</tbody></table></div>`;
+}
 function renderHome(){
   const k=S.date;
   let h=`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>부서를 선택해 들어가세요.</p></div><div class="dept-grid">`;
@@ -1737,7 +1753,7 @@ function renderHome(){
     <div class="tx"><b>홈 화면에 바로가기 추가</b><span>휴대폰 홈 화면에 아이콘을 만들어 앱처럼 열어요</span></div>
     <button class="btn primary" id="a2hsOpen">추가하기</button><button class="x" id="a2hsHide" aria-label="이 안내 닫기">×</button></div>`;
   if(S.isAdmin){
-    h+=`<details class="fold" data-fold="codes"${S.fold.codes?" open":""}><summary><h2 class="sec">팀별 관리자 번호</h2><span class="fold-sum">${Object.keys(TEAMS).length}개 부서 중 ${Object.keys(TEAMS).filter(deptLocked).length}곳 설정</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">팀 관리자(중간관리자)에게 이 번호를 주면 그 부서 전체를 관리하고, 반별 담임에게 담임 번호를 줄 수 있어요. 번호가 없는 부서는 누구나 들어갈 수 있어요. 이 칸은 관리자로 로그인한 사람에게만 보여요.</p>
+    h+=renderAdminSummary();h+=`<details class="fold" data-fold="codes"${S.fold.codes?" open":""}><summary><h2 class="sec">팀별 관리자 번호</h2><span class="fold-sum">${Object.keys(TEAMS).length}개 부서 중 ${Object.keys(TEAMS).filter(deptLocked).length}곳 설정</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">팀 관리자(중간관리자)에게 이 번호를 주면 그 부서 전체를 관리하고, 반별 담임에게 담임 번호를 줄 수 있어요. 번호가 없는 부서는 누구나 들어갈 수 있어요. 이 칸은 관리자로 로그인한 사람에게만 보여요.</p>
       <div class="card admin-list">${Object.entries(TEAMS).map(([t,x])=>{const code=S.codes[t]||"";const set=deptLocked(t);
         return `<div class="admin-row"><b>${x.label}</b><span class="code num ${code?"":"none"}">${code?esc(code):set?"설정됨":"번호 없음 (누구나 입장)"}</span>
           ${code?`<button class="btn" data-copy-code="${esc(code)}">복사</button>`:""}<button class="btn" data-code-gen="${t}">${set?"새 번호":"번호 만들기"}</button><button class="btn" data-code-edit="${t}">직접 입력</button>${set?`<button class="btn danger" data-code-clear="${t}">해제</button>`:""}</div>`}).join("")}</div></details>`+renderPromoAdmin()+activityCard();
@@ -1874,7 +1890,10 @@ function openPerson(id){
 
 /* ---------- events ---------- */
 document.addEventListener("toggle",e=>{const f=e.target;if(f.dataset&&f.dataset.fold)S.fold[f.dataset.fold]=f.open},true);
-document.addEventListener("click",e=>{
+document.addEventListener("click",e=>{const ad=e.target.closest("[data-adate]");
+if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
+  if(d<START){toast("기록은 시작 주일부터 있어요");return}
+  S.date=keyOf(d);render();return}
   const t=e.target.closest("[data-toggle]");if(t)return togglePresent(t.dataset.toggle);
   const tl=e.target.closest("[data-t]");if(tl)return bumpTalent(tl.dataset.t,Number(tl.dataset.d));
   const ep=e.target.closest("[data-edit-person]");if(ep){openPerson.edit=true;openPerson(ep.dataset.editPerson);openPerson.edit=false;return}
