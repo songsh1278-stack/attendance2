@@ -426,7 +426,7 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const pad=n=>String(n).padStart(2,"0");
 const keyOf=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const parseKey=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
-const START_KEY="2027-01-03";const START=new Date(2027,0,3);
+const START_KEY="2026-01-04";const START=new Date(2026,0,4);
 function realSunday(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-d.getDay());return d}
 function lastSunday(){const d=realSunday();return d<START?new Date(START):d}
 function toSunday(d){d=new Date(d);d.setDate(d.getDate()-d.getDay());return d<START?new Date(START):d}
@@ -1971,7 +1971,7 @@ document.addEventListener("change",e=>{
 });
 document.addEventListener("focusin",e=>{if(e.target.dataset&&(e.target.dataset.tv||e.target.dataset.total))e.target.select()});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&(e.target.dataset.tv||e.target.dataset.total))e.target.blur()});
-$("#prev").onclick=()=>{const d=parseKey(S.date);d.setDate(d.getDate()-7);if(d<START){toast("기록은 2027년 1월 3일부터 시작해요");return}S.date=keyOf(d);render()};
+$("#prev").onclick=()=>{const d=parseKey(S.date);d.setDate(d.getDate()-7);if(d<START){toast("기록은 2026년 1월 4일부터 시작해요");return}S.date=keyOf(d);render()};
 $("#next").onclick=()=>{const d=parseKey(S.date);d.setDate(d.getDate()+7);S.date=keyOf(d);render()};
 $("#datePick").onchange=e=>{if(e.target.value){S.date=keyOf(toSunday(parseKey(e.target.value)));render()}};
 
