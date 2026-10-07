@@ -1101,6 +1101,36 @@ function openGuide(){
   getAppUrl().then(u=>{const b=ov.querySelector(".guide-url");if(b&&u)b.textContent=u.split(":"+"/"+"/").pop().replace(/[/]$/,"")});
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
 }
+/* ---------- 활동 기록 (총관리자 전용) ---------- */
+const activityCard=()=>`<h2 class="sec">활동 기록</h2><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">로그인, 번호 변경, 명단·반 이동, 일정, 자료실, 설정 기록</span><button class="btn" id="actOpen">기록 보기</button></div></div>`;
+async function openActivityLog(){
+  if(!S.isAdmin){toast("총관리자만 볼 수 있어요");return}
+  const ov=document.createElement("div");ov.className="overlay";let all=null,tm="all",kd="all",q="";
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-label="활동 기록"><h3>활동 기록 <span class="muted" style="font-family:var(--body);font-size:14px" id="alCount"></span></h3>
+    <div class="seg" id="alTeams"><button data-atm="all" aria-pressed="true">전체</button>${Object.entries(TEAMS).map(([k,x])=>`<button data-atm="${k}" aria-pressed="false">${esc(x.short)}</button>`).join("")}</div>
+    <div class="form" style="grid-template-columns:1fr 1fr"><label>종류<select id="alKind"><option value="all">전체</option></select></label><label>검색<input id="alQ" type="search" placeholder="이름·내용·바꾼 사람" autocomplete="off"></label></div>
+    <div id="alList" style="margin-top:6px"><p class="muted">불러오는 중…</p></div>
+    <p class="muted" style="font-size:12px;margin:10px 0 0">최근 1500건까지 보여요. 시트의 '이력' 탭에도 같은 내용이 있어요. 출석 체크 하나하나는 기록하지 않아요.</p>
+    <div class="actions"><div class="spacer"></div><button class="btn primary" data-close>닫기</button></div></div>`;
+  document.body.appendChild(ov);
+  const list=ov.querySelector("#alList");
+  const draw=()=>{
+    if(all===null)return;
+    const lab=tm==="all"?"":TEAMS[tm].label;const qq=q.trim();
+    const f=all.filter(x=>(!lab||x.team===lab)&&(kd==="all"||x.kind===kd)&&(!qq||[x.name,x.text,x.by,x.kind].some(v=>(v||"").includes(qq))));
+    ov.querySelector("#alCount").textContent=`${f.length}건`;
+    list.innerHTML=f.length?f.slice(0,300).map(x=>`<div class="hist-item"><span class="when">${esc(x.at.slice(0,10))}<br>${esc(x.at.slice(11))}</span><span class="what"><span class="hist-kind ${x.kind==="교사"||x.kind==="담임"?"t":""}">${esc(x.kind)}</span>${x.team?`<span class="muted" style="font-size:12px">${esc(x.team.replace("교육팀",""))} </span>`:""}${x.name?`<b>${esc(x.name)}</b> `:""}${esc(x.text)}<span class="by">${esc(x.by)}</span></span></div>`).join("")+(f.length>300?`<p class="muted" style="font-size:12px">앞 300건만 보여요. 종류나 검색으로 좁혀 보세요.</p>`:""):`<p class="muted">기록이 없어요.</p>`;
+  };
+  ov.addEventListener("click",e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    const b=e.target.closest("[data-atm]");if(b){tm=b.dataset.atm;ov.querySelectorAll("[data-atm]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));draw()}
+  });
+  ov.querySelector("#alKind").addEventListener("change",e=>{kd=e.target.value;draw()});
+  ov.querySelector("#alQ").addEventListener("input",e=>{q=e.target.value;draw()});
+  try{all=await call("activity");const kinds=[...new Set(all.map(x=>x.kind))].sort((a,b)=>a.localeCompare(b,"ko"));
+    ov.querySelector("#alKind").innerHTML=`<option value="all">전체</option>`+kinds.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");draw()}
+  catch(e){ov.remove();alertBox("활동 기록을 불러오지 못했어요",e.message)}
+}
 /* ---------- 이력 (팀 관리자 이상) ---------- */
 const histItem=x=>`<div class="hist-item"><span class="when">${esc(x.at.slice(0,10))}<br>${esc(x.at.slice(11))}</span><span class="what"><span class="hist-kind ${x.kind==="교사"||x.kind==="담임"?"t":""}">${esc(x.kind)}</span>${x.name?`<b>${esc(x.name)}</b> `:""}${esc(x.text)}<span class="by">${esc(x.by)}</span></span></div>`;
 function yearSummary(p){
@@ -1710,7 +1740,7 @@ function renderHome(){
     h+=`<details class="fold" data-fold="codes"${S.fold.codes?" open":""}><summary><h2 class="sec">팀별 관리자 번호</h2><span class="fold-sum">${Object.keys(TEAMS).length}개 부서 중 ${Object.keys(TEAMS).filter(deptLocked).length}곳 설정</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">팀 관리자(중간관리자)에게 이 번호를 주면 그 부서 전체를 관리하고, 반별 담임에게 담임 번호를 줄 수 있어요. 번호가 없는 부서는 누구나 들어갈 수 있어요. 이 칸은 관리자로 로그인한 사람에게만 보여요.</p>
       <div class="card admin-list">${Object.entries(TEAMS).map(([t,x])=>{const code=S.codes[t]||"";const set=deptLocked(t);
         return `<div class="admin-row"><b>${x.label}</b><span class="code num ${code?"":"none"}">${code?esc(code):set?"설정됨":"번호 없음 (누구나 입장)"}</span>
-          ${code?`<button class="btn" data-copy-code="${esc(code)}">복사</button>`:""}<button class="btn" data-code-gen="${t}">${set?"새 번호":"번호 만들기"}</button><button class="btn" data-code-edit="${t}">직접 입력</button>${set?`<button class="btn danger" data-code-clear="${t}">해제</button>`:""}</div>`}).join("")}</div></details>`+renderPromoAdmin();
+          ${code?`<button class="btn" data-copy-code="${esc(code)}">복사</button>`:""}<button class="btn" data-code-gen="${t}">${set?"새 번호":"번호 만들기"}</button><button class="btn" data-code-edit="${t}">직접 입력</button>${set?`<button class="btn danger" data-code-clear="${t}">해제</button>`:""}</div>`}).join("")}</div></details>`+renderPromoAdmin()+activityCard();
   }
   {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
     if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`}
@@ -1873,6 +1903,7 @@ document.addEventListener("click",e=>{
   if(e.target.closest("#xlsTpl"))return downloadTemplate();
   if(e.target.closest("#xlsUp"))return uploadRoster();
   if(e.target.closest("#xlsExport"))return exportAll();
+  if(e.target.closest("#actOpen"))return openActivityLog();
   if(e.target.closest("#guideOpen"))return openGuide();
   const hs=e.target.closest("[data-hist]");if(hs)return openHistory(hs.dataset.hist);
   if(e.target.closest("#histAll"))return openHistoryList();
@@ -1951,7 +1982,7 @@ let pending=0;
 const API_URL="https:"+"/"+"/script.google.com/macros/s/AKfycbxAIzrJ4PjqNm4lo-1iC88RjRV56JTSkug5moMo_a-x7Im4v98XxCZ0Z-Gm0Y2FaUGt/exec";
 const HAS_GS=typeof google!=="undefined"&&!!(google.script&&google.script.run);
 /* 읽기만 하는 요청은 연결이 끊기면 자동으로 두 번 더 시도해요 (저장 요청은 중복될 수 있어 다시 보내지 않아요) */
-const READ_OPS=new Set(["boot","events","libList","contacts","appUrl","history","gradeCodes","verifyCode","findGradeCode","verifyGradeCode","downloadFile"]);
+const READ_OPS=new Set(["boot","events","libList","contacts","appUrl","history","activity","gradeCodes","verifyCode","findGradeCode","verifyGradeCode","downloadFile"]);
 async function callFetch(op,args){
   let t;const ac=typeof AbortController!=="undefined"?new AbortController():null;const tm=ac?setTimeout(()=>ac.abort(),60000):0;
   try{const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({op,auth:AUTH(),args}),redirect:"follow",signal:ac?ac.signal:undefined});
