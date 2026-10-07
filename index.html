@@ -709,8 +709,8 @@ function openGradeManage(){
     const gen=e.target.closest("[data-ggen]"),clr=e.target.closest("[data-gclear]");
     if(!gen&&!clr)return;
     if(clr&&!clr.dataset.armed){clr.dataset.armed="1";clr.textContent="한 번 더 누르면 해제";return}
-    const g=(gen||clr).dataset[gen?"ggen":"gclear"];const code=gen?randomCode():"";
-    try{await tracked(call("setGradeCode",S.team,g,code));B.gradeCodes={...(B.gradeCodes||{}),[g]:code};B.gradeLocked={...(B.gradeLocked||{}),[g]:!!code};draw();toast(code?`${GL[g]} 담임 번호를 만들었어요`:`${GL[g]} 담임 번호를 해제했어요`)}
+    const g=(gen||clr).dataset[gen?"ggen":"gclear"];let code="";
+    try{code=await saveGradeCode(S.team,g,gen,Object.values(B.gradeCodes||{}));B.gradeCodes={...(B.gradeCodes||{}),[g]:code};B.gradeLocked={...(B.gradeLocked||{}),[g]:!!code};draw();toast(code?`${GL[g]} 담임 번호를 만들었어요`:`${GL[g]} 담임 번호를 해제했어요`)}
     catch(err){alertBox("번호를 저장하지 못했어요",err.message)}
   });
 }
@@ -718,8 +718,8 @@ function openHomeroomCodes(){
   if(!canManageGrades())return;
   const ov=document.createElement("div");ov.className="overlay";let codes=null,editing="";
   const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="담임 권한 관리"><h3>${TEAMS[S.team].label} 담임 권한</h3>
-    <p class="muted" style="margin:0;font-size:14px">반마다 담임 번호를 만들어 담임 선생님께 알려 주세요. 담임 번호로 들어오면 <b>자기 반만</b> 출석·달란트·명단(연락처 포함)을 관리할 수 있어요. 다른 반, 교사 명단, 연말 등반은 보이지 않아요.</p>
-    <div class="admin-list card" style="margin-top:12px">${codes?classesOf(S.team).map(([g,gl])=>{const code=codes[g]||"";const hr=hrText((S.classes.get(S.team+"_"+g)||{}).teacher);if(editing===g)return `<form class="admin-row" data-gform="${g}"><b style="min-width:56px">${gl}</b><input id="f-gc-${g}" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" placeholder="숫자 4~8자리" value="${esc(code)}" autocomplete="off" style="flex:1;min-width:110px;height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:16px;letter-spacing:.1em;background:var(--ground);color:var(--ink)"><button class="btn primary" type="submit">저장</button><button class="btn" type="button" data-gcancel>취소</button></form>`;
+    <p class="muted" style="margin:0;font-size:14px">반마다 담임 번호를 만들어 담임 선생님께 알려 주세요. 번호는 <b>${GRADE_PREFIX[S.team]}으로 시작하는 4자리</b>이고 뒤 3자리는 직접 정할 수 있어요. 담임 번호로 들어오면 <b>자기 반만</b> 출석·달란트·명단(연락처 포함)을 관리할 수 있어요. 다른 반, 교사 명단, 연말 등반은 보이지 않아요.</p>
+    <div class="admin-list card" style="margin-top:12px">${codes?classesOf(S.team).map(([g,gl])=>{const code=codes[g]||"";const hr=hrText((S.classes.get(S.team+"_"+g)||{}).teacher);if(editing===g)return `<form class="admin-row" data-gform="${g}"><b style="min-width:56px">${gl}</b><input id="f-gc-${g}" inputmode="numeric" pattern="${GRADE_PREFIX[S.team]}[0-9]{3}" maxlength="4" placeholder="${gradeCodeRule(S.team)}" value="${esc(code)}" autocomplete="off" style="flex:1;min-width:110px;height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:16px;letter-spacing:.1em;background:var(--ground);color:var(--ink)"><button class="btn primary" type="submit">저장</button><button class="btn" type="button" data-gcancel>취소</button></form>`;
       return `<div class="admin-row"><b style="min-width:56px">${gl}</b><span class="code num ${code?"":"none"}">${code?esc(code):"번호 없음"}</span>${hr?`<span class="muted" style="font-size:12px">담임 ${esc(hr)}</span>`:""}
       ${code?`<button class="btn" data-copy-c="${esc(code)}">복사</button>`:""}<button class="btn" data-ggen="${g}">${code?"새 번호":"번호 만들기"}</button><button class="btn" data-gedit="${g}">직접 입력</button>${code?`<button class="btn danger" data-gclear="${g}">해제</button>`:""}</div>`}).join(""):`<p class="muted">불러오는 중…</p>`}</div>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>닫기</button></div></div>`};
@@ -728,7 +728,7 @@ function openHomeroomCodes(){
   ov.addEventListener("submit",async e=>{
     const f=e.target.closest("[data-gform]");if(!f)return;e.preventDefault();
     const g=f.dataset.gform;const v=(ov.querySelector("#f-gc-"+g).value||"").trim();
-    if(!/^[0-9]{4,8}$/.test(v)){toast("담임 번호는 숫자 4~8자리로 적어 주세요");return}
+    if(!validGradeCode(S.team,v)){toast("담임 번호는 "+gradeCodeRule(S.team)+"로 적어 주세요 (뒤 3자리는 마음대로)");return}
     try{await tracked(call("setGradeCode",S.team,g,v));codes={...codes,[g]:v};editing="";draw();toast(`${GL[g]} 담임 번호를 저장했어요`)}
     catch(err){alertBox("번호를 저장하지 못했어요",err.message)}
   });
@@ -740,8 +740,8 @@ function openHomeroomCodes(){
     const gen=e.target.closest("[data-ggen]"),clr=e.target.closest("[data-gclear]");
     if(!gen&&!clr)return;
     if(clr&&!clr.dataset.armed){clr.dataset.armed="1";clr.textContent="한 번 더 누르면 해제";return}
-    const g=(gen||clr).dataset[gen?"ggen":"gclear"];const code=gen?randomCode():"";
-    try{await tracked(call("setGradeCode",S.team,g,code));codes={...codes,[g]:code};draw();toast(code?`${GL[g]} 담임 번호를 만들었어요`:`${GL[g]} 담임 번호를 해제했어요`)}
+    const g=(gen||clr).dataset[gen?"ggen":"gclear"];let code="";
+    try{code=await saveGradeCode(S.team,g,gen,Object.values(codes||{}));codes={...codes,[g]:code};draw();toast(code?`${GL[g]} 담임 번호를 만들었어요`:`${GL[g]} 담임 번호를 해제했어요`)}
     catch(err){alertBox("번호를 저장하지 못했어요",err.message)}
   });
 }
@@ -1303,6 +1303,19 @@ function openCodeSheet(t){
     if(ok)storeCode(t,code);else if(g)storeGradeCode(t+"_"+g,code);
     if(ok||g){ov.remove();await load();goDept(t);if(ok&&canManageGrades())setTimeout(openHomeroomCodes,250);toast(ok?"팀 관리자로 들어왔어요":`${TEAMS[t].short} ${Object.fromEntries(classesOf(t))[g]||""} 담임으로 들어왔어요`)}else{ov.querySelector("#codeErr").hidden=false;inp.select()}
   });
+}
+/* 담임 번호: 네 자리, 첫 자리는 부서마다 고정(영아 1 · 유아 2 · 유소년 3 · 중고등 4), 뒤 세 자리는 자유 */
+const GRADE_PREFIX={infant:"1",toddler:"2",youth:"3",teen:"4"};
+const gradeCodeRule=t=>`${GRADE_PREFIX[t]||""}으로 시작하는 숫자 4자리`;
+const validGradeCode=(t,v)=>/^[0-9]{4}$/.test(v)&&v[0]===GRADE_PREFIX[t];
+async function saveGradeCode(t,g,make,used){
+  if(!make){await tracked(call("setGradeCode",t,g,""));return ""}
+  let last;
+  for(let i=0;i<8;i++){
+    let c;do{const a=new Uint32Array(1);crypto.getRandomValues(a);c=GRADE_PREFIX[t]+String(a[0]%1000).padStart(3,"0")}while((used||[]).includes(c));
+    try{await tracked(call("setGradeCode",t,g,c));return c}catch(e){last=e;if(!/겹쳐요/.test(e.message))throw e;used=(used||[]).concat(c)}
+  }
+  throw last;
 }
 function randomCode(){const a=new Uint32Array(1);crypto.getRandomValues(a);return String(100000+a[0]%900000)}
 async function saveDeptCode(t,code){
