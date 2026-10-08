@@ -431,6 +431,9 @@ function realSunday(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate
 function lastSunday(){const d=realSunday();return d<START?new Date(START):d}
 function toSunday(d){d=new Date(d);d.setDate(d.getDate()-d.getDay());return d<START?new Date(START):d}
 S.date=keyOf(lastSunday());
+/* 속도: 출석은 올해(1~2월엔 작년도)만 받고, 사진은 따로 받아 이 기기에 저장해 둬요 */
+{const _n=new Date(),_y=_n.getFullYear();S.years=new Set(_n.getMonth()<2?[_y-1,_y]:[_y]);S.years.add(Number(S.date.slice(0,4)));S.allYears=[];S.photos=new Map();S.ver="";S.lastBoot=0;
+ try{const j=JSON.parse(localStorage.getItem("ya-photos")||"null");if(j)S.photos=new Map(Object.entries(j))}catch(_){}}
 try{const t=localStorage.getItem("ya-team");if(t)S.team=t;const g=localStorage.getItem("ya-group");if(g)S.group=g}catch(e){}
 setTeam(S.team);
 
@@ -554,11 +557,12 @@ function renderDate(){
   $("#datebar").hidden=S.tab==="roster"||S.tab==="schedule";
 }
 const safePhoto=v=>typeof v==="string"&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v)?v:"";
-const avatar=(p,cls="")=>{const ph=safePhoto(p.photo);return ph?`<img class="avatar ${cls}" src="${ph}" alt="${esc(p.name)} 사진">`:`<span class="avatar ${cls}" aria-hidden="true">${esc((p.name||"?").slice(-2))}</span>`};
-function resizeImage(file,max=200){
+const photoOf=p=>{const ph=safePhoto(p.photo);if(ph)return ph;const c=p.id&&S.photos.get(p.id);return c?c[1]:""};
+const avatar=(p,cls="")=>{const ph=photoOf(p);return ph?`<img class="avatar ${cls}" src="${ph}" alt="${esc(p.name)} 사진">`:`<span class="avatar ${cls}" aria-hidden="true">${esc((p.name||"?").slice(-2))}</span>`};
+function resizeImage(file,max=120){
   return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{
     const sc=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
-    c.getContext("2d").drawImage(img,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.72))};img.src=fr.result};fr.readAsDataURL(file)});
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.7))};img.src=fr.result};fr.readAsDataURL(file)});
 }
 const UP_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>';
 const DOWN_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
@@ -1198,7 +1202,7 @@ async function openHistory(id){
     <div class="actions"><div class="spacer"></div><button class="btn primary" data-close>닫기</button></div></div>`};
   draw(null);document.body.appendChild(ov);
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
-  try{draw(await call("history",S.team,id))}catch(e){ov.remove();alertBox("이력을 불러오지 못했어요",e.message)}
+  try{const [hl]=await Promise.all([call("history",S.team,id),ensureYears(S.allYears||[])]);draw(hl)}catch(e){ov.remove();alertBox("이력을 불러오지 못했어요",e.message)}
 }
 async function openHistoryList(){
   const ov=document.createElement("div");ov.className="overlay";let all=null,mode="student";
@@ -1354,7 +1358,7 @@ const canEnter=t=>!!(S.access||{})[t];
 function storedCodes(){try{return JSON.parse(localStorage.getItem("ya-codes")||"{}")}catch(_){return S._codes||{}}}
 function storeCode(t,code){S._codes={...(S._codes||{}),[t]:code};if(S.remember===false)return;const c=storedCodes();c[t]=code;try{localStorage.setItem("ya-codes",JSON.stringify(c))}catch(_){}}
 function hasStored(){try{return !!(localStorage.getItem("ya-admin")||Object.keys(JSON.parse(localStorage.getItem("ya-codes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-gcodes")||"{}")).length)}catch(_){return false}}
-function forgetDevice(){try{["ya-admin","ya-codes","ya-gcodes",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._codes={};S._gcodes={};S.view="home";S.book=null;load();toast("이 기기에 기억된 번호와 로그인을 지웠어요")}
+function forgetDevice(){try{["ya-admin","ya-codes","ya-gcodes","ya-photos",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._codes={};S._gcodes={};S.photos=new Map();S.view="home";S.book=null;load();toast("이 기기에 기억된 번호와 로그인을 지웠어요")}
 function goDept(t){S.book=null;
   S.ev=rdC("ya-ev-"+t);S.lib=rdC("ya-lib-"+t);
   S.schedMode="cal";S.calSel="";S.calMonth="";S.rosterMode="active";setTeam(t);S.view="dept";S.tab="check";
@@ -1844,7 +1848,7 @@ function openPerson(id){
       <div class="photo-field"><span id="ph-prev">${avatar(p,"lg")}</span><div class="btns">
         <label class="btn" for="f-photo" style="display:inline-flex;align-items:center;color:var(--ink);font-size:13px">사진 선택</label>
         <input type="file" id="f-photo" accept="image/\*">
-        <button type="button" class="btn danger" id="ph-del" ${safePhoto(p.photo)?"":"hidden"}>사진 삭제</button></div></div>
+        <button type="button" class="btn danger" id="ph-del" ${photoOf(p)?"":"hidden"}>사진 삭제</button></div></div>
       ${formFields(teamOf(p)).map(([f,l])=>f==="team"?`<label>${l}<select id="f-team" name="team">${Object.entries(TEAMS).filter(([t])=>!isHomeroom()||t===S.team).map(([t,x])=>`<option value="${t}" ${teamOf(p)===t?"selected":""}>${x.label}</option>`).join("")}</select></label>`
         :f==="section"?`<label>${l}<select id="f-section" name="section">${[""].concat(sectionsOfKey(teamOf(p),p.group)).map(v=>`<option value="${v}" ${(secOf(p)||"")===v?"selected":""}>${v?v+"반":"없음"}</option>`).join("")}</select></label>`
         :f==="age"?(isFlex(teamOf(p))?`<label>${l}<select id="f-age" name="age"><option value="">모름</option>${TEAMS[teamOf(p)].groups.map(([a,al])=>`<option value="${a}" ${p.age===a?"selected":""}>${al}</option>`).join("")}</select></label>`:"")
@@ -1873,10 +1877,10 @@ function openPerson(id){
     }
   });
   const form=ov.querySelector("form");
-  let photo=safePhoto(p.photo);
+  const photo0=photoOf(p);let photo=photo0;
   const fPhoto=ov.querySelector("#f-photo");
   if(fPhoto){
-    const showPrev=()=>{ov.querySelector("#ph-prev").innerHTML=avatar({...p,name:form.querySelector("#f-name").value||p.name,photo},"lg");ov.querySelector("#ph-del").hidden=!photo};
+    const showPrev=()=>{ov.querySelector("#ph-prev").innerHTML=avatar({...p,id:"",name:form.querySelector("#f-name").value||p.name,photo},"lg");ov.querySelector("#ph-del").hidden=!photo};
     fPhoto.addEventListener("change",async()=>{const file=fPhoto.files&&fPhoto.files[0];if(!file)return;
       try{photo=await resizeImage(file);showPrev()}catch(_){toast("이 사진은 열 수 없어요. JPG나 PNG로 다시 골라 주세요")}fPhoto.value=""});
     ov.querySelector("#ph-del").addEventListener("click",()=>{photo="";showPrev()});
@@ -1912,7 +1916,7 @@ function openPerson(id){
     e.preventDefault();const fd=new FormData(form);
     const body={...(id?p:{}),active:true};["phone","parentPhone","guardian","address","lunar"].forEach(k=>delete body[k]);
     FIELDS.forEach(([f])=>body[f]=(fd.get(f)||"").toString().trim());if(!sectionsOfKey(body.team||S.team,body.group).includes(body.section))body.section="";
-    body.gender=["남","여"].includes(fd.get("gender"))?fd.get("gender"):"";body.lunar=fd.get("lunar")==="on"&&!!body.birthday;body.isNew=fd.get("isNew")==="on";body.photo=photo;if(id){const st=fd.get("status")||"재적";body.active=st==="재적";body.leftType=st==="재적"?"":st}body.team=id?teamOf(p):S.team;
+    body.gender=["남","여"].includes(fd.get("gender"))?fd.get("gender"):"";body.lunar=fd.get("lunar")==="on"&&!!body.birthday;body.isNew=fd.get("isNew")==="on";if(photo!==photo0)body.photo=photo;else delete body.photo;delete body.photoV;delete body.hasPhoto;if(id){const st=fd.get("status")||"재적";body.active=st==="재적";body.leftType=st==="재적"?"":st}body.team=id?teamOf(p):S.team;
     if(!body.name)return;
     if(body.birthday!==(p.birthday||"")){const bd=normBirthday(body.birthday);if(bd===null){toast("생일은 15/03/15처럼 연/월/일로 적어 주세요 (연도는 생략 가능)");ov.querySelector("#f-birthday").focus();return}body.birthday=bd}
     let contact=null;
@@ -1923,8 +1927,8 @@ function openPerson(id){
     delete body.id;
     const nid=id||("p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
     if(body.order==null)body.order=999;
-    S.people.set(nid,{...body,id:nid});render();close();
-    if(S.db)enqueue("people/"+nid,()=>S.db.doc("people/"+nid).set(body));
+    S.people.set(nid,{...body,id:nid});if(photo!==photo0||!id)S.photos.set(nid,[photo?-1:0,photo]);render();close();
+    if(S.db)enqueue("people/"+nid,()=>S.db.doc("people/"+nid)[id?"update":"set"](body));
     const repTeam=body.team;if(pcShown&&repSel&&body.group!=="T"&&personCallOn(repTeam)&&canContact(body.group)&&repSel!==callFirstOf(body.group,repTeam,id)){const np={...body,id:nid};
       if(id)setPersonCall(np,repSel).catch(err=>{toast(err.message);load()});else{const rs=repSel;enqueue("people/"+nid,()=>setPersonCall(np,rs).catch(err=>{toast(err.message);load()}))}}
     if(contact){S.book.contacts[nid]=contact;const bk=S.book;
@@ -1939,7 +1943,7 @@ document.addEventListener("toggle",e=>{const f=e.target;if(f.dataset&&f.dataset.
 document.addEventListener("click",e=>{const ad=e.target.closest("[data-adate]");
 if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   if(d<START){toast("기록은 시작 주일부터 있어요");return}
-  S.date=keyOf(d);render();return}
+  S.date=keyOf(d);needYear();render();return}
   const t=e.target.closest("[data-toggle]");if(t)return togglePresent(t.dataset.toggle);
   const tl=e.target.closest("[data-t]");if(tl)return bumpTalent(tl.dataset.t,Number(tl.dataset.d));
   const ep=e.target.closest("[data-edit-person]");if(ep){openPerson.edit=true;openPerson(ep.dataset.editPerson);openPerson.edit=false;return}
@@ -2036,9 +2040,9 @@ document.addEventListener("change",e=>{
 });
 document.addEventListener("focusin",e=>{if(e.target.dataset&&(e.target.dataset.tv||e.target.dataset.total))e.target.select()});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&(e.target.dataset.tv||e.target.dataset.total))e.target.blur()});
-$("#prev").onclick=()=>{const d=parseKey(S.date);d.setDate(d.getDate()-7);if(d<START){toast("기록은 2026년 1월 4일부터 시작해요");return}S.date=keyOf(d);render()};
-$("#next").onclick=()=>{const d=parseKey(S.date);d.setDate(d.getDate()+7);S.date=keyOf(d);render()};
-$("#datePick").onchange=e=>{if(e.target.value){S.date=keyOf(toSunday(parseKey(e.target.value)));render()}};
+$("#prev").onclick=()=>{const d=parseKey(S.date);d.setDate(d.getDate()-7);if(d<START){toast("기록은 2026년 1월 4일부터 시작해요");return}S.date=keyOf(d);needYear();render()};
+$("#next").onclick=()=>{const d=parseKey(S.date);d.setDate(d.getDate()+7);S.date=keyOf(d);needYear();render()};
+$("#datePick").onchange=e=>{if(e.target.value){S.date=keyOf(toSunday(parseKey(e.target.value)));needYear();render()}};
 
 /* ---------- data (Google Apps Script) ---------- */
 function AUTH(){let admin=S._admin||"",codes={...(S._codes||{})},gcodes={...(S._gcodes||{})};try{admin=localStorage.getItem("ya-admin")||admin;codes={...codes,...(JSON.parse(localStorage.getItem("ya-codes")||"null")||{})};gcodes={...gcodes,...(JSON.parse(localStorage.getItem("ya-gcodes")||"null")||{})}}catch(_){}return{admin,codes,gcodes}}
@@ -2047,7 +2051,7 @@ let pending=0;
 const API_URL="https:"+"/"+"/script.google.com/macros/s/AKfycbxAIzrJ4PjqNm4lo-1iC88RjRV56JTSkug5moMo_a-x7Im4v98XxCZ0Z-Gm0Y2FaUGt/exec";
 const HAS_GS=typeof google!=="undefined"&&!!(google.script&&google.script.run);
 /* 읽기만 하는 요청은 연결이 끊기면 자동으로 두 번 더 시도해요 (저장 요청은 중복될 수 있어 다시 보내지 않아요) */
-const READ_OPS=new Set(["boot","events","libList","contacts","appUrl","history","activity","gradeCodes","verifyCode","findGradeCode","verifyGradeCode","downloadFile"]);
+const READ_OPS=new Set(["boot","photos","events","libList","contacts","appUrl","history","activity","gradeCodes","verifyCode","findGradeCode","verifyGradeCode","downloadFile"]);
 async function callFetch(op,args){
   let t;const ac=typeof AbortController!=="undefined"?new AbortController():null;const tm=ac?setTimeout(()=>ac.abort(),60000):0;
   try{const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({op,auth:AUTH(),args}),redirect:"follow",signal:ac?ac.signal:undefined});
@@ -2055,7 +2059,7 @@ async function callFetch(op,args){
   catch(e){const er=new Error(navigator.onLine===false?"인터넷에 연결되어 있지 않아요. 연결을 확인해 주세요":"서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요");er.net=true;throw er}
   finally{clearTimeout(tm)}
   let x;try{x=JSON.parse(t)}catch(_){const er=new Error("서버 응답을 읽지 못했어요");er.net=true;throw er}
-  if(!x.ok)throw new Error(x.error);return x.data;
+  if(!x.ok)throw new Error(x.error);noteVer(op,x);return x.data;
 }
 async function callFetchRetry(op,args){
   for(let i=0;;i++){try{return await callFetch(op,args)}catch(e){if(!e.net||!READ_OPS.has(op)||i>=2)throw e;await new Promise(r=>setTimeout(r,1500*(i+1)))}}
@@ -2063,7 +2067,7 @@ async function callFetchRetry(op,args){
 function call(op,...args){
   if(!HAS_GS)return callFetchRetry(op,args);
   return new Promise((res,rej)=>{
-    google.script.run.withSuccessHandler(r=>{let x;try{x=JSON.parse(r)}catch(_){return rej(new Error("서버 응답을 읽지 못했어요"))}x.ok?res(x.data):rej(new Error(x.error))})
+    google.script.run.withSuccessHandler(r=>{let x;try{x=JSON.parse(r)}catch(_){return rej(new Error("서버 응답을 읽지 못했어요"))}if(x.ok)noteVer(op,x);x.ok?res(x.data):rej(new Error(x.error))})
       .withFailureHandler(e=>rej(new Error((e&&e.message)||"연결하지 못했어요. 인터넷 연결을 확인해 주세요")))
       .api(op,AUTH(),...args);
   });
@@ -2079,6 +2083,39 @@ S.db={
   batch:list=>tracked(call("batch",list)),
 };
 let autoDate=true,loading=null;
+/* ---- 속도: 바뀐 것이 있을 때만 새로 받아요 ---- */
+const WRITE_OPS=new Set(["write","batch","setCode","changeTeamCode","saveContact","setTeamSetting","setClassCallFirst","setPersonCallFirst","setClasses","importRoster","saveEvent","deleteEvent","libUpload","libDelete","libDoc","libVis","setGradeCode"]);
+/* 내가 쓰기 전까지 최신이었다면, 내 쓰기로 바뀐 버전은 이미 아는 것으로 쳐요 (내 저장 때문에 다시 받지 않게) */
+function noteVer(op,x){if(WRITE_OPS.has(op)&&x.v&&x.pv===S.ver)S.ver=x.v}
+async function checkUpdate(){
+  if(loading||pending||!S.ready)return;
+  try{const v=await call("ping");
+    if(S.needFull||v!==S.ver||Date.now()-S.lastBoot>300000){S.needFull=false;load(true)}}catch(_){}
+}
+function needYear(){const y=Number(S.date.slice(0,4));if(S.years.has(y))return;S.years.add(y);if(loading)S.needFull=true;else load(true)}
+async function ensureYears(list){const add=list.filter(y=>!S.years.has(y));if(!add.length)return;add.forEach(y=>S.years.add(y));if(loading)await loading.catch(()=>{});await load(true)}
+/* ---- 사진: 따로 받아서 이 기기에 저장해 둬요 ---- */
+let photoBusy=false;
+function savePhotoCache(){
+  if(S.remember===false)return;
+  for(const id of [...S.photos.keys()])if(!S.people.has(id))S.photos.delete(id);
+  try{localStorage.setItem("ya-photos",JSON.stringify(Object.fromEntries(S.photos)))}catch(_){try{localStorage.removeItem("ya-photos")}catch(__){}}
+}
+async function loadPhotos(){
+  if(photoBusy)return;
+  const need=[...S.people.values()].filter(p=>{const c=S.photos.get(p.id);return !c||(Number(p.photoV)||0)!==(c[0]||0)}).map(p=>p.id);
+  if(!need.length)return;
+  photoBusy=true;
+  try{
+    for(let i=0;i<need.length;i+=100){
+      const ids=need.slice(i,i+100);const r=await call("photos",ids)||{};let got=false;
+      ids.forEach(id=>{const p=S.people.get(id);const d=safePhoto(r[id]||"");S.photos.set(id,[Number(p&&p.photoV)||0,d]);if(d)got=true});
+      if(got&&!document.querySelector(".overlay"))render();
+    }
+    savePhotoCache();
+  }catch(_){}
+  photoBusy=false;
+}
 function applyBoot(d){
   S.isAdmin=!!d.isAdmin;S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
   S.scope=d.scope||{};S.settings=d.settings||{};S.people=new Map((d.people||[]).map(p=>[p.id,p]));setTeam(S.team);
@@ -2086,6 +2123,7 @@ function applyBoot(d){
   S.classes=new Map(Object.entries(d.classes||{}));
   S.promos=new Map(Object.entries(d.promos||{}));
   if(autoDate&&realSunday()<START&&S.date===START_KEY){autoDate=false;const ks=[...S.att.keys()].filter(k=>k>=START_KEY&&Object.keys(S.att.get(k).p||{}).length).sort();if(ks.length)S.date=ks.pop()}
+  if(d.years)S.years=new Set(d.years);S.allYears=d.allYears||[];if(d.v!==undefined)S.ver=d.v;
   S.ready=true;
 }
 const BOOT_KEY="ya-boot-v1";
@@ -2102,7 +2140,7 @@ async function load(quiet){
   if(loading)return loading;
   const slow=setTimeout(()=>{if(!S.ready){slowNotice(true,"구글 시트에서 불러오는 데 시간이 걸리고 있어요.");hideBootLoader()}},12000);
   const slowMsg=setTimeout(()=>{if(!S.ready&&$("#bootMsg"))$("#bootMsg").textContent="조금만 기다려 주세요. 처음 열 때는 시간이 걸려요…"},5000);
-  loading=call("boot").then(d=>{applyBoot(d);saveBootCache(d);slowNotice(false);$("#sync").textContent="구글 시트에 저장됨";render();hideBootLoader()})
+  loading=call("boot",[...S.years]).then(d=>{applyBoot(d);saveBootCache(d);S.lastBoot=Date.now();slowNotice(false);$("#sync").textContent="구글 시트에 저장됨";render();hideBootLoader();loadPhotos()})
     .catch(e=>{console.error(e);$("#sync").textContent=S.ready?"연결 안 됨 · 자동 재시도":"연결 안 됨";if(!S.ready){slowNotice(true,"불러오지 못했어요: "+e.message);hideBootLoader()}else if(!quiet)toast(e.message)})
     .finally(()=>{clearTimeout(slow);clearTimeout(slowMsg);loading=null});
   return loading;
@@ -2114,9 +2152,9 @@ setInterval(()=>{
   if(document.hidden||pending||document.querySelector(".overlay"))return;
   const a=document.activeElement;if(a&&a.dataset&&(a.dataset.tv||a.dataset.total))return;
   if(a&&a.id==="q")return; // 이름 검색 중에는 새로 불러오지 않아요 (한글 입력이 끊기지 않게)
-  load(true);
-},40000);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)load(true)});
+  checkUpdate();
+},30000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)checkUpdate()});
 </script>
 
 <script>
