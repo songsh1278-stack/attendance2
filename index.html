@@ -470,7 +470,24 @@ function bdDates(p,y){
   return M[md[0]+"/"+md[1]]||(md[1]===30?M[md[0]+"/29"]:null)||[];
 }
 /* 생일 표시: 연도 없이 적었으면 날짜만, 음력이면 앞에 "음력" */
-const bdText=p=>(p.lunar?"음력 ":"")+(p.birthday||"");
+/* 학생은 생일에 연도가 없으면 반(학년·나이)에 맞는 출생연도를 자동으로 붙여서 보여줘요 (저장된 값은 그대로 두어요).
+   기준: 초N = 학년도-6-N, 중N = 학년도-12-N, 고N = 학년도-15-N, 유아·영아 N세 = 한국 나이(학년도-N+1, 0세는 올해생).
+   학년도는 선택한 날짜의 해이고, 그해 연말 등반을 이미 마친 학생은 다음 해 기준으로 계산해요. */
+function bdRefYear(p){const y=Number(S.date.slice(0,4));return Number(p.promotedYear)===y?y+1:y}
+function bdBirthYear(p){
+  if(p.group==="T")return 0;const ref=bdRefYear(p),t=teamOf(p);
+  if(t==="youth"){const n=Number(p.group);return n>=1&&n<=6?ref-6-n:0}
+  if(t==="teen"){const m=/^([mh])([1-3])$/.exec(String(p.group));if(!m)return 0;const n=Number(m[2]);return m[1]==="m"?ref-12-n:ref-15-n}
+  if(t==="toddler"){const n=Number(p.group);return n>=5&&n<=7?ref-n+1:0}
+  if(t==="infant"){if(p.age===""||p.age==null||isNaN(p.age))return 0;const n=Number(p.age);return n<=0?ref:ref-n+1}
+  return 0;
+}
+function bdFull(p){
+  const b=String(p.birthday||"").trim();if(!b)return "";
+  const m=/^(\d{1,2})\/(\d{1,2})$/.exec(b);if(!m)return b;
+  const y=bdBirthYear(p);return y?String(y).slice(-2)+"/"+m[1].padStart(2,"0")+"/"+m[2].padStart(2,"0"):b;
+}
+const bdText=p=>(p.lunar?"음력 ":"")+bdFull(p);
 function bdWeekHit(p,k){
   if(!bdMD(p.birthday))return null;
   const s=parseKey(k);
@@ -914,7 +931,7 @@ async function exportAll(){
   const cols=used.length?used:keys.filter(k=>k<=S.date).slice(-1);
   const label=k=>Number(k.slice(5,7))+"/"+Number(k.slice(8));
   const wb=XLSX.utils.book_new();
-  const roster=[["이름","반","분반","구분","생일","음력","새친구","상태","메모","보호자","부모 연락처","학생 연락처","주소"]].concat([...S.people.values()].filter(p=>teamOf(p)===S.team).map(p=>{const c=C[p.id]||{};return [p.name,GL[p.group]||p.group,secOf(p)||"",p.group==="T"?"교사":"학생",p.birthday||"",p.lunar?"Y":"",p.isNew?"Y":"",p.active===false?(p.leftType==="졸업"?"졸업":"제적"):"출석",p.note||"",c.guardian||"",c.parentPhone||"",c.phone||"",c.address||""]}));
+  const roster=[["이름","반","분반","구분","생일","음력","새친구","상태","메모","보호자","부모 연락처","학생 연락처","주소"]].concat([...S.people.values()].filter(p=>teamOf(p)===S.team).map(p=>{const c=C[p.id]||{};return [p.name,GL[p.group]||p.group,secOf(p)||"",p.group==="T"?"교사":"학생",bdFull(p),p.lunar?"Y":"",p.isNew?"Y":"",p.active===false?(p.leftType==="졸업"?"졸업":"제적"):"출석",p.note||"",c.guardian||"",c.parentPhone||"",c.phone||"",c.address||""]}));
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(roster),"명단");
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["이름","반","출석 합계",...cols.map(label)]].concat(ps.map(p=>[p.name,classLabel(p),cols.filter(k=>isOn(k,p.id)).length,...cols.map(k=>isOn(k,p.id)?1:"")]))),"출석");
   if(talentOn()){const wsum=p=>cols.reduce((a,k)=>a+talentOf(k,p.id),0),tot=p=>Math.max(0,wsum(p)+talentAdj(p));
@@ -923,7 +940,7 @@ async function exportAll(){
   {const yy=Number(S.date.slice(0,4));
     const bp=ps.flatMap(p=>bdDates(p,yy).map(([m,d])=>({p,m,d}))).sort((a,b)=>a.m-b.m||a.d-b.d||a.p.name.localeCompare(b.p.name,"ko"));
     const miss=ps.filter(p=>!bdMD(p.birthday));
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["월","일","이름","반","구분","생일","음력"]].concat(bp.map(({p,m,d})=>[m,d,p.name,classLabel(p),p.group==="T"?"교사":"학생",p.birthday,p.lunar?"음력":""]),miss.length?[[],["생일 미등록"]].concat(miss.map(p=>["","",p.name,classLabel(p),p.group==="T"?"교사":"학생",p.birthday||""])):[])),"생일");}
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["월","일","이름","반","구분","생일","음력"]].concat(bp.map(({p,m,d})=>[m,d,p.name,classLabel(p),p.group==="T"?"교사":"학생",bdFull(p),p.lunar?"음력":""]),miss.length?[[],["생일 미등록"]].concat(miss.map(p=>["","",p.name,classLabel(p),p.group==="T"?"교사":"학생",p.birthday||""])):[])),"생일");}
   const memos=[["날짜","이름","반","출석","메모"]];cols.forEach(k=>{const m=(S.att.get(k)||{}).m||{};Object.keys(m).forEach(id=>{const p=S.people.get(id);if(p&&m[id])memos.push([k,p.name,classLabel(p),isOn(k,id)?"출석":"결석",m[id]])})});
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(memos),"출결메모");
   {let E=S.ev;if(!E||E.team!==S.team||E.error){try{const d=await call("events",S.team);E={team:S.team,list:d.events||[]}}catch(_){E={list:[]}}}
@@ -1119,7 +1136,7 @@ function openGuide(){
     <h4>2. 들어가기</h4><ol><li>메인에서 <b>우리 부서</b> 카드 → <b>담임 번호</b> 넣기</li><li>제목 옆에 "담임 · 2학년"처럼 보이면 성공!</li><li>내 휴대폰이면 "이 기기에서 번호 기억하기"를 켜 두세요. 다음부터 바로 들어가요.</li></ol>
     <h4>3. 출결메모 (주일 출석)</h4><ol><li>위쪽 날짜가 오늘 주일인지 확인해요. ‹ › 로 다른 주일로 가요.</li><li><b>체크 칸</b>: 누르면 출석, 다시 누르면 취소</li><li><b>메모</b>: 결석 이유 적기 ("감기·아픔" 같은 버튼도 있어요)</li><li><b>전화</b>: 누르면 그 학생의 <b>대표전화</b>로 바로 걸려요. 대표전화는 학생마다 명단 [수정]에서 <b>[대표]</b>에 체크한 번호예요. 체크하지 않았으면 영아·유아부는 부모님, 유소년·중고등부는 학생 번호예요 (없으면 다른 번호). 컴퓨터에서는 번호 창이 떠요.</li><li>숫자 칸(달란트 등): ▲▼ 를 누르거나 숫자를 눌러 적어요. 달란트는 여기서만 줘요.</li><li><b>담임 선생님 출석</b>: 우리 반 담임 줄 바로 아래에 선생님 이름이 <b>연보라색 줄</b>로 나와요. 거기서 선생님 출석·메모도 체크해요. (교사 명단의 이름과 담임 이름이 같아야 나와요)</li></ol>
     <h4>4. 명단 (연락처 포함)</h4><ol><li><b>[+ 사람 추가]</b>로 새 학생을 넣어요. 연락처·주소도 같이 적을 수 있어요.</li><li>이름을 누르면 보호자·부모 연락처와 주소가 보여요. <b>[전화]</b>, <b>[복사]</b>도 여기서.</li><li><b>[수정]</b>: 사진·반·생일·메모·연락처·주소를 한 창에서 위에서 아래로 차례대로 고쳐요.</li><li><b>[삭제]</b>: 이름을 누른 창에서 눌러요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li>사람 정보는 <b>명단 탭에서만</b> 고칠 수 있어요. 다른 탭에서는 보기만 해요.</li><li><b>대표전화</b>: [수정]에서 부모 연락처·학생 연락처 옆 <b>[대표]</b> 중 하나에 체크하고 저장해요. 출결메모의 <b>[전화]</b>를 누르면 그 번호로 바로 걸려요. 이름을 누른 창에서 전화기 아이콘을 눌러 바꿀 수도 있어요.</li><li>명단에서 <b>연보라색</b> 줄은 선생님이에요.</li><li>연락처가 잠겨 있으면 명단 위쪽 <b>연락처</b> 줄의 <b>[번호 입력]</b>에 담임 번호를 넣어요.</li></ol>
-    <h4>5. 생일 · 달란트</h4><ol><li><b>생일</b>: 이번 주·이번 달·다음 달 생일. 생일이 없는 사람은 맨 아래에 모여요. 음력 생일은 [수정]에서 "음력 생일"에 체크하면 그 해 양력 날짜로 바꿔 보여 줘요. 연도 없이 3/15처럼 날짜만 적어도 돼요.</li><li><b>달란트</b>: 올해 누적 순위를 보는 화면이에요 (고치기는 출결메모에서).</li><li>달란트·생일·일정 엑셀은 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b> 파일에 들어 있어요.</li></ol>
+    <h4>5. 생일 · 달란트</h4><ol><li><b>생일</b>: 이번 주·이번 달·다음 달 생일. 생일이 없는 사람은 맨 아래에 모여요. 음력 생일은 [수정]에서 "음력 생일"에 체크하면 그 해 양력 날짜로 바꿔 보여 줘요. 연도 없이 3/15처럼 날짜만 적어도 되고, 학생은 학년에 맞는 출생연도가 자동으로 붙어요(교사는 연도 없이 날짜만).</li><li><b>달란트</b>: 올해 누적 순위를 보는 화면이에요 (고치기는 출결메모에서).</li><li>달란트·생일·일정 엑셀은 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b> 파일에 들어 있어요.</li></ol>
     <h4>6. 출석 · 제적 · 졸업</h4><ol><li>명단 위쪽 <b>[출석] [제적] [졸업]</b> 을 눌러 나눠 봐요.</li><li>더 이상 안 나오는 학생: 이름 → [수정] → 상태를 <b>제적</b>으로. 졸업한 학생은 <b>졸업</b>으로.</li><li>제적·졸업 학생은 출석 명단에서 빠지지만 기록은 그대로 남아요.</li><li>다시 나오면 [제적] 목록에서 <b>[출석으로]</b>를 눌러요.</li></ol>
     <h4>7. 엑셀로 한 번에 (명단 · 연락처)</h4><ol><li>명단 탭 <b>엑셀</b> 줄의 <b>[양식 받기]</b>로 파일을 받아요. 지금 명단이 채워져 있어요.</li><li>'명단' 시트에 이름·반·생일·연락처·주소를 적어요. 생일은 15/03/15 처럼(연도 생략 가능). 빈 칸은 원래 값을 그대로 둬요.</li><li><b>[올리기]</b>로 파일을 고르고 확인. 이름·생일·연락처가 같은 사람은 같은 사람으로 보고 기존 정보 위에 덮어써요(없으면 이름과 반이 같은 사람). 없는 사람은 새로 들어가요.</li><li>담임은 <b>우리 반</b> 학생만 올라가요. 파일에서 줄을 지워도 앱에서는 지워지지 않아요.</li><li>출석부 전체를 저장해 두려면 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b>를 눌러요.</li></ol>
     <h4>8. 일정 · 자료실</h4><ol><li><b>일정</b> 탭 <b>[달력]</b>: 날짜를 누르면 그날 일정과 내용이 보여요. 일정 등록과 수정은 팀 관리자가 해요(날짜를 두 번 누르면 바로 등록·수정 창이 열려요).</li><li><b>[자료실]</b>: 공과 교재·양식·연락망처럼 부서에서 함께 쓰는 파일이에요. 일정과는 따로예요.</li><li><b>[+ 파일 올리기]</b>: 담임도 올릴 수 있어요 (10MB까지). 담임이 올린 파일은 부서의 담임 모두가 볼 수 있어요.</li><li><b>[삭제]</b>: 담임도 지울 수 있어요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li><b>[미리보기]</b>: 받지 않고 바로 봐요 (PDF·엑셀·워드·사진·텍스트). 한글·파워포인트는 <b>[내려받기]</b>로 열어요.</li><li><b>[보내기]</b>: 자료실 파일을 메일로 전해요. 받는 주소는 쉼표로 5명까지 적을 수 있고, 전할 말도 함께 보낼 수 있어요.</li><li><b>[관리자만 보기]</b> 표시가 붙은 파일은 팀 관리자와 총관리자만 볼 수 있어서 담임 화면에는 나오지 않아요.</li><li><b>[온라인 작성]</b>과 <b>[열기/수정]</b>(팀 관리자): 엑셀·워드·파워포인트·텍스트·CSV 파일을 내려받지 않고 구글 시트·문서·슬라이드로 열어 고쳐요. 고친 내용은 미리보기·내려받기·메일에 바로 반영돼요. 이 버튼과 공개 범위 바꾸기는 팀 관리자만 쓸 수 있어요.</li><li>작성본 링크는 밖으로 알리지 마세요.</li></ol>
@@ -1695,7 +1712,7 @@ function openAdminLogin(){
     e.preventDefault();const pw=ov.querySelector("#f-admin").value;
     const r=await call("adminLogin",pw).catch(err=>({ok:false,error:err.message}));
     if(r.ok){try{localStorage.setItem("ya-admin",pw)}catch(_){}S._admin=pw;ov.remove();await load();toast("관리자로 로그인했어요")}
-    else{const el=ov.querySelector("#adminErr");el.textContent=r.configured===false?"시트에 관리자 비밀번호가 아직 없어요.":"비밀번호가 맞지 않아요.";el.hidden=false}
+    else{const el=ov.querySelector("#adminErr");el.textContent=r.error?r.error:r.configured===false?"시트에 관리자 비밀번호가 아직 없어요.":"비밀번호가 맞지 않아요.";el.hidden=false}
   });
 }
 /* ---------- 홈 화면에 바로가기 ---------- */
@@ -1832,7 +1849,7 @@ function openPerson(id){
         :f==="section"?`<label>${l}<select id="f-section" name="section">${[""].concat(sectionsOfKey(teamOf(p),p.group)).map(v=>`<option value="${v}" ${(secOf(p)||"")===v?"selected":""}>${v?v+"반":"없음"}</option>`).join("")}</select></label>`
         :f==="age"?(isFlex(teamOf(p))?`<label>${l}<select id="f-age" name="age"><option value="">모름</option>${TEAMS[teamOf(p)].groups.map(([a,al])=>`<option value="${a}" ${p.age===a?"selected":""}>${al}</option>`).join("")}</select></label>`:"")
         :f==="group"?`<label>${l}<select id="f-group" name="group">${pickGroupsOf(teamOf(p)).filter(([g])=>!isHomeroom()||myScope().grades.includes(g)).map(([g,gl])=>`<option value="${g}" ${p.group===g?"selected":""}>${gl}</option>`).join("")}</select></label>`
-        :f==="birthday"?`<label>${l}<input id="f-birthday" name="birthday" value="${esc(p.birthday)}" placeholder="연도 없이 3/15도 돼요"></label><label class="inline full"><input type="checkbox" id="f-lunar" name="lunar" ${p.lunar?"checked":""}>음력 생일</label>`
+        :f==="birthday"?`<label>${l}<input id="f-birthday" name="birthday" value="${esc(p.birthday)}" placeholder="3/15 (학생은 연도 자동)"></label><label class="inline full"><input type="checkbox" id="f-lunar" name="lunar" ${p.lunar?"checked":""}>음력 생일</label>`
         :f==="note"?`<label class="full">${l}<textarea id="f-${f}" name="${f}">${esc(p[f])}</textarea></label>`
         :f==="name"?`<label>${l}<span class="name-sex"><input id="f-name" name="name" value="${esc(p.name)}" required><select id="f-gender" name="gender" aria-label="성별"><option value="">성별</option><option value="남" ${p.gender==="남"?"selected":""}>남</option><option value="여" ${p.gender==="여"?"selected":""}>여</option></select></span></label>`
         :`<label>${l}<input id="f-${f}" name="${f}" value="${esc(p[f])}"></label>`).join("")}
