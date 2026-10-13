@@ -433,7 +433,7 @@ function lastSunday(){const d=realSunday();return d<START?new Date(START):d}
 function toSunday(d){d=new Date(d);d.setDate(d.getDate()-d.getDay());return d<START?new Date(START):d}
 S.date=keyOf(lastSunday());
 /* 속도: 출석은 올해(1~2월엔 작년도)만 받고, 사진은 따로 받아 이 기기에 저장해 둬요 */
-{const _n=new Date(),_y=_n.getFullYear();S.years=new Set(_n.getMonth()<2?[_y-1,_y]:[_y]);S.years.add(Number(S.date.slice(0,4)));S.allYears=[];S.photos=new Map();S.ver="";S.lastBoot=0;
+{const _n=new Date(),_y=_n.getFullYear();S.years=new Set(_n.getMonth()<2?[_y-1,_y]:[_y]);S.years.add(Number(S.date.slice(0,4)));S.allYears=[];S.photos=new Map();S.ver="";S.vers={};S.lastBoot=0;
  try{const j=JSON.parse(localStorage.getItem("ya-photos")||"null");if(j)S.photos=new Map(Object.entries(j))}catch(_){}}
 try{const t=localStorage.getItem("ya-team");if(t)S.team=t;const g=localStorage.getItem("ya-group");if(g)S.group=g}catch(e){}
 setTeam(S.team);
@@ -509,17 +509,27 @@ function onWriteError(e){
   console.error(e);
   toast((e&&e.message)||"저장하지 못했어요. 잠시 후 다시 시도해 주세요");load();
 }
+/* 출석 체크는 바로 보내지 않고 잠깐(0.8초) 모았다가 한 번에 보낸다. 20명을 눌러도 서버 요청은 한두 번 */
+const attBuf={};let attTimer=null;
+function mergeAtt(cur,body){return {...cur,p:{...cur.p,...(body.p||{})},t:{...cur.t,...(body.t||{})},m:{...(cur.m||{}),...(body.m||{})}}}
 function writeAtt(k,body){
-  const cur=S.att.get(k)||{date:k,p:{},t:{}};
-  const next={...cur,p:{...cur.p,...(body.p||{})},t:{...cur.t,...(body.t||{})},m:{...(cur.m||{}),...(body.m||{})}};
-  S.att.set(k,next);render();
+  S.att.set(k,mergeAtt(S.att.get(k)||{date:k,p:{},t:{}},body));render();
   if(!S.db)return;
-  enqueue("att/"+k,async()=>{
-    const ref=S.db.doc("att/"+k);
-    try{await ref.update(body)}
-    catch(e){if(e&&e.code==="invalid_argument"){const snap=await ref.get();if(snap.exists)throw e;await ref.set({date:k,p:body.p||{},t:body.t||{}})}else throw e}
-  });
+  attBuf[k]=mergeAtt(attBuf[k]||{p:{},t:{}},body);
+  if(attTimer)return;
+  pending++;$("#sync").textContent="저장 중…";
+  attTimer=setTimeout(flushAtt,800);
 }
+function flushAtt(){
+  if(!attTimer)return;clearTimeout(attTimer);attTimer=null;
+  const jobs=Object.keys(attBuf).map(k=>{const b=attBuf[k];delete attBuf[k];
+    const body={};["p","t","m"].forEach(f=>{if(b[f]&&Object.keys(b[f]).length)body[f]=b[f]});
+    return enqueue("att/"+k,()=>S.db.doc("att/"+k).update(body))});
+  Promise.allSettled(jobs).then(()=>{pending--;if(!pending)$("#sync").textContent="구글 시트에 저장됨"});
+}
+/* 화면을 떠나거나 다른 앱으로 갈 때는 기다리지 않고 바로 보낸다 */
+addEventListener("pagehide",flushAtt);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)flushAtt()});
 function togglePresent(id){if(!S.editable)return;writeAtt(S.date,{p:{[id]:isOn(S.date,id)?0:1}})}
 const talentTimers={};
 function bumpTalent(id,delta){
@@ -2188,11 +2198,18 @@ let autoDate=true,loading=null;
 /* ---- 속도: 바뀐 것이 있을 때만 새로 받아요 ---- */
 const WRITE_OPS=new Set(["write","batch","setCode","changeTeamCode","saveContact","setTeamSetting","setClassCallFirst","setPersonCallFirst","setClasses","importRoster","saveEvent","deleteEvent","libUpload","libDelete","libDoc","libVis","setGradeCode"]);
 /* 내가 쓰기 전까지 최신이었다면, 내 쓰기로 바뀐 버전은 이미 아는 것으로 쳐요 (내 저장 때문에 다시 받지 않게) */
-function noteVer(op,x){if(WRITE_OPS.has(op)&&x.v&&x.pv===S.ver)S.ver=x.v}
+/* 버전은 부서·반별로 따로예요. 화면은 자기가 보는 부서·반의 버전만 물어봐요 (다른 반 출석 체크로 전체를 다시 받지 않게) */
+function noteVer(op,x){
+  if(!WRITE_OPS.has(op)||!x.v)return;
+  if(typeof x.v==="string"){if(x.pv===S.ver)S.ver=x.v;return}
+  Object.keys(x.v).forEach(k=>{if(k in S.vers&&S.vers[k]===(x.pv||{})[k])S.vers[k]=x.v[k]});
+}
 async function checkUpdate(){
   if(loading||pending||!S.ready)return;
-  try{const v=await call("ping");
-    if(S.needFull||v!==S.ver||Date.now()-S.lastBoot>300000){S.needFull=false;load(true)}}catch(_){}
+  try{const keys=Object.keys(S.vers||{});let changed;
+    if(keys.length){const m=await call("ping",keys)||{};changed=keys.some(k=>(m[k]||"0")!==S.vers[k])}
+    else changed=(await call("ping"))!==S.ver;
+    if(S.needFull||changed||Date.now()-S.lastBoot>600000){S.needFull=false;load(true)}}catch(_){}
 }
 function needYear(){const y=Number(S.date.slice(0,4));if(S.years.has(y))return;S.years.add(y);if(loading)S.needFull=true;else load(true)}
 async function ensureYears(list){const add=list.filter(y=>!S.years.has(y));if(!add.length)return;add.forEach(y=>S.years.add(y));if(loading)await loading.catch(()=>{});await load(true)}
@@ -2222,10 +2239,11 @@ function applyBoot(d){
   S.isAdmin=!!d.isAdmin;S.isCo=!!d.isCo;S.me=d.me||"";S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
   S.staff=d.staff||[];S.scope=d.scope||{};S.settings=d.settings||{};S.people=new Map((d.people||[]).map(p=>[p.id,p]));setTeam(S.team);
   S.att=new Map(Object.entries(d.att||{}));
+  Object.keys(attBuf).forEach(k=>S.att.set(k,mergeAtt(S.att.get(k)||{date:k,p:{},t:{}},attBuf[k]))); // 아직 안 보낸 체크는 유지
   S.classes=new Map(Object.entries(d.classes||{}));
   S.promos=new Map(Object.entries(d.promos||{}));
   if(autoDate&&realSunday()<START&&S.date===START_KEY){autoDate=false;const ks=[...S.att.keys()].filter(k=>k>=START_KEY&&Object.keys(S.att.get(k).p||{}).length).sort();if(ks.length)S.date=ks.pop()}
-  if(d.years)S.years=new Set(d.years);S.allYears=d.allYears||[];if(d.v!==undefined)S.ver=d.v;
+  if(d.years)S.years=new Set(d.years);S.allYears=d.allYears||[];if(d.v!==undefined)S.ver=d.v;S.vers=d.vers||{};
   S.ready=true;
 }
 const BOOT_KEY="ya-boot-v1";
@@ -2261,7 +2279,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014074628';
+  var BUILD = '20261014080229';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
