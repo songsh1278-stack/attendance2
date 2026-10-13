@@ -1,0 +1,16 @@
+{
+  "name": "신당중앙교회",
+  "short_name": "출석부",
+  "description": "교회학교 교육부 주일 출석·달란트·명단 관리",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F1F5F2",
+  "theme_color": "#18856B",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
