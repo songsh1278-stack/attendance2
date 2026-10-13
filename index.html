@@ -350,6 +350,12 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .form label .rep-chk input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 .form .pc-rep{justify-content:space-between}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.rpt-paper{background:#fff;color:#111;border-radius:8px;padding:18px 14px;overflow-x:auto;margin-top:8px}
+.rpt-h1{font-weight:800;font-size:22px;text-align:center;text-decoration:underline;margin-bottom:10px}
+.rpt-h2{font-weight:800;font-size:15px;text-decoration:underline;margin-bottom:8px}
+.rpt-tbl{width:100%;min-width:560px;border-collapse:collapse;font-size:12.5px;line-height:1.5;margin:0}
+.rpt-tbl th,.rpt-tbl td{border:1px solid #333;padding:6px 7px;vertical-align:middle;white-space:pre-wrap;text-align:left;color:#111;background:#fff;font-weight:400}
+.rpt-tbl th,.rpt-tbl td.c{text-align:center}
 </style>
 </head>
 <body>
@@ -1214,6 +1220,211 @@ async function openActivityLog(){
   ov.querySelector("#alQ").addEventListener("input",e=>{q=e.target.value;shown=200;draw()});
   fetchMore();
 }
+/* ---------- 당회보고 (팀 관리자 이상) ---------- */
+const RPT_TEAMS=["infant","toddler","youth","teen","support"];
+const rptName=t=>t==="support"?"교육지원":TEAMS[t].label;
+const canRpt=()=>S.isAdmin||Object.keys(TEAMS).some(t=>deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
+const rptCard=()=>`<h2 class="sec">당회보고서 제출</h2><div class="card admin-list"><div class="admin-row"><b>당회·제직회 자료</b><span class="code none">부서별 한글 보고서 올리기 · 고치기 · 통합 · 메일</span><button class="btn" id="rptOpen">열기</button></div></div>`;
+/** 그달 넷째 주일 */
+function fourthSun(ym){const y=Number(ym.slice(0,4)),m=Number(ym.slice(5,7));return ym+"-"+String(1+(7-new Date(y,m-1,1).getDay())%7+21)}
+/** 기본으로 여는 달: 이번 달 넷째 주일이 지났으면 다음 달 */
+function rptDefaultYm(){const n=new Date();let y=n.getFullYear(),m=n.getMonth()+1;const ym=()=>y+"-"+String(m).padStart(2,"0");
+  const today=ym()+"-"+String(n.getDate()).padStart(2,"0");if(today>fourthSun(ym())){m++;if(m>12){m=1;y++}}return ym()}
+const ymShift=(ym,d)=>{let y=Number(ym.slice(0,4)),m=Number(ym.slice(5,7))+d;while(m<1){m+=12;y--}while(m>12){m-=12;y++}return y+"-"+String(m).padStart(2,"0")};
+const ymLabel=ym=>ym.slice(0,4)+"년 "+Number(ym.slice(5,7))+"월";
+const dateLabel=k=>{const d=parseKey(k);return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`};
+/** 기본 정리: 줄 끝 공백, 겹친 띄어쓰기, 괄호·쉼표 앞뒤 띄어쓰기, 들여쓰기(두 칸), 빈 줄 겹침을 맞춘다 */
+function rptTidy(lines){
+  let a=(lines||[]).map(x=>{let s=String(x==null?"":x).replace(/ /g," ").replace(/\t/g," ").replace(/\s+$/,"");const lead=/^\s/.test(s);
+    s=s.trim().replace(/\s{2,}/g," ").replace(/\s+([,.)\]])/g,"$1").replace(/([(\[])\s+/g,"$1").replace(/,(?!\s)/g,(m,i,x)=>/\d/.test(x[i-1]||"")&&/\d/.test(x[i+1]||"")?",":", ");return s?(lead?"  ":"")+s:""});
+  a=a.filter((x,i)=>x||(i>0&&a[i-1]));while(a.length&&!a[0])a.shift();while(a.length&&!a[a.length-1])a.pop();return a;
+}
+function saveB64(name,b64,mime){
+  const bin=atob(b64);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+  const url=URL.createObjectURL(new Blob([u8],{type:mime||"application/octet-stream"}));const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+async function openReport(){
+  if(!canRpt()){toast("팀 관리자 이상만 볼 수 있어요");return}
+  let ym=rptDefaultYm(),R=null,busy=false;
+  const ov=document.createElement("div");ov.className="overlay";document.body.appendChild(ov);
+  const draw=()=>{
+    const T=R&&R.teams;const done=T?RPT_TEAMS.filter(t=>(T[t].cur.length||T[t].next.length)).length:0;
+    ov.innerHTML=`<div class="sheet" role="dialog" aria-label="당회보고서 제출"><h3>당회보고서 제출</h3>
+      <div class="datebar" style="margin:8px 0 10px"><button class="arrow" data-rym="-1" aria-label="지난달">‹</button><div class="date"><strong class="num">${ymLabel(ym)}</strong></div><button class="arrow" data-rym="1" aria-label="다음 달">›</button></div>
+      ${!R?`<p class="muted">불러오는 중…</p>`:`
+      <div class="form" style="grid-template-columns:1fr 1fr;margin-top:0">
+        <label>보고 날짜 (넷째 주일)<input type="date" id="rptDate" value="${esc(R.date)}" ${R.admin?"":"disabled"}></label>
+        <label>문서 제목<input id="rptHead" value="${esc(R.heading)}" maxlength="60" ${R.admin?"":"disabled"}></label></div>
+      ${R.admin&&R.date!==fourthSun(ym)?`<p class="muted" style="font-size:12px;margin:4px 0 0">넷째 주일(${esc(dateLabel(fourthSun(ym)))})이 아닌 날로 바꿨어요. <button class="btn" data-rdate-reset style="padding:2px 8px">넷째 주일로</button></p>`:""}
+      <div class="card admin-list" style="margin-top:12px">${RPT_TEAMS.map(t=>{const x=T[t];const has=x.cur.length||x.next.length;
+        return `<div class="admin-row"><b>${esc(rptName(t))}</b><span class="tag ${has?"new":"role"}">${has?"제출":"미제출"}</span>
+          <span class="muted" style="font-size:12px;flex:1;min-width:120px">${has?esc(x.at+" · "+x.by):""}${x.file?`<br>${esc(x.file)}`:""}</span>
+          ${x.file?`<button class="btn" data-rorig="${t}">원본</button>`:""}
+          ${x.edit?`${t!=="support"?`<button class="btn" data-rup="${t}">한글 올리기</button>`:""}<button class="btn" data-redit="${t}">${has?"고치기":"직접 쓰기"}</button>`:has?`<button class="btn" data-rview="${t}">보기</button>`:""}</div>`}).join("")}</div>
+      <p class="muted" style="font-size:12px;margin:8px 0 0">${done}/${RPT_TEAMS.length} 제출 · 부서는 한글(.hwp) 보고서를 올리면 표의 '보고 내용'과 '계획' 칸 글자를 꺼내 담아요. 올린 뒤 화면에서 바로 고칠 수 있어요.</p>
+      ${R.admin&&R.sent.length?`<h4 style="margin:14px 0 4px;font-size:14px">보낸 메일</h4>${R.sent.slice(0,5).map(s=>`<div class="hist-item"><span class="when">${esc(s.at.slice(0,10))}<br>${esc(s.at.slice(11))}</span><span class="what">${esc(s.to)}<span class="by">${esc(s.by)}</span></span></div>`).join("")}`:""}`}
+      <div class="actions"><button class="btn" data-close>닫기</button><div class="spacer"></div>
+        ${R?`<button class="btn" id="rptPrev">미리보기</button><button class="btn" id="rptDown">한글 파일 받기</button>${R.admin?`<button class="btn primary" id="rptMail">메일 보내기</button>`:""}`:""}</div></div>`;
+  };
+  const load=async()=>{R=null;draw();try{R=await call("rptGet",ym)}catch(e){ov.remove();alertBox("당회보고를 불러오지 못했어요",e.message);return}draw()};
+  const setR=r=>{R=r;draw()};
+  ov.addEventListener("click",async e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    const mv=e.target.closest("[data-rym]");if(mv){ym=ymShift(ym,Number(mv.dataset.rym));return load()}
+    if(!R||busy)return;
+    if(e.target.closest("[data-rdate-reset]")){busy=true;try{setR(await tracked(call("rptMeta",ym,{date:fourthSun(ym)})))}catch(x){alertBox("바꾸지 못했어요",x.message)}busy=false;return}
+    const up=e.target.closest("[data-rup]");if(up)return rptUpload(up.dataset.rup,ym,setR);
+    const ed=e.target.closest("[data-redit]");if(ed){const t=ed.dataset.redit;return rptEditor(t,ym,{cur:R.teams[t].cur,next:R.teams[t].next},setR)}
+    const vw=e.target.closest("[data-rview]");if(vw)return rptPreview(R,ym,vw.dataset.rview);
+    const og=e.target.closest("[data-rorig]");if(og){busy=true;try{toast("내려받는 중…");const d=await call("rptOrig",ym,og.dataset.rorig);saveB64(d.name,d.b64,"application/x-hwp")}catch(x){alertBox("내려받지 못했어요",x.message)}busy=false;return}
+    if(e.target.closest("#rptPrev"))return rptPreview(R,ym);
+    if(e.target.closest("#rptDown")){busy=true;try{toast("한글 파일을 만드는 중…");const d=await call("rptHwp",ym);saveB64(d.name,d.b64,"application/x-hwp");toast("파일을 내려받았어요")}catch(x){alertBox("만들지 못했어요",x.message)}busy=false;return}
+    if(e.target.closest("#rptMail"))return rptMailBox(R,ym,setR);
+  });
+  ov.addEventListener("change",async e=>{
+    if(!R||!R.admin)return;
+    const meta=e.target.id==="rptDate"?{date:e.target.value}:e.target.id==="rptHead"?{heading:e.target.value}:null;if(!meta)return;
+    if(meta.date===""){e.target.value=R.date;return}
+    try{setR(await tracked(call("rptMeta",ym,meta)));toast("저장했어요")}catch(x){alertBox("저장하지 못했어요",x.message)}
+  });
+  load();
+}
+function rptUpload(t,ym,setR){
+  const inp=document.createElement("input");inp.type="file";inp.accept=".hwp";
+  inp.onchange=async()=>{
+    const f=inp.files&&inp.files[0];if(!f)return;
+    if(/\.hwpx$/i.test(f.name)){alertBox("한글(.hwp) 파일로 올려 주세요","한글에서 [파일 → 다른 이름으로 저장 → 파일 형식: 한글 문서(*.hwp)]로 저장한 뒤 올려 주세요.");return}
+    if(f.size>10*1024*1024){alertBox("파일이 너무 커요","10MB까지 올릴 수 있어요.");return}
+    let r;try{toast("한글 파일을 읽는 중…");r=await readHwpReport(await f.arrayBuffer())}catch(e){alertBox("한글 파일을 읽지 못했어요",e.message);return}
+    rptEditor(t,ym,{cur:rptTidy(r.cur),next:rptTidy(r.next),file:{name:f.name,b64:await fileToB64(f)},note:r.table?"":"보고서에서 표를 찾지 못해 본문 전체를 '보고 내용'에 넣었어요. 나눠서 옮겨 주세요."},setR);
+  };
+  inp.click();
+}
+function rptEditor(t,ym,d,setR){
+  const ov=document.createElement("div");ov.className="overlay";
+  const m=Number(ym.slice(5,7)),nm=m%12+1;
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-label="${esc(rptName(t))} 당회보고"><h3>${esc(rptName(t))} <span class="muted" style="font-family:var(--body);font-size:14px">${esc(ymLabel(ym))} 당회보고</span></h3>
+    ${d.file?`<p class="notice" style="margin-top:6px">올린 파일: <b>${esc(d.file.name)}</b> — 아래 내용을 확인하고 [저장]을 눌러야 제출돼요.</p>`:""}
+    ${d.note?`<p class="err" style="font-size:13px">${esc(d.note)}</p>`:""}
+    <div class="form" style="grid-template-columns:1fr">
+      <label>${m}월 보고 내용<textarea id="rCur" style="height:220px;font-size:14px;line-height:1.5" spellcheck="true">${esc(d.cur.join("\n"))}</textarea></label>
+      <label>${nm}월 계획, 예정 사항<textarea id="rNext" style="height:220px;font-size:14px;line-height:1.5" spellcheck="true">${esc(d.next.join("\n"))}</textarea></label></div>
+    <p class="muted" style="font-size:12px;margin:6px 0 0">한 줄이 문서의 한 문단이 돼요. 글꼴·글자 크기·문단 모양은 통합 문서에서 모든 부서가 같게 맞춰져요. [자동 정리]는 겹친 띄어쓰기, 괄호·쉼표 띄어쓰기, 들여쓰기, 빈 줄을 맞춰요.</p>
+    <div class="actions"><button type="button" class="btn" data-close>취소</button><button class="btn" id="rTidy">자동 정리</button><div class="spacer"></div><button class="btn primary" id="rSave">저장</button></div></div>`;
+  document.body.appendChild(ov);
+  const ta=id=>ov.querySelector(id);
+  ov.addEventListener("click",async e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    if(e.target.closest("#rTidy")){["#rCur","#rNext"].forEach(id=>{ta(id).value=rptTidy(ta(id).value.split("\n")).join("\n")});toast("정리했어요");return}
+    const sv=e.target.closest("#rSave");if(!sv||sv.disabled)return;sv.disabled=true;sv.textContent="저장 중…";
+    const lines=id=>{const a=ta(id).value.replace(/\r/g,"").split("\n");while(a.length&&!a[a.length-1].trim())a.pop();return a};
+    try{const r=await tracked(call("rptSave",ym,t,{cur:lines("#rCur"),next:lines("#rNext"),file:d.file||null}));ov.remove();setR(r);toast("저장했어요")}
+    catch(x){sv.disabled=false;sv.textContent="저장";alertBox("저장하지 못했어요",x.message)}
+  });
+}
+/** 미리보기: 통합 문서와 같은 모양(표). only 를 주면 그 부서만 */
+function rptPreview(R,ym,only){
+  const m=Number(ym.slice(5,7));const ts=only?[only]:RPT_TEAMS;
+  const cell=a=>esc((a||[]).join("\n"));
+  const team=t=>t==="support"?"교육지원":esc(TEAMS[t].label.replace("교육팀",""))+"<br>교육팀";
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-label="미리보기" style="max-width:900px"><h3>미리보기 <span class="muted" style="font-family:var(--body);font-size:14px">${esc(R.fileName)}</span></h3>
+    <div class="rpt-paper"><div class="rpt-h1">${esc(R.heading)}</div><div class="rpt-h2">${esc(dateLabel(R.date))} 당회 보고 사항</div>
+    <table class="rpt-tbl"><colgroup><col style="width:10%"><col style="width:45%"><col style="width:45%"></colgroup>
+    <thead><tr><th>팀</th><th>${m} 월 보 고 내 용</th><th>계획, 예정사항</th></tr></thead>
+    <tbody>${ts.map(t=>`<tr><td class="c">${team(t)}</td><td>${cell(R.teams[t].cur)}</td><td>${cell(R.teams[t].next)}</td></tr>`).join("")}</tbody></table></div>
+    <p class="muted" style="font-size:12px;margin:8px 0 0">실제 한글 파일은 휴먼고딕 10pt(본문)·HY견고딕(제목)으로 만들어져요. 줄 바꿈 위치는 한글에서 조금 다를 수 있어요.</p>
+    <div class="actions"><div class="spacer"></div><button class="btn primary" data-close>닫기</button></div></div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+}
+function rptMailBox(R,ym,setR){
+  const list=R.recent.map((x,i)=>({name:x.name||"",email:x.email,on:i===0}));
+  const miss=RPT_TEAMS.filter(t=>!(R.teams[t].cur.length||R.teams[t].next.length)).map(rptName);
+  const ov=document.createElement("div");ov.className="overlay";
+  const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="메일 보내기"><h3>메일 보내기</h3>
+    <p style="margin:4px 0 0;font-size:14px">첨부: <b>${esc(R.fileName)}</b></p>
+    ${miss.length?`<p class="err" style="font-size:13px;margin:6px 0 0">아직 내지 않은 곳: ${esc(miss.join(", "))}</p>`:""}
+    <h4 style="margin:14px 0 4px;font-size:14px">받는 사람 <span class="muted" style="font-weight:400;font-size:12px">최근 보낸 순</span></h4>
+    <div class="card admin-list">${list.map((x,i)=>`<label class="admin-row" style="cursor:pointer"><input type="checkbox" data-mi="${i}" ${x.on?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><b>${esc(x.name||"(이름 없음)")}</b><span class="muted" style="font-size:13px">${esc(x.email)}</span></label>`).join("")}</div>
+    <div class="form" style="grid-template-columns:1fr 1.4fr auto;align-items:end"><label>이름<input id="mName" maxlength="30" placeholder="예: 홍길동 장로님" autocomplete="off"></label><label>메일 주소<input id="mEmail" type="email" inputmode="email" autocomplete="off"></label><button class="btn" id="mAdd" style="height:42px">추가</button></div>
+    <div class="form" style="grid-template-columns:1fr"><label>내용<textarea id="mMsg" style="height:90px">${esc(ymLabel(ym))} 당회·제직회 자료를 보내 드립니다.</textarea></label></div>
+    <p class="muted" style="font-size:12px;margin:6px 0 0">메일 첫 줄에 받는 분 이름이 들어가요 (예: ${esc((list.find(x=>x.on)||list[0]||{name:"조주영 간사님"}).name||"")}께).</p>
+    <div class="actions"><button class="btn" data-close>취소</button><div class="spacer"></div><button class="btn primary" id="mSend">보내기</button></div></div>`};
+  draw();document.body.appendChild(ov);
+  ov.addEventListener("change",e=>{const c=e.target.closest("[data-mi]");if(c){list[Number(c.dataset.mi)].on=c.checked;const sd=ov.querySelector("#mSend");delete sd.dataset.ok;sd.textContent="보내기"}});
+  ov.addEventListener("click",async e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    if(e.target.closest("#mAdd")){const name=ov.querySelector("#mName").value.trim(),email=ov.querySelector("#mEmail").value.trim().toLowerCase();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast("메일 주소를 확인해 주세요");return}
+      const msg=ov.querySelector("#mMsg").value;const hit=list.find(x=>x.email===email);if(hit){hit.on=true;if(name)hit.name=name}else list.unshift({name,email,on:true});draw();ov.querySelector("#mMsg").value=msg;return}
+    const sd=e.target.closest("#mSend");if(!sd||sd.disabled)return;
+    const to=list.filter(x=>x.on).map(x=>({name:x.name,email:x.email}));if(!to.length){toast("받는 사람을 골라 주세요");return}
+    if(!sd.dataset.ok){sd.dataset.ok="1";sd.textContent=to.map(x=>x.name||x.email).join(", ")+"에게 보내기";return} /* 한 번 더 눌러야 보낸다 */
+    sd.disabled=true;sd.textContent="보내는 중…";
+    try{const r=await tracked(call("rptMail",ym,{to,msg:ov.querySelector("#mMsg").value}));ov.remove();setR(r);alertBox("메일을 보냈어요",to.map(x=>(x.name?x.name+" ":"")+"<"+x.email+">").join(", "))}
+    catch(x){sd.disabled=false;sd.textContent="보내기";alertBox("보내지 못했어요",x.message)}
+  });
+}
+/* 한글(.hwp) 읽기: 부서 보고서에서 표의 '이번 달 보고'·'다음 달 계획' 칸 글자만 꺼낸다 (브라우저에서) */
+function cfbRead(u8){
+  const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);const u32=o=>dv.getUint32(o,true);
+  if(u32(0)!==0xE011CFD0)throw new Error("한글(.hwp) 파일이 아니에요. 한글에서 .hwp로 저장해 주세요");
+  const ss=1<<dv.getUint16(30,true),mss=1<<dv.getUint16(32,true),E=0xFFFFFFFA;
+  const sec=s=>u8.subarray(512+s*ss,512+(s+1)*ss);
+  let difat=[];for(let i=0;i<109;i++)difat.push(u32(76+i*4));
+  for(let s=u32(68),n=u32(72);n-->0&&s<E;){const b=sec(s),d=new DataView(b.buffer,b.byteOffset,ss);for(let i=0;i<ss/4-1;i++)difat.push(d.getUint32(i*4,true));s=d.getUint32(ss-4,true)}
+  const fat=[];difat.slice(0,u32(44)).forEach(s=>{const d=new DataView(u8.buffer,u8.byteOffset+512+s*ss,ss);for(let i=0;i<ss/4;i++)fat.push(d.getUint32(i*4,true))});
+  const chain=(s,t)=>{const o=[];while(s<E&&o.length<1e6){o.push(s);s=t[s]}return o};
+  const cat=(parts,size)=>{const o=new Uint8Array(parts.reduce((a,p)=>a+p.length,0));let k=0;parts.forEach(p=>{o.set(p,k);k+=p.length});return size==null?o:o.subarray(0,size)};
+  const big=(s,size)=>cat(chain(s,fat).map(sec),size);
+  const dir=big(u32(48));const dd=new DataView(dir.buffer,dir.byteOffset,dir.byteLength);
+  const ents=[];for(let o=0;o+128<=dir.length;o+=128){const nl=dd.getUint16(o+64,true);let nm="";for(let i=0;i<nl-2;i+=2)nm+=String.fromCharCode(dd.getUint16(o+i,true));
+    ents.push({nm,t:dir[o+66],l:dd.getUint32(o+68,true),r:dd.getUint32(o+72,true),c:dd.getUint32(o+76,true),s:dd.getUint32(o+116,true),z:dd.getUint32(o+120,true)})}
+  const root=ents[0],ms=big(root.s,root.z),mf=[];if(u32(64)){const b=big(u32(60));const d=new DataView(b.buffer,b.byteOffset,b.length);for(let i=0;i+4<=b.length;i+=4)mf.push(d.getUint32(i,true))}
+  const files={};
+  const walk=(i,pre)=>{if(i>=E||!ents[i])return;const e=ents[i];walk(e.l,pre);walk(e.r,pre);const p=pre+e.nm;
+    if(e.t===2)files[p]=e.z<u32(56)?cat(chain(e.s,mf).map(x=>ms.subarray(x*mss,(x+1)*mss)),e.z):big(e.s,e.z);
+    if(e.t===1)walk(e.c,p+"/")};
+  walk(root.c,"");return files;
+}
+async function inflateRaw(u8){
+  if(typeof DecompressionStream==="undefined")throw new Error("이 브라우저에서는 한글 파일을 읽을 수 없어요. Chrome이나 Safari 최신 버전으로 열어 주세요");
+  /* 한글 파일은 압축 데이터 뒤에 남는 바이트가 있어 브라우저가 끝에서 오류를 낸다. 그때까지 풀린 내용을 쓴다 */
+  const rd=new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate-raw")).getReader();const parts=[];let n=0;
+  try{for(;;){const r=await rd.read();if(r.done)break;parts.push(r.value);n+=r.value.length}}catch(e){if(!n)throw new Error("한글 파일 내용을 풀지 못했어요")}
+  const out=new Uint8Array(n);let k=0;parts.forEach(x=>{out.set(x,k);k+=x.length});return out;
+}
+/** 부서 보고서 .hwp → { cur:[줄], next:[줄] }. 표가 없으면 본문 전체를 cur 로 */
+async function readHwpReport(buf){
+  const f=cfbRead(new Uint8Array(buf));const fh=f.FileHeader;if(!fh)throw new Error("한글 파일 머리글이 없어요");
+  const flags=new DataView(fh.buffer,fh.byteOffset,fh.length).getUint32(36,true);
+  if(flags&2)throw new Error("암호가 걸린 한글 파일이에요. 암호를 풀고 다시 올려 주세요");
+  if(flags&4)throw new Error("배포용 한글 문서는 읽을 수 없어요. 일반 문서로 저장해 주세요");
+  const names=Object.keys(f).filter(k=>/^BodyText\/Section\d+$/.test(k)).sort((a,b)=>Number(a.slice(16))-Number(b.slice(16)));
+  const paras=[];let cell=null;const cells=[];
+  /* 문단 모양 중 '문단 번호'(1. 2. …)·'글머리표'(•)인 것: 번호는 글자로 들어 있지 않아서 직접 붙여 준다 */
+  const head=[];if(f.DocInfo){const d=flags&1?await inflateRaw(f.DocInfo):f.DocInfo;const v=new DataView(d.buffer,d.byteOffset,d.length);let o=0;
+    while(o+4<=d.length){const h=v.getUint32(o,true);let sz=h>>>20;o+=4;if(sz===4095){sz=v.getUint32(o,true);o+=4}if((h&1023)===25&&sz>=4)head.push((v.getUint32(o,true)>>>23)&3);o+=sz}}
+  let ps=0,num=0;
+  for(const k of names){
+    const d=flags&1?await inflateRaw(f[k]):f[k];const v=new DataView(d.buffer,d.byteOffset,d.length);let o=0;
+    while(o+4<=d.length){const h=v.getUint32(o,true);const tag=h&1023,lv=(h>>10)&1023;let sz=h>>>20;o+=4;if(sz===4095){sz=v.getUint32(o,true);o+=4}
+      const p=d.subarray(o,o+sz),pv=new DataView(p.buffer,p.byteOffset,p.length);o+=sz;
+      if(cell&&lv<cell.lv)cell=null; /* 표가 끝나면 칸 밖 */
+      if(tag===72&&p.length>=16){cell={col:pv.getUint16(8,true),row:pv.getUint16(10,true),lv,lines:[]};cells.push(cell);num=0;continue}
+      const to=cell?cell.lines:paras;
+      if(tag===67){let t="";for(let i=0;i+1<p.length;i+=2){const c=pv.getUint16(i,true);if(c<32){if(c===10)t+="\n";else if(c===9)t+="\t";else if(c===24||c===30||c===31)t+=" ";if([0,10,13,24,25,26,27,28,29,30,31].indexOf(c)<0)i+=14}else t+=String.fromCharCode(c)}
+        const kind=head[ps]||0;if(kind===2&&t.trim())t=(++num)+". "+t.replace(/^\s+/,"");else if(kind===3&&t.trim())t="• "+t.replace(/^\s+/,"");
+        t.split("\n").forEach(x=>to.push(x));continue}
+      if(tag===66){ps=pv.getUint16(8,true);if((pv.getUint32(0,true)&0x7fffffff)<=1)to.push("")}
+    }
+  }
+  // 부서 보고서 표: 3칸(팀 | 이번 달 | 다음 달). 둘째 줄부터의 2·3번째 칸을 모은다
+  const body=cells.filter(c=>c.row>=1&&(c.col===1||c.col===2));
+  if(body.length){const pick=col=>body.filter(c=>c.col===col).sort((a,b)=>a.row-b.row).reduce((a,c)=>a.concat(c.lines),[]);return {cur:pick(1),next:pick(2),table:true}}
+  return {cur:paras,next:[],table:false};
+}
 /* ---------- 이력 (팀 관리자 이상) ---------- */
 const histItem=x=>`<div class="hist-item"><span class="when">${esc(x.at.slice(0,10))}<br>${esc(x.at.slice(11))}</span><span class="what"><span class="hist-kind ${x.kind==="교사"||x.kind==="담임"?"t":""}">${esc(x.kind)}</span>${x.name?`<b>${esc(x.name)}</b> `:""}${esc(x.text)}<span class="by">${esc(x.by)}</span></span></div>`;
 function yearSummary(p){
@@ -1870,6 +2081,7 @@ function renderHome(){
     <button class="btn primary" id="a2hsOpen">추가하기</button><button class="x" id="a2hsHide" aria-label="이 안내 닫기">×</button></div>`;
   if(S.isAdmin){
     h+=renderAdminSummary();
+    h+=rptCard();
     // 시스템 전체 설정은 총관리자만 화면에 표시합니다. 공동관리자는 등록 메뉴만 사용합니다.
     if(!S.isCo) h+=`<details class="fold" data-fold="codes"${S.fold.codes?" open":""}><summary><h2 class="sec">팀별 관리자 번호</h2><span class="fold-sum">${Object.keys(TEAMS).length}개 부서 중 ${Object.keys(TEAMS).filter(deptLocked).length}곳 설정</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">팀 관리자(중간관리자)에게 이 번호를 주면 그 부서 전체를 관리하고, 반별 담임에게 담임 번호를 줄 수 있어요. 번호가 없는 부서는 누구나 입장할 수 있어요. 이 설정은 총관리자만 변경할 수 있어요.</p>
       <div class="card admin-list">${Object.entries(TEAMS).map(([t,x])=>{const code=S.codes[t]||"";const set=deptLocked(t);
@@ -1877,6 +2089,7 @@ function renderHome(){
           ${code?`<button class="btn" data-copy-code="${esc(code)}">복사</button>`:""}<button class="btn" data-code-gen="${t}">${set?"새 번호":"번호 만들기"}</button><button class="btn" data-code-edit="${t}">직접 입력</button>${set?`<button class="btn danger" data-code-clear="${t}">해제</button>`:""}</div>`}).join("")}</div></details>`+renderPromoAdmin();
   }
   {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
+    if(mine.length)h+=rptCard();
     if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`}
   h+=`<div style="margin-top:28px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   if(S.isAdmin){h+=renderStaff();if(!S.isCo)h+=activityCard()}
@@ -2080,6 +2293,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   if(e.target.closest("#xlsUp"))return uploadRoster();
   if(e.target.closest("#xlsExport"))return exportAll();
   if(e.target.closest("#actOpen"))return openActivityLog();
+  if(e.target.closest("#rptOpen"))return openReport();
   if(e.target.closest("#guideOpen"))return openGuide();
   const hs=e.target.closest("[data-hist]");if(hs)return openHistory(hs.dataset.hist);
   if(e.target.closest("#histAll"))return openHistoryList();
@@ -2163,7 +2377,7 @@ const API_URL="https:"+"/"+"/script.google.com/macros/s/AKfycbxAIzrJ4PjqNm4lo-1i
 const CLIENT_V=2; /* 서버(MIN_CLIENT)보다 낮으면 예전 화면으로 보고 거절해요 */
 const HAS_GS=typeof google!=="undefined"&&!!(google.script&&google.script.run);
 /* 읽기만 하는 요청은 연결이 끊기면 자동으로 두 번 더 시도해요 (저장 요청은 중복될 수 있어 다시 보내지 않아요) */
-const READ_OPS=new Set(["boot","photos","events","libList","contacts","appUrl","history","activity","gradeCodes","verifyCode","findGradeCode","verifyGradeCode","downloadFile"]);
+const READ_OPS=new Set(["boot","photos","events","libList","contacts","appUrl","history","activity","gradeCodes","verifyCode","findGradeCode","verifyGradeCode","downloadFile","rptGet","rptHwp","rptOrig"]);
 async function callFetch(op,args){
   let t;const ac=typeof AbortController!=="undefined"?new AbortController():null;const tm=ac?setTimeout(()=>ac.abort(),60000):0;
   try{const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({op,auth:AUTH(),args,cv:CLIENT_V}),redirect:"follow",signal:ac?ac.signal:undefined});
@@ -2196,7 +2410,7 @@ S.db={
 };
 let autoDate=true,loading=null;
 /* ---- 속도: 바뀐 것이 있을 때만 새로 받아요 ---- */
-const WRITE_OPS=new Set(["write","batch","setCode","changeTeamCode","saveContact","setTeamSetting","setClassCallFirst","setPersonCallFirst","setClasses","importRoster","saveEvent","deleteEvent","libUpload","libDelete","libDoc","libVis","setGradeCode"]);
+const WRITE_OPS=new Set(["write","batch","setCode","changeTeamCode","saveContact","setTeamSetting","setClassCallFirst","setPersonCallFirst","setClasses","importRoster","saveEvent","deleteEvent","libUpload","libDelete","libDoc","libVis","setGradeCode","rptSave","rptMeta","rptMail"]);
 /* 내가 쓰기 전까지 최신이었다면, 내 쓰기로 바뀐 버전은 이미 아는 것으로 쳐요 (내 저장 때문에 다시 받지 않게) */
 /* 버전은 부서·반별로 따로예요. 화면은 자기가 보는 부서·반의 버전만 물어봐요 (다른 반 출석 체크로 전체를 다시 받지 않게) */
 function noteVer(op,x){
@@ -2279,7 +2493,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014080229';
+  var BUILD = '20261014085638';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
