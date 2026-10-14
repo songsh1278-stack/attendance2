@@ -22,7 +22,7 @@
 <title>신당중앙교회 교육팀 출석부</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Myeongjo:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
-<script>/* 디자인(기본·교회) 선택을 화면이 그려지기 전에 적용 */try{if(localStorage.getItem("ya-style")==="church")document.documentElement.setAttribute("data-style","church")}catch(e){}</script>
+<script>/* 디자인(기본·교회)·배경색 선택을 화면이 그려지기 전에 적용 */try{if(localStorage.getItem("ya-style")==="church")document.documentElement.setAttribute("data-style","church");var bg=localStorage.getItem("ya-bg");if(bg)document.documentElement.setAttribute("data-bg",bg)}catch(e){}</script>
 <style>
 :root{
   --ground:#F1F5F2; --surface:#FFFFFF; --sunk:#E6ECE8; --line:#D5DED9;
@@ -378,6 +378,12 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .form label .rep-chk input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 .form .pc-rep{justify-content:space-between}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* ===== 배경색 (메인화면 맨 아래에서 고름, 밝은 화면에서만) ===== */
+@media (prefers-color-scheme: light){:root[data-bg="ivory"]:not([data-theme="dark"]){--ground:#F6F1E7}:root[data-bg="sky"]:not([data-theme="dark"]){--ground:#EAF1F8}:root[data-bg="pink"]:not([data-theme="dark"]){--ground:#F8ECEE}:root[data-bg="lilac"]:not([data-theme="dark"]){--ground:#F0ECF7}:root[data-bg="mint"]:not([data-theme="dark"]){--ground:#EEF4E6}:root[data-bg="gray"]:not([data-theme="dark"]){--ground:#F0F0EE}:root[data-bg="white"]:not([data-theme="dark"]){--ground:#FFFFFF}}
+:root[data-bg="ivory"][data-theme="light"]{--ground:#F6F1E7}:root[data-bg="sky"][data-theme="light"]{--ground:#EAF1F8}:root[data-bg="pink"][data-theme="light"]{--ground:#F8ECEE}:root[data-bg="lilac"][data-theme="light"]{--ground:#F0ECF7}:root[data-bg="mint"][data-theme="light"]{--ground:#EEF4E6}:root[data-bg="gray"][data-theme="light"]{--ground:#F0F0EE}:root[data-bg="white"][data-theme="light"]{--ground:#FFFFFF}
+.bg-pick{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:8px}
+.bg-pick button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);box-shadow:var(--shadow);cursor:pointer;font-size:9px;padding:0;white-space:nowrap;letter-spacing:-.05em;color:var(--muted)}
+.bg-pick button[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px}
 /* ===== 교회 디자인 (메인화면 맨 아래 [디자인] 버튼으로 켜고 끔. 끄면 위의 기본 디자인 그대로) ===== */
 :root[data-style="church"]{
   --ground:#F6F1E7; --surface:#FFFDF8; --sunk:#EEE6D6; --line:#E1D5BE;
@@ -2262,6 +2268,12 @@ function renderAdminSummary(){
     <div class="summary" style="margin-bottom:0"><div><div class="big num">${sum("on")}<em> / ${sum("n")}명</em></div><div class="sub num">학생 전체${sum("n")?" · "+Math.round(sum("on")/sum("n")*100)+"%":""} · 교사 ${sum("ton")} / ${sum("tn")}</div></div></div>
     <table style="margin-top:10px"><thead><tr><th>부서</th><th class="r">학생</th><th class="r">교사</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.label}</td><td class="r num">${r.on}/${r.n}</td><td class="r num">${r.ton}/${r.tn}</td></tr>`).join("")}</tbody></table></div></details>`;
 }
+/* 배경색 선택: 이 기기에만 저장. '기본'을 고르면 원래 배경으로 */
+const BG_COLORS=[["","기본",""],["ivory","상아","#F6F1E7"],["sky","하늘","#EAF1F8"],["pink","연분홍","#F8ECEE"],["lilac","연보라","#F0ECF7"],["mint","연두","#EEF4E6"],["gray","회색","#F0F0EE"],["white","흰색","#FFFFFF"]];
+const curBg=()=>document.documentElement.getAttribute("data-bg")||"";
+function setBg(k){if(k)document.documentElement.setAttribute("data-bg",k);else document.documentElement.removeAttribute("data-bg");
+  try{if(k)localStorage.setItem("ya-bg",k);else localStorage.removeItem("ya-bg")}catch(_){}render();toast(k?`배경색을 ${BG_COLORS.find(x=>x[0]===k)[1]}(으)로 바꿨어요`:"기본 배경으로 되돌렸어요")}
+const bgPicker=()=>`<div style="margin-top:12px;text-align:center"><span class="muted" style="font-size:13px">배경색</span><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-bgc="${k}" title="${n}" aria-label="배경색 ${n}" aria-pressed="${curBg()===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}</div></div>`;
 /* 디자인 선택(기본·교회풍): 이 기기에만 저장. 언제든 다시 눌러 되돌릴 수 있다 */
 const isChurchStyle=()=>document.documentElement.getAttribute("data-style")==="church";
 function toggleStyle(){const on=!isChurchStyle();if(on)document.documentElement.setAttribute("data-style","church");else document.documentElement.removeAttribute("data-style");
@@ -2295,7 +2307,7 @@ function renderHome(){
     if(mine.length)h+=rptCard();
     if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`+hrCodesCard(mine)}
   if(S.isAdmin){if(!S.isCo)h+=renderPromoAdmin();h+=renderStaff();if(!S.isCo)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
-  h+=`<div style="margin-top:28px;text-align:center"><button class="btn" id="styleToggle">디자인: ${isChurchStyle()?"교회풍 ✝ · 기본으로 되돌리기":"기본 · 교회풍으로 바꿔 보기"}</button></div>`;
+  h+=`<div style="margin-top:28px;text-align:center"><button class="btn" id="styleToggle">디자인: ${isChurchStyle()?"교회풍 ✝ · 기본으로 되돌리기":"기본 · 교회풍으로 바꿔 보기"}</button>${bgPicker()}</div>`;
   h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   return h;
 }
@@ -2474,6 +2486,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const o=e.target.closest("[data-open]");if(o){openPerson.edit=false;return openPerson(o.dataset.open)}
   const gc=e.target.closest("[data-gcode]");if(gc)return openGradeCodeEntry(gc.dataset.gcode);
   if(e.target.closest("#styleToggle"))return toggleStyle();
+  const bgc=e.target.closest("[data-bgc]");if(bgc)return setBg(bgc.dataset.bgc);
   if(e.target.closest("#toTop")){window.scrollTo({top:0,behavior:"smooth"});const v=$("#view");if(v&&v.scrollTop)v.scrollTo({top:0,behavior:"smooth"});return}
   if(e.target.closest("#goSet")){const el=document.querySelector("#view [data-set]");if(el){el.scrollIntoView({behavior:"smooth",block:"start"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1200)}return}
   if(e.target.closest("#gcManage")||e.target.closest("#gcManage2")||e.target.closest("#gcManage3"))return openHomeroomCodes();
@@ -2706,7 +2719,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014131726';
+  var BUILD = '20261014131842';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
