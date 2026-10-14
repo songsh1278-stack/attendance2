@@ -1880,7 +1880,9 @@ function goDept(t){S.book=null;if(S.view!=="dept"||S.team!==t)navPush();
   render();window.scrollTo(0,0);
   setTimeout(()=>{preloadSched()},300);
 }
-function enterDept(t){if(canEnter(t))return goDept(t);openCodeSheet(t)}
+/** 총관리자·공동관리자가 아니면서 번호로 들어간 부서들. 비어 있으면 아직 아무 부서에도 로그인하지 않은 상태 */
+const myDepts=()=>S.isAdmin?[]:Object.keys(TEAMS).filter(canEnter);
+function enterDept(t){if(canEnter(t))return goDept(t);if(myDepts().length){toast("로그인한 부서만 들어갈 수 있어요");return}openCodeSheet(t)}
 function openCodeSheet(t){
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="부서 고유번호 입력"><h3>${TEAMS[t].label}</h3>
@@ -2492,8 +2494,9 @@ function hardRefresh(){
 function renderHome(){
   const k=S.date;
   let h=(onOfficialUrl()?"":`<div class="notice" style="margin:0 0 12px"><b>예전 주소로 열려 있어요.</b> 바뀐 내용이 보이지 않으면 새 주소로 여세요.<div style="margin-top:8px"><a class="btn primary" href="${OFFICIAL_URL}" target="_top" rel="noopener">↻ 새 주소로 새로고침</a></div></div>`)
-    +`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>부서를 선택해 들어가세요.</p></div><div class="dept-grid">`;
-  for(const [t,x] of Object.entries(TEAMS)){
+    +`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>${myDepts().length?"내 부서로 들어가세요.":"부서를 선택해 들어가세요."}</p></div><div class="dept-grid">`;
+  /* 팀 관리자·담임은 번호로 들어간 부서만 보여요 (다른 부서는 이 기기 번호를 지우면 다시 보여요) */
+  for(const [t,x] of Object.entries(TEAMS).filter(([t])=>!myDepts().length||myDepts().includes(t))){
     const ps=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group!=="T");
     const on=ps.filter(p=>isOn(k,p.id)).length;const open=canEnter(t);
     h+=`<button class="dept${deptColor()?" tinted":""}" data-enter="${t}"${deptColor()?` style="--dept-bg:${deptColor()}"`:""}><span class="top"><span class="name">${x.label}</span>${!canEnter(t)?`<span class="lock">${LOCK_SVG}번호</span>`:""}</span>
@@ -2936,7 +2939,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014193303';
+  var BUILD = '20261014211038';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
