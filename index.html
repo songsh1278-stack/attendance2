@@ -355,7 +355,12 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 @media (prefers-reduced-motion:reduce){.boot-loader .spin{animation-duration:2.5s}}
 .toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:8px 14px;border-radius:99px;font-size:13px;z-index:30}
 .notice{background:var(--gold-soft);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px}
-#pform .form{grid-template-columns:1fr}
+#pform .form{grid-template-columns:minmax(0,1fr)}
+/* 창 안의 칸이 화면 폭보다 넓어지지 않게 (긴 선택지·날짜 칸이 창을 밀어내지 않게) */
+.sheet{overflow-x:hidden}
+.form>*{min-width:0}
+.form input:not([type=checkbox]):not([type=radio]):not([type=file]),.form select,.form textarea{width:100%;min-width:0;max-width:100%}
+.form .name-sex select{width:72px}
 #pform .form label.full{grid-column:auto}
 /* 휴대폰 가로 화면: 창을 가운데 넓게, 칸은 한 줄에 3개, 저장 버튼은 아래에 고정 */
 @media (orientation:landscape) and (max-height:520px){
@@ -2658,7 +2663,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014131130';
+  var BUILD = '20261014131239';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
