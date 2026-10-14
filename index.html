@@ -1435,7 +1435,9 @@ const RPT_TEAMS=["infant","toddler","youth","teen","support"];
 const rptName=t=>t==="support"?"교육지원":TEAMS[t].label;
 const canRpt=()=>S.isAdmin||Object.keys(TEAMS).some(t=>deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
 /* 접기 칸: 총관리자·공동관리자는 접힘, 팀 관리자 이하는 펼침이 기본 */
-const foldOpen=k=>S.isAdmin?!!S.fold[k]:S.fold[k]!==false;
+/* 팀 관리자 화면: 반 담임 사용 설명서·내 팀 관리자 번호·반 담임 번호는 접힌 채로 시작 */
+const isTeamMgr=()=>!S.isAdmin&&Object.keys(TEAMS).some(t=>deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
+const foldOpen=k=>S.isAdmin||(isTeamMgr()&&["guide","mycode","hrcodes"].includes(k))?!!S.fold[k]:S.fold[k]!==false;
 /* 당회보고서 제출 현황 (그달 제출한 부서 수). 1분이 지나면 메인 화면을 그릴 때 다시 받아요 */
 function rptStatLoad(){
   if(!S.rptOk||Date.now()-(S.rptStatAt||0)<60000)return;S.rptStatAt=Date.now();const ym=rptDefaultYm();
@@ -3016,7 +3018,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261015072252';
+  var BUILD = '20261015072426';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
