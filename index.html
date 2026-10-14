@@ -424,9 +424,9 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 /* 남색 머리 안의 날짜 칸·반 칩은 흰 바탕이므로 원래 글씨색 */
 :root[data-style="navy"] header.top .datebar,:root[data-style="navy"] header.top .chips{color:var(--ink)}
 :root[data-style="navy"] header.top .datebar .arrow,:root[data-style="navy"] header.top .datebar .date{border-color:rgba(255,255,255,.18)}
-:root[data-style="navy"] header.top .chip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#1B2433}
+:root[data-style="navy"] header.top .chip[aria-pressed="true"]{background:#B9A8F0;border-color:#B9A8F0;color:#1B2433} /* 선택된 학년: 연보라 */
 :root[data-style="navy"] header.top .back{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:var(--hdr-ink)}
-:root[data-style="navy"] header.top .role-badge{background:var(--gold);color:#1B2433}
+:root[data-style="navy"] header.top .role-badge{background:#B9A8F0;color:#1B2433} /* 권한 표시: 연보라 */
 :root[data-style="navy"] header.top .teams{background:rgba(255,255,255,.12);border:0}
 :root[data-style="navy"] header.top .teams button{color:rgba(255,255,255,.75)}
 :root[data-style="navy"] header.top .teams button[aria-selected="true"]{color:var(--accent)}
@@ -2806,7 +2806,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014133747';
+  var BUILD = '20261014134732';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
