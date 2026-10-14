@@ -458,7 +458,7 @@ function toast(msg){const t=document.createElement("div");t.className="toast";t.
 /* ---------- derived ---------- */
 function activePeople(group){
   return [...S.people.values()].filter(p=>teamOf(p)===S.team&&p.active!==false&&(group==="all"||!group||p.group===group))
-    .sort((a,b)=>GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||(a.order??999)-(b.order??999)||a.name.localeCompare(b.name,"ko"));
+    .sort((a,b)=>GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||a.name.localeCompare(b.name,"ko")); /* 반 안에서는 학생·교사 모두 가나다순 */
 }
 const attOf=k=>S.att.get(k)||{p:{},t:{}};
 const isOn=(k,id)=>!!(attOf(k).p||{})[id];
@@ -2614,7 +2614,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014103848';
+  var BUILD = '20261014111359';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
