@@ -271,7 +271,8 @@ details.fold>summary::after{content:"펼치기 ▾";margin-left:auto;font-size:1
 details.fold[open]>summary::after{content:"접기 ▴"}
 .seg{display:flex;background:var(--sunk);border-radius:10px;padding:3px;gap:3px;margin-top:14px}
 .seg button{flex:1;border:0;background:none;border-radius:8px;padding:7px;font-size:13px;font-weight:600;color:var(--muted)}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow),inset 0 0 0 1px var(--line)}
+:root[data-style] .seg button[aria-pressed="true"]{color:var(--accent);box-shadow:var(--shadow),inset 0 0 0 1px var(--accent)}
 
 .brand .left{display:flex;align-items:center;gap:8px;min-width:0}
 .back{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:18px;display:grid;place-items:center;flex:none}
@@ -402,28 +403,29 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
   --gold:#B08D57; --gold-soft:#F3EBDD; --teacher:#EFEAF7; --teacher-line:#D6CCE9; --new:#9A3B5C; --new-soft:#F6E3EA; --danger:#B3261E;
   --shadow:0 1px 2px rgba(20,35,60,.06),0 6px 20px rgba(20,35,60,.07);
   --display:"Gowun Batang","Nanum Myeongjo",serif;
+  --hdr:#1F3A5F; --hdr-ink:#FFFFFF;
 }
 @media (prefers-color-scheme: dark){
   :root[data-style="navy"]:not([data-theme="light"]){
     --ground:#0E1420; --surface:#162032; --sunk:#1C2940; --line:#2A3A55;
     --ink:#E6ECF5; --muted:#9AA8BE; --accent:#8FB3E6; --accent-ink:#0B1626; --accent-soft:#1E3352;
     --gold:#D6B67A; --gold-soft:#3A3122; --teacher:#231F33; --teacher-line:#3E3558; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
-    --shadow:0 1px 2px rgba(0,0,0,.35);
+    --shadow:0 1px 2px rgba(0,0,0,.35); --hdr:#15243D; --hdr-ink:#E6ECF5;
   }
 }
-:root[data-style="navy"][data-theme="dark"]{
+:root[data-style="navy"][data-theme="dark"]{--hdr:#15243D; --hdr-ink:#E6ECF5;
   --ground:#0E1420; --surface:#162032; --sunk:#1C2940; --line:#2A3A55;
   --ink:#E6ECF5; --muted:#9AA8BE; --accent:#8FB3E6; --accent-ink:#0B1626; --accent-soft:#1E3352;
   --gold:#D6B67A; --gold-soft:#3A3122; --teacher:#231F33; --teacher-line:#3E3558; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
   --shadow:0 1px 2px rgba(0,0,0,.35);
 }
-:root[data-style="navy"] header.top{background:var(--accent);border-bottom:2px solid var(--gold)}
-:root[data-style="navy"] header.top .brand,:root[data-style="navy"] header.top .brand *{color:var(--accent-ink)}
+:root[data-style="navy"] header.top{background:var(--hdr);border-bottom:2px solid var(--gold)}
+:root[data-style="navy"] header.top .brand,:root[data-style="navy"] header.top .brand *{color:var(--hdr-ink)}
 /* 남색 머리 안의 날짜 칸·반 칩은 흰 바탕이므로 원래 글씨색 */
 :root[data-style="navy"] header.top .datebar,:root[data-style="navy"] header.top .chips{color:var(--ink)}
-:root[data-style="navy"] header.top .datebar .arrow,:root[data-style="navy"] header.top .datebar .date{border-color:transparent}
+:root[data-style="navy"] header.top .datebar .arrow,:root[data-style="navy"] header.top .datebar .date{border-color:rgba(255,255,255,.18)}
 :root[data-style="navy"] header.top .chip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#1B2433}
-:root[data-style="navy"] header.top .back{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:var(--accent-ink)}
+:root[data-style="navy"] header.top .back{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:var(--hdr-ink)}
 :root[data-style="navy"] header.top .role-badge{background:var(--gold);color:#1B2433}
 :root[data-style="navy"] header.top .teams{background:rgba(255,255,255,.12);border:0}
 :root[data-style="navy"] header.top .teams button{color:rgba(255,255,255,.75)}
@@ -476,6 +478,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 :root[data-style="church"] .btn.primary{border-color:var(--gold);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
 :root[data-style="church"] nav.tabs{border-top:1px solid var(--gold)}
 :root[data-style="church"] .teams{border:1px solid var(--line)}
+:root[data-style="church"] .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 
 .rpt-paper{background:#fff;color:#111;border-radius:8px;padding:18px 14px;overflow-x:auto;margin-top:8px}
 .rpt-h1{font-weight:800;font-size:22px;text-align:center;text-decoration:underline;margin-bottom:10px}
@@ -2338,9 +2341,9 @@ const deptColors=()=>{try{return JSON.parse(localStorage.getItem("ya-deptcolor")
 const deptColorOf=t=>{const v=deptColors()[t]||"";if(!v)return "";if(v.charAt(0)==="#")return v;const hit=BG_COLORS.find(x=>x[0]===v);return hit?hit[2]:""};
 function setDeptColor(t,v){const m=deptColors();if(v)m[t]=v;else delete m[t];try{localStorage.setItem("ya-deptcolor",JSON.stringify(m))}catch(_){}
   render();{const ls=document.getElementById("lookSheet");if(ls&&ls._redraw)ls._redraw()}toast(`${TEAMS[t].short} 카드 색을 ${v?"바꿨어요":"기본으로 되돌렸어요"}`)}
-const deptColorRows=()=>`<div style="margin-top:14px;text-align:center"><span class="muted" style="font-size:13px">부서 카드 색 (메인화면)</span>${Object.keys(TEAMS).map(t=>{const cur=deptColors()[t]||"";const custom=cur.charAt(0)==="#";
+const deptColorRows=()=>`<div style="margin-top:14px;text-align:center"><span class="muted" style="font-size:13px">부서 카드 색 (메인화면) <span style="font-size:11px">· 밝은 화면에서 적용</span></span>${Object.keys(TEAMS).map(t=>{const cur=deptColors()[t]||"";const custom=cur.charAt(0)==="#";
   return `<div class="dc-row"><b>${esc(TEAMS[t].label)}</b><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-dc="${t}|${k}" title="${n}" aria-label="${esc(TEAMS[t].short)} 카드 색 ${n}" aria-pressed="${!custom&&cur===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}<label class="custom${custom?" on":""}" title="사용자 지정"><input type="color" data-dccustom="${t}" value="${custom?cur:"#f6f1e7"}"></label></div></div>`}).join("")}</div>`;
-const bgPicker=()=>`<div style="margin-top:12px;text-align:center"><span class="muted" style="font-size:13px">배경색</span><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-bgc="${k}" title="${n}" aria-label="배경색 ${n}" aria-pressed="${curBg()===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}<label class="custom${curBg()==="custom"?" on":""}" title="사용자 지정" aria-label="배경색 직접 고르기"><input type="color" data-bgcustom value="${customBg()}"></label></div><div class="muted" style="font-size:11px;margin-top:4px">맨 오른쪽 무지개 동그라미: 원하는 색 직접 고르기</div></div>`;
+const bgPicker=()=>`<div style="margin-top:12px;text-align:center"><span class="muted" style="font-size:13px">배경색 <span style="font-size:11px">(밝은 화면에서 적용)</span></span><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-bgc="${k}" title="${n}" aria-label="배경색 ${n}" aria-pressed="${curBg()===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}<label class="custom${curBg()==="custom"?" on":""}" title="사용자 지정" aria-label="배경색 직접 고르기"><input type="color" data-bgcustom value="${customBg()}"></label></div><div class="muted" style="font-size:11px;margin-top:4px">맨 오른쪽 무지개 동그라미: 원하는 색 직접 고르기</div></div>`;
 /* 디자인(기본·교회풍·네이비)과 글자 크기: 이 기기에만 저장. 언제든 '기본'·'보통'으로 되돌릴 수 있다 */
 const STYLES=[["","기본"],["church","교회풍"],["navy","네이비"]],FONT_SIZES=[["s","작게"],["","보통"],["l","크게"],["xl","아주 크게"]];
 const curAttr=a=>document.documentElement.getAttribute(a)||"";
@@ -2803,7 +2806,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014133122';
+  var BUILD = '20261014133747';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
