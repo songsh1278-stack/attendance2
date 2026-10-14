@@ -759,7 +759,7 @@ function openGradeCodeEntry(g){
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="담임 번호 입력"><h3>${TEAMS[S.team].short} ${GL[g]} 연락처</h3>
     <p class="muted" style="margin:0;font-size:14px">부서 관리자에게 받은 담임 번호를 입력하세요.</p>
-    <div class="form"><label class="full">담임 번호<input id="f-gcode" type="password" maxlength="12" autocapitalize="off" autocomplete="off" required></label></div>
+    <div class="form"><label class="full">담임 번호<input id="f-gcode" type="password" maxlength="20" autocapitalize="off" autocomplete="off" required></label></div>
     <p class="err" id="gcErr" hidden>번호가 맞지 않아요.</p>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">확인</button></div></form>`;
   document.body.appendChild(ov);const inp=ov.querySelector("#f-gcode");inp.focus();
@@ -789,12 +789,14 @@ function openGradeManage(){
     catch(err){alertBox("번호를 저장하지 못했어요",err.message)}
   });
 }
+/* 메인화면: 부서별 반 담임 번호 관리 (팀별 관리자 번호 아래) */
+const hrCodesCard=teams=>teams.length?`<h2 class="sec">반 담임 번호</h2><div class="card admin-list">${teams.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">영문+숫자 6자리 이상 · 대소문자 구분 없음</span><button class="btn" data-hrcodes="${t}">담임 번호 관리</button></div>`).join("")}</div>`:"";
 function openHomeroomCodes(){
   if(!canManageGrades())return;
   const ov=document.createElement("div");ov.className="overlay";let codes=null,editing="";
   const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="담임 권한 관리"><h3>${TEAMS[S.team].label} 담임 권한</h3>
-    <p class="muted" style="margin:0;font-size:14px">반마다 담임 번호를 만들어 담임 선생님께 알려 주세요. 번호는 <b>영문과 숫자를 모두 넣은 6자리 이상</b>(최대 12자, 대소문자 구분)이에요. 담임 번호로 들어오면 <b>자기 반만</b> 출석·달란트·명단(연락처 포함)을 관리할 수 있어요. 다른 반, 교사 명단, 연말 등반은 보이지 않아요.</p>
-    <div class="admin-list card" style="margin-top:12px">${codes?classesOf(S.team).map(([g,gl])=>{const code=codes[g]||"";const hr=hrText((S.classes.get(S.team+"_"+g)||{}).teacher);if(editing===g)return `<form class="admin-row" data-gform="${g}"><b style="min-width:56px">${gl}</b><input id="f-gc-${g}" maxlength="12" autocapitalize="off" placeholder="${gradeCodeRule(S.team)}" value="${esc(code)}" autocomplete="off" style="flex:1;min-width:110px;height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:16px;letter-spacing:.1em;background:var(--ground);color:var(--ink)"><button class="btn primary" type="submit">저장</button><button class="btn" type="button" data-gcancel>취소</button></form>`;
+    <p class="muted" style="margin:0;font-size:14px">반마다 담임 번호를 만들어 담임 선생님께 알려 주세요. 번호는 <b>영문과 숫자를 모두 넣은 6자리 이상</b>(대소문자 구분 없음)이에요. 담임 번호로 들어오면 <b>자기 반만</b> 출석·달란트·명단(연락처 포함)을 관리할 수 있어요. 다른 반, 교사 명단, 연말 등반은 보이지 않아요.</p>
+    <div class="admin-list card" style="margin-top:12px">${codes?classesOf(S.team).map(([g,gl])=>{const code=codes[g]||"";const hr=hrText((S.classes.get(S.team+"_"+g)||{}).teacher);if(editing===g)return `<form class="admin-row" data-gform="${g}"><b style="min-width:56px">${gl}</b><input id="f-gc-${g}" maxlength="20" autocapitalize="off" placeholder="${gradeCodeRule(S.team)}" value="${esc(code)}" autocomplete="off" style="flex:1;min-width:110px;height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:16px;letter-spacing:.1em;background:var(--ground);color:var(--ink)"><button class="btn primary" type="submit">저장</button><button class="btn" type="button" data-gcancel>취소</button></form>`;
       return `<div class="admin-row"><b style="min-width:56px">${gl}</b><span class="code num ${code?"":"none"}">${code?esc(code):"번호 없음"}</span>${hr?`<span class="muted" style="font-size:12px">담임 ${esc(hr)}</span>`:""}
       ${code?`<button class="btn" data-copy-c="${esc(code)}">복사</button>`:""}<button class="btn" data-ggen="${g}">${code?"새 번호":"번호 만들기"}</button><button class="btn" data-gedit="${g}">직접 입력</button>${code?`<button class="btn danger" data-gclear="${g}">해제</button>`:""}</div>`}).join(""):`<p class="muted">불러오는 중…</p>`}</div>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>닫기</button></div></div>`};
@@ -803,7 +805,7 @@ function openHomeroomCodes(){
   ov.addEventListener("submit",async e=>{
     const f=e.target.closest("[data-gform]");if(!f)return;e.preventDefault();
     const g=f.dataset.gform;const v=(ov.querySelector("#f-gc-"+g).value||"").trim();
-    if(!validGradeCode(S.team,v)){toast("담임 번호는 "+gradeCodeRule(S.team)+"이어야 해요 (최대 12자)");return}
+    if(!validGradeCode(S.team,v)){toast("담임 번호는 "+gradeCodeRule(S.team)+"이어야 해요 (대소문자 구분 없음)");return}
     try{await tracked(call("setGradeCode",S.team,g,v));codes={...codes,[g]:v};editing="";draw();toast(`${GL[g]} 담임 번호를 저장했어요`)}
     catch(err){alertBox("번호를 저장하지 못했어요",err.message)}
   });
@@ -1509,7 +1511,7 @@ function renderCheck(){
   const talent=ps.reduce((a,p)=>a+talentOf(k,p.id),0);
   let h=`<div class="summary"><div class="ring" style="--p:${pct}"><span class="num">${pct}%</span></div>
     <div><div class="big num">${on}<em> / ${stu.length}명</em></div><div class="sub num">${TEAMS[S.team].short} ${S.group==="all"?"전체":GL[S.group]} 출석${talentOn()?` · 달란트 ${talent}`:""}${tch.length?` · 교사 ${tch.filter(p=>isOn(k,p.id)).length} / ${tch.length}`:""}</div></div>
-    <div class="spacer"></div>${canManageGrades()?`<button class="btn" id="gcManage3">담임 권한</button>`:""}${S.editable&&ps.length?`<button class="btn" id="markAll">${ps.every(p=>isOn(k,p.id))?"전체 해제":"전체 출석"}</button>`:""}</div>`;
+    <div class="spacer"></div>${S.editable&&ps.length?`<button class="btn" id="markAll">${ps.every(p=>isOn(k,p.id))?"전체 해제":"전체 출석"}</button>`:""}</div>`;
   if(!S.editable)h+=`<div class="notice">보기 권한으로 열려 있어 출석을 바꿀 수 없어요. 편집 권한이 필요하면 담당자에게 요청하세요.</div>`;
   const groups=S.group==="all"?GROUPS.map(g=>g[0]):[S.group];
   for(const g of groups){
@@ -1558,7 +1560,7 @@ function renderRoster(){
     <div class="summary"><div>${(()=>{const act=all.filter(p=>p.active!==false),st=act.filter(p=>p.group!=="T").length,tc=act.length-st;
       /* 학생과 교사를 따로 세요 (교사 칩을 고르면 교사만) */
       return S.group==="T"?`<div class="big num">${tc}<em> 명 교사</em></div>`:`<div class="big num">${st}<em> 명 학생</em>${tc?`<em style="margin-left:10px">교사 </em>${tc}<em> 명</em>`:""}</div>`})()}<div class="sub">${TEAMS[S.team].short} · ${S.group==="all"?"전체":GL[S.group]} · 재적</div></div><div class="spacer"></div>
-    ${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">담임</span><span class="none" style="font-size:13px">담임 번호를 받은 선생님은 자기 반만 관리해요</span><span class="spacer"></span><button id="gcManage2">담임 권한 관리</button></div>`:""}${canManageGrades()&&deptLocked(S.team)?`<div class="homeroom" style="margin-top:4px"><span class="lbl">관리번호</span><span class="none" style="font-size:13px">내 팀 관리자 번호를 바꿔요</span><span class="spacer"></span><button data-mycode="${S.team}">번호 변경</button></div>`:""}${canManageGrades()&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div>`:""}${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
+    ${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()&&deptLocked(S.team)?`<div class="homeroom" style="margin-top:4px"><span class="lbl">관리번호</span><span class="none" style="font-size:13px">내 팀 관리자 번호를 바꿔요</span><span class="spacer"></span><button data-mycode="${S.team}">번호 변경</button></div>`:""}${canManageGrades()&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div>`:""}${canManageGrades()?`<div class="homeroom" style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
   /* 반(학년)마다 제목 줄과 인원. 영아처럼 나이가 따로 있으면 나이별 인원도 */
   const ageCnt=list=>{if(!isFlex(S.team))return "";const m=new Map();list.forEach(p=>{if(p.group==="T")return;const a=ageLabel(p)||"나이 모름";m.set(a,(m.get(a)||0)+1)});
     return [...m].sort((x,y)=>(parseInt(x[0])||99)-(parseInt(y[0])||99)).map(([a,n])=>`${a} ${n}명`).join(" · ")};
@@ -1652,7 +1654,7 @@ function openCodeSheet(t){
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="부서 고유번호 입력"><h3>${TEAMS[t].label}</h3>
     <p class="muted" style="margin:0;font-size:14px">팀 관리자 번호 또는 담임 번호를 입력하세요. 담임 번호로 들어가면 자기 반만 보여요. 팀 관리자는 먼저 메인 화면의 [팀관리자 로그인]에서 등록된 이메일로 로그인해 주세요.</p>
-    <div class="form"><label class="full">번호<input id="f-code" type="password" autocomplete="off" autocapitalize="off" maxlength="12" required></label><label class="inline full"><input type="checkbox" id="f-remember" checked>이 기기에서 번호 기억하기 <span class="muted" style="font-size:12px">(여러 사람이 쓰는 기기면 끄세요)</span></label></div>
+    <div class="form"><label class="full">번호<input id="f-code" type="password" autocomplete="off" autocapitalize="off" maxlength="20" required></label><label class="inline full"><input type="checkbox" id="f-remember" checked>이 기기에서 번호 기억하기 <span class="muted" style="font-size:12px">(여러 사람이 쓰는 기기면 끄세요)</span></label></div>
     <p class="err" id="codeErr" hidden>번호가 맞지 않아요. 다시 확인해 주세요.</p>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">들어가기</button></div></form>`;
   document.body.appendChild(ov);
@@ -1668,7 +1670,7 @@ function openCodeSheet(t){
 /* 담임 번호: 네 자리, 첫 자리는 부서마다 고정(영아 1 · 유아 2 · 유소년 3 · 중고등 4), 뒤 세 자리는 자유 */
 const GRADE_PREFIX={infant:"1",toddler:"2",youth:"3",teen:"4"};
 const gradeCodeRule=t=>"영문과 숫자를 모두 넣은 6자리 이상";
-const validGradeCode=(t,v)=>/^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{6,12}$/.test(v);
+const validGradeCode=(t,v)=>/^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{6,20}$/.test(v);
 function randomGradeCode(){
   const L="ABCDEFGHJKLMNPQRSTUVWXYZ",N="23456789",A=L+N+"abcdefghjkmnpqrstuvwxyz";
   const r=n=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]%n};
@@ -2222,11 +2224,11 @@ function renderHome(){
     if(!S.isCo) h+=`<details class="fold" data-fold="codes"${S.fold.codes?" open":""}><summary><h2 class="sec">팀별 관리자 번호</h2><span class="fold-sum">${Object.keys(TEAMS).length}개 부서 중 ${Object.keys(TEAMS).filter(deptLocked).length}곳 설정</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">팀 관리자(중간관리자)에게 이 번호를 주면 그 부서 전체를 관리하고, 반별 담임에게 담임 번호를 줄 수 있어요. 번호가 없는 부서는 누구나 입장할 수 있어요. 이 설정은 총관리자만 변경할 수 있어요.</p>
       <div class="card admin-list">${Object.entries(TEAMS).map(([t,x])=>{const code=S.codes[t]||"";const set=deptLocked(t);
         return `<div class="admin-row"><b>${x.label}</b><span class="code num ${code?"":"none"}">${code?esc(code):set?"설정됨":"번호 없음 (누구나 입장)"}</span>
-          ${code?`<button class="btn" data-copy-code="${esc(code)}">복사</button>`:""}<button class="btn" data-code-gen="${t}">${set?"새 번호":"번호 만들기"}</button><button class="btn" data-code-edit="${t}">직접 입력</button>${set?`<button class="btn danger" data-code-clear="${t}">해제</button>`:""}</div>`}).join("")}</div></details>`+renderPromoAdmin();
+          ${code?`<button class="btn" data-copy-code="${esc(code)}">복사</button>`:""}<button class="btn" data-code-gen="${t}">${set?"새 번호":"번호 만들기"}</button><button class="btn" data-code-edit="${t}">직접 입력</button>${set?`<button class="btn danger" data-code-clear="${t}">해제</button>`:""}</div>`}).join("")}</div></details>`+hrCodesCard(Object.keys(TEAMS))+renderPromoAdmin();
   }
   {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
     if(mine.length)h+=rptCard();
-    if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`}
+    if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`+hrCodesCard(mine)}
   h+=`<div style="margin-top:28px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   if(S.isAdmin){h+=renderStaff();if(!S.isCo)h+=activityCard()}
   return h;
@@ -2406,6 +2408,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const o=e.target.closest("[data-open]");if(o){openPerson.edit=false;return openPerson(o.dataset.open)}
   const gc=e.target.closest("[data-gcode]");if(gc)return openGradeCodeEntry(gc.dataset.gcode);
   if(e.target.closest("#gcManage")||e.target.closest("#gcManage2")||e.target.closest("#gcManage3"))return openHomeroomCodes();
+  const hc=e.target.closest("[data-hrcodes]");if(hc){setTeam(hc.dataset.hrcodes);return openHomeroomCodes()}
   const cc2=e.target.closest("[data-copy-c]");if(cc2){navigator.clipboard.writeText(cc2.dataset.copyC).then(()=>toast("복사했어요"),()=>toast("길게 눌러 복사하세요"));return}
   const hr=e.target.closest("[data-homeroom]");if(hr)return openHomeroom(hr.dataset.homeroom,hr.dataset.sec||"");
   const sp=e.target.closest("[data-split]");if(sp)return openSplit(sp.dataset.split);
@@ -2634,7 +2637,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014115657';
+  var BUILD = '20261014124029';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
