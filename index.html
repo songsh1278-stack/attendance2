@@ -1305,7 +1305,7 @@ function rptUpload(t,ym,setR,x){
     if(/\.hwpx$/i.test(f.name)){alertBox("한글(.hwp) 파일로 올려 주세요","한글에서 [파일 → 다른 이름으로 저장 → 파일 형식: 한글 문서(*.hwp)]로 저장한 뒤 올려 주세요.");return}
     if(f.size>10*1024*1024){alertBox("파일이 너무 커요","10MB까지 올릴 수 있어요.");return}
     let r;try{toast("한글 파일을 읽는 중…");r=await readHwpReport(await f.arrayBuffer())}catch(e){alertBox("한글 파일을 읽지 못했어요",e.message);return}
-    rptEditor(t,ym,{cur:rptTidy(r.cur),next:rptTidy(r.next),file:{name:f.name,b64:await fileToB64(f)},carry:(x||{}).carry||[],saved:!!(x||{}).saved,note:r.table?"":"보고서에서 표를 찾지 못해 본문 전체를 '보고 내용'에 넣었어요. 나눠서 옮겨 주세요."},setR);
+    rptEditor(t,ym,{cur:rptTidy(r.cur),next:rptTidy(r.next),file:{name:f.name,b64:await fileToB64(f)},carry:(x||{}).carry||[],saved:!!(x||{}).saved,carried:!!(x||{}).carried,note:r.table?"":"보고서에서 표를 찾지 못해 본문 전체를 '보고 내용'에 넣었어요. 나눠서 옮겨 주세요."},setR);
   };
   inp.click();
 }
@@ -1314,7 +1314,7 @@ function rptEditor(t,ym,d,setR){
   const m=Number(ym.slice(5,7)),nm=m%12+1,pm=Number(ymShift(ym,-1).slice(5,7));const carry=d.carry||[];
   ov.innerHTML=`<div class="sheet" role="dialog" aria-label="${esc(rptName(t))} 당회보고"><h3>${esc(rptName(t))} <span class="muted" style="font-family:var(--body);font-size:14px">${esc(ymLabel(ym))} 당회보고</span></h3>
     ${d.carried&&!d.file?`<p class="notice" style="margin-top:6px">${pm}월에 쓴 '${m}월 계획'을 ${m}월 보고 내용으로 가져왔어요. 실제로 한 일에 맞게 고친 뒤 [저장]하세요.</p>`:""}
-    ${d.file?`<p class="notice" style="margin-top:6px">올린 파일: <b>${esc(d.file.name)}</b> — 아래 내용을 확인하고 [저장]을 눌러야 제출돼요.</p>`:""}
+    ${d.file?`<p class="notice" style="margin-top:6px">올린 파일: <b>${esc(d.file.name)}</b> — 아래 내용을 확인하고 [저장]을 눌러야 제출돼요.${d.saved?` <b>이미 낸 ${m}월 보고서는 이 파일 내용으로 덮어써지고, 전에 올린 원본 파일도 이 파일로 바뀌어요.</b>`:d.carried?` ${pm}월에서 이월된 내용 대신 이 파일 내용이 들어가요.`:""}</p>`:""}
     ${d.note?`<p class="err" style="font-size:13px">${esc(d.note)}</p>`:""}
     <div class="form" style="grid-template-columns:1fr">
       <label>${m}월 보고 내용${carry.length?`<button type="button" class="btn" id="rCarry" style="align-self:flex-start;padding:2px 10px;font-size:12px;font-weight:600">${pm}월에 쓴 계획 가져오기</button>`:""}<textarea id="rCur" style="height:220px;font-size:14px;line-height:1.5" spellcheck="true">${esc(d.cur.join("\n"))}</textarea></label>
@@ -2614,7 +2614,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014101245';
+  var BUILD = '20261014102615';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
