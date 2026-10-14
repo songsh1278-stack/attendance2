@@ -151,6 +151,10 @@ button.rep-tel{cursor:pointer}
 .brand h1{font-size:clamp(17px,4.8vw,24px)}
 #brandTitle{cursor:pointer}
 #sync{padding:8px 0 8px 12px;-webkit-user-select:none;user-select:none}
+/* 총관리자 로그인: 보이지 않는 자리. "저장됨" 바로 왼쪽 빈 곳을 누르면 열린다 */
+.brand-right{position:relative}
+#adminIn{position:absolute;right:100%;top:0;bottom:0;width:44px;z-index:1;-webkit-tap-highlight-color:transparent}
+#brandTitle{position:relative;z-index:2} /* 제목 글자 위는 제목(메인으로)이 먼저 */
 nav.tabs button{font-size:11px;white-space:nowrap}
 .icon-btn{flex:none;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--muted);padding:0;text-decoration:none}
 .icon-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -542,7 +546,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 
 <div class="app">
   <header class="top">
-    <div class="brand"><div class="left"><button class="back" id="homeBtn" aria-label="메인 화면으로" hidden>‹</button><h1 id="brandTitle" title="메인 화면으로">신당중앙교회 교육팀 출석부</h1></div><span class="brand-right"><small id="sync" class="muted">불러오는 중…</small><button class="hdr-refresh" id="hdrRefresh" aria-label="새로고침 (최신 화면으로)" title="새로고침">↻</button></span></div>
+    <div class="brand"><div class="left"><button class="back" id="homeBtn" aria-label="메인 화면으로" hidden>‹</button><h1 id="brandTitle" title="메인 화면으로">신당중앙교회 교육팀 출석부</h1></div><span class="brand-right"><span id="adminIn" aria-hidden="true"></span><small id="sync" class="muted">불러오는 중…</small><button class="hdr-refresh" id="hdrRefresh" aria-label="새로고침 (최신 화면으로)" title="새로고침">↻</button></span></div>
     <div class="datebar" id="datebar">
       <button class="arrow" id="prev" aria-label="지난 주일">‹</button>
       <div class="date"><strong id="dateLabel" class="num"></strong><span id="todayTag" class="today-tag" hidden>오늘</span>
@@ -2734,8 +2738,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
     tracked(call("staffDel",sdl.dataset.staffDel)).then(l=>{S.staff=l;render();toast("삭제했어요")}).catch(err=>alertBox("삭제하지 못했어요",err.message));return}
   const mcb=e.target.closest("[data-mycode]");if(mcb)return openMyCode(mcb.dataset.mycode);
   if(e.target.closest("#teamAdminIn"))return openTeamAdminLogin();
-  if(e.target.closest("#sync")){if(S.isAdmin){toast("이미 총관리자로 로그인되어 있어요");return}return openAdminLogin()}
-  if(e.target.closest("#adminIn"))return openAdminLogin();
+    if(e.target.closest("#adminIn")){if(S.isAdmin){toast("이미 총관리자로 로그인되어 있어요");return}return openAdminLogin()}
   if(e.target.closest("#adminOut")){try{localStorage.removeItem("ya-admin");localStorage.removeItem("ya-copw")}catch(_){}S._admin="";S._copw="";load();toast("로그아웃했어요");return}
   const pu=e.target.closest("[data-promo-undo]");if(pu){e.preventDefault();return openUndoPromotion(pu.dataset.promoUndo)}
   const cEd=e.target.closest("[data-class-edit]");if(cEd)return openClassEdit(cEd.dataset.classEdit);
@@ -2911,7 +2914,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014171059';
+  var BUILD = '20261014171611';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
