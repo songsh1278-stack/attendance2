@@ -1688,6 +1688,23 @@ const recOf=(t,y,runs)=>{const live=runs.filter(x=>!x.undone);
   return {team:t,year:y,at:(live[live.length-1]||runs[runs.length-1]||{}).at||new Date().toISOString(),count:live.reduce((a,x)=>a+(x.count||0),0),undone:!live.length,runs,skip:promoSkip(t,y)}};
 /* 등반에서 뺄 학생 (그해 연말 등반 기록에 함께 저장). 유급·보류 등 */
 const promoSkip=(t,y=promoYear())=>((S.promos.get(promoKey(t,y))||{}).skip||[]).slice();
+/** 이미 등반한 학생 한 명: 되돌리고 그해 등반 기록·이력에서 지운 뒤 등반에서 뺀다 */
+function excludePromoted(t,id){
+  if(!S.db||!S.editable||!canPromote(t)){toast("등반 제외는 팀 관리자 이상만 할 수 있어요");return}
+  const y=promoYear();const m=liveRuns(promoRec(t)).flatMap(x=>x.moves||[]).find(x=>x.id===id);const p=S.people.get(id);if(!m||!p)return;
+  const back=stepFrom(m.team,m)?stepLabel(m.team,stepFrom(m.team,m)):classLabelOf(m.team,m.group);
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-label="등반에서 빼기"><h3>${esc(p.name)} 등반에서 빼기</h3>
+    <p style="margin:6px 0 0;font-size:15px"><b>${esc(back)}</b>(으)로 되돌리고, ${y}년 연말 등반 기록과 이력에서도 지워요. 이후 등반 대상에서도 빠져요.</p>
+    <div class="actions"><div class="spacer"></div><button class="btn" data-close>취소</button><button class="btn danger" id="pxGo">빼기</button></div></div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener("click",async e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    const go=e.target.closest("#pxGo");if(!go||go.disabled)return;go.disabled=true;go.textContent="처리 중…";
+    try{await tracked(call("promoExclude",promoKey(t,y),id));ov.remove();await load();toast(`${p.name} 등반을 되돌리고 뺐어요`)}
+    catch(x){go.disabled=false;go.textContent="빼기";alertBox("빼지 못했어요",x.message)}
+  });
+}
 async function togglePromoSkip(t,id){
   if(!S.db||!S.editable||!canPromote(t)){toast("등반 제외는 팀 관리자 이상만 할 수 있어요");return}
   const y=promoYear(),key=promoKey(t,y);const skip=promoSkip(t,y);const i=skip.indexOf(id);if(i<0)skip.push(id);else skip.splice(i,1);
@@ -1725,7 +1742,7 @@ function promoGroups(t,plan=planPromotion(t)){
   return [...groups.values()].map(g=>{const o=g.ids.map((id,i)=>[id,g.names[i]]).sort((a,b)=>a[1].localeCompare(b[1],"ko"));return {...g,n:o.length,ids:o.map(x=>x[0]),names:o.map(x=>x[1])}}).sort((a,b)=>b.idx-a.idx);
 }
 /* t 를 주면 이름을 눌러 등반에서 뺄 수 있다 */
-const promoMoveRow=(m,t)=>`<div class="move ${m.grad?"grad":""}"><span>${esc(m.from)}</span><span class="arrow">→</span><span class="to"${m.out&&!m.grad?' style="color:var(--accent);font-weight:600"':""}>${esc(m.to)}</span><span class="n num">${m.n}명</span>${m.names?`<span class="names">${t&&m.ids?m.names.map((n,i)=>`<button type="button" class="pname" data-pskip="${t}|${esc(m.ids[i])}" title="눌러서 등반에서 빼기">${esc(n)}</button>`).join(""):m.names.map(esc).join(", ")}</span>`:""}</div>`;
+const promoMoveRow=(m,t,attr="data-pskip")=>`<div class="move ${m.grad?"grad":""}"><span>${esc(m.from)}</span><span class="arrow">→</span><span class="to"${m.out&&!m.grad?' style="color:var(--accent);font-weight:600"':""}>${esc(m.to)}</span><span class="n num">${m.n}명</span>${m.names?`<span class="names">${t&&m.ids?m.names.map((n,i)=>`<button type="button" class="pname" ${attr}="${t}|${esc(m.ids[i])}" title="눌러서 등반에서 빼기">${esc(n)}</button>`).join(""):m.names.map(esc).join(", ")}</span>`:""}</div>`;
 const promoSkipRow=t=>{const sk=promoSkipped(t);return sk.length?`<div class="move skip"><span>등반에서 뺌</span><span class="n num">${sk.length}명</span><span class="names">${sk.map(p=>`<button type="button" class="pname off" data-pskip="${t}|${esc(p.id)}" title="눌러서 다시 넣기">${esc(p.name)} <small>${esc(stepLabel(t,stepFrom(t,p)).slice(TEAMS[t].short.length+1))}</small></button>`).join("")}</span></div>`:""};
 /* 이미 한 등반(되돌리지 않은 것)에서 올라간 학생: 등반 전 자리 → 올라간 자리 */
 /** 등반 대상(남은 사람)과 이미 등반한 학생을 엑셀로. teams: 부서 목록 */
@@ -1752,9 +1769,9 @@ function promoDoneGroups(t){
   for(const x of liveRuns(promoRec(t)))for(const m of x.moves||[]){
     const f=stepFrom(m.team,m);const nx=f?nextStep(m.team,f):null;const from=f?stepLabel(m.team,f):classLabelOf(m.team,m.group),to=nx?stepToLabel(nx):"?";const k=from+"|"+to;
     const r=g.get(k)||{from,to,grad:nx==="grad",out:nx==="grad"||(nx&&nx[0]!==t),idx:SEQ.findIndex(([a,b])=>a===m.team&&b===f),names:[]};
-    r.names.push((S.people.get(m.id)||{}).name||"(지운 사람)");g.set(k,r);
+    r.names.push((S.people.get(m.id)||{}).name||"(지운 사람)");(r.ids||(r.ids=[])).push(m.id);g.set(k,r);
   }
-  return [...g.values()].map(r=>({...r,n:r.names.length,names:r.names.sort((a,b)=>a.localeCompare(b,"ko"))})).sort((a,b)=>b.idx-a.idx);
+  return [...g.values()].map(r=>{const o=r.ids.map((id,i)=>[id,r.names[i]]).sort((a,b)=>a[1].localeCompare(b[1],"ko"));return {...r,n:o.length,ids:o.map(x=>x[0]),names:o.map(x=>x[1])}}).sort((a,b)=>b.idx-a.idx);
 }
 async function writeWithRetry(ref,body){return ref.update(body)}
 async function applyMoves(list,onProgress){
@@ -1976,7 +1993,7 @@ function renderPromoAdmin(){
         ${todo.length?`<p class="muted" style="font-size:12px;margin:8px 0 0">등반 대상 ${todo.reduce((a,m)=>a+m.n,0)}명 · 이름을 누르면 등반에서 빼요 (유급·보류 등)</p><div class="move-list">${todo.map(m=>promoMoveRow(m,t)).join("")}</div>`:`<p class="muted" style="font-size:13px;margin:8px 0 0">남은 등반 대상이 없어요.</p>`}
         ${promoSkipRow(t)?`<div class="move-list">${promoSkipRow(t)}</div>`:""}
         ${noAgeKids(t).length?`<p class="err" style="font-size:12px">나이가 없어 빠지는 ${noAgeKids(t).length}명: ${noAgeKids(t).map(p=>esc(p.name)).join(", ")}</p>`:""}
-        ${done.length?`<p class="muted" style="font-size:12px;margin:10px 0 0">${promoYear()}년 연말에 등반한 학생 ${done.reduce((a,m)=>a+m.n,0)}명</p><div class="move-list">${done.map(m=>promoMoveRow(m)).join("")}</div>`:""}
+        ${done.length?`<p class="muted" style="font-size:12px;margin:10px 0 0">${promoYear()}년 연말에 등반한 학생 ${done.reduce((a,m)=>a+m.n,0)}명 · 이름을 누르면 그 학생만 되돌리고 등반에서 빼요</p><div class="move-list">${done.map(m=>promoMoveRow(m,t,"data-pundo")).join("")}</div>`:""}
         ${todo.length||done.length||promoSkipped(t).length?`<div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn" data-promo-xlsx="${t}">${esc(TEAMS[t].short)} 명단 엑셀로 내려받기</button></div>`:""}</details>`}).join("")}</div></details>`;
 }
 /* ---------- 팀관리자 로그인 · 내 관리번호 변경 ---------- */
@@ -2398,6 +2415,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const pu=e.target.closest("[data-promo-undo]");if(pu){e.preventDefault();return openUndoPromotion(pu.dataset.promoUndo)}
   const cEd=e.target.closest("[data-class-edit]");if(cEd)return openClassEdit(cEd.dataset.classEdit);
   const cAs=e.target.closest("[data-class-assign]");if(cAs)return openClassAssign(cAs.dataset.classAssign);
+  const pd=e.target.closest("[data-pundo]");if(pd){const [t,id]=pd.dataset.pundo.split("|");return excludePromoted(t,id)}
   const ps=e.target.closest("[data-pskip]");if(ps){const [t,id]=ps.dataset.pskip.split("|");return togglePromoSkip(t,id)}
   const px=e.target.closest("[data-promo-xlsx]");if(px)return downloadPromoXlsx(px.dataset.promoXlsx==="all"?PROMO_TEAMS:[px.dataset.promoXlsx]);
   const po=e.target.closest("[data-promo]");if(po){e.preventDefault();return openPromotion(po.dataset.promo)}
@@ -2483,7 +2501,7 @@ S.db={
 };
 let autoDate=true,loading=null;
 /* ---- 속도: 바뀐 것이 있을 때만 새로 받아요 ---- */
-const WRITE_OPS=new Set(["write","batch","setCode","changeTeamCode","saveContact","setTeamSetting","setClassCallFirst","setPersonCallFirst","setClasses","importRoster","saveEvent","deleteEvent","libUpload","libDelete","libDoc","libVis","setGradeCode","rptSave","rptMeta","rptMail"]);
+const WRITE_OPS=new Set(["write","batch","setCode","changeTeamCode","saveContact","setTeamSetting","setClassCallFirst","setPersonCallFirst","setClasses","importRoster","saveEvent","deleteEvent","libUpload","libDelete","libDoc","libVis","setGradeCode","rptSave","rptMeta","rptMail","promoExclude"]);
 /* 내가 쓰기 전까지 최신이었다면, 내 쓰기로 바뀐 버전은 이미 아는 것으로 쳐요 (내 저장 때문에 다시 받지 않게) */
 /* 버전은 부서·반별로 따로예요. 화면은 자기가 보는 부서·반의 버전만 물어봐요 (다른 반 출석 체크로 전체를 다시 받지 않게) */
 function noteVer(op,x){
@@ -2566,7 +2584,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014091217';
+  var BUILD = '20261014091730';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
