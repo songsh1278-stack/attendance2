@@ -2488,6 +2488,23 @@ function renderAdminSummary(){
     <div class="summary" style="margin-bottom:0"><div><div class="big num">${sum("on")}<em> / ${sum("n")}명</em></div><div class="sub num">학생 전체${sum("n")?" · "+Math.round(sum("on")/sum("n")*100)+"%":""} · 교사 ${sum("ton")} / ${sum("tn")}</div></div></div>
     <table style="margin-top:10px"><thead><tr><th>부서</th><th class="r">학생</th><th class="r">교사</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.label}</td><td class="r num">${r.on}/${r.n}</td><td class="r num">${r.ton}/${r.tn}</td></tr>`).join("")}</tbody></table></div></details>`;
 }
+/* 팀 관리자 메인화면: 내 부서의 반별 출석 현황 (분반이 있으면 반 아래에 분반별로) */
+function renderClassSummary(t){
+  const k=S.date,d=parseKey(k);
+  const all=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false);
+  const cnt=ps=>({n:ps.length,on:ps.filter(p=>isOn(k,p.id)).length});
+  const pct=r=>r.n?Math.round(r.on/r.n*100)+"%":"-";
+  const rows=[];
+  for(const [g,l] of classesOf(t)){const ps=all.filter(p=>p.group===g);rows.push({label:esc(l),...cnt(ps)});
+    const ss=sectionsOfKey(t,g);if(ss.length)for(const x of ss)rows.push({label:"&nbsp;&nbsp;└ "+x+"반",sub:true,...cnt(ps.filter(p=>p.section===x))})}
+  const st=cnt(all.filter(p=>p.group!=="T")),tc=cnt(all.filter(p=>p.group==="T"));
+  return `<details class="fold" data-fold="cls_${t}"${S.fold["cls_"+t]!==false?" open":""} style="margin-top:12px"><summary><h2 class="sec">${TEAMS[t].label} 반별 출석 현황</h2><span class="fold-sum num">${d.getMonth()+1}월 ${d.getDate()}일 · ${st.on}/${st.n}명</span></summary><div class="card">
+    <div class="datebar" style="margin:0 0 12px"><button class="arrow" data-adate="-7" aria-label="지난 주일">‹</button>
+    <div class="date"><strong class="num">${d.getMonth()+1}월 ${d.getDate()}일 주일</strong></div>
+    <button class="arrow" data-adate="7" aria-label="다음 주일">›</button></div>
+    <div class="summary" style="margin-bottom:0"><div><div class="big num">${st.on}<em> / ${st.n}명</em></div><div class="sub num">학생 전체${st.n?" · "+pct(st):""} · 교사 ${tc.on} / ${tc.n}</div></div></div>
+    <table style="margin-top:10px"><thead><tr><th>반</th><th class="r">출석</th><th class="r">출석률</th></tr></thead><tbody>${rows.map(r=>`<tr${r.sub?' class="muted"':""}><td>${r.label}</td><td class="r num">${r.on}/${r.n}</td><td class="r num">${pct(r)}</td></tr>`).join("")}</tbody></table></div></details>`;
+}
 /* 배경색 선택: 이 기기에만 저장. '기본'을 고르면 원래 배경으로 */
 const BG_COLORS=[["","기본",""],["ivory","상아","#F6F1E7"],["sky","하늘","#EAF1F8"],["pink","연분홍","#F8ECEE"],["lilac","연보라","#F0ECF7"],["mint","연두","#EEF4E6"],["gray","회색","#F0F0EE"],["white","흰색","#FFFFFF"]];
 const curBg=()=>document.documentElement.getAttribute("data-bg")||"";
@@ -2553,6 +2570,8 @@ function renderHome(){
       <span class="stat num">${!S.ready?"불러오는 중…":open?`${((S.scope||{})[t]||{}).level==="grade"?"내 반":"재적"} ${ps.length}명 · 출석 ${on}명`:`재적 ${(S.counts||{})[t]||0}명 · 번호 입력 후 확인`}</span></button>`;
   }
   h+=`</div>`;
+  /* 팀 관리자: 부서 카드 바로 아래에 반별 출석 현황 */
+  if(!S.isAdmin&&S.ready)for(const t of Object.keys(TEAMS).filter(t=>deptLocked(t)&&canEnter(t)&&((S.scope||{})[t]||{}).level==="dept"))h+=renderClassSummary(t);
   /* 반 담임 사용 설명서: 접기 기능, 기본은 접힘 */
   h+=`<details class="fold" data-fold="guide"${foldOpen("guide")?" open":""} style="margin-top:12px"><summary><h2 class="sec">반 담임 사용 설명서</h2></summary><div class="a2hs"><svg viewBox="0 0 24 24"><path d="M5 4.5h9a3 3 0 013 3v12H8a3 3 0 01-3-3z"/><path d="M5 16.5a3 3 0 013-3h9"/><path d="M9 8h5M9 11h3"/></svg>
     <div class="tx"><b>반 담임 사용 설명서</b><span>담임 번호로 들어가 출석·메모·전화·자료실 쓰는 방법</span></div><button class="btn" id="guideOpen">보기</button></div></details>`;
@@ -2993,7 +3012,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014215906';
+  var BUILD = '20261015071713';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
