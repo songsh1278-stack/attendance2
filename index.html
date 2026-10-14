@@ -609,7 +609,7 @@ function setPersonCall(p,next){const t=teamOf(p);const cur=(S.settings||{})[t]||
 const myScope=()=>(S.scope||{})[S.team]||{level:"dept",grades:[]};
 const isHomeroom=()=>myScope().level==="grade";
 const canManageGrades=()=>S.isAdmin||(myScope().level==="dept"&&deptLocked(S.team));
-function roleLabel(){if(S.isAdmin)return S.isCo?"공동관리자":"총관리자";const sc=myScope();if(sc.level==="grade")return "담임 · "+sc.grades.map(g=>GL[g]).join(", ");return deptLocked(S.team)?"팀 관리자":""}
+function roleLabel(){if(S.isAdmin)return S.isCo?"공동관리자(수정권한)":"총관리자";if(S.isViewer)return "공동관리자(보기권한)";const sc=myScope();if(sc.level==="grade")return "담임 · "+sc.grades.map(g=>GL[g]).join(", ");return deptLocked(S.team)?"팀 관리자":""}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pad=n=>String(n).padStart(2,"0");
@@ -976,6 +976,7 @@ function openGradeManage(){
 /* 메인화면: 부서별 반 담임 번호 관리 (팀별 관리자 번호 아래) */
 const hrCodesCard=teams=>teams.length?`<details class="fold" data-fold="hrcodes"${S.fold.hrcodes?" open":""}><summary><h2 class="sec">반 담임 번호</h2><span class="fold-sum">${teams.length}개 부서 · 영문+숫자 6자리 이상</span></summary><div class="card admin-list">${teams.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">영문+숫자 6자리 이상 · 대소문자 구분 없음</span><button class="btn" data-hrcodes="${t}">담임 번호 관리</button></div>`).join("")}</div></details>`:"";
 function openHomeroomCodes(){
+  if(!S.editable){toast("보기권한 계정이라 담임 번호를 볼 수 없어요");return}
   if(!canManageGrades())return;
   const ov=document.createElement("div");ov.className="overlay";let codes=null,editing="";
   const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="담임 권한 관리"><h3>${TEAMS[S.team].label} 담임 권한</h3>
@@ -2069,7 +2070,7 @@ function runSheet(ov,armText,work){
     ov.remove();render();
   });
 }
-const canPromote=t=>S.isAdmin||(((S.scope||{})[t]||{}).level==="dept"&&deptLocked(t));
+const canPromote=t=>S.editable&&S.isAdmin||S.editable&&(((S.scope||{})[t]||{}).level==="dept"&&deptLocked(t));
 function openPromotion(t){
   if(!S.db||!S.editable)return;if(!canPromote(t)){toast("연말 등반은 팀 관리자 이상만 할 수 있어요");return}
   let plan=planPromotion(t);const y=promoYear();
@@ -2259,7 +2260,7 @@ function renderPromoAdmin(){
 function openTeamAdminLogin(){
   const ov=document.createElement("div");ov.className="overlay";
   let step=1,who="",myTeam="";
-  const err=m=>{const el=ov.querySelector("#taErr");el.textContent=m;el.hidden=false};
+  const err=m=>{const el=ov.querySelector("#taErr");el.textContent=m;el.hidden=false};let who2="";
   const draw=()=>{
     ov.innerHTML=step===1
     ?`<form class="sheet" role="dialog" aria-label="팀관리자 로그인"><h3>팀관리자 로그인</h3>
@@ -2269,7 +2270,7 @@ function openTeamAdminLogin(){
       <p class="err" id="taErr" hidden></p>
       <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">다음</button></div></form>`
     :step===3
-    ?`<form class="sheet" role="dialog" aria-label="공동관리자 로그인"><h3>공동관리자 로그인</h3>
+    ?`<form class="sheet" role="dialog" aria-label="공동관리자 로그인"><h3>${who2==="co2"?"공동관리자(보기권한)":"공동관리자(수정권한)"} 로그인</h3>
       <p class="muted" style="margin:0;font-size:14px"><b>${esc(who)}</b>님, 2단계: 개인 비밀번호를 입력하세요.</p>
       <div class="form"><label class="full">공동관리자 비밀번호<input id="f-copw" type="password" autocomplete="current-password" required></label></div>
       <p class="err" id="taErr" hidden></p>
@@ -2288,14 +2289,14 @@ function openTeamAdminLogin(){
     e.preventDefault();
     if(step===1){
       const email=ov.querySelector("#f-taem").value.trim();S.remember=!!ov.querySelector("#f-tar").checked;
-      try{const r=await call("verifyEmail",email);if(r.role==="admin"){err("총관리자 계정입니다. 홈 화면의 관리자 로그인 메뉴에서 관리자 비밀번호로 로그인하세요.");return}storeEmail(email);who=r.name||email;myTeam=r.team||"";step=r.role==="co"?3:2;draw()}catch(x){err(x.message)}
+      try{const r=await call("verifyEmail",email);if(r.role==="admin"){err("총관리자 계정입니다. 홈 화면의 관리자 로그인 메뉴에서 관리자 비밀번호로 로그인하세요.");return}storeEmail(email);who=r.name||email;myTeam=r.team||"";who2=r.role;step=r.role==="co"||r.role==="co2"?3:2;draw()}catch(x){err(x.message)}
       return;
     }
     if(step===3){
       const pw=ov.querySelector("#f-copw").value;
       try{await call("coLogin",AUTH().email,pw)}catch(x){err(x.message);return}
       S._copw=pw;if(S.remember!==false){try{localStorage.setItem("ya-copw",pw)}catch(_){}}
-      ov.remove();await load();toast("공동관리자로 로그인했어요");return;
+      ov.remove();await load();toast(who2==="co2"?"공동관리자(보기권한)로 로그인했어요. 보기만 할 수 있어요":"공동관리자(수정권한)로 로그인했어요");return;
     }
     const t=ov.querySelector("#f-tat").value,inp=ov.querySelector("#f-tac"),code=inp.value.trim();
     if(!deptLocked(t)){err("이 부서는 아직 팀 관리자 번호가 없어요. 총관리자에게 번호를 만들어 달라고 해 주세요.");return}
@@ -2502,21 +2503,21 @@ function renderHome(){
   return h;
 }
 function renderStaff(){
-  const TO=["infant","toddler","youth","teen"],oi=t=>TO.indexOf(t)<0?9:TO.indexOf(t),ord=x=>x.role==="admin"?0:x.role==="co"?1:2;const L=[...(S.staff||[])].sort((a,b)=>ord(a)-ord(b)||(ord(a)===2?oi(a.team)-oi(b.team):0)||String(a.name).localeCompare(String(b.name),"ko"));
-  const rl=x=>x.role==="admin"?"총관리자":x.role==="co"?"공동관리자":"팀 관리자";
+  const TO=["infant","toddler","youth","teen"],oi=t=>TO.indexOf(t)<0?9:TO.indexOf(t),ord=x=>x.role==="admin"?0:x.role==="co"?1:x.role==="co2"?2:3;const L=[...(S.staff||[])].sort((a,b)=>ord(a)-ord(b)||(ord(a)===3?oi(a.team)-oi(b.team):0)||String(a.name).localeCompare(String(b.name),"ko"));
+  const rl=x=>x.role==="admin"?"총관리자":x.role==="co"?"공동관리자(수정권한)":x.role==="co2"?"공동관리자(보기권한)":"팀 관리자";
   return `<details class="fold" data-fold="staff"${S.fold.staff?" open":""}><summary><h2 class="sec">팀 관리자·공동관리자 등록</h2><span class="fold-sum">${L.length}명 등록</span></summary><div class="card">
-    ${L.length?`<div class="admin-list">${L.map(x=>`<div class="admin-row"><b>${esc(x.name)}</b><span class="tag ${x.role==="admin"?"admin":x.role==="co"?"new":"role"}">${rl(x)}</span>${x.role==="team"?`<span class="tag ${x.team?"role":"new"}">${x.team&&TEAMS[x.team]?esc(TEAMS[x.team].label):"부서 미지정"}</span>`:""}<span class="code none" style="letter-spacing:0;word-break:break-all">${esc(x.email)}</span>${S.isCo&&x.role==="admin"?"":`<button class="btn" data-staff-edit="${esc(x.email)}">수정</button><button class="btn danger" data-staff-del="${esc(x.email)}">삭제</button>`}</div>`).join("")}</div>`:`<p class="muted" style="margin:0 0 10px">등록된 사람이 없어요.</p>`}
+    ${L.length?`<div class="admin-list">${L.map(x=>`<div class="admin-row"><b>${esc(x.name)}</b><span class="tag ${x.role==="admin"?"admin":x.role==="co"||x.role==="co2"?"new":"role"}">${rl(x)}</span>${x.role==="team"?`<span class="tag ${x.team?"role":"new"}">${x.team&&TEAMS[x.team]?esc(TEAMS[x.team].label):"부서 미지정"}</span>`:""}<span class="code none" style="letter-spacing:0;word-break:break-all">${esc(x.email)}</span>${S.isCo&&x.role==="admin"?"":`<button class="btn" data-staff-edit="${esc(x.email)}">수정</button><button class="btn danger" data-staff-del="${esc(x.email)}">삭제</button>`}</div>`).join("")}</div>`:`<p class="muted" style="margin:0 0 10px">등록된 사람이 없어요.</p>`}
     <form id="staffForm" class="form" style="grid-template-columns:1fr"><label>이름<input id="f-sname" maxlength="20" required autocomplete="off"></label><label>이메일<input id="f-semail" type="email" inputmode="email" autocomplete="off" required></label>
-    <label>구분<select id="f-srole"><option value="team">팀 관리자</option><option value="co">공동관리자 (출석부 운영·등록 권한)</option><option value="admin" ${S.isCo?"disabled":""}>총관리자</option></select></label>
+    <label>구분<select id="f-srole"><option value="team">팀 관리자</option><option value="co">공동관리자(수정권한) · 운영·등록</option><option value="co2">공동관리자(보기권한) · 보기만</option><option value="admin" ${S.isCo?"disabled":""}>총관리자</option></select></label>
     <label id="f-steaml">담당 부서 (이 부서로만 로그인할 수 있어요)<select id="f-steam"><option value="">부서 선택</option>${Object.entries(TEAMS).map(([t,x])=>`<option value="${t}">${x.label}</option>`).join("")}</select></label>
     <label id="f-spwl" hidden>공동관리자 비밀번호 (영문+숫자 8자 이상)<input id="f-spw" maxlength="30" autocomplete="off"></label>
     <div class="actions" style="margin-top:0"><div class="spacer"></div><button class="btn primary" type="submit">등록</button></div></form></div></details>`;
 }
-document.addEventListener("change",e=>{if(e.target.id==="f-srole"){const l=document.querySelector("#f-spwl");if(l)l.hidden=e.target.value!=="co";const tl=document.querySelector("#f-steaml");if(tl)tl.hidden=e.target.value!=="team"}});
+document.addEventListener("change",e=>{if(e.target.id==="f-srole"){const l=document.querySelector("#f-spwl");if(l)l.hidden=e.target.value!=="co"&&e.target.value!=="co2";const tl=document.querySelector("#f-steaml");if(tl)tl.hidden=e.target.value!=="team"}});
 document.addEventListener("submit",async e=>{
   if(e.target.id!=="staffForm")return;e.preventDefault();
   const f={name:$("#f-sname").value.trim(),email:$("#f-semail").value.trim(),role:$("#f-srole").value,pw:($("#f-spw").value||"").trim(),team:($("#f-steam")||{}).value||""};
-  try{const list=await tracked(call("staffAdd",f));S.staff=list;if(!AUTH().email)storeEmail(f.email);render();toast(f.role==="co"?"공동관리자를 등록했어요. 비밀번호를 본인에게 알려 주세요":f.role==="admin"?"총관리자 계정을 등록했어요. 관리자 비밀번호로 로그인합니다.":"팀 관리자 이메일을 등록했어요")}
+  try{const list=await tracked(call("staffAdd",f));S.staff=list;if(!AUTH().email)storeEmail(f.email);render();toast(f.role==="co"||f.role==="co2"?`${f.role==="co2"?"공동관리자(보기권한)":"공동관리자(수정권한)"}를 등록했어요. 비밀번호를 본인에게 알려 주세요`:f.role==="admin"?"총관리자 계정을 등록했어요. 관리자 비밀번호로 로그인합니다.":"팀 관리자 이메일을 등록했어요")}
   catch(err){alertBox("등록하지 못했어요",err.message)}
 });
 function openStaffEdit(email){
@@ -2524,14 +2525,14 @@ function openStaffEdit(email){
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="등록 정보 수정"><h3>등록 정보 수정</h3>
     <div class="form" style="grid-template-columns:1fr"><label>이름<input id="f-esn" maxlength="20" value="${esc(x.name)}" required autocomplete="off"></label><label>이메일<input id="f-ese" type="email" inputmode="email" value="${esc(x.email)}" required autocomplete="off"></label>
-    <label>구분<select id="f-esr"><option value="team" ${x.role==="team"?"selected":""}>팀 관리자</option><option value="co" ${x.role==="co"?"selected":""}>공동관리자 (출석부 운영·등록 권한)</option><option value="admin" ${x.role==="admin"?"selected":""} ${S.isCo?"disabled":""}>총관리자</option></select></label>
+    <label>구분<select id="f-esr"><option value="team" ${x.role==="team"?"selected":""}>팀 관리자</option><option value="co" ${x.role==="co"?"selected":""}>공동관리자(수정권한) · 운영·등록</option><option value="co2" ${x.role==="co2"?"selected":""}>공동관리자(보기권한) · 보기만</option><option value="admin" ${x.role==="admin"?"selected":""} ${S.isCo?"disabled":""}>총관리자</option></select></label>
     <label id="f-esteaml" ${x.role==="team"?"":"hidden"}>담당 부서 (이 부서로만 로그인할 수 있어요)<select id="f-este"><option value="">부서 선택</option>${Object.entries(TEAMS).map(([t,y])=>`<option value="${t}" ${x.team===t?"selected":""}>${y.label}</option>`).join("")}</select></label>
-    <label id="f-espwl" ${x.role==="co"?"":"hidden"}>공동관리자 비밀번호 (영문+숫자 8자 이상, 비워 두면 그대로)<input id="f-espw" maxlength="30" autocomplete="off"></label></div>
+    <label id="f-espwl" ${x.role==="co"||x.role==="co2"?"":"hidden"}>공동관리자 비밀번호 (영문+숫자 8자 이상, 비워 두면 그대로)<input id="f-espw" maxlength="30" autocomplete="off"></label></div>
     <p class="err" id="esErr" hidden></p>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
   document.body.appendChild(ov);
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
-  ov.addEventListener("change",e=>{if(e.target.id==="f-esr"){ov.querySelector("#f-espwl").hidden=e.target.value!=="co";ov.querySelector("#f-esteaml").hidden=e.target.value!=="team"}});
+  ov.addEventListener("change",e=>{if(e.target.id==="f-esr"){ov.querySelector("#f-espwl").hidden=e.target.value!=="co"&&e.target.value!=="co2";ov.querySelector("#f-esteaml").hidden=e.target.value!=="team"}});
   ov.querySelector("form").addEventListener("submit",async e=>{
     e.preventDefault();const f={name:ov.querySelector("#f-esn").value.trim(),email:ov.querySelector("#f-ese").value.trim(),role:ov.querySelector("#f-esr").value,pw:(ov.querySelector("#f-espw").value||"").trim(),team:ov.querySelector("#f-este").value||""};
     try{const list=await tracked(call("staffEdit",email,f));if(String(AUTH().email||"").toLowerCase()===email.toLowerCase())storeEmail(f.email);S.staff=list;ov.remove();render();toast("수정했어요")}
@@ -2871,7 +2872,7 @@ async function loadPhotos(){
 }
 function applyBoot(d){
   if(d.tk){S._tk=d.tk;if(S.remember!==false)try{localStorage.setItem("ya-tk",JSON.stringify(d.tk))}catch(_){}}
-  S.isAdmin=!!d.isAdmin;S.isCo=!!d.isCo;S.me=d.me||"";S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
+  S.isAdmin=!!d.isAdmin;S.isCo=!!d.isCo;S.isViewer=!!d.isViewer;S.editable=!d.readOnly;S.me=d.me||"";S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
   S.staff=d.staff||[];S.scope=d.scope||{};S.settings=d.settings||{};S.people=new Map((d.people||[]).map(p=>[p.id,p]));setTeam(S.team);
   S.att=new Map(Object.entries(d.att||{}));
   Object.keys(attBuf).forEach(k=>S.att.set(k,mergeAtt(S.att.get(k)||{date:k,p:{},t:{}},attBuf[k]))); // 아직 안 보낸 체크는 유지
@@ -2914,7 +2915,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014180402';
+  var BUILD = '20261014181548';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
