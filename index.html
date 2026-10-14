@@ -2100,23 +2100,25 @@ function openMyCode(t){
   if(!TEAMS[t]||!deptLocked(t)||!(S.isAdmin||((S.scope||{})[t]||{}).level==="dept")){toast("팀 관리자로 로그인한 뒤에 바꿀 수 있어요");return}
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="관리번호 변경"><h3>${TEAMS[t].label} 관리번호 변경</h3>
-    <p class="muted" style="margin:0;font-size:14px">팀 관리자 본인 번호를 바꿔요. 먼저 지금 쓰는 번호를 확인해요. 바꾼 뒤에는 새 번호로 들어와야 하고, 다른 기기에 저장된 예전 번호는 쓸 수 없어요. 다른 부서·담임 번호와 같으면 안 돼요.</p>
-    <div class="form"><label class="full">지금 쓰는 번호<input id="f-mc0" type="password" inputmode="numeric" autocomplete="off" maxlength="8" required></label>
+    <p class="muted" style="margin:0;font-size:14px">팀 관리자 본인 번호를 바꿔요. 바꾸는 사람의 이메일과 지금 쓰는 번호를 먼저 확인하고, 누가 바꿨는지 활동 기록에 남겨요. 바꾼 뒤에는 새 번호로 들어와야 하고, 다른 기기에 저장된 예전 번호는 쓸 수 없어요. 다른 부서·담임 번호와 같으면 안 돼요.</p>
+    <div class="form"><label class="full">바꾸는 사람 이메일 (등록된 팀 관리자)<input id="f-mce" type="email" inputmode="email" autocomplete="off" value="${esc(AUTH().email||"")}" required></label>
+    <label class="full">지금 쓰는 번호<input id="f-mc0" type="password" inputmode="numeric" autocomplete="off" maxlength="8" required></label>
     <label class="full">새 번호 (숫자 4~8자리)<input id="f-mc1" type="password" inputmode="numeric" autocomplete="off" maxlength="8" required></label>
     <label class="full">새 번호 한 번 더<input id="f-mc2" type="password" inputmode="numeric" autocomplete="off" maxlength="8" required></label></div>
     <p class="err" id="mcErr" hidden></p>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">변경</button></div></form>`;
-  document.body.appendChild(ov);const o=ov.querySelector("#f-mc0"),a=ov.querySelector("#f-mc1"),b=ov.querySelector("#f-mc2");o.focus();
+  document.body.appendChild(ov);const em=ov.querySelector("#f-mce"),o=ov.querySelector("#f-mc0"),a=ov.querySelector("#f-mc1"),b=ov.querySelector("#f-mc2");(em.value?o:em).focus();
   const err=m=>{const el=ov.querySelector("#mcErr");el.textContent=m;el.hidden=false};
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
   ov.querySelector("form").addEventListener("submit",async e=>{
-    e.preventDefault();const v=a.value.trim(),ov0=o.value.trim();
+    e.preventDefault();const v=a.value.trim(),ov0=o.value.trim(),email=em.value.trim().toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err("바꾸는 사람의 이메일을 적어 주세요");em.focus();return}
     if(!ov0){err("지금 쓰는 번호를 먼저 적어 주세요");o.focus();return}
     if(!/^[0-9]{4,8}$/.test(v)){err("번호는 숫자 4~8자리로 적어 주세요");return}
     if(v===ov0){err("지금 번호와 같아요. 다른 번호로 정해 주세요");a.select();return}
     if(v!==b.value.trim()){err("두 번호가 달라요. 다시 확인해 주세요");b.select();return}
     const btn=ov.querySelector('[type="submit"]');btn.disabled=true;
-    try{await tracked(call("changeTeamCode",t,v,ov0))}catch(x){btn.disabled=false;err(x.message);if(/지금/.test(x.message))o.select();return}
+    try{await tracked(call("changeTeamCode",t,v,{old:ov0,email}))}catch(x){btn.disabled=false;err(x.message);if(/지금/.test(x.message))o.select();else if(/이메일/.test(x.message))em.select();return}
     // 이 기기에 저장된 번호도 새 번호로 바꿔요 (안 바꾸면 다음 새로고침 때 로그아웃돼요)
     S._codes={...(S._codes||{}),[t]:v};
     try{const c=JSON.parse(localStorage.getItem("ya-codes")||"{}");if(t in c){c[t]=v;localStorage.setItem("ya-codes",JSON.stringify(c))}}catch(_){}
@@ -2642,7 +2644,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014124803';
+  var BUILD = '20261014124953';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
