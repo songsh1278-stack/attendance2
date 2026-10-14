@@ -988,7 +988,7 @@ function gcSeenFilter(L){
 }
 const gcChangedNote=teams=>{const L=gcSeenFilter(Object.entries(S.gcChanged||{}).filter(([k])=>teams.includes(k.split("_")[0]))).sort((a,b)=>String(b[1]).localeCompare(String(a[1])));
   return L.length?`<div class="notice" style="margin:0 0 10px"><b>최근 담임 번호 변경</b>${L.map(([k,at])=>{const t=k.split("_")[0],g=k.slice(t.length+1);return `<div style="margin-top:4px">${esc(TEAMS[t].label)} ${esc((groupsOf(t).find(x=>x[0]===g)||[g,g])[1])} <span class="muted num">(${esc(String(at).slice(5,7)*1+"/"+String(at).slice(8,10)*1+" "+String(at).slice(11))})</span></div>`}).join("")}<div class="muted" style="font-size:12px;margin-top:6px">담임 선생님이 직접 바꾼 번호예요. 새 번호는 [담임 번호 관리]에서 볼 수 있어요.</div></div>`:""};
-const hrCodesCard=teams=>teams.length?gcChangedNote(teams)+`<details class="fold" data-fold="hrcodes"${S.fold.hrcodes?" open":""}><summary><h2 class="sec">반 담임 번호</h2><span class="fold-sum">${teams.length}개 부서 · 영문+숫자 6자리 이상</span></summary><div class="card admin-list">${teams.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">영문+숫자 6자리 이상 · 대소문자 구분 없음</span><button class="btn" data-hrcodes="${t}">담임 번호 관리</button></div>`).join("")}</div></details>`:"";
+const hrCodesCard=teams=>teams.length?gcChangedNote(teams)+`<details class="fold" data-fold="hrcodes"${S.fold.hrcodes?" open":""}><summary><h2 class="sec">반 담임 번호</h2><span class="fold-sum">${S.isAdmin?teams.length+"개 부서 · ":""}영문+숫자 6자리 이상</span></summary><div class="card admin-list">${teams.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">영문+숫자 6자리 이상 · 대소문자 구분 없음</span><button class="btn" data-hrcodes="${t}">담임 번호 관리</button></div>`).join("")}</div></details>`:"";
 function openHomeroomCodes(){
   if(S.isCo2){toast("공동관리자2는 담임 번호를 볼 수 없어요");return}
   if(!canManageGrades())return;
@@ -2985,7 +2985,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014214139';
+  var BUILD = '20261014214400';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
