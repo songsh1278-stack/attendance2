@@ -1316,7 +1316,7 @@ function rptEditor(t,ym,d,setR){
     ${d.file?`<p class="notice" style="margin-top:6px">올린 파일: <b>${esc(d.file.name)}</b> — 아래 내용을 확인하고 [저장]을 눌러야 제출돼요.${d.saved?` <b>이미 낸 ${m}월 보고서는 이 파일 내용으로 덮어써지고, 전에 올린 원본 파일도 이 파일로 바뀌어요.</b>`:""}</p>`:""}
     ${d.note?`<p class="err" style="font-size:13px">${esc(d.note)}</p>`:""}
     <div class="form" style="grid-template-columns:1fr">
-      <label>${m}월 보고 내용${carry.length?`<button type="button" class="btn" id="rCarry" style="align-self:flex-start;padding:2px 10px;font-size:12px;font-weight:600">${pm}월에 쓴 계획 가져오기</button>`:""}<textarea id="rCur" style="height:220px;font-size:14px;line-height:1.5" spellcheck="true">${esc(d.cur.join("\n"))}</textarea></label>
+      <label>${m}월 보고 내용<textarea id="rCur" style="height:220px;font-size:14px;line-height:1.5" spellcheck="true">${esc(d.cur.join("\n"))}</textarea></label>
       <label>${nm}월 계획, 예정 사항<textarea id="rNext" style="height:220px;font-size:14px;line-height:1.5" spellcheck="true">${esc(d.next.join("\n"))}</textarea></label></div>
     <p class="muted" style="font-size:12px;margin:6px 0 0">한 줄이 문서의 한 문단이 돼요. 글꼴·글자 크기·문단 모양은 통합 문서에서 모든 부서가 같게 맞춰져요. [자동 정리]는 겹친 띄어쓰기, 괄호·쉼표 띄어쓰기, 들여쓰기, 빈 줄을 맞춰요.</p>
     <div class="actions"><button type="button" class="btn" data-close>취소</button><button class="btn" id="rTidy">자동 정리</button>${d.saved?`<button class="btn danger" id="rDel">삭제</button>`:""}<div class="spacer"></div><button class="btn primary" id="rSave">저장</button></div></div>`;
@@ -1324,7 +1324,6 @@ function rptEditor(t,ym,d,setR){
   const ta=id=>ov.querySelector(id);
   ov.addEventListener("click",async e=>{
     if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
-    if(e.target.closest("#rCarry")){const c=ta("#rCur");const cur=c.value.replace(/\s+$/,"");c.value=(cur?cur+"\n\n":"")+carry.join("\n");toast(`${pm}월에 쓴 계획을 가져왔어요`);return}
     const dl=e.target.closest("#rDel");
     if(dl&&!dl.disabled){if(!dl.dataset.armed){dl.dataset.armed="1";dl.textContent="한 번 더 누르면 삭제";return}
       dl.disabled=true;dl.textContent="삭제 중…";
@@ -2613,7 +2612,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014103224';
+  var BUILD = '20261014103300';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
