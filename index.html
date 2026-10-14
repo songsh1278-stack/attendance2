@@ -197,7 +197,7 @@ nav.tabs button{font-size:11px;white-space:nowrap}
 .roster-wrap{display:flex;flex-direction:column}
 .roster-wrap>.homeroom{order:3}
 .roster-wrap>.list{margin-bottom:12px}
-.roster-wrap>.list,.roster-wrap>.empty{order:2}
+.roster-wrap>.list,.roster-wrap>.empty,.roster-wrap>.group-h{order:2} /* 학년 제목 바로 아래에 그 학년 명단 */
 .call-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
 .call-row .k{width:52px;font-size:12px;color:var(--muted)}
 .call-row .v{flex:1;min-width:120px;font-size:17px;font-weight:700;letter-spacing:.02em;user-select:all}
@@ -2631,7 +2631,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014115032';
+  var BUILD = '20261014115351';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
