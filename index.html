@@ -196,6 +196,7 @@ nav.tabs button{font-size:11px;white-space:nowrap}
 .act-box .act-lbl.memo{color:var(--gold)}
 .roster-wrap{display:flex;flex-direction:column}
 .roster-wrap>.homeroom{order:3}
+.roster-wrap>.to-top{order:4;text-align:center;margin:18px 0 8px}
 .homeroom.flash{outline:2px solid var(--accent);outline-offset:2px;transition:outline-color .3s}
 .roster-wrap>.list{margin-bottom:12px}
 .roster-wrap>.list,.roster-wrap>.empty,.roster-wrap>.group-h{order:2} /* 학년 제목 바로 아래에 그 학년 명단 */
@@ -1576,6 +1577,7 @@ function renderRoster(){
       <span>${esc([p.birthday&&"생일 "+bdText(p),p.note].filter(Boolean).join(" · "))}</span></span></button>${p.active===false&&S.editable?`<button class="btn" data-restore="${p.id}">출석으로</button>`:""}</div>`;
   }
   h+=`</div>`;if(!ps.length)h+=`<div class="empty">${S.rosterMode==="removed"?"제적한 사람이 없어요.":S.rosterMode==="grad"?"졸업한 사람이 없어요.":"찾는 사람이 없어요."}</div>`;
+  h+=`<div class="to-top"><button class="btn" id="toTop">▲ 맨 위로</button></div>`; /* 명단 맨 아래(설정 메뉴 다음) */
   return `<div class="roster-wrap">${h}</div>`;
 }
 function yearKeys(){const y=S.date.slice(0,4);return [...S.att.keys()].filter(k=>k.startsWith(y)&&k<=S.date).sort()}
@@ -2413,6 +2415,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const ep=e.target.closest("[data-edit-person]");if(ep){openPerson.edit=true;openPerson(ep.dataset.editPerson);openPerson.edit=false;return}
   const o=e.target.closest("[data-open]");if(o){openPerson.edit=false;return openPerson(o.dataset.open)}
   const gc=e.target.closest("[data-gcode]");if(gc)return openGradeCodeEntry(gc.dataset.gcode);
+  if(e.target.closest("#toTop")){window.scrollTo({top:0,behavior:"smooth"});const v=$("#view");if(v&&v.scrollTop)v.scrollTo({top:0,behavior:"smooth"});return}
   if(e.target.closest("#goSet")){const el=document.querySelector("#view [data-set]");if(el){el.scrollIntoView({behavior:"smooth",block:"start"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1200)}return}
   if(e.target.closest("#gcManage")||e.target.closest("#gcManage2")||e.target.closest("#gcManage3"))return openHomeroomCodes();
   const hc=e.target.closest("[data-hrcodes]");if(hc){setTeam(hc.dataset.hrcodes);return openHomeroomCodes()}
@@ -2644,7 +2647,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014125032';
+  var BUILD = '20261014130804';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
