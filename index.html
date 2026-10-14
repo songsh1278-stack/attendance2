@@ -1764,6 +1764,20 @@ async function downloadPromoXlsx(teams){
   if(!todo.length&&!done.length&&!skipped.length){toast("내려받을 등반 대상이 없어요");return}
   saveWorkbook(wb,`${y}년 연말 등반 대상${teams.length===1?"_"+TEAMS[teams[0]].short:""}.xlsx`);
 }
+/** 졸업자 명단(모든 부서). 졸업 연도는 등반 기록 연도, 없으면 메모의 'OOOO년 졸업' */
+async function downloadGradXlsx(){
+  const yr=p=>Number(p.promotedYear)||Number(((p.note||"").match(/(\d{4})년 졸업/)||[])[1])||0;
+  const ps=[...S.people.values()].filter(p=>p.group!=="T"&&rosterModeOf(p)==="grad"&&PROMO_TEAMS.includes(teamOf(p)));
+  if(!ps.length){toast("졸업한 사람이 없어요");return}
+  if(!await needXLSX())return;
+  const gi=(t,g)=>(isFlex(t)?TEAMS[t].groups:classesOf(t)).findIndex(x=>x[0]===g);
+  const rows=ps.sort((a,b)=>yr(b)-yr(a)||PROMO_TEAMS.indexOf(teamOf(a))-PROMO_TEAMS.indexOf(teamOf(b))||gi(teamOf(b),b.group)-gi(teamOf(a),a.group)||a.name.localeCompare(b.name,"ko"))
+    .map(p=>{const t=teamOf(p);return [yr(p)||"",TEAMS[t].label,classLabelOf(t,p.group),p.name,p.gender||"",p.birthday||"",p.note||""]});
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([["졸업 연도","부서","졸업 때 반","이름","성별","생일","메모"],...rows]);ws["!cols"]=[9,12,10,10,5,10,30].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws,"졸업자");
+  saveWorkbook(wb,"졸업자 명단.xlsx");
+}
 function promoDoneGroups(t){
   const g=new Map();
   for(const x of liveRuns(promoRec(t)))for(const m of x.moves||[]){
@@ -1987,7 +2001,7 @@ function openClassAssign(t){
 const PROMO_TEAMS=["infant","toddler","youth","teen"];
 function renderPromoAdmin(){
   return `<details class="fold" data-fold="promo"${S.fold.promo?" open":""}><summary><h2 class="sec">연말 학년 등반</h2><span class="fold-sum">${promoYear()}년 연말 · 완료 ${PROMO_TEAMS.filter(promoDone).length}곳 / 대상 ${PROMO_TEAMS.length}곳</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">부서마다 따로 진행해요. 각 부서 명단 탭에서도 부서 관리자가 고유번호를 확인한 뒤 실행할 수 있어요. 맨 위 학년은 다음 부서로 올라가고(영아 4세→유아 5세, 유아 7세→유소년, 6학년→중고등 중1), 고3은 졸업해요.</p>
-    <div style="display:flex;justify-content:flex-end;margin:0 0 8px"><button class="btn" data-promo-xlsx="all">전체 명단 엑셀로 내려받기</button></div>
+    <div style="display:flex;justify-content:flex-end;margin:0 0 8px"><button class="btn" id="gradXlsx">졸업자 명단 엑셀로 받기</button></div>
     <div class="card admin-list">${PROMO_TEAMS.map(t=>{const todo=promoGroups(t),done=promoDone(t)?promoDoneGroups(t):[];
       return `<details class="fold promo-team" data-fold="promo-${t}"${S.fold["promo-"+t]?" open":""}><summary><b>${TEAMS[t].label}</b><span class="code none">${esc(promoStatus(t))}</span><button class="btn" data-promo="${t}">등반</button><button class="btn danger" data-promo-undo="${t}">되돌리기</button></summary>
         ${todo.length?`<p class="muted" style="font-size:12px;margin:8px 0 0">등반 대상 ${todo.reduce((a,m)=>a+m.n,0)}명 · 이름을 누르면 등반에서 빼요 (유급·보류 등)</p><div class="move-list">${todo.map(m=>promoMoveRow(m,t)).join("")}</div>`:`<p class="muted" style="font-size:13px;margin:8px 0 0">남은 등반 대상이 없어요.</p>`}
@@ -2417,7 +2431,8 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const cAs=e.target.closest("[data-class-assign]");if(cAs)return openClassAssign(cAs.dataset.classAssign);
   const pd=e.target.closest("[data-pundo]");if(pd){const [t,id]=pd.dataset.pundo.split("|");return excludePromoted(t,id)}
   const ps=e.target.closest("[data-pskip]");if(ps){const [t,id]=ps.dataset.pskip.split("|");return togglePromoSkip(t,id)}
-  const px=e.target.closest("[data-promo-xlsx]");if(px)return downloadPromoXlsx(px.dataset.promoXlsx==="all"?PROMO_TEAMS:[px.dataset.promoXlsx]);
+  if(e.target.closest("#gradXlsx"))return downloadGradXlsx();
+  const px=e.target.closest("[data-promo-xlsx]");if(px)return downloadPromoXlsx([px.dataset.promoXlsx]);
   const po=e.target.closest("[data-promo]");if(po){e.preventDefault();return openPromotion(po.dataset.promo)}
   const en=e.target.closest("[data-enter]");if(en)return enterDept(en.dataset.enter);
   if(e.target.closest("#homeBtn")){S.view="home";render();window.scrollTo(0,0);return}
@@ -2584,7 +2599,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014091730';
+  var BUILD = '20261014093547';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
