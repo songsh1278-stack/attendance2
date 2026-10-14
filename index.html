@@ -22,7 +22,7 @@
 <title>신당중앙교회 교육팀 출석부</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Jua&family=Do+Hyeon&family=Nanum+Myeongjo:wght@700;800&family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
-<script>/* 디자인·배경색·글자 크기 선택을 화면이 그려지기 전에 적용 */try{var de=document.documentElement,st=localStorage.getItem("ya-style")||"church",bg=localStorage.getItem("ya-bg"),fs=localStorage.getItem("ya-fs");if(st==="church"||st==="navy"||st==="sunset")de.setAttribute("data-style",st);if(bg&&bg.charAt(0)==="#"){de.setAttribute("data-bg","custom");de.style.setProperty("--custom-bg",bg)}else if(bg)de.setAttribute("data-bg",bg);if(fs)de.setAttribute("data-fs",fs);var bc={church:"#6E1F2E",navy:"#1F3A5F",sunset:"#E8553F"}[st]||"#18856B",tm=document.querySelector('meta[name="theme-color"]');if(tm&&!(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches))tm.setAttribute("content",bc)}catch(e){document.documentElement.setAttribute("data-style","church")}</script>
+<script>/* 디자인·배경색·글자 크기 선택을 화면이 그려지기 전에 적용 */try{var de=document.documentElement,st=localStorage.getItem("ya-style")||"church",bg=localStorage.getItem("ya-bg"),fs=localStorage.getItem("ya-fs");if(st==="church"||st==="navy"||st==="sunset")de.setAttribute("data-style",st);if(bg&&bg.charAt(0)==="#"){de.setAttribute("data-bg","custom");de.style.setProperty("--custom-bg",bg)}else if(bg)de.setAttribute("data-bg",bg);if(fs)de.setAttribute("data-fs",fs);var bc={church:"#6E1F2E",navy:"#1F3A5F",sunset:"#E8553F"}[st]||"#18856B";if(st==="church"&&bg)bc=bg.charAt(0)==="#"?bg:({ivory:"#F6F1E7",sky:"#EAF1F8",pink:"#F8ECEE",lilac:"#F0ECF7",mint:"#EEF4E6",gray:"#F0F0EE",white:"#FFFFFF"}[bg]||bc);var tm=document.querySelector('meta[name="theme-color"]');if(tm&&!(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches))tm.setAttribute("content",bc)}catch(e){document.documentElement.setAttribute("data-style","church")}</script>
 <style>
 :root{
   --ground:#F1F5F2; --surface:#FFFFFF; --sunk:#E6ECE8; --line:#D5DED9;
@@ -2512,7 +2512,7 @@ const customBg=()=>document.documentElement.style.getPropertyValue("--custom-bg"
 /* k: 정해 둔 색 이름, '#rrggbb'(사용자 지정), ''(기본) */
 function setBg(k){const de=document.documentElement;const custom=/^#[0-9a-f]{6}$/i.test(k||"");
   if(custom){de.setAttribute("data-bg","custom");de.style.setProperty("--custom-bg",k)}else{de.style.removeProperty("--custom-bg");if(k)de.setAttribute("data-bg",k);else de.removeAttribute("data-bg")}
-  try{if(k)localStorage.setItem("ya-bg",k);else localStorage.removeItem("ya-bg")}catch(_){}render();{const ls=document.getElementById("lookSheet");if(ls&&ls._redraw)ls._redraw()}toast(custom?"배경색을 직접 고른 색으로 바꿨어요":k?`배경색을 ${BG_COLORS.find(x=>x[0]===k)[1]}(으)로 바꿨어요`:"기본 배경으로 되돌렸어요")}
+  try{if(k)localStorage.setItem("ya-bg",k);else localStorage.removeItem("ya-bg")}catch(_){}syncBar();render();{const ls=document.getElementById("lookSheet");if(ls&&ls._redraw)ls._redraw()}toast(custom?"배경색을 직접 고른 색으로 바꿨어요":k?`배경색을 ${BG_COLORS.find(x=>x[0]===k)[1]}(으)로 바꿨어요`:"기본 배경으로 되돌렸어요")}
 /* 메인화면 부서 카드 색: 모든 부서 카드에 한 색으로, 이 기기에만 저장 ('ivory' | '#rrggbb' | 없음=기본) */
 const deptColorKey=()=>{try{const v=localStorage.getItem("ya-deptcard");if(v!==null)return v;localStorage.removeItem("ya-deptcolor")}catch(_){}return ""};
 const deptColor=()=>{const v=deptColorKey();if(!v)return "";if(v.charAt(0)==="#")return v;const hit=BG_COLORS.find(x=>x[0]===v);return hit?hit[2]:""};
@@ -2526,7 +2526,8 @@ const bgPicker=()=>`<div style="margin-top:12px;text-align:center"><span class="
 const BAR_COLORS={"":"#18856B",church:"#6E1F2E",navy:"#1F3A5F",sunset:"#E8553F"};
 function syncBar(){const de=document.documentElement,th=de.getAttribute("data-theme");
   const dark=th==="dark"||(th!=="light"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);
-  const c=dark?(getComputedStyle(de).getPropertyValue("--ground").trim()||"#0F1614"):(BAR_COLORS[de.getAttribute("data-style")||""]||BAR_COLORS[""]);
+  const st=de.getAttribute("data-style")||"",bgOn=st==="church"&&de.hasAttribute("data-bg"); /* 교회 디자인은 배경색을 고르면 맨 위 막대도 그 색 */
+  const c=dark||bgOn?(getComputedStyle(de).getPropertyValue("--ground").trim()||(dark?"#0F1614":BAR_COLORS[st])):(BAR_COLORS[st]||BAR_COLORS[""]);
   let m=document.querySelector('meta[name="theme-color"]');if(!m){m=document.createElement("meta");m.name="theme-color";document.head.appendChild(m)}m.setAttribute("content",c)}
 syncBar();try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",syncBar)}catch(_){}
 const STYLES=[["church","교회"],["","초록"],["navy","네이비"],["sunset","노을"]],FONT_SIZES=[["s","작게"],["","보통"],["l","크게"],["xl","아주 크게"]];
@@ -3012,7 +3013,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261015071713';
+  var BUILD = '20261015071941';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
