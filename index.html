@@ -1196,7 +1196,7 @@ function renderLibrary(){
   if(L.error)return `<div class="notice">${esc(L.error)}</div>`;
   let h=`<h2 class="sec">${esc(TEAMS[S.team].label)} 자료실</h2><p class="muted" style="font-size:13px;margin:-4px 0 10px">일정과 상관없이 부서에서 함께 쓰는 파일이에요. 담임 선생님도 올리고 지울 수 있고, [보내기]로 메일로 전할 수 있어요.${L.admin?" 엑셀·워드·파워포인트·텍스트·CSV 파일은 [온라인 작성]을 누르면 내려받지 않고 구글 시트·문서·슬라이드로 열어 고칠 수 있고, 고친 내용은 미리보기·내려받기·메일에 바로 반영돼요(엑셀 매크로는 작동하지 않아요). 작성본 링크는 밖으로 알리지 마세요.":""}</p>`;
   if(L.canEdit)h+=`<div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">${L.admin?`<select id="f-lvis" aria-label="공개 범위" style="height:38px;border:1px solid var(--line);border-radius:10px;background:var(--ground);padding:0 8px;color:var(--ink)"><option value="all">전체 보기</option><option value="admin">관리자만 보기</option></select>`:""}<button class="btn primary" id="libAdd">+ 파일 올리기 (10MB까지)</button>${L.admin?`<span class="muted" style="font-size:12px;flex-basis:100%">전체 보기: 담임도 볼 수 있어요 · 관리자만 보기: 팀 관리자와 총관리자만</span>`:""}</div>`;
-  h+=L.files.length?`<div class="card" style="padding:4px 12px">${L.files.map(f=>`<div class="file-row"><span class="nm">${f.vis==="admin"?`<span class="vis-badge">관리자만 보기</span>`:""}${esc(f.name)}<br><span class="muted" style="font-size:12px">${f.size?Math.max(1,Math.round(f.size/1024))+"KB · ":""}${esc(f.updated||"")}${f.by?" · "+esc(f.by):""}${f.doc?" · 작성본 내용이 자동 반영돼요":""}</span></span><button class="btn primary" data-lview="${f.id}">미리보기</button><button class="btn" data-ldl="${f.id}">내려받기</button><button class="btn" data-lsend="${f.id}">보내기</button>${L.admin&&DOC_EXT.test(f.name)?(f.doc?`<a class="btn primary" href="${esc(f.doc.url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">열기/수정</a>`:`<button class="btn" data-ldoc="${f.id}">온라인 작성</button>`):""}${L.admin?`<button class="btn" data-lvis="${f.id}" data-v="${f.vis==="admin"?"all":"admin"}">${f.vis==="admin"?"전체 공개로":"관리자만 보기로"}</button>`:""}<button class="btn danger" data-ldel="${f.id}">삭제</button></div>`).join("")}</div>`
+  h+=L.files.length?`<div class="card" style="padding:4px 12px">${L.files.map(f=>`<div class="file-row"><span class="nm">${f.vis==="admin"?`<span class="vis-badge">관리자만 보기</span>`:""}${esc(f.name)}<br><span class="muted" style="font-size:12px">${f.size?Math.max(1,Math.round(f.size/1024))+"KB · ":""}${esc(f.updated||"")}${f.by?" · "+esc(f.by):""}${f.doc?" · 작성본 내용이 자동 반영돼요":""}</span></span><button class="btn primary" data-lview="${f.id}">미리보기</button><button class="btn" data-ldl="${f.id}">내려받기</button>${L.admin?`<button class="btn" data-lsend="${f.id}">보내기</button>`:""}${L.admin&&DOC_EXT.test(f.name)?(f.doc?`<a class="btn primary" href="${esc(f.doc.url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">열기/수정</a>`:`<button class="btn" data-ldoc="${f.id}">온라인 작성</button>`):""}${L.admin?`<button class="btn" data-lvis="${f.id}" data-v="${f.vis==="admin"?"all":"admin"}">${f.vis==="admin"?"전체 공개로":"관리자만 보기로"}</button>`:""}${L.admin||f.mine?`<button class="btn danger" data-ldel="${f.id}">삭제</button>`:""}</div>`).join("")}</div>`
     :`<div class="empty">아직 올린 파일이 없어요. 위에서 파일을 올려 보세요.</div>`;
   return h;
 }
@@ -2914,7 +2914,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014171611';
+  var BUILD = '20261014175150';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
