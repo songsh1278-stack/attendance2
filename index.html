@@ -974,7 +974,7 @@ function openGradeManage(){
   });
 }
 /* 메인화면: 부서별 반 담임 번호 관리 (팀별 관리자 번호 아래) */
-const hrCodesCard=teams=>teams.length?`<details class="fold" data-fold="hrcodes"${S.fold.hrcodes?" open":""}><summary><h2 class="sec">반 담임 번호</h2><span class="fold-sum">${teams.length}개 부서 · 영문+숫자 6자리 이상</span></summary><div class="card admin-list">${teams.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">영문+숫자 6자리 이상 · 대소문자 구분 없음</span><button class="btn" data-hrcodes="${t}">담임 번호 관리</button></div>`).join("")}</div></details>`:"";
+const hrCodesCard=teams=>teams.length?`<details class="fold" data-fold="hrcodes"${(S.isAdmin?S.fold.hrcodes:S.fold.hrcodes!==false)?" open":""}><summary><h2 class="sec">반 담임 번호</h2><span class="fold-sum">${teams.length}개 부서 · 영문+숫자 6자리 이상</span></summary><div class="card admin-list">${teams.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">영문+숫자 6자리 이상 · 대소문자 구분 없음</span><button class="btn" data-hrcodes="${t}">담임 번호 관리</button></div>`).join("")}</div></details>`:"";
 function openHomeroomCodes(){
   if(S.isCo2){toast("공동관리자2는 담임 번호를 볼 수 없어요");return}
   if(!canManageGrades())return;
@@ -2939,7 +2939,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014211038';
+  var BUILD = '20261014211410';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
