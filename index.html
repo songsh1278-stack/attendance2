@@ -1437,6 +1437,8 @@ const canRpt=()=>S.isAdmin||Object.keys(TEAMS).some(t=>deptLocked(t)&&((S.scope|
 /* 접기 칸: 총관리자·공동관리자는 접힘, 팀 관리자 이하는 펼침이 기본 */
 /* 팀 관리자 화면: 반 담임 사용 설명서·내 팀 관리자 번호·반 담임 번호는 접힌 채로 시작 */
 const isTeamMgr=()=>!S.isAdmin&&Object.keys(TEAMS).some(t=>deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
+/* 담임 번호로만 들어온 사람: 메인화면 아래 버튼이 [로그아웃] */
+const isHrOnly=()=>!S.isAdmin&&!isTeamMgr()&&Object.keys(TEAMS).some(t=>((S.scope||{})[t]||{}).level==="grade");
 const foldOpen=k=>S.isAdmin||(isTeamMgr()&&["guide","mycode","hrcodes"].includes(k))?!!S.fold[k]:S.fold[k]!==false;
 /* 당회보고서 제출 현황 (그달 제출한 부서 수). 1분이 지나면 메인 화면을 그릴 때 다시 받아요 */
 function rptStatLoad(){
@@ -1872,7 +1874,7 @@ const canEnter=t=>!!(S.access||{})[t];
 function storedCodes(){try{return JSON.parse(localStorage.getItem("ya-codes")||"{}")}catch(_){return S._codes||{}}}
 function storeCode(t,code){S._codes={...(S._codes||{}),[t]:code};if(S.remember===false)return;const c=storedCodes();c[t]=code;try{localStorage.setItem("ya-codes",JSON.stringify(c))}catch(_){}}
 function hasStored(){try{return !!(localStorage.getItem("ya-admin")||Object.keys(JSON.parse(localStorage.getItem("ya-codes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-gcodes")||"{}")).length)}catch(_){return false}}
-function forgetDevice(){try{["ya-admin","ya-email","ya-copw","ya-codes","ya-gcodes","ya-tk","ya-photos",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._email="";S._copw="";S._codes={};S._gcodes={};S._tk={};S.photos=new Map();S.view="home";S.book=null;load();toast("이 기기에 기억된 번호와 로그인을 지웠어요")}
+function forgetDevice(msg){try{["ya-admin","ya-email","ya-copw","ya-codes","ya-gcodes","ya-tk","ya-photos",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._email="";S._copw="";S._codes={};S._gcodes={};S._tk={};S.photos=new Map();S.view="home";S.book=null;load();toast(msg||"이 기기에 기억된 번호와 로그인을 지웠어요")}
 /* ---------- 휴대폰 뒤로 버튼: 앱이 꺼지지 않고 이전 화면으로 ----------
  * 화면을 옮길 때(부서 들어가기·탭 바꾸기) 이전 화면을 NAV 에 쌓고 브라우저 기록을 하나 더한다.
  * 창(.overlay)이 열리면 기록을 하나 더해서, 뒤로 버튼은 창부터 닫는다. 버튼으로 창을 닫으면 그 기록을 되돌려 놓는다.
@@ -2601,7 +2603,7 @@ function renderHome(){
     if(hr.length)h+=`<h2 class="sec">내 담임 번호</h2><div class="card admin-list">${hr.map(([t,g])=>`<div class="admin-row"><b>${TEAMS[t].label} ${esc((groupsOf(t).find(x=>x[0]===g)||[g,g])[1])}</b><span class="code none">담임으로 로그인됨</span><button class="btn" data-mygcode="${t}|${esc(g)}">번호 변경</button></div>`).join("")}</div>`}
   if(S.isAdmin){h+=renderPromoAdmin();if(!S.isCo2)h+=renderStaff();if(!S.isCo)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
   h+=lookPanel(); /* 새로고침은 맨 위 제목 줄 오른쪽 ↻ 버튼 */
-  h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
+  h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:isHrOnly()?`<button class="btn" id="hrOut">로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   return h;
 }
 function renderStaff(){
@@ -2842,6 +2844,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const mcb=e.target.closest("[data-mycode]");if(mcb)return openMyCode(mcb.dataset.mycode);
   const mgb=e.target.closest("[data-mygcode]");if(mgb){const [t,g]=mgb.dataset.mygcode.split("|");return openMyGradeCode(t,g)}
   if(e.target.closest("#teamAdminIn"))return openTeamAdminLogin();
+  if(e.target.closest("#hrOut"))return forgetDevice("로그아웃했어요");
     if(e.target.closest("#adminIn")){if(S.isAdmin){toast("이미 총관리자로 로그인되어 있어요");return}return openAdminLogin()}
   if(e.target.closest("#adminOut")){try{localStorage.removeItem("ya-admin");localStorage.removeItem("ya-copw")}catch(_){}S._admin="";S._copw="";load();toast("로그아웃했어요");return}
   const pu=e.target.closest("[data-promo-undo]");if(pu){e.preventDefault();return openUndoPromotion(pu.dataset.promoUndo)}
@@ -3018,7 +3021,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261015072426';
+  var BUILD = '20261015074111';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
