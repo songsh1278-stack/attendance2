@@ -419,7 +419,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
   --gold:#D6B67A; --gold-soft:#3A3122; --teacher:#231F33; --teacher-line:#3E3558; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
   --shadow:0 1px 2px rgba(0,0,0,.35);
 }
-:root[data-style="navy"] header.top{background:var(--hdr);border-bottom:2px solid var(--gold)}
+:root[data-style="navy"] header.top{background:var(--hdr);border-bottom:2px solid #B9A8F0} /* 머리 아랫줄: 연보라 */
 :root[data-style="navy"] header.top .brand,:root[data-style="navy"] header.top .brand *{color:var(--hdr-ink)}
 /* 남색 머리 안의 날짜 칸·반 칩은 흰 바탕이므로 원래 글씨색 */
 :root[data-style="navy"] header.top .datebar,:root[data-style="navy"] header.top .chips{color:var(--ink)}
@@ -431,7 +431,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 :root[data-style="navy"] header.top .teams button{color:rgba(255,255,255,.75)}
 :root[data-style="navy"] header.top .teams button[aria-selected="true"]{color:var(--accent)}
 :root[data-style="navy"] .brand h1{font-weight:700;letter-spacing:.02em}
-:root[data-style="navy"] h2.sec{font-weight:700;padding-left:10px;border-left:3px solid var(--gold);line-height:1.2}
+:root[data-style="navy"] h2.sec{font-weight:700;padding-left:10px;border-left:3px solid #9B87E6;line-height:1.2} /* 섹션 제목 세로줄: 보라 */
 :root[data-style="navy"] .sheet h3,:root[data-style="navy"] .group-h{font-weight:700}
 :root[data-style="navy"] .dept{border:0;box-shadow:var(--shadow);border-bottom:3px solid var(--accent)}
 :root[data-style="navy"] .card{border-color:transparent;box-shadow:var(--shadow)}
@@ -2806,7 +2806,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014134732';
+  var BUILD = '20261014134928';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
