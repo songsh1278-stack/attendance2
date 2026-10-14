@@ -21,8 +21,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>신당중앙교회 교육팀 출석부</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Myeongjo:wght@700;800&family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
-<script>/* 디자인·배경색·글자 크기 선택을 화면이 그려지기 전에 적용 */try{var de=document.documentElement,st=localStorage.getItem("ya-style")||"church",bg=localStorage.getItem("ya-bg"),fs=localStorage.getItem("ya-fs");if(st==="church"||st==="navy")de.setAttribute("data-style",st);if(bg&&bg.charAt(0)==="#"){de.setAttribute("data-bg","custom");de.style.setProperty("--custom-bg",bg)}else if(bg)de.setAttribute("data-bg",bg);if(fs)de.setAttribute("data-fs",fs)}catch(e){document.documentElement.setAttribute("data-style","church")}</script>
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Jua&family=Do+Hyeon&family=Nanum+Myeongjo:wght@700;800&family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<script>/* 디자인·배경색·글자 크기 선택을 화면이 그려지기 전에 적용 */try{var de=document.documentElement,st=localStorage.getItem("ya-style")||"church",bg=localStorage.getItem("ya-bg"),fs=localStorage.getItem("ya-fs");if(st==="church"||st==="navy"||st==="sunset")de.setAttribute("data-style",st);if(bg&&bg.charAt(0)==="#"){de.setAttribute("data-bg","custom");de.style.setProperty("--custom-bg",bg)}else if(bg)de.setAttribute("data-bg",bg);if(fs)de.setAttribute("data-fs",fs)}catch(e){document.documentElement.setAttribute("data-style","church")}</script>
 <style>
 :root{
   --ground:#F1F5F2; --surface:#FFFFFF; --sunk:#E6ECE8; --line:#D5DED9;
@@ -281,7 +281,7 @@ details.fold[open]>summary::after{content:"접기 ▴"}
 .brand small{flex:none;white-space:nowrap}
 .brand-right{display:flex;align-items:center;gap:8px;flex:none}
 .hdr-refresh{width:32px;height:32px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:17px;line-height:1;display:grid;place-items:center;padding:0;flex:none}
-:root[data-style="navy"] header.top .hdr-refresh{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:var(--hdr-ink)}
+:root[data-style="navy"] header.top .hdr-refresh,:root[data-style="sunset"] header.top .hdr-refresh{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:var(--hdr-ink)}
 .brand small.tight{font-size:10px;max-width:64px;overflow:hidden;text-overflow:ellipsis}
 .back{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:18px;display:grid;place-items:center;flex:none}
 .home-intro{margin-block:18px 12px}
@@ -440,6 +440,49 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 :root[data-style="navy"] .dept{border:0;box-shadow:var(--shadow);border-bottom:3px solid var(--accent)}
 :root[data-style="navy"] .card{border-color:transparent;box-shadow:var(--shadow)}
 :root[data-style="navy"] nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:700}
+/* ===== 노을 디자인 (산호·주황 그라데이션 머리, 둥근 카드, 굵은 제목) ===== */
+:root[data-style="sunset"]{
+  --ground:#FFF4EE; --surface:#FFFFFF; --sunk:#FBE6DC; --line:#F3D6C8;
+  --ink:#3A1F1A; --muted:#7A5248; --accent:#D9483B; --accent-ink:#FFFFFF; --accent-soft:#FDE1D9;
+  --gold:#E08A1E; --gold-ink:#8F520A; --gold-soft:#FDEBD2; --teacher:#F4EAFB; --teacher-line:#DECBF0; --new:#B03466; --new-soft:#FBE1EC; --danger:#B3261E;
+  --shadow:0 2px 4px rgba(150,60,40,.06),0 10px 24px rgba(150,60,40,.09);
+  --display:"Do Hyeon","Jua",system-ui,sans-serif;
+  --hdr:linear-gradient(120deg,#E8553F,#F39A4B); --hdr-ink:#FFFFFF;
+}
+@media (prefers-color-scheme: dark){
+  :root[data-style="sunset"]:not([data-theme="light"]){
+    --ground:#1A1113; --surface:#251A1D; --sunk:#30222A; --line:#3F2C30;
+    --ink:#F7E6DF; --muted:#BFA096; --accent:#FF8A6B; --accent-ink:#2A0E08; --accent-soft:#45231D;
+    --gold:#F5B25C; --gold-ink:#F5B25C; --gold-soft:#3E2B16; --teacher:#2A2034; --teacher-line:#45365A; --new:#F08FB4; --new-soft:#3D1D29; --danger:#F2867E;
+    --shadow:0 1px 2px rgba(0,0,0,.4); --hdr:linear-gradient(120deg,#7A2A22,#8A4A1E); --hdr-ink:#FFEDE5;
+  }
+}
+:root[data-style="sunset"][data-theme="dark"]{--hdr:linear-gradient(120deg,#7A2A22,#8A4A1E); --hdr-ink:#FFEDE5;
+  --ground:#1A1113; --surface:#251A1D; --sunk:#30222A; --line:#3F2C30;
+  --ink:#F7E6DF; --muted:#BFA096; --accent:#FF8A6B; --accent-ink:#2A0E08; --accent-soft:#45231D;
+  --gold:#F5B25C; --gold-ink:#F5B25C; --gold-soft:#3E2B16; --teacher:#2A2034; --teacher-line:#45365A; --new:#F08FB4; --new-soft:#3D1D29; --danger:#F2867E;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+:root[data-style="sunset"] header.top{background:var(--hdr);border-bottom:0;border-radius:0 0 22px 22px;box-shadow:var(--shadow)}
+:root[data-style="sunset"] header.top .brand,:root[data-style="sunset"] header.top .brand *{color:var(--hdr-ink)}
+:root[data-style="sunset"] header.top .datebar,:root[data-style="sunset"] header.top .chips{color:var(--ink)}
+:root[data-style="sunset"] header.top .datebar .arrow,:root[data-style="sunset"] header.top .datebar .date{border-color:rgba(255,255,255,.3)}
+:root[data-style="sunset"] header.top .chip[aria-pressed="true"]{background:#FFFFFF;border-color:#FFFFFF;color:#C23A2E}
+:root[data-style="sunset"] header.top .back{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:var(--hdr-ink)}
+:root[data-style="sunset"] header.top .role-badge{background:rgba(255,255,255,.92);color:#C23A2E}
+:root[data-style="sunset"] header.top .teams{background:rgba(255,255,255,.18);border:0}
+:root[data-style="sunset"] header.top .teams button{color:rgba(255,255,255,.85)}
+:root[data-style="sunset"] header.top .teams button[aria-selected="true"]{color:var(--accent)}
+:root[data-style="sunset"] h2.sec{display:flex;align-items:center;gap:8px}
+:root[data-style="sunset"] h2.sec::before{content:"";flex:none;width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#E8553F,#F39A4B)}
+:root[data-style="sunset"] .card{border:0;border-radius:20px;box-shadow:var(--shadow)}
+:root[data-style="sunset"] .dept{border:0;border-radius:22px;box-shadow:var(--shadow);border-left:6px solid var(--accent)}
+:root[data-style="sunset"] .btn{border-radius:999px}
+:root[data-style="sunset"] .btn.primary{background:linear-gradient(120deg,#E8553F,#F39A4B);border-color:transparent}
+:root[data-style="sunset"] .row{border-radius:18px}
+:root[data-style="sunset"] .sheet{border-radius:24px 24px 0 0}
+:root[data-style="sunset"] nav.tabs{border-top:0;box-shadow:0 -4px 18px rgba(150,60,40,.08)}
+:root[data-style="sunset"] nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:700}
 /* ===== 글자 크기 (화면 전체 비율) ===== */
 :root[data-fs="s"] body{zoom:.92}
 :root[data-fs="l"] body{zoom:1.12}
@@ -2384,7 +2427,7 @@ const deptColorRows=()=>{const cur=deptColorKey(),custom=cur.charAt(0)==="#";
   return `<div style="margin-top:14px;text-align:center"><span class="muted" style="font-size:13px">부서 카드 색 (메인화면 · 모든 부서 같은 색) <span style="font-size:11px">· 밝은 화면에서 적용</span></span><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-dc="${k}" title="${n}" aria-label="부서 카드 색 ${n}" aria-pressed="${!custom&&cur===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}<label class="custom${custom?" on":""}" title="사용자 지정" aria-label="부서 카드 색 직접 고르기"><input type="color" data-dccustom value="${custom?cur:"#f6f1e7"}"></label></div></div>`};
 const bgPicker=()=>`<div style="margin-top:12px;text-align:center"><span class="muted" style="font-size:13px">배경색 <span style="font-size:11px">(밝은 화면에서 적용)</span></span><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-bgc="${k}" title="${n}" aria-label="배경색 ${n}" aria-pressed="${curBg()===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}<label class="custom${curBg()==="custom"?" on":""}" title="사용자 지정" aria-label="배경색 직접 고르기"><input type="color" data-bgcustom value="${customBg()}"></label></div><div class="muted" style="font-size:11px;margin-top:4px">맨 오른쪽 무지개 동그라미: 원하는 색 직접 고르기</div></div>`;
 /* 디자인(기본·교회풍·네이비)과 글자 크기: 이 기기에만 저장. 언제든 '기본'·'보통'으로 되돌릴 수 있다 */
-const STYLES=[["church","교회"],["","초록"],["navy","네이비"]],FONT_SIZES=[["s","작게"],["","보통"],["l","크게"],["xl","아주 크게"]];
+const STYLES=[["church","교회"],["","초록"],["navy","네이비"],["sunset","노을"]],FONT_SIZES=[["s","작게"],["","보통"],["l","크게"],["xl","아주 크게"]];
 const curAttr=a=>document.documentElement.getAttribute(a)||"";
 function setLook(attr,key,val,label){const de=document.documentElement;if(val)de.setAttribute(attr,val);else de.removeAttribute(attr);
   try{if(val)localStorage.setItem(key,val);else localStorage.removeItem(key)}catch(_){}render();const ls=document.getElementById("lookSheet");if(ls&&ls._redraw)ls._redraw();toast(label)}
@@ -2859,7 +2902,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014153333';
+  var BUILD = '20261014153531';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
