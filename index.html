@@ -1535,7 +1535,7 @@ function ageSortKey(p){
   const inv=n=>String(99999999-n).padStart(8,"0");
   if(m&&m[1]){const yy=Number(m[1]),cy=new Date().getFullYear()%100;return "0"+inv((yy<=cy?2000+yy:1900+yy)*10000+md)}
   const a=Number(p.age);if(p.group!=="T"&&p.age!==""&&p.age!=null&&!isNaN(a))return "1"+a+inv(md);
-  return "2"+(m?inv(md):"");
+  return m?"2"+inv(md):"3";
 }
 let rosterSort=(()=>{try{return localStorage.getItem("ya-rsort")==="age"?"age":"name"}catch(_){return "name"}})();
 function renderRoster(){
@@ -2624,7 +2624,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014113352';
+  var BUILD = '20261014113408';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
