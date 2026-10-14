@@ -21,7 +21,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>신당중앙교회 교육팀 출석부</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Myeongjo:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<script>/* 디자인(기본·교회) 선택을 화면이 그려지기 전에 적용 */try{if(localStorage.getItem("ya-style")==="church")document.documentElement.setAttribute("data-style","church")}catch(e){}</script>
 <style>
 :root{
   --ground:#F1F5F2; --surface:#FFFFFF; --sunk:#E6ECE8; --line:#D5DED9;
@@ -377,6 +378,42 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .form label .rep-chk input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 .form .pc-rep{justify-content:space-between}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* ===== 교회 디자인 (메인화면 맨 아래 [디자인] 버튼으로 켜고 끔. 끄면 위의 기본 디자인 그대로) ===== */
+:root[data-style="church"]{
+  --ground:#F6F1E7; --surface:#FFFDF8; --sunk:#EEE6D6; --line:#E1D5BE;
+  --ink:#2B2320; --muted:#7A6D60; --accent:#6E1F2E; --accent-ink:#FFF8EC; --accent-soft:#F2E3E1;
+  --gold:#A8843E; --gold-soft:#F4EAD2; --teacher:#F3EEF6; --teacher-line:#DCCFE6; --new:#8E3B5A; --new-soft:#F6E4EA; --danger:#A3261E;
+  --shadow:0 1px 2px rgba(70,45,20,.06),0 6px 18px rgba(70,45,20,.07);
+  --display:"Nanum Myeongjo","Noto Serif KR","AppleMyungjo",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root[data-style="church"]:not([data-theme="light"]){
+    --ground:#15110E; --surface:#1F1A16; --sunk:#29231E; --line:#3B322A;
+    --ink:#F0E7D8; --muted:#AB9C8A; --accent:#D6A35C; --accent-ink:#1E1407; --accent-soft:#3A2C1B;
+    --gold:#D9B36A; --gold-soft:#3A3020; --teacher:#272030; --teacher-line:#43375A; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
+    --shadow:0 1px 2px rgba(0,0,0,.35);
+  }
+}
+:root[data-style="church"][data-theme="dark"]{
+  --ground:#15110E; --surface:#1F1A16; --sunk:#29231E; --line:#3B322A;
+  --ink:#F0E7D8; --muted:#AB9C8A; --accent:#D6A35C; --accent-ink:#1E1407; --accent-soft:#3A2C1B;
+  --gold:#D9B36A; --gold-soft:#3A3020; --teacher:#272030; --teacher-line:#43375A; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
+  --shadow:0 1px 2px rgba(0,0,0,.35);
+}
+:root[data-style="church"] body{background:var(--ground) radial-gradient(ellipse at top,rgba(168,132,62,.08),transparent 60%) no-repeat}
+:root[data-style="church"] header.top{border-bottom:1px solid var(--gold);box-shadow:0 1px 0 var(--gold-soft)}
+:root[data-style="church"] .brand h1{font-weight:800;letter-spacing:.02em}
+:root[data-style="church"] .brand h1::before{content:"✝";color:var(--gold);font-weight:400;margin-right:8px;font-size:.85em}
+:root[data-style="church"] h2.sec{font-weight:800;letter-spacing:.01em;display:flex;align-items:center;gap:10px}
+:root[data-style="church"] h2.sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--gold),transparent);opacity:.55}
+:root[data-style="church"] details.fold>summary h2.sec::after{display:none}
+:root[data-style="church"] .sheet h3,:root[data-style="church"] .group-h{font-weight:800}
+:root[data-style="church"] .card,:root[data-style="church"] .dept{border-color:var(--line);box-shadow:var(--shadow)}
+:root[data-style="church"] .dept{border-top:3px solid var(--gold)}
+:root[data-style="church"] .btn.primary{border-color:var(--gold);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+:root[data-style="church"] nav.tabs{border-top:1px solid var(--gold)}
+:root[data-style="church"] .teams{border:1px solid var(--line)}
+
 .rpt-paper{background:#fff;color:#111;border-radius:8px;padding:18px 14px;overflow-x:auto;margin-top:8px}
 .rpt-h1{font-weight:800;font-size:22px;text-align:center;text-decoration:underline;margin-bottom:10px}
 .rpt-h2{font-weight:800;font-size:15px;text-decoration:underline;margin-bottom:8px}
@@ -2225,6 +2262,10 @@ function renderAdminSummary(){
     <div class="summary" style="margin-bottom:0"><div><div class="big num">${sum("on")}<em> / ${sum("n")}명</em></div><div class="sub num">학생 전체${sum("n")?" · "+Math.round(sum("on")/sum("n")*100)+"%":""} · 교사 ${sum("ton")} / ${sum("tn")}</div></div></div>
     <table style="margin-top:10px"><thead><tr><th>부서</th><th class="r">학생</th><th class="r">교사</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.label}</td><td class="r num">${r.on}/${r.n}</td><td class="r num">${r.ton}/${r.tn}</td></tr>`).join("")}</tbody></table></div></details>`;
 }
+/* 디자인 선택(기본·교회풍): 이 기기에만 저장. 언제든 다시 눌러 되돌릴 수 있다 */
+const isChurchStyle=()=>document.documentElement.getAttribute("data-style")==="church";
+function toggleStyle(){const on=!isChurchStyle();if(on)document.documentElement.setAttribute("data-style","church");else document.documentElement.removeAttribute("data-style");
+  try{localStorage.setItem("ya-style",on?"church":"basic")}catch(_){}render();toast(on?"교회풍 디자인으로 바꿨어요":"기본 디자인으로 되돌렸어요")}
 function renderHome(){
   const k=S.date;
   let h=`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>부서를 선택해 들어가세요.</p></div><div class="dept-grid">`;
@@ -2254,7 +2295,8 @@ function renderHome(){
     if(mine.length)h+=rptCard();
     if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`+hrCodesCard(mine)}
   if(S.isAdmin){if(!S.isCo)h+=renderPromoAdmin();h+=renderStaff();if(!S.isCo)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
-  h+=`<div style="margin-top:28px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
+  h+=`<div style="margin-top:28px;text-align:center"><button class="btn" id="styleToggle">디자인: ${isChurchStyle()?"교회풍 ✝ · 기본으로 되돌리기":"기본 · 교회풍으로 바꿔 보기"}</button></div>`;
+  h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   return h;
 }
 function renderStaff(){
@@ -2431,6 +2473,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const ep=e.target.closest("[data-edit-person]");if(ep){openPerson.edit=true;openPerson(ep.dataset.editPerson);openPerson.edit=false;return}
   const o=e.target.closest("[data-open]");if(o){openPerson.edit=false;return openPerson(o.dataset.open)}
   const gc=e.target.closest("[data-gcode]");if(gc)return openGradeCodeEntry(gc.dataset.gcode);
+  if(e.target.closest("#styleToggle"))return toggleStyle();
   if(e.target.closest("#toTop")){window.scrollTo({top:0,behavior:"smooth"});const v=$("#view");if(v&&v.scrollTop)v.scrollTo({top:0,behavior:"smooth"});return}
   if(e.target.closest("#goSet")){const el=document.querySelector("#view [data-set]");if(el){el.scrollIntoView({behavior:"smooth",block:"start"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1200)}return}
   if(e.target.closest("#gcManage")||e.target.closest("#gcManage2")||e.target.closest("#gcManage3"))return openHomeroomCodes();
@@ -2663,7 +2706,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014131317';
+  var BUILD = '20261014131726';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
