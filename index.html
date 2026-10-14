@@ -1529,12 +1529,13 @@ function renderCheck(){
   }
   return h;
 }
-/** 나이순 정렬 열쇠 (나이 많은 사람 먼저). 생일 연도가 있으면 생년월일, 없으면 영아는 나이 → 생일, 그 밖은 맨 뒤 */
+/** 나이순 정렬 열쇠 (어린 사람 먼저). 생일 연도가 있으면 늦게 태어난 순, 없으면 영아는 나이(0세→4세), 생일이 없으면 맨 뒤 */
 function ageSortKey(p){
-  const m=String(p.birthday||"").trim().match(/^(?:(\d{2})\/)?(\d{1,2})\/(\d{1,2})$/);const md=m?String(m[2]).padStart(2,"0")+String(m[3]).padStart(2,"0"):"9999";
-  if(m&&m[1]){const yy=Number(m[1]),cy=new Date().getFullYear()%100;return "0"+(yy<=cy?2000+yy:1900+yy)+md}
-  const a=Number(p.age);if(p.group!=="T"&&p.age!==""&&p.age!=null&&!isNaN(a))return "1"+(9-a)+md;
-  return "2"+md;
+  const m=String(p.birthday||"").trim().match(/^(?:(\d{2})\/)?(\d{1,2})\/(\d{1,2})$/);const md=m?Number(m[2])*100+Number(m[3]):0;
+  const inv=n=>String(99999999-n).padStart(8,"0");
+  if(m&&m[1]){const yy=Number(m[1]),cy=new Date().getFullYear()%100;return "0"+inv((yy<=cy?2000+yy:1900+yy)*10000+md)}
+  const a=Number(p.age);if(p.group!=="T"&&p.age!==""&&p.age!=null&&!isNaN(a))return "1"+a+inv(md);
+  return "2"+(m?inv(md):"");
 }
 let rosterSort=(()=>{try{return localStorage.getItem("ya-rsort")==="age"?"age":"name"}catch(_){return "name"}})();
 function renderRoster(){
@@ -2623,7 +2624,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014113218';
+  var BUILD = '20261014113352';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
