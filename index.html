@@ -1529,12 +1529,14 @@ function renderCheck(){
   }
   return h;
 }
-/** 나이순 정렬 열쇠 (어린 사람 먼저). 생일 연도가 있으면 늦게 태어난 순, 없으면 영아는 나이(0세→4세), 생일이 없으면 맨 뒤 */
+/** 나이순 정렬 열쇠 (어린 사람 먼저). 영아부는 나이(0세→4세) 먼저, 그 밖은 생일 연도가 있으면 늦게 태어난 순, 생일이 없으면 맨 뒤 */
 function ageSortKey(p){
   const m=String(p.birthday||"").trim().match(/^(?:(\d{2})\/)?(\d{1,2})\/(\d{1,2})$/);const md=m?Number(m[2])*100+Number(m[3]):0;
   const inv=n=>String(99999999-n).padStart(8,"0");
-  if(m&&m[1]){const yy=Number(m[1]),cy=new Date().getFullYear()%100;return "0"+inv((yy<=cy?2000+yy:1900+yy)*10000+md)}
-  const a=Number(p.age);if(p.group!=="T"&&p.age!==""&&p.age!=null&&!isNaN(a))return "1"+a+inv(md);
+  const full=m&&m[1]?(()=>{const yy=Number(m[1]),cy=new Date().getFullYear()%100;return (yy<=cy?2000+yy:1900+yy)*10000+md})():0;
+  /* 영아부는 나이(0세→4세)가 먼저, 같은 나이 안에서는 어린 순 */
+  const a=Number(p.age);if(isFlex(teamOf(p))&&p.group!=="T"&&p.age!==""&&p.age!=null&&!isNaN(a))return "0"+a+(full?"0"+inv(full):"1"+inv(md));
+  if(full)return "0"+inv(full);
   return m?"2"+inv(md):"3";
 }
 let rosterSort=(()=>{try{return localStorage.getItem("ya-rsort")==="age"?"age":"name"}catch(_){return "name"}})();
@@ -2624,7 +2626,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014113408';
+  var BUILD = '20261014113447';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
