@@ -1765,20 +1765,23 @@ async function downloadPromoXlsx(teams){
   saveWorkbook(wb,`${y}년 연말 등반 대상${teams.length===1?"_"+TEAMS[teams[0]].short:""}.xlsx`);
 }
 /**
- * 올해 졸업 예정자 명단(모든 부서). 졸업 예정 = 올해 연말 등반에서 졸업할 학생(아직 등반 전, 등반에서 뺀 학생 제외),
- * 졸업 = 올해 연말 등반으로 이미 졸업 처리된 학생. 지난해 이전 졸업생은 넣지 않는다
+ * 올해 졸업 예정자 명단(모든 부서). 졸업 예정자 = 각 부서의 가장 마지막 학년·나이 (영아 4세, 유아 7세, 유소년 6학년, 중고등 고3)
+ *  - 졸업 예정: 올해 연말 등반 전인 학생 (등반에서 뺀 학생 제외)
+ *  - 졸업: 올해 연말 등반으로 이미 다음 부서로 올라갔거나 졸업 처리된 학생 (등반 기록에서 찾음)
  */
+const lastStep=t=>TEAMS[t].groups[TEAMS[t].groups.length-1][0];
 async function downloadGradXlsx(){
-  const y=promoYear();const yr=p=>Number(p.promotedYear)||Number(((p.note||"").match(/(\d{4})년 졸업/)||[])[1])||0;
-  const soon=PROMO_TEAMS.flatMap(t=>planPromotion(t).filter(x=>x.next==="grad").map(x=>({p:x.p,kind:"졸업 예정",y})));
-  const done=[...S.people.values()].filter(p=>p.group!=="T"&&rosterModeOf(p)==="grad"&&PROMO_TEAMS.includes(teamOf(p))&&yr(p)===y).map(p=>({p,kind:"졸업",y}));
+  const y=promoYear();
+  const soon=PROMO_TEAMS.flatMap(t=>planPromotion(t).filter(x=>stepFrom(t,x.p)===lastStep(t))
+    .map(x=>({t,kind:"졸업 예정",p:x.p,group:x.p.group,section:x.p.section||"",to:stepToLabel(x.next)})));
+  const done=PROMO_TEAMS.flatMap(t=>liveRuns(promoRec(t)).flatMap(r=>(r.moves||[]).filter(m=>m.team===t&&stepFrom(t,m)===lastStep(t))
+    .map(m=>({t,kind:"졸업",p:S.people.get(m.id)||{name:"(지운 사람)"},group:m.group,section:m.section||"",to:stepToLabel(nextStep(t,lastStep(t)))}))));
   if(!soon.length&&!done.length){toast(`${y}년 졸업 예정자가 없어요`);return}
   if(!await needXLSX())return;
-  const gi=(t,g)=>(isFlex(t)?TEAMS[t].groups:classesOf(t)).findIndex(x=>x[0]===g);
-  const rows=soon.concat(done).sort((a,b)=>(a.kind===b.kind?0:a.kind==="졸업 예정"?-1:1)||b.y-a.y||PROMO_TEAMS.indexOf(teamOf(a.p))-PROMO_TEAMS.indexOf(teamOf(b.p))||gi(teamOf(b.p),b.p.group)-gi(teamOf(a.p),a.p.group)||a.p.name.localeCompare(b.p.name,"ko"))
-    .map(({p,kind,y})=>{const t=teamOf(p);return [kind,y||"",TEAMS[t].label,classLabelOf(t,p.group),p.section||"",p.name,p.gender||"",p.birthday||"",p.note||""]});
+  const rows=soon.concat(done).sort((a,b)=>(a.kind===b.kind?0:a.kind==="졸업 예정"?-1:1)||PROMO_TEAMS.indexOf(a.t)-PROMO_TEAMS.indexOf(b.t)||String(a.group).localeCompare(String(b.group))||String(a.p.name).localeCompare(String(b.p.name),"ko"))
+    .map(x=>[x.kind,y,TEAMS[x.t].label,stepLabel(x.t,lastStep(x.t)).slice(TEAMS[x.t].short.length+1),classLabelOf(x.t,x.group),x.section,x.p.name,x.p.gender||"",x.p.birthday||"",x.to,x.p.note||""]);
   const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.aoa_to_sheet([["구분","졸업 연도","부서","반","분반","이름","성별","생일","메모"],...rows]);ws["!cols"]=[9,9,12,8,5,10,5,10,30].map(w=>({wch:w}));
+  const ws=XLSX.utils.aoa_to_sheet([["구분","졸업 연도","부서","학년·나이","반","분반","이름","성별","생일","올라갈 곳","메모"],...rows]);ws["!cols"]=[9,9,12,9,8,5,10,5,10,14,30].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb,ws,`${y}년 졸업 예정자`);
   saveWorkbook(wb,`${y}년 졸업 예정자 명단.xlsx`);
 }
@@ -2603,7 +2606,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014094444';
+  var BUILD = '20261014095243';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
