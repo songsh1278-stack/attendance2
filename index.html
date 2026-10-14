@@ -396,10 +396,6 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .bg-pick label.custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .dept.tinted{background:var(--dept-bg)}}
 :root[data-theme="light"] .dept.tinted{background:var(--dept-bg)}
-.dc-row{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center}
-.dc-row b{min-width:84px;text-align:right;font-size:13px}
-.dc-row .bg-pick{margin-top:0;gap:6px}
-.dc-row .bg-pick button,.dc-row .bg-pick label.custom{width:24px;height:24px}
 .bg-pick{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:8px}
 .bg-pick button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);box-shadow:var(--shadow);cursor:pointer;font-size:9px;padding:0;white-space:nowrap;letter-spacing:-.05em;color:var(--muted)}
 .bg-pick button[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px}
@@ -2379,13 +2375,13 @@ const customBg=()=>document.documentElement.style.getPropertyValue("--custom-bg"
 function setBg(k){const de=document.documentElement;const custom=/^#[0-9a-f]{6}$/i.test(k||"");
   if(custom){de.setAttribute("data-bg","custom");de.style.setProperty("--custom-bg",k)}else{de.style.removeProperty("--custom-bg");if(k)de.setAttribute("data-bg",k);else de.removeAttribute("data-bg")}
   try{if(k)localStorage.setItem("ya-bg",k);else localStorage.removeItem("ya-bg")}catch(_){}render();{const ls=document.getElementById("lookSheet");if(ls&&ls._redraw)ls._redraw()}toast(custom?"배경색을 직접 고른 색으로 바꿨어요":k?`배경색을 ${BG_COLORS.find(x=>x[0]===k)[1]}(으)로 바꿨어요`:"기본 배경으로 되돌렸어요")}
-/* 메인화면 부서 카드 색: 부서마다, 이 기기에만 저장 { infant:'ivory' | '#rrggbb' } */
-const deptColors=()=>{try{return JSON.parse(localStorage.getItem("ya-deptcolor")||"{}")||{}}catch(_){return {}}};
-const deptColorOf=t=>{const v=deptColors()[t]||"";if(!v)return "";if(v.charAt(0)==="#")return v;const hit=BG_COLORS.find(x=>x[0]===v);return hit?hit[2]:""};
-function setDeptColor(t,v){const m=deptColors();if(v)m[t]=v;else delete m[t];try{localStorage.setItem("ya-deptcolor",JSON.stringify(m))}catch(_){}
-  render();{const ls=document.getElementById("lookSheet");if(ls&&ls._redraw)ls._redraw()}toast(`${TEAMS[t].short} 카드 색을 ${v?"바꿨어요":"기본으로 되돌렸어요"}`)}
-const deptColorRows=()=>`<div style="margin-top:14px;text-align:center"><span class="muted" style="font-size:13px">부서 카드 색 (메인화면) <span style="font-size:11px">· 밝은 화면에서 적용</span></span>${Object.keys(TEAMS).map(t=>{const cur=deptColors()[t]||"";const custom=cur.charAt(0)==="#";
-  return `<div class="dc-row"><b>${esc(TEAMS[t].label)}</b><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-dc="${t}|${k}" title="${n}" aria-label="${esc(TEAMS[t].short)} 카드 색 ${n}" aria-pressed="${!custom&&cur===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}<label class="custom${custom?" on":""}" title="사용자 지정"><input type="color" data-dccustom="${t}" value="${custom?cur:"#f6f1e7"}"></label></div></div>`}).join("")}</div>`;
+/* 메인화면 부서 카드 색: 모든 부서 카드에 한 색으로, 이 기기에만 저장 ('ivory' | '#rrggbb' | 없음=기본) */
+const deptColorKey=()=>{try{const v=localStorage.getItem("ya-deptcard");if(v!==null)return v;localStorage.removeItem("ya-deptcolor")}catch(_){}return ""};
+const deptColor=()=>{const v=deptColorKey();if(!v)return "";if(v.charAt(0)==="#")return v;const hit=BG_COLORS.find(x=>x[0]===v);return hit?hit[2]:""};
+function setDeptColor(v){try{if(v)localStorage.setItem("ya-deptcard",v);else localStorage.removeItem("ya-deptcard")}catch(_){}
+  render();{const ls=document.getElementById("lookSheet");if(ls&&ls._redraw)ls._redraw()}toast(`부서 카드 색을 ${v?"바꿨어요":"기본으로 되돌렸어요"}`)}
+const deptColorRows=()=>{const cur=deptColorKey(),custom=cur.charAt(0)==="#";
+  return `<div style="margin-top:14px;text-align:center"><span class="muted" style="font-size:13px">부서 카드 색 (메인화면 · 모든 부서 같은 색) <span style="font-size:11px">· 밝은 화면에서 적용</span></span><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-dc="${k}" title="${n}" aria-label="부서 카드 색 ${n}" aria-pressed="${!custom&&cur===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}<label class="custom${custom?" on":""}" title="사용자 지정" aria-label="부서 카드 색 직접 고르기"><input type="color" data-dccustom value="${custom?cur:"#f6f1e7"}"></label></div></div>`};
 const bgPicker=()=>`<div style="margin-top:12px;text-align:center"><span class="muted" style="font-size:13px">배경색 <span style="font-size:11px">(밝은 화면에서 적용)</span></span><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-bgc="${k}" title="${n}" aria-label="배경색 ${n}" aria-pressed="${curBg()===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}<label class="custom${curBg()==="custom"?" on":""}" title="사용자 지정" aria-label="배경색 직접 고르기"><input type="color" data-bgcustom value="${customBg()}"></label></div><div class="muted" style="font-size:11px;margin-top:4px">맨 오른쪽 무지개 동그라미: 원하는 색 직접 고르기</div></div>`;
 /* 디자인(기본·교회풍·네이비)과 글자 크기: 이 기기에만 저장. 언제든 '기본'·'보통'으로 되돌릴 수 있다 */
 const STYLES=[["church","교회"],["","초록"],["navy","네이비"]],FONT_SIZES=[["s","작게"],["","보통"],["l","크게"],["xl","아주 크게"]];
@@ -2423,7 +2419,7 @@ function renderHome(){
   for(const [t,x] of Object.entries(TEAMS)){
     const ps=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group!=="T");
     const on=ps.filter(p=>isOn(k,p.id)).length;const open=canEnter(t);
-    h+=`<button class="dept${deptColorOf(t)?" tinted":""}" data-enter="${t}"${deptColorOf(t)?` style="--dept-bg:${deptColorOf(t)}"`:""}><span class="top"><span class="name">${x.label}</span>${deptLocked(t)&&!canEnter(t)?`<span class="lock">${LOCK_SVG}번호</span>`:""}</span>
+    h+=`<button class="dept${deptColor()?" tinted":""}" data-enter="${t}"${deptColor()?` style="--dept-bg:${deptColor()}"`:""}><span class="top"><span class="name">${x.label}</span>${deptLocked(t)&&!canEnter(t)?`<span class="lock">${LOCK_SVG}번호</span>`:""}</span>
       <span class="range">${(isFlex(t)?x.groups:classesOf(t))[0][1]} ~ ${(isFlex(t)?x.groups:classesOf(t))[x.groups.length-1][1]}</span>
       <span class="stat num">${!S.ready?"불러오는 중…":open?`${((S.scope||{})[t]||{}).level==="grade"?"내 반":"재적"} ${ps.length}명 · 출석 ${on}명`:`재적 ${(S.counts||{})[t]||0}명 · 번호 입력 후 확인`}</span></button>`;
   }
@@ -2614,7 +2610,7 @@ function openPerson(id){
 }
 
 /* ---------- events ---------- */
-document.addEventListener("change",e=>{const c=e.target.closest&&e.target.closest("[data-bgcustom]");if(c)setBg(c.value);const d=e.target.closest&&e.target.closest("[data-dccustom]");if(d&&/^#[0-9a-f]{6}$/i.test(d.value))setDeptColor(d.dataset.dccustom,d.value)});
+document.addEventListener("change",e=>{const c=e.target.closest&&e.target.closest("[data-bgcustom]");if(c)setBg(c.value);const d=e.target.closest&&e.target.closest("[data-dccustom]");if(d&&/^#[0-9a-f]{6}$/i.test(d.value))setDeptColor(d.value)});
 document.addEventListener("toggle",e=>{const f=e.target;if(f.dataset&&f.dataset.fold)S.fold[f.dataset.fold]=f.open},true);
 document.addEventListener("click",e=>{const ad=e.target.closest("[data-adate]");
 if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
@@ -2627,7 +2623,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const gc=e.target.closest("[data-gcode]");if(gc)return openGradeCodeEntry(gc.dataset.gcode);
   if(e.target.closest("#lookOpen"))return openLook();
   if(e.target.closest("#hardRefresh")||e.target.closest("#hdrRefresh"))return hardRefresh();
-  const dcb=e.target.closest("[data-dc]");if(dcb){const [t,k]=dcb.dataset.dc.split("|");return setDeptColor(t,k)}
+  const dcb=e.target.closest("[data-dc]");if(dcb)return setDeptColor(dcb.dataset.dc)
   const lk=e.target.closest("[data-look]");if(lk){const v=lk.dataset.look;setLook("data-style","ya-style",v,(STYLES.find(x=>x[0]===v)||STYLES[0])[1]+" 디자인으로 바꿨어요");if(!v)try{localStorage.setItem("ya-style","basic")}catch(_){}return}
   const fz=e.target.closest("[data-fsz]");if(fz){const v=fz.dataset.fsz;return setLook("data-fs","ya-fs",v,"글자 크기: "+(FONT_SIZES.find(x=>x[0]===v)||FONT_SIZES[1])[1])}
   const bgc=e.target.closest("[data-bgc]");if(bgc)return setBg(bgc.dataset.bgc);
@@ -2863,7 +2859,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014143605';
+  var BUILD = '20261014150120';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
