@@ -1381,7 +1381,7 @@ function openGuide(){
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
 }
 /* ---------- 활동 기록 (총관리자 전용) ---------- */
-const activityCard=()=>`<h2 class="sec">활동 기록</h2><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">로그인, 번호 변경, 명단·반 이동, 일정, 자료실, 설정 기록</span><button class="btn" id="actOpen">기록 보기</button></div></div>`;
+const activityCard=()=>`<details class="fold" data-fold="activity"${S.fold.activity?" open":""}><summary><h2 class="sec">활동 기록</h2></summary><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">로그인, 번호 변경, 명단·반 이동, 일정, 자료실, 설정 기록</span><button class="btn" id="actOpen">기록 보기</button></div></div></details>`;
 async function openActivityLog(){
   if(!S.isAdmin){toast("총관리자만 볼 수 있어요");return}
   const ov=document.createElement("div");ov.className="overlay";let all=null,tm="all",kd="all",q="",total=0,more=false,busy=false,shown=200;
@@ -2987,7 +2987,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014214959';
+  var BUILD = '20261014215506';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
