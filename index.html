@@ -1236,6 +1236,8 @@ const canRpt=()=>S.isAdmin||Object.keys(TEAMS).some(t=>deptLocked(t)&&((S.scope|
 const rptCard=()=>`<h2 class="sec">당회보고서 제출</h2><div class="card admin-list"><div class="admin-row"><b>당회·제직회 자료</b><span class="code none">부서별 한글 보고서 올리기 · 고치기 · 통합 · 메일</span><button class="btn" id="rptOpen">열기</button></div></div>`;
 /** 그달 넷째 주일 */
 function fourthSun(ym){const y=Number(ym.slice(0,4)),m=Number(ym.slice(5,7));return ym+"-"+String(1+(7-new Date(y,m-1,1).getDay())%7+21)}
+/** 그달 셋째 주 화요일 (부서 보고서 제출 기한) */
+function thirdTue(ym){const y=Number(ym.slice(0,4)),m=Number(ym.slice(5,7));return 1+(9-new Date(y,m-1,1).getDay())%7+14}
 /** 기본으로 여는 달: 이번 달 넷째 주일이 지났으면 다음 달 */
 function rptDefaultYm(){const n=new Date();let y=n.getFullYear(),m=n.getMonth()+1;const ym=()=>y+"-"+String(m).padStart(2,"0");
   const today=ym()+"-"+String(n.getDate()).padStart(2,"0");if(today>fourthSun(ym())){m++;if(m>12){m=1;y++}}return ym()}
@@ -1267,7 +1269,7 @@ async function openReport(){
       ${R.admin&&R.date!==fourthSun(ym)?`<p class="muted" style="font-size:12px;margin:4px 0 0">넷째 주일(${esc(dateLabel(fourthSun(ym)))})이 아닌 날로 바꿨어요. <button class="btn" data-rdate-reset style="padding:2px 8px">넷째 주일로</button></p>`:""}
       <div class="card admin-list" style="margin-top:12px">${RPT_TEAMS.map(t=>{const x=T[t];const has=x.cur.length||x.next.length;const sub=x.saved&&has&&!x.carried;
         return `<div class="admin-row"><b>${esc(rptName(t))}</b><span class="tag ${sub?"new":"role"}">${sub?"제출":"미제출"}</span>
-          <span class="muted" style="font-size:12px;flex:1;min-width:120px">${sub?esc(x.at+" · "+x.by):""}${x.file?`<br>${esc(x.file)}`:""}</span>
+          <span class="muted" style="font-size:12px;flex:1;min-width:120px">${sub?esc(x.at+" · "+x.by):`<span style="color:var(--danger)">${Number(ym.slice(5,7))}월 ${thirdTue(ym)}일(화)까지 제출해 주세요~</span>`}${x.file?`<br>${esc(x.file)}`:""}</span>
           ${x.file?`<button class="btn" data-rorig="${t}">원본</button>`:""}
           ${x.edit?`${t!=="support"?`<button class="btn" data-rup="${t}">한글 올리기</button>`:""}<button class="btn" data-redit="${t}">${has||x.saved?"고치기":"직접 쓰기"}</button>`:has?`<button class="btn" data-rview="${t}">보기</button>`:""}</div>`}).join("")}</div>
       <p class="muted" style="font-size:12px;margin:8px 0 0">${done}/${RPT_TEAMS.length} 제출 · 부서는 한글(.hwp) 보고서를 올리면 표의 '보고 내용'과 '계획' 칸 글자를 꺼내 담아요. 올린 뒤 화면에서 바로 고칠 수 있어요.</p>
@@ -2612,7 +2614,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014103300';
+  var BUILD = '20261014103848';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
