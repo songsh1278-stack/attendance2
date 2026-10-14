@@ -279,6 +279,9 @@ details.fold[open]>summary::after{content:"접기 ▴"}
 .brand h1{min-width:0;line-height:1.25} /* 제목이 길면 '교육팀 출석부'만 아랫줄로 (.tw 덩어리는 끊지 않음) */
 .brand h1 .tw{white-space:nowrap;display:inline-block}
 .brand small{flex:none;white-space:nowrap}
+.brand-right{display:flex;align-items:center;gap:8px;flex:none}
+.hdr-refresh{width:32px;height:32px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:17px;line-height:1;display:grid;place-items:center;padding:0;flex:none}
+:root[data-style="navy"] header.top .hdr-refresh{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:var(--hdr-ink)}
 .brand small.tight{font-size:10px;max-width:64px;overflow:hidden;text-overflow:ellipsis}
 .back{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:18px;display:grid;place-items:center;flex:none}
 .home-intro{margin-block:18px 12px}
@@ -499,7 +502,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 
 <div class="app">
   <header class="top">
-    <div class="brand"><div class="left"><button class="back" id="homeBtn" aria-label="메인 화면으로" hidden>‹</button><h1 id="brandTitle" title="메인 화면으로">신당중앙교회 교육팀 출석부</h1></div><small id="sync" class="muted">불러오는 중…</small></div>
+    <div class="brand"><div class="left"><button class="back" id="homeBtn" aria-label="메인 화면으로" hidden>‹</button><h1 id="brandTitle" title="메인 화면으로">신당중앙교회 교육팀 출석부</h1></div><span class="brand-right"><small id="sync" class="muted">불러오는 중…</small><button class="hdr-refresh" id="hdrRefresh" aria-label="새로고침 (최신 화면으로)" title="새로고침" hidden>↻</button></span></div>
     <div class="datebar" id="datebar">
       <button class="arrow" id="prev" aria-label="지난 주일">‹</button>
       <div class="date"><strong id="dateLabel" class="num"></strong><span id="todayTag" class="today-tag" hidden>오늘</span>
@@ -698,7 +701,7 @@ function renderChips(){
 }
 function renderTeams(){
   const home=S.view==="home";document.body.classList.toggle("home",home);
-  $("#homeBtn").hidden=home;if(home)$("#brandTitle").innerHTML=`<span class="tw">신당중앙교회</span> <span class="tw">교육팀 출석부</span>`;else{const r=roleLabel();$("#brandTitle").innerHTML=esc(TEAMS[S.team].label)+(r?`<span class="role-badge">${esc(r)}</span>`:"")}
+  $("#homeBtn").hidden=home;{const hr=$("#hdrRefresh");if(hr)hr.hidden=home}if(home)$("#brandTitle").innerHTML=`<span class="tw">신당중앙교회</span> <span class="tw">교육팀 출석부</span>`;else{const r=roleLabel();$("#brandTitle").innerHTML=esc(TEAMS[S.team].label)+(r?`<span class="role-badge">${esc(r)}</span>`:"")}
   fitBrand();
 }
 /* 맨 위 제목: 줄바꿈은 '신당중앙교회' / '교육팀 출석부' 사이에서만. 한 덩어리도 안 들어갈 만큼 좁으면 글자 크기를 줄인다 */
@@ -2624,7 +2627,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const o=e.target.closest("[data-open]");if(o){openPerson.edit=false;return openPerson(o.dataset.open)}
   const gc=e.target.closest("[data-gcode]");if(gc)return openGradeCodeEntry(gc.dataset.gcode);
   if(e.target.closest("#lookOpen"))return openLook();
-  if(e.target.closest("#hardRefresh"))return hardRefresh();
+  if(e.target.closest("#hardRefresh")||e.target.closest("#hdrRefresh"))return hardRefresh();
   const dcb=e.target.closest("[data-dc]");if(dcb){const [t,k]=dcb.dataset.dc.split("|");return setDeptColor(t,k)}
   const lk=e.target.closest("[data-look]");if(lk){const v=lk.dataset.look;setLook("data-style","ya-style",v,(STYLES.find(x=>x[0]===v)||STYLES[0])[1]+" 디자인으로 바꿨어요");if(!v)try{localStorage.setItem("ya-style","basic")}catch(_){}return}
   const fz=e.target.closest("[data-fsz]");if(fz){const v=fz.dataset.fsz;return setLook("data-fs","ya-fs",v,"글자 크기: "+(FONT_SIZES.find(x=>x[0]===v)||FONT_SIZES[1])[1])}
@@ -2861,7 +2864,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014143256';
+  var BUILD = '20261014143432';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
