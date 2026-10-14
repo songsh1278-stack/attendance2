@@ -2508,7 +2508,7 @@ function renderStaff(){
   return `<details class="fold" data-fold="staff"${S.fold.staff?" open":""}><summary><h2 class="sec">팀 관리자·공동관리자 등록</h2><span class="fold-sum">${L.length}명 등록</span></summary><div class="card">
     ${L.length?`<div class="admin-list">${L.map(x=>`<div class="admin-row"><b>${esc(x.name)}</b><span class="tag ${x.role==="admin"?"admin":x.role==="co"||x.role==="co2"?"new":"role"}">${rl(x)}</span>${x.role==="team"?`<span class="tag ${x.team?"role":"new"}">${x.team&&TEAMS[x.team]?esc(TEAMS[x.team].label):"부서 미지정"}</span>`:""}<span class="code none" style="letter-spacing:0;word-break:break-all">${esc(x.email)}</span>${S.isCo&&x.role==="admin"?"":`<button class="btn" data-staff-edit="${esc(x.email)}">수정</button><button class="btn danger" data-staff-del="${esc(x.email)}">삭제</button>`}</div>`).join("")}</div>`:`<p class="muted" style="margin:0 0 10px">등록된 사람이 없어요.</p>`}
     <form id="staffForm" class="form" style="grid-template-columns:1fr"><label>이름<input id="f-sname" maxlength="20" required autocomplete="off"></label><label>이메일<input id="f-semail" type="email" inputmode="email" autocomplete="off" required></label>
-    <label>구분<select id="f-srole"><option value="team">팀 관리자</option><option value="co">공동관리자(수정권한) · 운영·등록</option><option value="co2">공동관리자(운영권한) · 번호·이메일 관리 제외</option><option value="admin" ${S.isCo?"disabled":""}>총관리자</option></select></label>
+    <label>구분<select id="f-srole"><option value="team">팀 관리자</option><option value="co">공동관리자(수정권한)</option><option value="co2">공동관리자(운영권한)</option><option value="admin" ${S.isCo?"disabled":""}>총관리자</option></select></label>
     <label id="f-steaml">담당 부서 (이 부서로만 로그인할 수 있어요)<select id="f-steam"><option value="">부서 선택</option>${Object.entries(TEAMS).map(([t,x])=>`<option value="${t}">${x.label}</option>`).join("")}</select></label>
     <label id="f-spwl" hidden>공동관리자 비밀번호 (영문+숫자 8자 이상)<input id="f-spw" maxlength="30" autocomplete="off"></label>
     <div class="actions" style="margin-top:0"><div class="spacer"></div><button class="btn primary" type="submit">등록</button></div></form></div></details>`;
@@ -2525,7 +2525,7 @@ function openStaffEdit(email){
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="등록 정보 수정"><h3>등록 정보 수정</h3>
     <div class="form" style="grid-template-columns:1fr"><label>이름<input id="f-esn" maxlength="20" value="${esc(x.name)}" required autocomplete="off"></label><label>이메일<input id="f-ese" type="email" inputmode="email" value="${esc(x.email)}" required autocomplete="off"></label>
-    <label>구분<select id="f-esr"><option value="team" ${x.role==="team"?"selected":""}>팀 관리자</option><option value="co" ${x.role==="co"?"selected":""}>공동관리자(수정권한) · 운영·등록</option><option value="co2" ${x.role==="co2"?"selected":""}>공동관리자(운영권한) · 번호·이메일 관리 제외</option><option value="admin" ${x.role==="admin"?"selected":""} ${S.isCo?"disabled":""}>총관리자</option></select></label>
+    <label>구분<select id="f-esr"><option value="team" ${x.role==="team"?"selected":""}>팀 관리자</option><option value="co" ${x.role==="co"?"selected":""}>공동관리자(수정권한)</option><option value="co2" ${x.role==="co2"?"selected":""}>공동관리자(운영권한)</option><option value="admin" ${x.role==="admin"?"selected":""} ${S.isCo?"disabled":""}>총관리자</option></select></label>
     <label id="f-esteaml" ${x.role==="team"?"":"hidden"}>담당 부서 (이 부서로만 로그인할 수 있어요)<select id="f-este"><option value="">부서 선택</option>${Object.entries(TEAMS).map(([t,y])=>`<option value="${t}" ${x.team===t?"selected":""}>${y.label}</option>`).join("")}</select></label>
     <label id="f-espwl" ${x.role==="co"||x.role==="co2"?"":"hidden"}>공동관리자 비밀번호 (영문+숫자 8자 이상, 비워 두면 그대로)<input id="f-espw" maxlength="30" autocomplete="off"></label></div>
     <p class="err" id="esErr" hidden></p>
@@ -2915,7 +2915,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014183306';
+  var BUILD = '20261014183606';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
