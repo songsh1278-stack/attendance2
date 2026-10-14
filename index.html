@@ -975,10 +975,9 @@ function openGradeManage(){
 }
 /* 메인화면: 부서별 반 담임 번호 관리 (팀별 관리자 번호 아래) */
 /* 담임이 직접 바꾼 담임 번호 (최근 14일). 접혀 있어도 보이게 카드 위에 띄워요 */
-/* 팀 관리자는 처음 본 뒤 10분이 지나면 이 기기에서 안 보여요 (바꾼 시각이 다르면 새 변경으로 다시 보여요) */
-const GC_SEEN_MS=10*60*1000;
+/* 처음 본 뒤 3분이 지나면 이 기기에서 안 보여요 (바꾼 시각이 다르면 새 변경으로 다시 보여요) */
+const GC_SEEN_MS=3*60*1000;
 function gcSeenFilter(L){
-  if(S.isAdmin)return L;
   let seen={};try{seen=JSON.parse(localStorage.getItem("ya-gcseen")||"{}")||{}}catch(_){}seen={...seen,...(S.gcSeen||{})};
   const now=Date.now(),keep={};let soon=0;
   Object.keys(seen).forEach(id=>{if(now-seen[id]<15*864e5)keep[id]=seen[id]}); /* 오래된 기록만 정리 */
@@ -2985,7 +2984,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014213133';
+  var BUILD = '20261014213322';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
