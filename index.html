@@ -1545,15 +1545,15 @@ function rptPreview(R,ym,only){
 function rptMailBox(R,ym,setR){
   const list=R.recent.map((x,i)=>({name:x.name||"",email:x.email,on:i===0,saved:true}));
   /* 보내는 사람: 기본(교육팀 출석부) + 최근 보낸 사람 + 로그인한 나. 고른 이름으로 보이고 답장은 그 주소로 */
-  const froms=[{name:"",email:"",def:true}].concat((R.froms||[]).map(x=>({...x,saved:true})));if(R.me&&!froms.some(x=>x.email===R.me.email&&x.name===R.me.name))froms.push(R.me);
-  let fi=(R.froms||[]).length?1:0;
+  const froms=(R.froms||[]).map(x=>({...x,saved:true}));if(R.me&&!froms.some(x=>x.email===R.me.email&&x.name===R.me.name))froms.push(R.me);
+  let fi=0;
   const miss=RPT_TEAMS.filter(t=>!(R.teams[t].cur.length||R.teams[t].next.length)).map(rptName);
   const ov=document.createElement("div");ov.className="overlay";
   const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="메일 보내기"><h3>메일 보내기</h3>
     <p style="margin:4px 0 0;font-size:14px">첨부: <b>${esc(R.fileName)}</b></p>
     ${miss.length?`<p class="err" style="font-size:13px;margin:6px 0 0">아직 내지 않은 곳: ${esc(miss.join(", "))}</p>`:""}
     <h4 style="margin:14px 0 4px;font-size:14px">보내는 사람 <span class="muted" style="font-weight:400;font-size:12px">받는 분께 이 이름으로 보이고, 답장은 이 주소로 가요</span></h4>
-    <div class="card admin-list">${froms.map((x,i)=>`<label class="admin-row" style="cursor:pointer"><input type="radio" name="mFrom" data-fi="${i}" ${i===fi?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><b>${x.def?"교육팀 출석부 (기본)":esc(x.name||"(이름 없음)")}</b><span class="muted" style="font-size:13px">${x.def?"보낸 사람 표시 없이":esc(x.email||"답장 주소 없음")}</span>${x.def?"":`<span class="spacer"></span><button type="button" class="btn danger" data-fdel="${i}" style="padding:3px 10px;font-size:12px">삭제</button>`}</label>`).join("")}</div>
+    <div class="card admin-list">${froms.length?"":`<p class="muted" style="font-size:13px;margin:4px 0">보내는 사람이 없어요. 아래에서 추가해 주세요.</p>`}${froms.map((x,i)=>`<label class="admin-row" style="cursor:pointer"><input type="radio" name="mFrom" data-fi="${i}" ${i===fi?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><b>${esc(x.name||"(이름 없음)")}</b><span class="muted" style="font-size:13px">${esc(x.email||"답장 주소 없음")}</span><span class="spacer"></span><button type="button" class="btn danger" data-fdel="${i}" style="padding:3px 10px;font-size:12px">삭제</button></label>`).join("")}</div>
     <div class="form" style="grid-template-columns:1fr 1.4fr auto;align-items:end"><label>보내는 사람 이름<input id="fName" maxlength="30" placeholder="예: 교육부장 홍길동" autocomplete="off"></label><label>답장 받을 메일<input id="fEmail" type="email" inputmode="email" autocomplete="off"></label><button class="btn" id="fAdd" style="height:42px">추가</button></div>
     <h4 style="margin:14px 0 4px;font-size:14px">받는 사람 <span class="muted" style="font-weight:400;font-size:12px">최근 보낸 순</span></h4>
     <div class="card admin-list">${list.map((x,i)=>`<label class="admin-row" style="cursor:pointer"><input type="checkbox" data-mi="${i}" ${x.on?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><b>${esc(x.name||"(이름 없음)")}</b><span class="muted" style="font-size:13px">${esc(x.email)}</span><span class="spacer"></span><button type="button" class="btn danger" data-tdel="${i}" style="padding:3px 10px;font-size:12px">삭제</button></label>`).join("")}</div>
@@ -1572,19 +1572,19 @@ function rptMailBox(R,ym,setR){
       list.splice(k,1);draw();ov.querySelector("#mMsg").value=msg;const sd=ov.querySelector("#mSend");delete sd.dataset.ok;sd.textContent="보내기";toast(`${x.name||x.email}을(를) 받는 사람 목록에서 지웠어요`);return}
     const fd=e.target.closest("[data-fdel]");if(fd){e.preventDefault();
       if(!fd.dataset.armed){fd.dataset.armed="1";fd.textContent="한 번 더";return}
-      const k=Number(fd.dataset.fdel),x=froms[k];if(!x||x.def)return;const msg=ov.querySelector("#mMsg").value;
+      const k=Number(fd.dataset.fdel),x=froms[k];if(!x)return;const msg=ov.querySelector("#mMsg").value;
       if(x.saved){try{const r=await tracked(call("rptFromDel",ym,{name:x.name,email:x.email}));setR(r);R.froms=r.froms}catch(err){alertBox("지우지 못했어요",err.message);return}}
-      froms.splice(k,1);if(fi===k)fi=0;else if(fi>k)fi--;draw();ov.querySelector("#mMsg").value=msg;toast(`${x.name||x.email}을(를) 보내는 사람 목록에서 지웠어요`);return}
+      froms.splice(k,1);if(fi>k||fi>=froms.length)fi=Math.max(0,fi-1);draw();ov.querySelector("#mMsg").value=msg;toast(`${x.name||x.email}을(를) 보내는 사람 목록에서 지웠어요`);return}
     if(e.target.closest("#fAdd")){const name=ov.querySelector("#fName").value.trim(),email=ov.querySelector("#fEmail").value.trim().toLowerCase();
       if(!name){toast("보내는 사람 이름을 적어 주세요");return}
       if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast("메일 주소를 확인해 주세요");return}
-      const msg=ov.querySelector("#mMsg").value;let k=froms.findIndex(x=>!x.def&&x.name===name&&x.email===email);if(k<0){froms.splice(1,0,{name,email});k=1}fi=k;draw();ov.querySelector("#mMsg").value=msg;return}
+      const msg=ov.querySelector("#mMsg").value;let k=froms.findIndex(x=>x.name===name&&x.email===email);if(k<0){froms.unshift({name,email});k=0}fi=k;draw();ov.querySelector("#mMsg").value=msg;return}
     if(e.target.closest("#mAdd")){const name=ov.querySelector("#mName").value.trim(),email=ov.querySelector("#mEmail").value.trim().toLowerCase();
       if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast("메일 주소를 확인해 주세요");return}
       const msg=ov.querySelector("#mMsg").value;const hit=list.find(x=>x.email===email);if(hit){hit.on=true;if(name)hit.name=name}else list.unshift({name,email,on:true});draw();ov.querySelector("#mMsg").value=msg;return}
     const sd=e.target.closest("#mSend");if(!sd||sd.disabled)return;
     const to=list.filter(x=>x.on).map(x=>({name:x.name,email:x.email}));if(!to.length){toast("받는 사람을 골라 주세요");return}
-    const fr=froms[fi]||froms[0];const from=fr.def?null:{name:fr.name,email:fr.email};
+    const fr=froms[fi]||froms[0];if(!fr){toast("보내는 사람을 추가해 주세요");return}const from={name:fr.name,email:fr.email};
     if(!sd.dataset.ok){sd.dataset.ok="1";sd.textContent=(from?(from.name||from.email)+" 이름으로 ":"")+to.map(x=>x.name||x.email).join(", ")+"에게 보내기";return} /* 한 번 더 눌러야 보낸다 */
     sd.disabled=true;sd.textContent="보내는 중…";
     try{const r=await tracked(call("rptMail",ym,{to,from,msg:ov.querySelector("#mMsg").value}));ov.remove();setR(r);alertBox("메일을 보냈어요",to.map(x=>(x.name?x.name+" ":"")+"<"+x.email+">").join(", "))}
@@ -2936,7 +2936,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014193044';
+  var BUILD = '20261014193303';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
