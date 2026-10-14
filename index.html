@@ -1543,11 +1543,13 @@ let rosterSort=(()=>{try{return localStorage.getItem("ya-rsort")==="age"?"age":"
 function renderRoster(){
   const q=S.q.trim();
   const all=[...S.people.values()].filter(p=>teamOf(p)===S.team&&(S.group==="all"||p.group===S.group)&&!(isHomeroom()&&p.group==="T"));
-  /* ㄱㄴㄷ순: 학년(반) 구분 없이 학생 전체를 한 목록으로, 교사는 따로. 학년별: 반마다 묶어서 어린 순 */
-  const flat=rosterSort==="name";const tFirst=GROUPS.findIndex(g=>g[0]==="T")===0;
-  const gk=p=>flat?(p.group==="T"?"T":"__all"):p.group;const bucket=p=>(p.group==="T")===tFirst?0:1;
+  /* ㄱㄴㄷ순: 학년(반) 구분 없이 학생 전체를 한 목록으로, 교사는 따로. 학년별: 학년마다 묶어서 어린 순.
+     영아부는 반이 나이와 따로라서, 학년별이면 반 대신 명단에 적힌 나이(0세~4세)로 묶는다 (생일이 없어도) */
+  const flat=rosterSort==="name";const tFirst=GROUPS.findIndex(g=>g[0]==="T")===0;const byAge=!flat&&isFlex(S.team);
+  const ageIx=p=>{const i=TEAMS[S.team].groups.findIndex(([a])=>a===String(p.age||""));return i<0?99:i};
+  const gk=p=>p.group==="T"?(flat||byAge?"T":p.group):flat?"__all":byAge?"age:"+(ageIx(p)<99?p.age:"?"):p.group;const bucket=p=>(p.group==="T")===tFirst?0:1;
   const ps=all.filter(p=>rosterModeOf(p)===(S.rosterMode||"active")).filter(p=>!q||[p.name,p.note].some(v=>(v||"").includes(q)))
-    .sort((a,b)=>(a.active===false)-(b.active===false)||(flat?bucket(a)-bucket(b):GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||String(a.group).localeCompare(String(b.group))||ageSortKey(a).localeCompare(ageSortKey(b)))||a.name.localeCompare(b.name,"ko"));
+    .sort((a,b)=>(a.active===false)-(b.active===false)||(flat?bucket(a)-bucket(b):byAge?bucket(a)-bucket(b)||ageIx(a)-ageIx(b)||ageSortKey(a).localeCompare(ageSortKey(b)):GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||String(a.group).localeCompare(String(b.group))||ageSortKey(a).localeCompare(ageSortKey(b)))||a.name.localeCompare(b.name,"ko"));
   let h=`<input class="search" id="q" type="search" placeholder="이름 검색" value="${esc(S.q)}"><div class="seg" style="margin-top:10px">${[["active","출석"],["removed","제적"],["grad","졸업"]].map(([m,l])=>`<button data-rmode="${m}" aria-pressed="${(S.rosterMode||"active")===m}">${l} ${(()=>{const L=all.filter(p=>rosterModeOf(p)===m),tc=L.filter(p=>p.group==="T").length;return S.group==="T"?tc+"명":(L.length-tc)+"명"+(tc?` <span style="font-weight:400;opacity:.75">+교사 ${tc}</span>`:"")})()}</button>`).join("")}</div>
     <div class="seg" style="margin-top:8px" aria-label="정렬">${[["name","ㄱㄴㄷ순"],["age","학년별"]].map(([m,l])=>`<button data-rsort="${m}" aria-pressed="${rosterSort===m}">${l}</button>`).join("")}</div>
     <div class="summary"><div>${(()=>{const act=all.filter(p=>p.active!==false),st=act.filter(p=>p.group!=="T").length,tc=act.length-st;
@@ -1560,9 +1562,9 @@ function renderRoster(){
   if(isFlex(S.team)&&ps.some(p=>p.group!=="T"))h+=`<div class="homeroom" style="margin-top:4px"><span class="lbl">나이별</span><span class="none num" style="font-size:13px">${esc(ageCnt(ps))}</span></div>`;
   let curG=null;
   for(const p of ps){
-    if(gk(p)!==curG){curG=gk(p);const gp=ps.filter(x=>gk(x)===curG);const ss=curG!=="__all"&&isClassKey(curG)?sectionsOf(curG):[];
+    if(gk(p)!==curG){curG=gk(p);const gp=ps.filter(x=>gk(x)===curG);const ss=curG!=="__all"&&!curG.startsWith("age:")&&isClassKey(curG)?sectionsOf(curG):[];
       const secTxt=ss.length?ss.map(sc=>`${sc}반 ${gp.filter(x=>secOf(x)===sc).length}`).join(" · "):"";
-      h+=`</div><div class="group-h"><span>${esc(curG==="__all"?"학생 전체":isFlex(S.team)&&isClassKey(curG)&&!/반$/.test(GL[curG]||"")?GL[curG]+"반":GL[curG]||curG)}<span class="num">(${gp.length}명)</span></span>${curG==="__all"?`<span class="c">가나다순</span>`:""}${secTxt?`<span class="c num">${secTxt}</span>`:""}${isFlex(S.team)&&curG!=="T"&&ageCnt(gp)?`<span class="c num">${esc(ageCnt(gp))}</span>`:""}</div><div class="list">`}
+      h+=`</div><div class="group-h"><span>${esc(curG==="__all"?"학생 전체":curG.startsWith("age:")?(curG==="age:?"?"나이 모름":ageLabel(gp[0])||curG.slice(4)+"세"):isFlex(S.team)&&isClassKey(curG)&&!/반$/.test(GL[curG]||"")?GL[curG]+"반":GL[curG]||curG)}<span class="num">(${gp.length}명)</span></span>${curG==="__all"?`<span class="c">가나다순</span>`:""}${secTxt?`<span class="c num">${secTxt}</span>`:""}${isFlex(S.team)&&curG!=="T"&&!curG.startsWith("age:")&&ageCnt(gp)?`<span class="c num">${esc(ageCnt(gp))}</span>`:""}</div><div class="list">`}
     const tags=[p.isNew?'<span class="tag new">새친구</span>':"",p.active===false?`<span class="tag role">${p.leftType==="졸업"?"졸업":"제적"}</span>`:"",p.role?`<span class="tag role">${esc(p.role)}</span>`:""].join("");
     h+=`<div class="row${p.group==="T"?" tch":""}" style="${p.active===false?"opacity:.55":""}"><button class="who-wrap" data-open="${p.id}" style="padding:2px 4px">${avatar(p)}<span class="who"><b>${esc(p.name)}${p.gender?`(${esc(p.gender)})`:""} <span class="muted" style="font-size:12px;font-weight:500">${esc(ageClassLabel(p))}</span>${tags}</b>
       <span>${esc([p.birthday&&"생일 "+bdText(p),p.note].filter(Boolean).join(" · "))}</span></span></button>${p.active===false&&S.editable?`<button class="btn" data-restore="${p.id}">출석으로</button>`:""}</div>`;
@@ -2629,7 +2631,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014114534';
+  var BUILD = '20261014115032';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
