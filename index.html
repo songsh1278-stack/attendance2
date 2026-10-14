@@ -2345,7 +2345,7 @@ const deptColorRows=()=>`<div style="margin-top:14px;text-align:center"><span cl
   return `<div class="dc-row"><b>${esc(TEAMS[t].label)}</b><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-dc="${t}|${k}" title="${n}" aria-label="${esc(TEAMS[t].short)} 카드 색 ${n}" aria-pressed="${!custom&&cur===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}<label class="custom${custom?" on":""}" title="사용자 지정"><input type="color" data-dccustom="${t}" value="${custom?cur:"#f6f1e7"}"></label></div></div>`}).join("")}</div>`;
 const bgPicker=()=>`<div style="margin-top:12px;text-align:center"><span class="muted" style="font-size:13px">배경색 <span style="font-size:11px">(밝은 화면에서 적용)</span></span><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-bgc="${k}" title="${n}" aria-label="배경색 ${n}" aria-pressed="${curBg()===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}<label class="custom${curBg()==="custom"?" on":""}" title="사용자 지정" aria-label="배경색 직접 고르기"><input type="color" data-bgcustom value="${customBg()}"></label></div><div class="muted" style="font-size:11px;margin-top:4px">맨 오른쪽 무지개 동그라미: 원하는 색 직접 고르기</div></div>`;
 /* 디자인(기본·교회풍·네이비)과 글자 크기: 이 기기에만 저장. 언제든 '기본'·'보통'으로 되돌릴 수 있다 */
-const STYLES=[["church","교회풍 (기본)"],["navy","네이비"],["","기존 초록"]],FONT_SIZES=[["s","작게"],["","보통"],["l","크게"],["xl","아주 크게"]];
+const STYLES=[["church","교회풍 (기본)"],["navy","네이비"],["","초록"]],FONT_SIZES=[["s","작게"],["","보통"],["l","크게"],["xl","아주 크게"]];
 const curAttr=a=>document.documentElement.getAttribute(a)||"";
 function setLook(attr,key,val,label){const de=document.documentElement;if(val)de.setAttribute(attr,val);else de.removeAttribute(attr);
   try{if(val)localStorage.setItem(key,val);else localStorage.removeItem(key)}catch(_){}render();const ls=document.getElementById("lookSheet");if(ls&&ls._redraw)ls._redraw();toast(label)}
@@ -2806,7 +2806,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014135449';
+  var BUILD = '20261014135530';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
