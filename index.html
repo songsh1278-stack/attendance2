@@ -1434,7 +1434,7 @@ async function openActivityLog(){
 const RPT_TEAMS=["infant","toddler","youth","teen","support"];
 const rptName=t=>t==="support"?"교육지원":TEAMS[t].label;
 const canRpt=()=>S.isAdmin||Object.keys(TEAMS).some(t=>deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
-const rptCard=()=>`<details class="fold" data-fold="rpt"${S.fold.rpt?" open":""}><summary><h2 class="sec">당회보고서 제출</h2></summary><div class="card admin-list"><div class="admin-row"><b>당회·제직회 자료</b><span class="code none">부서별 한글 보고서 올리기 · 고치기 · 통합 · 메일</span><button class="btn" id="rptOpen">열기</button></div></div></details>`;
+const rptCard=()=>!S.rptOk?"":`<details class="fold" data-fold="rpt"${S.fold.rpt?" open":""}><summary><h2 class="sec">당회보고서 제출</h2></summary><div class="card admin-list"><div class="admin-row"><b>당회·제직회 자료</b><span class="code none">부서별 한글 보고서 올리기 · 고치기 · 통합 · 메일</span><button class="btn" id="rptOpen">열기</button></div></div></details>`;
 /** 그달 넷째 주일 */
 function fourthSun(ym){const y=Number(ym.slice(0,4)),m=Number(ym.slice(5,7));return ym+"-"+String(1+(7-new Date(y,m-1,1).getDay())%7+21)}
 /** 그달 셋째 주 화요일 (부서 보고서 제출 기한) */
@@ -2942,7 +2942,7 @@ async function loadPhotos(){
 }
 function applyBoot(d){
   if(d.tk){S._tk=d.tk;if(S.remember!==false)try{localStorage.setItem("ya-tk",JSON.stringify(d.tk))}catch(_){}}
-  S.gcChanged=d.gcChanged||{};S.isAdmin=!!d.isAdmin;S.isCo=!!d.isCo;S.isCo2=!!d.isCo2;S.me=d.me||"";S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
+  S.gcChanged=d.gcChanged||{};S.rptOk=!!d.rptOk;S.isAdmin=!!d.isAdmin;S.isCo=!!d.isCo;S.isCo2=!!d.isCo2;S.me=d.me||"";S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
   S.staff=d.staff||[];S.scope=d.scope||{};S.settings=d.settings||{};S.people=new Map((d.people||[]).map(p=>[p.id,p]));setTeam(S.team);
   S.att=new Map(Object.entries(d.att||{}));
   Object.keys(attBuf).forEach(k=>S.att.set(k,mergeAtt(S.att.get(k)||{date:k,p:{},t:{}},attBuf[k]))); // 아직 안 보낸 체크는 유지
@@ -2985,7 +2985,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014213614';
+  var BUILD = '20261014214139';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
