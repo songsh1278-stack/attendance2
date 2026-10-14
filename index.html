@@ -1529,12 +1529,21 @@ function renderCheck(){
   }
   return h;
 }
+/** 나이순 정렬 열쇠 (나이 많은 사람 먼저). 생일 연도가 있으면 생년월일, 없으면 영아는 나이 → 생일, 그 밖은 맨 뒤 */
+function ageSortKey(p){
+  const m=String(p.birthday||"").trim().match(/^(?:(\d{2})\/)?(\d{1,2})\/(\d{1,2})$/);const md=m?String(m[2]).padStart(2,"0")+String(m[3]).padStart(2,"0"):"9999";
+  if(m&&m[1]){const yy=Number(m[1]),cy=new Date().getFullYear()%100;return "0"+(yy<=cy?2000+yy:1900+yy)+md}
+  const a=Number(p.age);if(p.group!=="T"&&p.age!==""&&p.age!=null&&!isNaN(a))return "1"+(9-a)+md;
+  return "2"+md;
+}
+let rosterSort=(()=>{try{return localStorage.getItem("ya-rsort")==="age"?"age":"name"}catch(_){return "name"}})();
 function renderRoster(){
   const q=S.q.trim();
   const all=[...S.people.values()].filter(p=>teamOf(p)===S.team&&(S.group==="all"||p.group===S.group)&&!(isHomeroom()&&p.group==="T"));
   const ps=all.filter(p=>rosterModeOf(p)===(S.rosterMode||"active")).filter(p=>!q||[p.name,p.note].some(v=>(v||"").includes(q)))
-    .sort((a,b)=>(a.active===false)-(b.active===false)||GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||String(a.group).localeCompare(String(b.group))||a.name.localeCompare(b.name,"ko"));
+    .sort((a,b)=>(a.active===false)-(b.active===false)||GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||String(a.group).localeCompare(String(b.group))||(rosterSort==="age"?ageSortKey(a).localeCompare(ageSortKey(b)):0)||a.name.localeCompare(b.name,"ko"));
   let h=`<input class="search" id="q" type="search" placeholder="이름 검색" value="${esc(S.q)}"><div class="seg" style="margin-top:10px">${[["active","출석"],["removed","제적"],["grad","졸업"]].map(([m,l])=>`<button data-rmode="${m}" aria-pressed="${(S.rosterMode||"active")===m}">${l} ${(()=>{const L=all.filter(p=>rosterModeOf(p)===m),tc=L.filter(p=>p.group==="T").length;return S.group==="T"?tc+"명":(L.length-tc)+"명"+(tc?` <span style="font-weight:400;opacity:.75">+교사 ${tc}</span>`:"")})()}</button>`).join("")}</div>
+    <div class="seg" style="margin-top:8px" aria-label="정렬">${[["name","ㄱㄴㄷ순"],["age","나이별"]].map(([m,l])=>`<button data-rsort="${m}" aria-pressed="${rosterSort===m}">${l}</button>`).join("")}</div>
     <div class="summary"><div>${(()=>{const act=all.filter(p=>p.active!==false),st=act.filter(p=>p.group!=="T").length,tc=act.length-st;
       /* 학생과 교사를 따로 세요 (교사 칩을 고르면 교사만) */
       return S.group==="T"?`<div class="big num">${tc}<em> 명 교사</em></div>`:`<div class="big num">${st}<em> 명 학생</em>${tc?`<em style="margin-left:10px">교사 </em>${tc}<em> 명</em>`:""}</div>`})()}<div class="sub">${TEAMS[S.team].short} · ${S.group==="all"?"전체":GL[S.group]} · 재적</div></div><div class="spacer"></div>
@@ -2401,6 +2410,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
     return}
   if(e.target.closest("#brandTitle")&&S.view!=="home"){S.view="home";render();window.scrollTo(0,0);return}
   const rm=e.target.closest("[data-rmode]");if(rm){S.rosterMode=rm.dataset.rmode;render();return}
+  const rso=e.target.closest("[data-rsort]");if(rso){rosterSort=rso.dataset.rsort;try{localStorage.setItem("ya-rsort",rosterSort)}catch(_){}render();return}
   const rs=e.target.closest("[data-restore]");if(rs){const id=rs.dataset.restore;const p=S.people.get(id);if(p){S.people.set(id,{...p,active:true,leftType:""});render();enqueue("people/"+id,()=>S.db.doc("people/"+id).update({active:true,leftType:""}));toast(p.name+"님을 출석으로 되돌렸어요")}return}
   const mm=e.target.closest("[data-memo]");if(mm)return openMemo(mm.dataset.memo);
   const ca=e.target.closest("[data-call]");if(ca)return openCall(ca.dataset.call);
@@ -2613,7 +2623,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014112833';
+  var BUILD = '20261014113218';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
