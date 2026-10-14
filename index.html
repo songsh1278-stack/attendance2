@@ -709,7 +709,7 @@ function flushAtt(){
   const jobs=Object.keys(attBuf).map(k=>{const b=attBuf[k];delete attBuf[k];
     const body={};["p","t","m"].forEach(f=>{if(b[f]&&Object.keys(b[f]).length)body[f]=b[f]});
     return enqueue("att/"+k,()=>S.db.doc("att/"+k).update(body))});
-  Promise.allSettled(jobs).then(()=>{pending--;if(!pending)$("#sync").textContent="구글 시트에 저장됨"});
+  Promise.allSettled(jobs).then(()=>{pending--;if(!pending)$("#sync").textContent="저장됨"});
 }
 /* 화면을 떠나거나 다른 앱으로 갈 때는 기다리지 않고 바로 보낸다 */
 addEventListener("pagehide",flushAtt);
@@ -2815,7 +2815,7 @@ function call(op,...args){
       .api(op,AUTH(),...args);
   });
 }
-function tracked(p){pending++;$("#sync").textContent="저장 중…";return p.finally(()=>{pending--;if(!pending)$("#sync").textContent="구글 시트에 저장됨"})}
+function tracked(p){pending++;$("#sync").textContent="저장 중…";return p.finally(()=>{pending--;if(!pending)$("#sync").textContent="저장됨"})}
 S.db={
   doc(path){return{
     update:b=>tracked(call("write","update",path,b)),
@@ -2891,7 +2891,7 @@ async function load(quiet){
   if(loading)return loading;
   const slow=setTimeout(()=>{if(!S.ready){slowNotice(true,"구글 시트에서 불러오는 데 시간이 걸리고 있어요.");hideBootLoader()}},12000);
   const slowMsg=setTimeout(()=>{if(!S.ready&&$("#bootMsg"))$("#bootMsg").textContent="조금만 기다려 주세요. 처음 열 때는 시간이 걸려요…"},5000);
-  loading=call("boot",[...S.years]).then(d=>{applyBoot(d);saveBootCache(d);S.lastBoot=Date.now();slowNotice(false);$("#sync").textContent="구글 시트에 저장됨";render();hideBootLoader();loadPhotos()})
+  loading=call("boot",[...S.years]).then(d=>{applyBoot(d);saveBootCache(d);S.lastBoot=Date.now();slowNotice(false);$("#sync").textContent="저장됨";render();hideBootLoader();loadPhotos()})
     .catch(e=>{console.error(e);$("#sync").textContent=S.ready?"연결 안 됨 · 자동 재시도":"연결 안 됨";if(!S.ready){slowNotice(true,"불러오지 못했어요: "+e.message);hideBootLoader()}else if(!quiet)toast(e.message)})
     .finally(()=>{clearTimeout(slow);clearTimeout(slowMsg);loading=null});
   return loading;
@@ -2910,7 +2910,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014154120';
+  var BUILD = '20261014160940';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
