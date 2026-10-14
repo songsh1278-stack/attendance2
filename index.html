@@ -1257,7 +1257,7 @@ async function openReport(){
   let ym=rptDefaultYm(),R=null,busy=false;
   const ov=document.createElement("div");ov.className="overlay";document.body.appendChild(ov);
   const draw=()=>{
-    const T=R&&R.teams;const done=T?RPT_TEAMS.filter(t=>(T[t].cur.length||T[t].next.length)).length:0;
+    const T=R&&R.teams;const done=T?RPT_TEAMS.filter(t=>T[t].saved&&(T[t].cur.length||T[t].next.length)).length:0;const pm=Number(ymShift(ym,-1).slice(5,7));
     ov.innerHTML=`<div class="sheet" role="dialog" aria-label="당회보고서 제출"><h3>당회보고서 제출</h3>
       <div class="datebar" style="margin:8px 0 10px"><button class="arrow" data-rym="-1" aria-label="지난달">‹</button><div class="date"><strong class="num">${ymLabel(ym)}</strong></div><button class="arrow" data-rym="1" aria-label="다음 달">›</button></div>
       ${!R?`<p class="muted">불러오는 중…</p>`:`
@@ -1265,11 +1265,11 @@ async function openReport(){
         <label>보고 날짜 (넷째 주일)<input type="date" id="rptDate" value="${esc(R.date)}" ${R.admin?"":"disabled"}></label>
         <label>문서 제목<input id="rptHead" value="${esc(R.heading)}" maxlength="60" ${R.admin?"":"disabled"}></label></div>
       ${R.admin&&R.date!==fourthSun(ym)?`<p class="muted" style="font-size:12px;margin:4px 0 0">넷째 주일(${esc(dateLabel(fourthSun(ym)))})이 아닌 날로 바꿨어요. <button class="btn" data-rdate-reset style="padding:2px 8px">넷째 주일로</button></p>`:""}
-      <div class="card admin-list" style="margin-top:12px">${RPT_TEAMS.map(t=>{const x=T[t];const has=x.cur.length||x.next.length;
-        return `<div class="admin-row"><b>${esc(rptName(t))}</b><span class="tag ${has?"new":"role"}">${has?"제출":"미제출"}</span>
-          <span class="muted" style="font-size:12px;flex:1;min-width:120px">${has?esc(x.at+" · "+x.by):""}${x.file?`<br>${esc(x.file)}`:""}</span>
+      <div class="card admin-list" style="margin-top:12px">${RPT_TEAMS.map(t=>{const x=T[t];const has=x.cur.length||x.next.length;const sub=x.saved&&has;
+        return `<div class="admin-row"><b>${esc(rptName(t))}</b><span class="tag ${sub?"new":x.carried?"bd":"role"}">${sub?"제출":x.carried?"이월":"미제출"}</span>
+          <span class="muted" style="font-size:12px;flex:1;min-width:120px">${sub?esc(x.at+" · "+x.by):x.carried?`${pm}월에 쓴 계획을 보고 내용으로 가져왔어요`:""}${x.file?`<br>${esc(x.file)}`:""}</span>
           ${x.file?`<button class="btn" data-rorig="${t}">원본</button>`:""}
-          ${x.edit?`${t!=="support"?`<button class="btn" data-rup="${t}">한글 올리기</button>`:""}<button class="btn" data-redit="${t}">${has?"고치기":"직접 쓰기"}</button>`:has?`<button class="btn" data-rview="${t}">보기</button>`:""}</div>`}).join("")}</div>
+          ${x.edit?`${t!=="support"?`<button class="btn" data-rup="${t}">한글 올리기</button>`:""}<button class="btn" data-redit="${t}">${has||x.saved?"고치기":"직접 쓰기"}</button>`:has?`<button class="btn" data-rview="${t}">보기</button>`:""}</div>`}).join("")}</div>
       <p class="muted" style="font-size:12px;margin:8px 0 0">${done}/${RPT_TEAMS.length} 제출 · 부서는 한글(.hwp) 보고서를 올리면 표의 '보고 내용'과 '계획' 칸 글자를 꺼내 담아요. 올린 뒤 화면에서 바로 고칠 수 있어요.</p>
       ${R.admin&&R.sent.length?`<h4 style="margin:14px 0 4px;font-size:14px">보낸 메일</h4>${R.sent.slice(0,5).map(s=>`<div class="hist-item"><span class="when">${esc(s.at.slice(0,10))}<br>${esc(s.at.slice(11))}</span><span class="what">${esc(s.to)}<span class="by">${esc(s.by)}</span></span></div>`).join("")}`:""}`}
       <div class="actions"><button class="btn" data-close>닫기</button><div class="spacer"></div>
@@ -1282,8 +1282,8 @@ async function openReport(){
     const mv=e.target.closest("[data-rym]");if(mv){ym=ymShift(ym,Number(mv.dataset.rym));return load()}
     if(!R||busy)return;
     if(e.target.closest("[data-rdate-reset]")){busy=true;try{setR(await tracked(call("rptMeta",ym,{date:fourthSun(ym)})))}catch(x){alertBox("바꾸지 못했어요",x.message)}busy=false;return}
-    const up=e.target.closest("[data-rup]");if(up)return rptUpload(up.dataset.rup,ym,setR);
-    const ed=e.target.closest("[data-redit]");if(ed){const t=ed.dataset.redit;return rptEditor(t,ym,{cur:R.teams[t].cur,next:R.teams[t].next},setR)}
+    const up=e.target.closest("[data-rup]");if(up)return rptUpload(up.dataset.rup,ym,setR,R.teams[up.dataset.rup]);
+    const ed=e.target.closest("[data-redit]");if(ed){const t=ed.dataset.redit,x=R.teams[t];return rptEditor(t,ym,{cur:x.cur,next:x.next,carry:x.carry,carried:x.carried,saved:x.saved},setR)}
     const vw=e.target.closest("[data-rview]");if(vw)return rptPreview(R,ym,vw.dataset.rview);
     const og=e.target.closest("[data-rorig]");if(og){busy=true;try{toast("내려받는 중…");const d=await call("rptOrig",ym,og.dataset.rorig);saveB64(d.name,d.b64,"application/x-hwp")}catch(x){alertBox("내려받지 못했어요",x.message)}busy=false;return}
     if(e.target.closest("#rptPrev"))return rptPreview(R,ym);
@@ -1298,32 +1298,40 @@ async function openReport(){
   });
   load();
 }
-function rptUpload(t,ym,setR){
+function rptUpload(t,ym,setR,x){
   const inp=document.createElement("input");inp.type="file";inp.accept=".hwp";
   inp.onchange=async()=>{
     const f=inp.files&&inp.files[0];if(!f)return;
     if(/\.hwpx$/i.test(f.name)){alertBox("한글(.hwp) 파일로 올려 주세요","한글에서 [파일 → 다른 이름으로 저장 → 파일 형식: 한글 문서(*.hwp)]로 저장한 뒤 올려 주세요.");return}
     if(f.size>10*1024*1024){alertBox("파일이 너무 커요","10MB까지 올릴 수 있어요.");return}
     let r;try{toast("한글 파일을 읽는 중…");r=await readHwpReport(await f.arrayBuffer())}catch(e){alertBox("한글 파일을 읽지 못했어요",e.message);return}
-    rptEditor(t,ym,{cur:rptTidy(r.cur),next:rptTidy(r.next),file:{name:f.name,b64:await fileToB64(f)},note:r.table?"":"보고서에서 표를 찾지 못해 본문 전체를 '보고 내용'에 넣었어요. 나눠서 옮겨 주세요."},setR);
+    rptEditor(t,ym,{cur:rptTidy(r.cur),next:rptTidy(r.next),file:{name:f.name,b64:await fileToB64(f)},carry:(x||{}).carry||[],saved:!!(x||{}).saved,note:r.table?"":"보고서에서 표를 찾지 못해 본문 전체를 '보고 내용'에 넣었어요. 나눠서 옮겨 주세요."},setR);
   };
   inp.click();
 }
 function rptEditor(t,ym,d,setR){
   const ov=document.createElement("div");ov.className="overlay";
-  const m=Number(ym.slice(5,7)),nm=m%12+1;
+  const m=Number(ym.slice(5,7)),nm=m%12+1,pm=Number(ymShift(ym,-1).slice(5,7));const carry=d.carry||[];
   ov.innerHTML=`<div class="sheet" role="dialog" aria-label="${esc(rptName(t))} 당회보고"><h3>${esc(rptName(t))} <span class="muted" style="font-family:var(--body);font-size:14px">${esc(ymLabel(ym))} 당회보고</span></h3>
+    ${d.carried&&!d.file?`<p class="notice" style="margin-top:6px">${pm}월에 쓴 '${m}월 계획'을 ${m}월 보고 내용으로 가져왔어요. 실제로 한 일에 맞게 고친 뒤 [저장]하세요.</p>`:""}
     ${d.file?`<p class="notice" style="margin-top:6px">올린 파일: <b>${esc(d.file.name)}</b> — 아래 내용을 확인하고 [저장]을 눌러야 제출돼요.</p>`:""}
     ${d.note?`<p class="err" style="font-size:13px">${esc(d.note)}</p>`:""}
     <div class="form" style="grid-template-columns:1fr">
-      <label>${m}월 보고 내용<textarea id="rCur" style="height:220px;font-size:14px;line-height:1.5" spellcheck="true">${esc(d.cur.join("\n"))}</textarea></label>
+      <label>${m}월 보고 내용${carry.length?`<button type="button" class="btn" id="rCarry" style="align-self:flex-start;padding:2px 10px;font-size:12px;font-weight:600">${pm}월에 쓴 계획 가져오기</button>`:""}<textarea id="rCur" style="height:220px;font-size:14px;line-height:1.5" spellcheck="true">${esc(d.cur.join("\n"))}</textarea></label>
       <label>${nm}월 계획, 예정 사항<textarea id="rNext" style="height:220px;font-size:14px;line-height:1.5" spellcheck="true">${esc(d.next.join("\n"))}</textarea></label></div>
     <p class="muted" style="font-size:12px;margin:6px 0 0">한 줄이 문서의 한 문단이 돼요. 글꼴·글자 크기·문단 모양은 통합 문서에서 모든 부서가 같게 맞춰져요. [자동 정리]는 겹친 띄어쓰기, 괄호·쉼표 띄어쓰기, 들여쓰기, 빈 줄을 맞춰요.</p>
-    <div class="actions"><button type="button" class="btn" data-close>취소</button><button class="btn" id="rTidy">자동 정리</button><div class="spacer"></div><button class="btn primary" id="rSave">저장</button></div></div>`;
+    <div class="actions"><button type="button" class="btn" data-close>취소</button><button class="btn" id="rTidy">자동 정리</button>${d.saved?`<button class="btn danger" id="rDel">삭제</button>`:""}<div class="spacer"></div><button class="btn primary" id="rSave">저장</button></div></div>`;
   document.body.appendChild(ov);
   const ta=id=>ov.querySelector(id);
   ov.addEventListener("click",async e=>{
     if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    if(e.target.closest("#rCarry")){const c=ta("#rCur");const cur=c.value.replace(/\s+$/,"");c.value=(cur?cur+"\n\n":"")+carry.join("\n");toast(`${pm}월에 쓴 계획을 가져왔어요`);return}
+    const dl=e.target.closest("#rDel");
+    if(dl&&!dl.disabled){if(!dl.dataset.armed){dl.dataset.armed="1";dl.textContent="한 번 더 누르면 삭제";return}
+      dl.disabled=true;dl.textContent="삭제 중…";
+      try{const r=await tracked(call("rptDelete",ym,t));ov.remove();setR(r);toast(`${rptName(t)} ${m}월 보고서를 지웠어요`)}
+      catch(x){dl.disabled=false;delete dl.dataset.armed;dl.textContent="삭제";alertBox("지우지 못했어요",x.message)}
+      return}
     if(e.target.closest("#rTidy")){["#rCur","#rNext"].forEach(id=>{ta(id).value=rptTidy(ta(id).value.split("\n")).join("\n")});toast("정리했어요");return}
     const sv=e.target.closest("#rSave");if(!sv||sv.disabled)return;sv.disabled=true;sv.textContent="저장 중…";
     const lines=id=>{const a=ta(id).value.replace(/\r/g,"").split("\n");while(a.length&&!a[a.length-1].trim())a.pop();return a};
@@ -2523,7 +2531,7 @@ S.db={
 };
 let autoDate=true,loading=null;
 /* ---- 속도: 바뀐 것이 있을 때만 새로 받아요 ---- */
-const WRITE_OPS=new Set(["write","batch","setCode","changeTeamCode","saveContact","setTeamSetting","setClassCallFirst","setPersonCallFirst","setClasses","importRoster","saveEvent","deleteEvent","libUpload","libDelete","libDoc","libVis","setGradeCode","rptSave","rptMeta","rptMail","promoExclude"]);
+const WRITE_OPS=new Set(["write","batch","setCode","changeTeamCode","saveContact","setTeamSetting","setClassCallFirst","setPersonCallFirst","setClasses","importRoster","saveEvent","deleteEvent","libUpload","libDelete","libDoc","libVis","setGradeCode","rptSave","rptMeta","rptMail","promoExclude","rptDelete"]);
 /* 내가 쓰기 전까지 최신이었다면, 내 쓰기로 바뀐 버전은 이미 아는 것으로 쳐요 (내 저장 때문에 다시 받지 않게) */
 /* 버전은 부서·반별로 따로예요. 화면은 자기가 보는 부서·반의 버전만 물어봐요 (다른 반 출석 체크로 전체를 다시 받지 않게) */
 function noteVer(op,x){
@@ -2606,7 +2614,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014095243';
+  var BUILD = '20261014101245';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
