@@ -975,7 +975,19 @@ function openGradeManage(){
 }
 /* 메인화면: 부서별 반 담임 번호 관리 (팀별 관리자 번호 아래) */
 /* 담임이 직접 바꾼 담임 번호 (최근 14일). 접혀 있어도 보이게 카드 위에 띄워요 */
-const gcChangedNote=teams=>{const L=Object.entries(S.gcChanged||{}).filter(([k])=>teams.includes(k.split("_")[0])).sort((a,b)=>String(b[1]).localeCompare(String(a[1])));
+/* 팀 관리자는 처음 본 뒤 10분이 지나면 이 기기에서 안 보여요 (바꾼 시각이 다르면 새 변경으로 다시 보여요) */
+const GC_SEEN_MS=10*60*1000;
+function gcSeenFilter(L){
+  if(S.isAdmin)return L;
+  let seen={};try{seen=JSON.parse(localStorage.getItem("ya-gcseen")||"{}")||{}}catch(_){}seen={...seen,...(S.gcSeen||{})};
+  const now=Date.now(),keep={};let soon=0;
+  Object.keys(seen).forEach(id=>{if(now-seen[id]<15*864e5)keep[id]=seen[id]}); /* 오래된 기록만 정리 */
+  const out=L.filter(([k,at])=>{const id=k+"|"+at;const t=seen[id]||(seen[id]=now);keep[id]=t;const left=t+GC_SEEN_MS-now;if(left>0&&(!soon||left<soon))soon=left;return left>0});
+  S.gcSeen=keep;try{localStorage.setItem("ya-gcseen",JSON.stringify(keep))}catch(_){}
+  if(soon){clearTimeout(S.gcSeenT);S.gcSeenT=setTimeout(()=>{if(S.view==="home")render()},soon+500)}
+  return out;
+}
+const gcChangedNote=teams=>{const L=gcSeenFilter(Object.entries(S.gcChanged||{}).filter(([k])=>teams.includes(k.split("_")[0]))).sort((a,b)=>String(b[1]).localeCompare(String(a[1])));
   return L.length?`<div class="notice" style="margin:0 0 10px"><b>최근 담임 번호 변경</b>${L.map(([k,at])=>{const t=k.split("_")[0],g=k.slice(t.length+1);return `<div style="margin-top:4px">${esc(TEAMS[t].label)} ${esc((groupsOf(t).find(x=>x[0]===g)||[g,g])[1])} <span class="muted num">(${esc(String(at).slice(5,7)*1+"/"+String(at).slice(8,10)*1+" "+String(at).slice(11))})</span></div>`}).join("")}<div class="muted" style="font-size:12px;margin-top:6px">담임 선생님이 직접 바꾼 번호예요. 새 번호는 [담임 번호 관리]에서 볼 수 있어요.</div></div>`:""};
 const hrCodesCard=teams=>teams.length?gcChangedNote(teams)+`<details class="fold" data-fold="hrcodes"${(S.isAdmin?S.fold.hrcodes:S.fold.hrcodes!==false)?" open":""}><summary><h2 class="sec">반 담임 번호</h2><span class="fold-sum">${teams.length}개 부서 · 영문+숫자 6자리 이상</span></summary><div class="card admin-list">${teams.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">영문+숫자 6자리 이상 · 대소문자 구분 없음</span><button class="btn" data-hrcodes="${t}">담임 번호 관리</button></div>`).join("")}</div></details>`:"";
 function openHomeroomCodes(){
@@ -2973,7 +2985,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014212806';
+  var BUILD = '20261014213133';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
