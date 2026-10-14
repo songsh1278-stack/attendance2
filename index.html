@@ -21,8 +21,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>신당중앙교회 교육팀 출석부</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Myeongjo:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
-<script>/* 디자인(기본·교회)·배경색 선택을 화면이 그려지기 전에 적용 */try{if(localStorage.getItem("ya-style")==="church")document.documentElement.setAttribute("data-style","church");var bg=localStorage.getItem("ya-bg");if(bg)document.documentElement.setAttribute("data-bg",bg)}catch(e){}</script>
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Myeongjo:wght@700;800&family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<script>/* 디자인·배경색·글자 크기 선택을 화면이 그려지기 전에 적용 */try{var de=document.documentElement,st=localStorage.getItem("ya-style"),bg=localStorage.getItem("ya-bg"),fs=localStorage.getItem("ya-fs");if(st==="church"||st==="navy")de.setAttribute("data-style",st);if(bg&&bg.charAt(0)==="#"){de.setAttribute("data-bg","custom");de.style.setProperty("--custom-bg",bg)}else if(bg)de.setAttribute("data-bg",bg);if(fs)de.setAttribute("data-fs",fs)}catch(e){}</script>
 <style>
 :root{
   --ground:#F1F5F2; --surface:#FFFFFF; --sunk:#E6ECE8; --line:#D5DED9;
@@ -379,11 +379,56 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .form .pc-rep{justify-content:space-between}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 /* ===== 배경색 (메인화면 맨 아래에서 고름, 밝은 화면에서만) ===== */
-@media (prefers-color-scheme: light){:root[data-bg="ivory"]:not([data-theme="dark"]){--ground:#F6F1E7}:root[data-bg="sky"]:not([data-theme="dark"]){--ground:#EAF1F8}:root[data-bg="pink"]:not([data-theme="dark"]){--ground:#F8ECEE}:root[data-bg="lilac"]:not([data-theme="dark"]){--ground:#F0ECF7}:root[data-bg="mint"]:not([data-theme="dark"]){--ground:#EEF4E6}:root[data-bg="gray"]:not([data-theme="dark"]){--ground:#F0F0EE}:root[data-bg="white"]:not([data-theme="dark"]){--ground:#FFFFFF}}
+@media (prefers-color-scheme: light){:root[data-bg="custom"]:not([data-theme="dark"]){--ground:var(--custom-bg)}:root[data-bg="ivory"]:not([data-theme="dark"]){--ground:#F6F1E7}:root[data-bg="sky"]:not([data-theme="dark"]){--ground:#EAF1F8}:root[data-bg="pink"]:not([data-theme="dark"]){--ground:#F8ECEE}:root[data-bg="lilac"]:not([data-theme="dark"]){--ground:#F0ECF7}:root[data-bg="mint"]:not([data-theme="dark"]){--ground:#EEF4E6}:root[data-bg="gray"]:not([data-theme="dark"]){--ground:#F0F0EE}:root[data-bg="white"]:not([data-theme="dark"]){--ground:#FFFFFF}}
 :root[data-bg="ivory"][data-theme="light"]{--ground:#F6F1E7}:root[data-bg="sky"][data-theme="light"]{--ground:#EAF1F8}:root[data-bg="pink"][data-theme="light"]{--ground:#F8ECEE}:root[data-bg="lilac"][data-theme="light"]{--ground:#F0ECF7}:root[data-bg="mint"][data-theme="light"]{--ground:#EEF4E6}:root[data-bg="gray"][data-theme="light"]{--ground:#F0F0EE}:root[data-bg="white"][data-theme="light"]{--ground:#FFFFFF}
+:root[data-bg="custom"][data-theme="light"]{--ground:var(--custom-bg)}
+.bg-pick label.custom{position:relative;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);box-shadow:var(--shadow);cursor:pointer;background:conic-gradient(#f88,#fd8,#8e8,#8df,#a8f,#f8c,#f88);overflow:hidden}
+.bg-pick label.custom.on{outline:2px solid var(--accent);outline-offset:2px}
+.bg-pick label.custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
 .bg-pick{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:8px}
 .bg-pick button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);box-shadow:var(--shadow);cursor:pointer;font-size:9px;padding:0;white-space:nowrap;letter-spacing:-.05em;color:var(--muted)}
 .bg-pick button[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ===== 네이비 디자인 ===== */
+:root[data-style="navy"]{
+  --ground:#EEF1F6; --surface:#FFFFFF; --sunk:#E3E8F0; --line:#D3DAE6;
+  --ink:#1B2433; --muted:#5E6B80; --accent:#1F3A5F; --accent-ink:#FFFFFF; --accent-soft:#DDE6F2;
+  --gold:#B08D57; --gold-soft:#F3EBDD; --teacher:#EFEAF7; --teacher-line:#D6CCE9; --new:#9A3B5C; --new-soft:#F6E3EA; --danger:#B3261E;
+  --shadow:0 1px 2px rgba(20,35,60,.06),0 6px 20px rgba(20,35,60,.07);
+  --display:"Gowun Batang","Nanum Myeongjo",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root[data-style="navy"]:not([data-theme="light"]){
+    --ground:#0E1420; --surface:#162032; --sunk:#1C2940; --line:#2A3A55;
+    --ink:#E6ECF5; --muted:#9AA8BE; --accent:#8FB3E6; --accent-ink:#0B1626; --accent-soft:#1E3352;
+    --gold:#D6B67A; --gold-soft:#3A3122; --teacher:#231F33; --teacher-line:#3E3558; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
+    --shadow:0 1px 2px rgba(0,0,0,.35);
+  }
+}
+:root[data-style="navy"][data-theme="dark"]{
+  --ground:#0E1420; --surface:#162032; --sunk:#1C2940; --line:#2A3A55;
+  --ink:#E6ECF5; --muted:#9AA8BE; --accent:#8FB3E6; --accent-ink:#0B1626; --accent-soft:#1E3352;
+  --gold:#D6B67A; --gold-soft:#3A3122; --teacher:#231F33; --teacher-line:#3E3558; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
+  --shadow:0 1px 2px rgba(0,0,0,.35);
+}
+:root[data-style="navy"] header.top{background:var(--accent);color:var(--accent-ink);border-bottom:2px solid var(--gold)}
+:root[data-style="navy"] header.top .brand small,:root[data-style="navy"] header.top .brand *{color:inherit}
+:root[data-style="navy"] header.top .teams{background:rgba(255,255,255,.12);border:0}
+:root[data-style="navy"] header.top .teams button{color:rgba(255,255,255,.75)}
+:root[data-style="navy"] header.top .teams button[aria-selected="true"]{color:var(--accent)}
+:root[data-style="navy"] .brand h1{font-weight:700;letter-spacing:.02em}
+:root[data-style="navy"] h2.sec{font-weight:700;padding-left:10px;border-left:3px solid var(--gold);line-height:1.2}
+:root[data-style="navy"] .sheet h3,:root[data-style="navy"] .group-h{font-weight:700}
+:root[data-style="navy"] .dept{border:0;box-shadow:var(--shadow);border-bottom:3px solid var(--accent)}
+:root[data-style="navy"] .card{border-color:transparent;box-shadow:var(--shadow)}
+:root[data-style="navy"] nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:700}
+/* ===== 글자 크기 (화면 전체 비율) ===== */
+:root[data-fs="s"] body{zoom:.92}
+:root[data-fs="l"] body{zoom:1.12}
+:root[data-fs="xl"] body{zoom:1.25}
+.look-seg{display:inline-flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:6px}
+.look-seg button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--ink)}
+.look-seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 /* ===== 교회 디자인 (메인화면 맨 아래 [디자인] 버튼으로 켜고 끔. 끄면 위의 기본 디자인 그대로) ===== */
 :root[data-style="church"]{
   --ground:#F6F1E7; --surface:#FFFDF8; --sunk:#EEE6D6; --line:#E1D5BE;
@@ -2271,13 +2316,29 @@ function renderAdminSummary(){
 /* 배경색 선택: 이 기기에만 저장. '기본'을 고르면 원래 배경으로 */
 const BG_COLORS=[["","기본",""],["ivory","상아","#F6F1E7"],["sky","하늘","#EAF1F8"],["pink","연분홍","#F8ECEE"],["lilac","연보라","#F0ECF7"],["mint","연두","#EEF4E6"],["gray","회색","#F0F0EE"],["white","흰색","#FFFFFF"]];
 const curBg=()=>document.documentElement.getAttribute("data-bg")||"";
-function setBg(k){if(k)document.documentElement.setAttribute("data-bg",k);else document.documentElement.removeAttribute("data-bg");
-  try{if(k)localStorage.setItem("ya-bg",k);else localStorage.removeItem("ya-bg")}catch(_){}render();toast(k?`배경색을 ${BG_COLORS.find(x=>x[0]===k)[1]}(으)로 바꿨어요`:"기본 배경으로 되돌렸어요")}
-const bgPicker=()=>`<div style="margin-top:12px;text-align:center"><span class="muted" style="font-size:13px">배경색</span><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-bgc="${k}" title="${n}" aria-label="배경색 ${n}" aria-pressed="${curBg()===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}</div></div>`;
-/* 디자인 선택(기본·교회풍): 이 기기에만 저장. 언제든 다시 눌러 되돌릴 수 있다 */
-const isChurchStyle=()=>document.documentElement.getAttribute("data-style")==="church";
-function toggleStyle(){const on=!isChurchStyle();if(on)document.documentElement.setAttribute("data-style","church");else document.documentElement.removeAttribute("data-style");
-  try{localStorage.setItem("ya-style",on?"church":"basic")}catch(_){}render();toast(on?"교회풍 디자인으로 바꿨어요":"기본 디자인으로 되돌렸어요")}
+const customBg=()=>document.documentElement.style.getPropertyValue("--custom-bg").trim()||"#f6f1e7";
+/* k: 정해 둔 색 이름, '#rrggbb'(사용자 지정), ''(기본) */
+function setBg(k){const de=document.documentElement;const custom=/^#[0-9a-f]{6}$/i.test(k||"");
+  if(custom){de.setAttribute("data-bg","custom");de.style.setProperty("--custom-bg",k)}else{de.style.removeProperty("--custom-bg");if(k)de.setAttribute("data-bg",k);else de.removeAttribute("data-bg")}
+  try{if(k)localStorage.setItem("ya-bg",k);else localStorage.removeItem("ya-bg")}catch(_){}render();{const ls=document.getElementById("lookSheet");if(ls&&ls._redraw)ls._redraw()}toast(custom?"배경색을 직접 고른 색으로 바꿨어요":k?`배경색을 ${BG_COLORS.find(x=>x[0]===k)[1]}(으)로 바꿨어요`:"기본 배경으로 되돌렸어요")}
+const bgPicker=()=>`<div style="margin-top:12px;text-align:center"><span class="muted" style="font-size:13px">배경색</span><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-bgc="${k}" title="${n}" aria-label="배경색 ${n}" aria-pressed="${curBg()===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}<label class="custom${curBg()==="custom"?" on":""}" title="사용자 지정" aria-label="배경색 직접 고르기"><input type="color" data-bgcustom value="${customBg()}"></label></div><div class="muted" style="font-size:11px;margin-top:4px">맨 오른쪽 무지개 동그라미: 원하는 색 직접 고르기</div></div>`;
+/* 디자인(기본·교회풍·네이비)과 글자 크기: 이 기기에만 저장. 언제든 '기본'·'보통'으로 되돌릴 수 있다 */
+const STYLES=[["","기본"],["church","교회풍"],["navy","네이비"]],FONT_SIZES=[["s","작게"],["","보통"],["l","크게"],["xl","아주 크게"]];
+const curAttr=a=>document.documentElement.getAttribute(a)||"";
+function setLook(attr,key,val,label){const de=document.documentElement;if(val)de.setAttribute(attr,val);else de.removeAttribute(attr);
+  try{if(val)localStorage.setItem(key,val);else localStorage.removeItem(key)}catch(_){}render();const ls=document.getElementById("lookSheet");if(ls&&ls._redraw)ls._redraw();toast(label)}
+const lookSeg=(list,attr,data)=>`<div class="look-seg">${list.map(([k,l])=>`<button type="button" ${data}="${k}" aria-pressed="${curAttr(attr)===k}">${l}</button>`).join("")}</div>`;
+const lookBody=()=>`<div style="text-align:center"><span class="muted" style="font-size:13px">디자인</span><br>${lookSeg(STYLES,"data-style","data-look")}
+  <div style="margin-top:14px"><span class="muted" style="font-size:13px">글자 크기</span><br>${lookSeg(FONT_SIZES,"data-fs","data-fsz")}</div><div style="margin-top:6px">${bgPicker()}</div></div>`;
+const lookPanel=()=>`<div style="margin-top:28px;text-align:center"><button class="btn" id="lookOpen">🎨 디자인 · 글자 크기 · 배경색</button></div>`;
+/* 디자인 창: 고르면 바로 적용, 창은 열린 채로 다시 그린다 */
+function openLook(){
+  const ov=document.createElement("div");ov.className="overlay";ov.id="lookSheet";
+  const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="디자인"><h3>디자인</h3><p class="muted" style="font-size:13px;margin:0 0 12px">이 기기에만 적용돼요. 언제든 [기본]·[보통]으로 되돌릴 수 있어요.</p>${lookBody()}
+    <div class="actions"><div class="spacer"></div><button class="btn primary" data-close>닫기</button></div></div>`};
+  draw();document.body.appendChild(ov);ov._redraw=draw;
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+}
 function renderHome(){
   const k=S.date;
   let h=`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>부서를 선택해 들어가세요.</p></div><div class="dept-grid">`;
@@ -2307,7 +2368,7 @@ function renderHome(){
     if(mine.length)h+=rptCard();
     if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`+hrCodesCard(mine)}
   if(S.isAdmin){if(!S.isCo)h+=renderPromoAdmin();h+=renderStaff();if(!S.isCo)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
-  h+=`<div style="margin-top:28px;text-align:center"><button class="btn" id="styleToggle">디자인: ${isChurchStyle()?"교회풍 ✝ · 기본으로 되돌리기":"기본 · 교회풍으로 바꿔 보기"}</button>${bgPicker()}</div>`;
+  h+=lookPanel();
   h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   return h;
 }
@@ -2475,6 +2536,7 @@ function openPerson(id){
 }
 
 /* ---------- events ---------- */
+document.addEventListener("change",e=>{const c=e.target.closest&&e.target.closest("[data-bgcustom]");if(c)setBg(c.value)});
 document.addEventListener("toggle",e=>{const f=e.target;if(f.dataset&&f.dataset.fold)S.fold[f.dataset.fold]=f.open},true);
 document.addEventListener("click",e=>{const ad=e.target.closest("[data-adate]");
 if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
@@ -2485,7 +2547,9 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const ep=e.target.closest("[data-edit-person]");if(ep){openPerson.edit=true;openPerson(ep.dataset.editPerson);openPerson.edit=false;return}
   const o=e.target.closest("[data-open]");if(o){openPerson.edit=false;return openPerson(o.dataset.open)}
   const gc=e.target.closest("[data-gcode]");if(gc)return openGradeCodeEntry(gc.dataset.gcode);
-  if(e.target.closest("#styleToggle"))return toggleStyle();
+  if(e.target.closest("#lookOpen"))return openLook();
+  const lk=e.target.closest("[data-look]");if(lk){const v=lk.dataset.look;return setLook("data-style","ya-style",v,(STYLES.find(x=>x[0]===v)||STYLES[0])[1]+" 디자인으로 바꿨어요")}
+  const fz=e.target.closest("[data-fsz]");if(fz){const v=fz.dataset.fsz;return setLook("data-fs","ya-fs",v,"글자 크기: "+(FONT_SIZES.find(x=>x[0]===v)||FONT_SIZES[1])[1])}
   const bgc=e.target.closest("[data-bgc]");if(bgc)return setBg(bgc.dataset.bgc);
   if(e.target.closest("#toTop")){window.scrollTo({top:0,behavior:"smooth"});const v=$("#view");if(v&&v.scrollTop)v.scrollTo({top:0,behavior:"smooth"});return}
   if(e.target.closest("#goSet")){const el=document.querySelector("#view [data-set]");if(el){el.scrollIntoView({behavior:"smooth",block:"start"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1200)}return}
@@ -2719,7 +2783,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014131842';
+  var BUILD = '20261014132400';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
