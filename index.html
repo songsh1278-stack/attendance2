@@ -458,7 +458,7 @@ function toast(msg){const t=document.createElement("div");t.className="toast";t.
 /* ---------- derived ---------- */
 function activePeople(group){
   return [...S.people.values()].filter(p=>teamOf(p)===S.team&&p.active!==false&&(group==="all"||!group||p.group===group))
-    .sort((a,b)=>GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||a.name.localeCompare(b.name,"ko")); /* 반 안에서는 학생·교사 모두 가나다순 */
+    .sort((a,b)=>GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||String(a.group).localeCompare(String(b.group))||a.name.localeCompare(b.name,"ko")); /* 반 안에서는 학생·교사 모두 가나다순 */
 }
 const attOf=k=>S.att.get(k)||{p:{},t:{}};
 const isOn=(k,id)=>!!(attOf(k).p||{})[id];
@@ -1533,7 +1533,7 @@ function renderRoster(){
   const q=S.q.trim();
   const all=[...S.people.values()].filter(p=>teamOf(p)===S.team&&(S.group==="all"||p.group===S.group)&&!(isHomeroom()&&p.group==="T"));
   const ps=all.filter(p=>rosterModeOf(p)===(S.rosterMode||"active")).filter(p=>!q||[p.name,p.note].some(v=>(v||"").includes(q)))
-    .sort((a,b)=>(a.active===false)-(b.active===false)||GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||a.name.localeCompare(b.name,"ko"));
+    .sort((a,b)=>(a.active===false)-(b.active===false)||GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||String(a.group).localeCompare(String(b.group))||a.name.localeCompare(b.name,"ko"));
   let h=`<input class="search" id="q" type="search" placeholder="이름 검색" value="${esc(S.q)}"><div class="seg" style="margin-top:10px">${[["active","출석"],["removed","제적"],["grad","졸업"]].map(([m,l])=>`<button data-rmode="${m}" aria-pressed="${(S.rosterMode||"active")===m}">${l} ${(()=>{const L=all.filter(p=>rosterModeOf(p)===m),tc=L.filter(p=>p.group==="T").length;return S.group==="T"?tc+"명":(L.length-tc)+"명"+(tc?` <span style="font-weight:400;opacity:.75">+교사 ${tc}</span>`:"")})()}</button>`).join("")}</div>
     <div class="summary"><div>${(()=>{const act=all.filter(p=>p.active!==false),st=act.filter(p=>p.group!=="T").length,tc=act.length-st;
       /* 학생과 교사를 따로 세요 (교사 칩을 고르면 교사만) */
@@ -1991,9 +1991,8 @@ function chipDouble(g){const now=Date.now();const dbl=chipLast.g===g&&now-chipLa
 function openClassAssign(t){
   if(!canPromote(t)){toast("반 배정은 팀 관리자 이상만 할 수 있어요");return}
   const cls=classesOf(t);const order=g=>{const i=cls.findIndex(x=>x[0]===g);return i<0?99:i};
-  const ages=Object.fromEntries(TEAMS[t].groups.map(([a],i)=>[a,i]));
   const ps=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group!=="T")
-    .sort((a,b)=>order(a.group)-order(b.group)||(ages[a.age]??99)-(ages[b.age]??99)||a.name.localeCompare(b.name,"ko"));
+    .sort((a,b)=>order(a.group)-order(b.group)||String(a.group).localeCompare(String(b.group))||a.name.localeCompare(b.name,"ko"));
   const opts=g=>cls.map(([k,l])=>`<option value="${k}" ${g===k?"selected":""}>${esc(l)}</option>`).join("");
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="반 배정"><h3>${esc(TEAMS[t].label)} 반 배정</h3>
@@ -2614,7 +2613,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014111359';
+  var BUILD = '20261014112833';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
