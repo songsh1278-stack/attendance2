@@ -22,7 +22,7 @@
 <title>신당중앙교회 교육팀 출석부</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Myeongjo:wght@700;800&family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
-<script>/* 디자인·배경색·글자 크기 선택을 화면이 그려지기 전에 적용 */try{var de=document.documentElement,st=localStorage.getItem("ya-style"),bg=localStorage.getItem("ya-bg"),fs=localStorage.getItem("ya-fs");if(st==="church"||st==="navy")de.setAttribute("data-style",st);if(bg&&bg.charAt(0)==="#"){de.setAttribute("data-bg","custom");de.style.setProperty("--custom-bg",bg)}else if(bg)de.setAttribute("data-bg",bg);if(fs)de.setAttribute("data-fs",fs)}catch(e){}</script>
+<script>/* 디자인·배경색·글자 크기 선택을 화면이 그려지기 전에 적용 */try{var de=document.documentElement,st=localStorage.getItem("ya-style")||"church",bg=localStorage.getItem("ya-bg"),fs=localStorage.getItem("ya-fs");if(st==="church"||st==="navy")de.setAttribute("data-style",st);if(bg&&bg.charAt(0)==="#"){de.setAttribute("data-bg","custom");de.style.setProperty("--custom-bg",bg)}else if(bg)de.setAttribute("data-bg",bg);if(fs)de.setAttribute("data-fs",fs)}catch(e){document.documentElement.setAttribute("data-style","church")}</script>
 <style>
 :root{
   --ground:#F1F5F2; --surface:#FFFFFF; --sunk:#E6ECE8; --line:#D5DED9;
@@ -2345,7 +2345,7 @@ const deptColorRows=()=>`<div style="margin-top:14px;text-align:center"><span cl
   return `<div class="dc-row"><b>${esc(TEAMS[t].label)}</b><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-dc="${t}|${k}" title="${n}" aria-label="${esc(TEAMS[t].short)} 카드 색 ${n}" aria-pressed="${!custom&&cur===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}<label class="custom${custom?" on":""}" title="사용자 지정"><input type="color" data-dccustom="${t}" value="${custom?cur:"#f6f1e7"}"></label></div></div>`}).join("")}</div>`;
 const bgPicker=()=>`<div style="margin-top:12px;text-align:center"><span class="muted" style="font-size:13px">배경색 <span style="font-size:11px">(밝은 화면에서 적용)</span></span><div class="bg-pick">${BG_COLORS.map(([k,n,c])=>`<button type="button" data-bgc="${k}" title="${n}" aria-label="배경색 ${n}" aria-pressed="${curBg()===k}" style="background:${c||"var(--surface)"}">${k?"":"기본"}</button>`).join("")}<label class="custom${curBg()==="custom"?" on":""}" title="사용자 지정" aria-label="배경색 직접 고르기"><input type="color" data-bgcustom value="${customBg()}"></label></div><div class="muted" style="font-size:11px;margin-top:4px">맨 오른쪽 무지개 동그라미: 원하는 색 직접 고르기</div></div>`;
 /* 디자인(기본·교회풍·네이비)과 글자 크기: 이 기기에만 저장. 언제든 '기본'·'보통'으로 되돌릴 수 있다 */
-const STYLES=[["","기본"],["church","교회풍"],["navy","네이비"]],FONT_SIZES=[["s","작게"],["","보통"],["l","크게"],["xl","아주 크게"]];
+const STYLES=[["church","교회풍 (기본)"],["navy","네이비"],["","기존 초록"]],FONT_SIZES=[["s","작게"],["","보통"],["l","크게"],["xl","아주 크게"]];
 const curAttr=a=>document.documentElement.getAttribute(a)||"";
 function setLook(attr,key,val,label){const de=document.documentElement;if(val)de.setAttribute(attr,val);else de.removeAttribute(attr);
   try{if(val)localStorage.setItem(key,val);else localStorage.removeItem(key)}catch(_){}render();const ls=document.getElementById("lookSheet");if(ls&&ls._redraw)ls._redraw();toast(label)}
@@ -2356,7 +2356,7 @@ const lookPanel=()=>`<div style="margin-top:28px;text-align:center"><button clas
 /* 디자인 창: 고르면 바로 적용, 창은 열린 채로 다시 그린다 */
 function openLook(){
   const ov=document.createElement("div");ov.className="overlay";ov.id="lookSheet";
-  const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="디자인"><h3>디자인</h3><p class="muted" style="font-size:13px;margin:0 0 12px">이 기기에만 적용돼요. 언제든 [기본]·[보통]으로 되돌릴 수 있어요.</p>${lookBody()}
+  const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="디자인"><h3>디자인</h3><p class="muted" style="font-size:13px;margin:0 0 12px">이 기기에만 적용돼요. 언제든 [교회풍 (기본)]·[보통]으로 되돌릴 수 있어요.</p>${lookBody()}
     <div class="actions"><div class="spacer"></div><button class="btn primary" data-close>닫기</button></div></div>`};
   draw();document.body.appendChild(ov);ov._redraw=draw;
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
@@ -2571,7 +2571,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const gc=e.target.closest("[data-gcode]");if(gc)return openGradeCodeEntry(gc.dataset.gcode);
   if(e.target.closest("#lookOpen"))return openLook();
   const dcb=e.target.closest("[data-dc]");if(dcb){const [t,k]=dcb.dataset.dc.split("|");return setDeptColor(t,k)}
-  const lk=e.target.closest("[data-look]");if(lk){const v=lk.dataset.look;return setLook("data-style","ya-style",v,(STYLES.find(x=>x[0]===v)||STYLES[0])[1]+" 디자인으로 바꿨어요")}
+  const lk=e.target.closest("[data-look]");if(lk){const v=lk.dataset.look;setLook("data-style","ya-style",v,(STYLES.find(x=>x[0]===v)||STYLES[0])[1]+" 디자인으로 바꿨어요");if(!v)try{localStorage.setItem("ya-style","basic")}catch(_){}return}
   const fz=e.target.closest("[data-fsz]");if(fz){const v=fz.dataset.fsz;return setLook("data-fs","ya-fs",v,"글자 크기: "+(FONT_SIZES.find(x=>x[0]===v)||FONT_SIZES[1])[1])}
   const bgc=e.target.closest("[data-bgc]");if(bgc)return setBg(bgc.dataset.bgc);
   if(e.target.closest("#toTop")){window.scrollTo({top:0,behavior:"smooth"});const v=$("#view");if(v&&v.scrollTop)v.scrollTo({top:0,behavior:"smooth"});return}
@@ -2806,7 +2806,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014134928';
+  var BUILD = '20261014135449';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
