@@ -2357,6 +2357,33 @@ function openMyCode(t){
     ov.remove();S.book=null;await load();toast("관리번호를 바꿨어요");
   });
 }
+function openMyGradeCode(t,g){
+  const gl=(groupsOf(t).find(x=>x[0]===g)||[g,g])[1];
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="담임 번호 변경"><h3>${esc(TEAMS[t].label)} ${esc(gl)} 담임 번호 변경</h3>
+    <p class="muted" style="margin:0;font-size:14px">담임 본인 번호를 바꿔요. 지금 쓰는 번호를 먼저 확인하고, 바꾼 일은 활동 기록에 남아요. 같은 반 다른 담임 선생님도 새 번호로 들어와야 하니 꼭 알려 주세요. 다른 부서·담임 번호와 같으면 안 돼요.</p>
+    <div class="form"><label class="full">지금 쓰는 번호<input id="f-mg0" type="password" autocomplete="off" autocapitalize="off" maxlength="20" required></label>
+    <label class="full">새 번호 (${gradeCodeRule(t)}, 대소문자 구분 없음)<input id="f-mg1" type="password" autocomplete="off" autocapitalize="off" maxlength="20" required></label>
+    <label class="full">새 번호 한 번 더<input id="f-mg2" type="password" autocomplete="off" autocapitalize="off" maxlength="20" required></label></div>
+    <p class="err" id="mgErr" hidden></p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">변경</button></div></form>`;
+  document.body.appendChild(ov);const o=ov.querySelector("#f-mg0"),a=ov.querySelector("#f-mg1"),b=ov.querySelector("#f-mg2");o.focus();
+  const err=m=>{const el=ov.querySelector("#mgErr");el.textContent=m;el.hidden=false};
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+  ov.querySelector("form").addEventListener("submit",async e=>{
+    e.preventDefault();const v=a.value.trim(),ov0=o.value.trim();
+    if(!ov0){err("지금 쓰는 번호를 먼저 적어 주세요");o.focus();return}
+    if(!validGradeCode(t,v)){err("새 번호는 "+gradeCodeRule(t)+"으로 적어 주세요");a.select();return}
+    if(v.toLowerCase()===ov0.toLowerCase()){err("지금 번호와 같아요. 다른 번호로 정해 주세요");a.select();return}
+    if(v.toLowerCase()!==b.value.trim().toLowerCase()){err("두 번호가 달라요. 다시 확인해 주세요");b.select();return}
+    const btn=ov.querySelector('[type="submit"]');btn.disabled=true;
+    try{await tracked(call("changeGradeCode",t,g,{code:v,old:ov0}))}catch(x){btn.disabled=false;err(x.message);if(/지금/.test(x.message))o.select();else a.select();return}
+    /* 이 기기에 저장된 번호도 새 번호로 바꿔요 (안 바꾸면 다음 새로고침 때 로그아웃돼요) */
+    const k=t+"_"+g;S._gcodes={...(S._gcodes||{}),[k]:v};
+    try{const c=JSON.parse(localStorage.getItem("ya-gcodes")||"{}");if(k in c){c[k]=v;localStorage.setItem("ya-gcodes",JSON.stringify(c))}}catch(_){}
+    ov.remove();S.book=null;await load();toast("담임 번호를 바꿨어요");
+  });
+}
 function openAdminLogin(){
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="관리자 로그인"><h3>관리자 로그인</h3>
@@ -2520,7 +2547,10 @@ function renderHome(){
   }
   {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
     if(mine.length)h+=rptCard();
-    if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`+hrCodesCard(mine)}
+    if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`+hrCodesCard(mine);
+    /* 담임 번호로 들어온 사람: 자기 반 담임 번호를 직접 바꿀 수 있어요 */
+    const hr=S.isAdmin?[]:Object.keys(TEAMS).flatMap(t=>{const sc=(S.scope||{})[t]||{};return sc.level==="grade"?sc.grades.map(g=>[t,g]):[]});
+    if(hr.length)h+=`<h2 class="sec">내 담임 번호</h2><div class="card admin-list">${hr.map(([t,g])=>`<div class="admin-row"><b>${TEAMS[t].label} ${esc((groupsOf(t).find(x=>x[0]===g)||[g,g])[1])}</b><span class="code none">담임으로 로그인됨</span><button class="btn" data-mygcode="${t}|${esc(g)}">번호 변경</button></div>`).join("")}</div>`}
   if(S.isAdmin){h+=renderPromoAdmin();if(!S.isCo2)h+=renderStaff();if(!S.isCo)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
   h+=lookPanel(); /* 새로고침은 맨 위 제목 줄 오른쪽 ↻ 버튼 */
   h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
@@ -2762,6 +2792,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const sdl=e.target.closest("[data-staff-del]");if(sdl){if(!sdl.dataset.armed){sdl.dataset.armed="1";sdl.textContent="한 번 더";return}
     tracked(call("staffDel",sdl.dataset.staffDel)).then(l=>{S.staff=l;render();toast("삭제했어요")}).catch(err=>alertBox("삭제하지 못했어요",err.message));return}
   const mcb=e.target.closest("[data-mycode]");if(mcb)return openMyCode(mcb.dataset.mycode);
+  const mgb=e.target.closest("[data-mygcode]");if(mgb){const [t,g]=mgb.dataset.mygcode.split("|");return openMyGradeCode(t,g)}
   if(e.target.closest("#teamAdminIn"))return openTeamAdminLogin();
     if(e.target.closest("#adminIn")){if(S.isAdmin){toast("이미 총관리자로 로그인되어 있어요");return}return openAdminLogin()}
   if(e.target.closest("#adminOut")){try{localStorage.removeItem("ya-admin");localStorage.removeItem("ya-copw")}catch(_){}S._admin="";S._copw="";load();toast("로그아웃했어요");return}
@@ -2939,7 +2970,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014212002';
+  var BUILD = '20261014212511';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
