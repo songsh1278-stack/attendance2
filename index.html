@@ -2285,7 +2285,7 @@ function openClassAssign(t){
 }
 const PROMO_TEAMS=["infant","toddler","youth","teen"];
 function renderPromoAdmin(){
-  return `<details class="fold" data-fold="promo"${S.fold.promo?" open":""}><summary><h2 class="sec">연말 학년 등반</h2><span class="fold-sum">${promoYear()}년 연말 · 완료 ${PROMO_TEAMS.filter(promoDone).length}곳 / 대상 ${PROMO_TEAMS.length}곳</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">부서마다 따로 진행해요. 각 부서 명단 탭에서도 부서 관리자가 고유번호를 확인한 뒤 실행할 수 있어요. 맨 위 학년은 다음 부서로 올라가고(영아 4세→유아 5세, 유아 7세→유소년, 6학년→중고등 중1), 고3은 졸업해요.</p>
+  return `<details class="fold" data-fold="promo"${S.fold.promo?" open":""}><summary><h2 class="sec">연말 학년 등반</h2><span class="fold-sum">완료 ${PROMO_TEAMS.filter(promoDone).length}곳 / 대상 ${PROMO_TEAMS.length}곳</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">부서마다 따로 진행해요. 각 부서 명단 탭에서도 부서 관리자가 고유번호를 확인한 뒤 실행할 수 있어요. 맨 위 학년은 다음 부서로 올라가고(영아 4세→유아 5세, 유아 7세→유소년, 6학년→중고등 중1), 고3은 졸업해요.</p>
     <div style="display:flex;justify-content:flex-end;margin:0 0 8px"><button class="btn" id="gradXlsx">올해 졸업 예정자 명단 엑셀로 받기</button></div>
     <div class="card admin-list">${PROMO_TEAMS.map(t=>{const todo=promoGroups(t),done=promoDone(t)?promoDoneGroups(t):[];
       return `<details class="fold promo-team" data-fold="promo-${t}"${S.fold["promo-"+t]?" open":""}><summary><b>${TEAMS[t].label}</b><span class="code none">${esc(promoStatus(t))}</span><button class="btn" data-promo="${t}">등반</button><button class="btn danger" data-promo-undo="${t}">되돌리기</button></summary>
@@ -2987,7 +2987,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014215506';
+  var BUILD = '20261014215705';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
