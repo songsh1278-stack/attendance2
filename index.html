@@ -26,8 +26,8 @@
 <style>
 :root{
   --ground:#F1F5F2; --surface:#FFFFFF; --sunk:#E6ECE8; --line:#D5DED9;
-  --ink:#17302B; --muted:#5F726D; --accent:#18856B; --accent-ink:#FFFFFF; --accent-soft:#D4EDE4;
-  --gold:#C98A0E; --gold-soft:#FBEFD2; --teacher:#F1EAFC; --teacher-line:#D9C9F2; --new:#B4476A; --new-soft:#F8E1E9; --danger:#B3261E;
+  --ink:#17302B; --muted:#4E605B; --accent:#13735C; --accent-ink:#FFFFFF; --accent-soft:#D4EDE4;
+  --gold:#C98A0E; --gold-ink:#835A05; --gold-soft:#FBEFD2; --teacher:#F1EAFC; --teacher-line:#D9C9F2; --new:#9E3A5C; --new-soft:#F8E1E9; --danger:#B3261E;
   --shadow:0 1px 2px rgba(23,48,43,.06),0 4px 14px rgba(23,48,43,.06);
   --display:"Jua","IBM Plex Sans KR",system-ui,sans-serif;
   --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
@@ -37,7 +37,7 @@
     color-scheme:dark;
     --ground:#0F1614; --surface:#18221F; --sunk:#202C28; --line:#2C3A35;
     --ink:#E3EDE9; --muted:#93A7A1; --accent:#3BC49C; --accent-ink:#06231B; --accent-soft:#173B31;
-    --gold:#F0BD4B; --gold-soft:#3A2E12; --teacher:#251E33; --teacher-line:#40345A; --new:#EE8AAB; --new-soft:#3D1D29; --danger:#F2867E;
+    --gold:#F0BD4B; --gold-ink:#F0BD4B; --gold-soft:#3A2E12; --teacher:#251E33; --teacher-line:#40345A; --new:#EE8AAB; --new-soft:#3D1D29; --danger:#F2867E;
     --shadow:0 1px 2px rgba(0,0,0,.3);
   }
 }
@@ -45,7 +45,7 @@
   color-scheme:dark;
   --ground:#0F1614; --surface:#18221F; --sunk:#202C28; --line:#2C3A35;
   --ink:#E3EDE9; --muted:#93A7A1; --accent:#3BC49C; --accent-ink:#06231B; --accent-soft:#173B31;
-  --gold:#F0BD4B; --gold-soft:#3A2E12; --teacher:#251E33; --teacher-line:#40345A; --new:#EE8AAB; --new-soft:#3D1D29; --danger:#F2867E;
+  --gold:#F0BD4B; --gold-ink:#F0BD4B; --gold-soft:#3A2E12; --teacher:#251E33; --teacher-line:#40345A; --new:#EE8AAB; --new-soft:#3D1D29; --danger:#F2867E;
   --shadow:0 1px 2px rgba(0,0,0,.3);
 }
 *{box-sizing:border-box}
@@ -154,8 +154,8 @@ nav.tabs button{font-size:11px;white-space:nowrap}
 .icon-btn{flex:none;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--muted);padding:0;text-decoration:none}
 .icon-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .icon-btn.tel{color:var(--accent)}
-.icon-btn.has{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
-.memo-line{color:var(--gold)!important;font-size:12px;font-weight:600}
+.icon-btn.has{color:var(--gold-ink);border-color:var(--gold);background:var(--gold-soft)}
+.memo-line{color:var(--gold-ink)!important;font-size:12px;font-weight:600}
 @media (max-width:440px){.row{gap:6px}.row .avatar{width:34px;height:34px;font-size:12px}.who b{font-size:15px}}
 .chipset{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .chipset button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 11px;font-size:13px}
@@ -186,15 +186,15 @@ nav.tabs button{font-size:11px;white-space:nowrap}
 .hist-item .what{flex:1;min-width:0}
 .hist-item .by{display:block;font-size:11px;color:var(--muted)}
 .hist-kind{display:inline-block;font-size:11px;font-weight:600;border-radius:99px;padding:0 7px;margin-right:4px;background:var(--sunk);color:var(--muted)}
-.hist-kind.t{background:var(--gold-soft);color:var(--gold)}
+.hist-kind.t{background:var(--gold-soft);color:var(--gold-ink)}
 .yr-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
 .row .check,.row .icon-btn.big{width:44px;height:44px;border-radius:12px}
 .icon-btn.big{border-width:2px}
 .icon-btn.big svg{width:20px;height:20px}
 .icon-btn.nonum{opacity:.45}
 .act-box{flex:none;display:flex;flex-direction:column;align-items:center}
-.act-box .act-lbl{font-size:10px;color:var(--muted);text-align:center;margin-top:2px;font-weight:600}
-.act-box .act-lbl.memo{color:var(--gold)}
+.act-box .act-lbl{font-size:11px;color:var(--muted);text-align:center;margin-top:2px;font-weight:600}
+.act-box .act-lbl.memo{color:var(--gold-ink)}
 .roster-wrap{display:flex;flex-direction:column}
 .roster-wrap>.homeroom{order:3}
 .roster-wrap>.to-top{order:4;text-align:center;margin:18px 0 8px}
@@ -225,15 +225,15 @@ nav.tabs button{font-size:11px;white-space:nowrap}
 .who span{font-size:12px;color:var(--muted)}
 .tag{font-size:11px;font-weight:600;padding:0 7px;border-radius:99px;line-height:18px}
 .tag.new{background:var(--new-soft);color:var(--new)}
-.tag.bd{background:var(--gold-soft);color:var(--gold)}
+.tag.bd{background:var(--gold-soft);color:var(--gold-ink)}
 .tag.role{background:var(--sunk);color:var(--muted)}
 .talent{flex:none;display:flex;align-items:center;gap:2px;background:var(--gold-soft);border-radius:10px;padding:2px 2px 2px 4px}
 .talent-box{flex:none}
 .talent .arrows{display:flex;flex-direction:column;gap:2px}
-.talent .arrows button{width:34px;height:22px;border:0;background:color-mix(in srgb,var(--gold) 12%,transparent);color:var(--gold);border-radius:6px;display:grid;place-items:center;padding:0}
+.talent .arrows button{width:34px;height:22px;border:0;background:color-mix(in srgb,var(--gold) 12%,transparent);color:var(--gold-ink);border-radius:6px;display:grid;place-items:center;padding:0}
 .talent .arrows svg{width:16px;height:16px}
 .talent .arrows button:active{background:color-mix(in srgb,var(--gold) 20%,transparent)}
-.talent input{width:40px;height:46px;border:1px solid transparent;border-radius:8px;background:transparent;text-align:center;font-weight:700;color:var(--gold);font-size:16px;padding:0;-moz-appearance:textfield}
+.talent input{width:40px;height:46px;border:1px solid transparent;border-radius:8px;background:transparent;text-align:center;font-weight:700;color:var(--gold-ink);font-size:16px;padding:0;-moz-appearance:textfield}
 .talent input::-webkit-outer-spin-button,.talent input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .talent input:focus{background:var(--surface);border-color:var(--gold);outline:none}
 .avatar{flex:none;width:42px;height:42px;border-radius:50%;object-fit:cover;background:var(--sunk);display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--muted);overflow:hidden}
@@ -244,8 +244,8 @@ nav.tabs button{font-size:11px;white-space:nowrap}
 .photo-field input[type=file]{display:none}
 .sheet-head{display:flex;align-items:center;gap:14px}
 .check-box{flex:none;display:flex;flex-direction:column;align-items:center}
-.check-lbl{font-size:10px;color:var(--accent);text-align:center;margin-top:2px;font-weight:600}
-.talent-lbl{font-size:10px;color:var(--gold);text-align:center;margin-top:-2px}
+.check-lbl{font-size:11px;color:var(--accent);text-align:center;margin-top:2px;font-weight:600}
+.talent-lbl{font-size:11px;color:var(--gold-ink);text-align:center;margin-top:-2px}
 
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
 .search{width:100%;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:0 14px;margin-top:14px}
@@ -403,8 +403,8 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 /* ===== 네이비 디자인 ===== */
 :root[data-style="navy"]{
   --ground:#EEF1F6; --surface:#FFFFFF; --sunk:#E3E8F0; --line:#D3DAE6;
-  --ink:#1B2433; --muted:#5E6B80; --accent:#1F3A5F; --accent-ink:#FFFFFF; --accent-soft:#DDE6F2;
-  --gold:#B08D57; --gold-soft:#F3EBDD; --teacher:#EFEAF7; --teacher-line:#D6CCE9; --new:#9A3B5C; --new-soft:#F6E3EA; --danger:#B3261E;
+  --ink:#1B2433; --muted:#4D596C; --accent:#1F3A5F; --accent-ink:#FFFFFF; --accent-soft:#DDE6F2;
+  --gold:#B08D57; --gold-ink:#7A5D30; --gold-soft:#F3EBDD; --teacher:#EFEAF7; --teacher-line:#D6CCE9; --new:#9A3B5C; --new-soft:#F6E3EA; --danger:#B3261E;
   --shadow:0 1px 2px rgba(20,35,60,.06),0 6px 20px rgba(20,35,60,.07);
   --display:"Gowun Batang","Nanum Myeongjo",serif;
   --hdr:#1F3A5F; --hdr-ink:#FFFFFF;
@@ -413,14 +413,14 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
   :root[data-style="navy"]:not([data-theme="light"]){
     --ground:#0E1420; --surface:#162032; --sunk:#1C2940; --line:#2A3A55;
     --ink:#E6ECF5; --muted:#9AA8BE; --accent:#8FB3E6; --accent-ink:#0B1626; --accent-soft:#1E3352;
-    --gold:#D6B67A; --gold-soft:#3A3122; --teacher:#231F33; --teacher-line:#3E3558; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
+    --gold:#D6B67A; --gold-ink:#D6B67A; --gold-soft:#3A3122; --teacher:#231F33; --teacher-line:#3E3558; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
     --shadow:0 1px 2px rgba(0,0,0,.35); --hdr:#15243D; --hdr-ink:#E6ECF5;
   }
 }
 :root[data-style="navy"][data-theme="dark"]{--hdr:#15243D; --hdr-ink:#E6ECF5;
   --ground:#0E1420; --surface:#162032; --sunk:#1C2940; --line:#2A3A55;
   --ink:#E6ECF5; --muted:#9AA8BE; --accent:#8FB3E6; --accent-ink:#0B1626; --accent-soft:#1E3352;
-  --gold:#D6B67A; --gold-soft:#3A3122; --teacher:#231F33; --teacher-line:#3E3558; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
+  --gold:#D6B67A; --gold-ink:#D6B67A; --gold-soft:#3A3122; --teacher:#231F33; --teacher-line:#3E3558; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
   --shadow:0 1px 2px rgba(0,0,0,.35);
 }
 :root[data-style="navy"] header.top{background:var(--hdr);border-bottom:2px solid #B9A8F0} /* 머리 아랫줄: 연보라 */
@@ -450,8 +450,8 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 /* ===== 교회 디자인 (메인화면 맨 아래 [디자인] 버튼으로 켜고 끔. 끄면 위의 기본 디자인 그대로) ===== */
 :root[data-style="church"]{
   --ground:#F6F1E7; --surface:#FFFDF8; --sunk:#EEE6D6; --line:#E1D5BE;
-  --ink:#2B2320; --muted:#7A6D60; --accent:#6E1F2E; --accent-ink:#FFF8EC; --accent-soft:#F2E3E1;
-  --gold:#A8843E; --gold-soft:#F4EAD2; --teacher:#F3EEF6; --teacher-line:#DCCFE6; --new:#8E3B5A; --new-soft:#F6E4EA; --danger:#A3261E;
+  --ink:#2B2320; --muted:#655949; --accent:#6E1F2E; --accent-ink:#FFF8EC; --accent-soft:#F2E3E1;
+  --gold:#A8843E; --gold-ink:#76591F; --gold-soft:#F4EAD2; --teacher:#F3EEF6; --teacher-line:#DCCFE6; --new:#8E3B5A; --new-soft:#F6E4EA; --danger:#A3261E;
   --shadow:0 1px 2px rgba(70,45,20,.06),0 6px 18px rgba(70,45,20,.07);
   --display:"Nanum Myeongjo","Noto Serif KR","AppleMyungjo",serif;
 }
@@ -459,14 +459,14 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
   :root[data-style="church"]:not([data-theme="light"]){
     --ground:#15110E; --surface:#1F1A16; --sunk:#29231E; --line:#3B322A;
     --ink:#F0E7D8; --muted:#AB9C8A; --accent:#D6A35C; --accent-ink:#1E1407; --accent-soft:#3A2C1B;
-    --gold:#D9B36A; --gold-soft:#3A3020; --teacher:#272030; --teacher-line:#43375A; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
+    --gold:#D9B36A; --gold-ink:#D9B36A; --gold-soft:#3A3020; --teacher:#272030; --teacher-line:#43375A; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
     --shadow:0 1px 2px rgba(0,0,0,.35);
   }
 }
 :root[data-style="church"][data-theme="dark"]{
   --ground:#15110E; --surface:#1F1A16; --sunk:#29231E; --line:#3B322A;
   --ink:#F0E7D8; --muted:#AB9C8A; --accent:#D6A35C; --accent-ink:#1E1407; --accent-soft:#3A2C1B;
-  --gold:#D9B36A; --gold-soft:#3A3020; --teacher:#272030; --teacher-line:#43375A; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
+  --gold:#D9B36A; --gold-ink:#D9B36A; --gold-soft:#3A3020; --teacher:#272030; --teacher-line:#43375A; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
   --shadow:0 1px 2px rgba(0,0,0,.35);
 }
 :root[data-style="church"] body{background:var(--ground) radial-gradient(ellipse at top,rgba(168,132,62,.08),transparent 60%) no-repeat}
@@ -2845,7 +2845,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014142716';
+  var BUILD = '20261014142946';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
