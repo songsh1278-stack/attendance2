@@ -502,7 +502,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 
 <div class="app">
   <header class="top">
-    <div class="brand"><div class="left"><button class="back" id="homeBtn" aria-label="메인 화면으로" hidden>‹</button><h1 id="brandTitle" title="메인 화면으로">신당중앙교회 교육팀 출석부</h1></div><span class="brand-right"><small id="sync" class="muted">불러오는 중…</small><button class="hdr-refresh" id="hdrRefresh" aria-label="새로고침 (최신 화면으로)" title="새로고침" hidden>↻</button></span></div>
+    <div class="brand"><div class="left"><button class="back" id="homeBtn" aria-label="메인 화면으로" hidden>‹</button><h1 id="brandTitle" title="메인 화면으로">신당중앙교회 교육팀 출석부</h1></div><span class="brand-right"><small id="sync" class="muted">불러오는 중…</small><button class="hdr-refresh" id="hdrRefresh" aria-label="새로고침 (최신 화면으로)" title="새로고침">↻</button></span></div>
     <div class="datebar" id="datebar">
       <button class="arrow" id="prev" aria-label="지난 주일">‹</button>
       <div class="date"><strong id="dateLabel" class="num"></strong><span id="todayTag" class="today-tag" hidden>오늘</span>
@@ -701,7 +701,7 @@ function renderChips(){
 }
 function renderTeams(){
   const home=S.view==="home";document.body.classList.toggle("home",home);
-  $("#homeBtn").hidden=home;{const hr=$("#hdrRefresh");if(hr)hr.hidden=home}if(home)$("#brandTitle").innerHTML=`<span class="tw">신당중앙교회</span> <span class="tw">교육팀 출석부</span>`;else{const r=roleLabel();$("#brandTitle").innerHTML=esc(TEAMS[S.team].label)+(r?`<span class="role-badge">${esc(r)}</span>`:"")}
+  $("#homeBtn").hidden=home;{const hr=$("#hdrRefresh");if(hr)hr.hidden=false}if(home)$("#brandTitle").innerHTML=`<span class="tw">신당중앙교회</span> <span class="tw">교육팀 출석부</span>`;else{const r=roleLabel();$("#brandTitle").innerHTML=esc(TEAMS[S.team].label)+(r?`<span class="role-badge">${esc(r)}</span>`:"")}
   fitBrand();
 }
 /* 맨 위 제목: 줄바꿈은 '신당중앙교회' / '교육팀 출석부' 사이에서만. 한 덩어리도 안 들어갈 만큼 좁으면 글자 크기를 줄인다 */
@@ -2446,8 +2446,7 @@ function renderHome(){
     if(mine.length)h+=rptCard();
     if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`+hrCodesCard(mine)}
   if(S.isAdmin){if(!S.isCo)h+=renderPromoAdmin();h+=renderStaff();if(!S.isCo)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
-  h+=lookPanel();
-  h+=`<div style="margin-top:10px;text-align:center">${onOfficialUrl()?`<button class="btn" id="hardRefresh">↻ 새로고침 (최신 화면으로)</button>`:`<a class="btn" href="${OFFICIAL_URL}" target="_top" rel="noopener">↻ 새 주소로 새로고침</a>`}</div>`;
+  h+=lookPanel(); /* 새로고침은 맨 위 제목 줄 오른쪽 ↻ 버튼 */
   h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   return h;
 }
@@ -2864,7 +2863,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014143432';
+  var BUILD = '20261014143605';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
