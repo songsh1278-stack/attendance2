@@ -1436,7 +1436,13 @@ const rptName=t=>t==="support"?"교육지원":TEAMS[t].label;
 const canRpt=()=>S.isAdmin||Object.keys(TEAMS).some(t=>deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
 /* 접기 칸: 총관리자·공동관리자는 접힘, 팀 관리자 이하는 펼침이 기본 */
 const foldOpen=k=>S.isAdmin?!!S.fold[k]:S.fold[k]!==false;
-const rptCard=()=>!S.rptOk?"":`<details class="fold" data-fold="rpt"${foldOpen("rpt")?" open":""}><summary><h2 class="sec">당회보고서 제출</h2></summary><div class="card admin-list"><div class="admin-row"><b>당회·제직회 자료</b><span class="code none">부서별 한글 보고서 올리기 · 고치기 · 통합 · 메일</span><button class="btn" id="rptOpen">열기</button></div></div></details>`;
+/* 당회보고서 제출 현황 (그달 제출한 부서 수). 1분이 지나면 메인 화면을 그릴 때 다시 받아요 */
+function rptStatLoad(){
+  if(!S.rptOk||Date.now()-(S.rptStatAt||0)<60000)return;S.rptStatAt=Date.now();const ym=rptDefaultYm();
+  call("rptGet",ym).then(R=>{const T=R.teams||{};S.rptStat={ym,done:RPT_TEAMS.filter(t=>T[t]&&T[t].saved&&!T[t].carried&&(T[t].cur.length||T[t].next.length)).length,n:RPT_TEAMS.length};if(S.view==="home")render()}).catch(()=>{});
+}
+const rptStatText=()=>{setTimeout(rptStatLoad,0);const s=S.rptStat;return s?`${Number(s.ym.slice(5,7))}월 · 제출 ${s.done}/${s.n}곳`:"현황 불러오는 중…"};
+const rptCard=()=>!S.rptOk?"":`<details class="fold" data-fold="rpt"${foldOpen("rpt")?" open":""}><summary><h2 class="sec">당회보고서 제출</h2><span class="fold-sum num">${rptStatText()}</span></summary><div class="card admin-list"><div class="admin-row"><b>당회·제직회 자료</b><span class="code none">부서별 한글 보고서 올리기 · 고치기 · 통합 · 메일</span><button class="btn" id="rptOpen">열기</button></div></div></details>`;
 /** 그달 넷째 주일 */
 function fourthSun(ym){const y=Number(ym.slice(0,4)),m=Number(ym.slice(5,7));return ym+"-"+String(1+(7-new Date(y,m-1,1).getDay())%7+21)}
 /** 그달 셋째 주 화요일 (부서 보고서 제출 기한) */
@@ -2782,7 +2788,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   if(e.target.closest("#xlsUp"))return uploadRoster();
   if(e.target.closest("#xlsExport"))return exportAll();
   if(e.target.closest("#actOpen"))return openActivityLog();
-  if(e.target.closest("#rptOpen"))return openReport();
+  if(e.target.closest("#rptOpen")){S.rptStatAt=0;return openReport()}
   if(e.target.closest("#guideOpen"))return openGuide();
   const hs=e.target.closest("[data-hist]");if(hs)return openHistory(hs.dataset.hist);
   if(e.target.closest("#histAll"))return openHistoryList();
@@ -2987,7 +2993,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014215705';
+  var BUILD = '20261014215906';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
