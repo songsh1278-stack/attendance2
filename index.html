@@ -1925,7 +1925,7 @@ const recOf=(t,y,runs)=>{const live=runs.filter(x=>!x.undone);
 const promoSkip=(t,y=promoYear())=>((S.promos.get(promoKey(t,y))||{}).skip||[]).slice();
 /** 이미 등반한 학생 한 명: 되돌리고 그해 등반 기록·이력에서 지운 뒤 등반에서 뺀다 */
 function excludePromoted(t,id){
-  if(!S.db||!S.editable||!canPromote(t)){toast("등반 제외는 팀 관리자 이상만 할 수 있어요");return}
+  if(!S.db||!S.editable||!S.isAdmin){toast("등반 되돌리기는 총관리자·공동관리자만 할 수 있어요");return}
   const y=promoYear();const m=liveRuns(promoRec(t)).flatMap(x=>x.moves||[]).find(x=>x.id===id);const p=S.people.get(id);if(!m||!p)return;
   const back=stepFrom(m.team,m)?stepLabel(m.team,stepFrom(m.team,m)):classLabelOf(m.team,m.group);
   const ov=document.createElement("div");ov.className="overlay";
@@ -2102,7 +2102,7 @@ function openPromotion(t){
   });
 }
 function openUndoPromotion(t){
-  if(!S.db||!S.editable)return;if(!canPromote(t)){toast("연말 등반은 팀 관리자 이상만 할 수 있어요");return}
+  if(!S.db||!S.editable)return;if(!S.isAdmin){toast("등반 되돌리기는 총관리자·공동관리자만 할 수 있어요");return}
   const hist=promoHistory(t).slice(0,10);
   /* 같은 학생을 그 뒤에 다시 올린 등반이 남아 있으면, 나중 것부터 되돌려야 해요 */
   const blocked=x=>hist.some(o=>!o.undone&&String(o.at)>String(x.at)&&(o.moves||[]).some(m=>(x.moves||[]).some(n=>n.id===m.id)));
@@ -2143,7 +2143,7 @@ function promoStatus(t){
 function promoBar(t){
   if(!S.editable||!canManageGrades())return "";
   return `<div class="homeroom" style="margin-top:4px"><span class="lbl">연말</span><span class="none" style="font-size:13px">${esc(promoStatus(t))}</span><span class="spacer"></span>
-    <button data-promo="${t}">학년 등반</button><button data-promo-undo="${t}" style="color:var(--danger)">되돌리기</button></div>`;
+    <button data-promo="${t}">학년 등반</button>${S.isAdmin?`<button data-promo-undo="${t}" style="color:var(--danger)">되돌리기</button>`:""}</div>`;
 }
 const classLabelOf=(t,g)=>g==="T"?"교사":(Object.fromEntries(classesOf(t))[g]||g);
 /* 영아교육팀: 명단 탭 '반 편성' 줄 */
@@ -2492,7 +2492,7 @@ function renderHome(){
   {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
     if(mine.length)h+=rptCard();
     if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`+hrCodesCard(mine)}
-  if(S.isAdmin){if(!S.isCo)h+=renderPromoAdmin();h+=renderStaff();if(!S.isCo)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
+  if(S.isAdmin){h+=renderPromoAdmin();h+=renderStaff();if(!S.isCo)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
   h+=lookPanel(); /* 새로고침은 맨 위 제목 줄 오른쪽 ↻ 버튼 */
   h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   return h;
@@ -2911,7 +2911,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014170045';
+  var BUILD = '20261014171059';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
