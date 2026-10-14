@@ -2545,8 +2545,9 @@ function renderHome(){
       <span class="stat num">${!S.ready?"불러오는 중…":open?`${((S.scope||{})[t]||{}).level==="grade"?"내 반":"재적"} ${ps.length}명 · 출석 ${on}명`:`재적 ${(S.counts||{})[t]||0}명 · 번호 입력 후 확인`}</span></button>`;
   }
   h+=`</div>`;
-  h+=`<div class="a2hs"><svg viewBox="0 0 24 24"><path d="M5 4.5h9a3 3 0 013 3v12H8a3 3 0 01-3-3z"/><path d="M5 16.5a3 3 0 013-3h9"/><path d="M9 8h5M9 11h3"/></svg>
-    <div class="tx"><b>반 담임 사용 설명서</b><span>담임 번호로 들어가 출석·메모·전화·자료실 쓰는 방법</span></div><button class="btn" id="guideOpen">보기</button></div>`;
+  /* 반 담임 사용 설명서: 접기 기능, 기본은 접힘 */
+  h+=`<details class="fold" data-fold="guide"${S.fold.guide?" open":""} style="margin-top:12px"><summary><h2 class="sec">반 담임 사용 설명서</h2></summary><div class="a2hs"><svg viewBox="0 0 24 24"><path d="M5 4.5h9a3 3 0 013 3v12H8a3 3 0 01-3-3z"/><path d="M5 16.5a3 3 0 013-3h9"/><path d="M9 8h5M9 11h3"/></svg>
+    <div class="tx"><b>반 담임 사용 설명서</b><span>담임 번호로 들어가 출석·메모·전화·자료실 쓰는 방법</span></div><button class="btn" id="guideOpen">보기</button></div></details>`;
   if(showA2hs())h+=`<div class="a2hs"><svg viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.2"/><path d="M12 8.5v6M9 11.5h6"/><path d="M10.5 18.5h3"/></svg>
     <div class="tx"><b>홈 화면에 바로가기 추가</b><span>휴대폰 홈 화면에 아이콘을 만들어 앱처럼 열어요</span></div>
     <button class="btn primary" id="a2hsOpen">추가하기</button><button class="x" id="a2hsHide" aria-label="이 안내 닫기">×</button></div>`;
@@ -2984,7 +2985,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014213322';
+  var BUILD = '20261014213435';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
