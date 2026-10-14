@@ -1543,13 +1543,13 @@ let rosterSort=(()=>{try{return localStorage.getItem("ya-rsort")==="age"?"age":"
 function renderRoster(){
   const q=S.q.trim();
   const all=[...S.people.values()].filter(p=>teamOf(p)===S.team&&(S.group==="all"||p.group===S.group)&&!(isHomeroom()&&p.group==="T"));
-  /* ㄱㄴㄷ순: 학년(반) 구분 없이 학생 전체를 한 목록으로, 교사는 따로. 나이별: 반마다 묶어서 */
+  /* ㄱㄴㄷ순: 학년(반) 구분 없이 학생 전체를 한 목록으로, 교사는 따로. 학년별: 반마다 묶어서 어린 순 */
   const flat=rosterSort==="name";const tFirst=GROUPS.findIndex(g=>g[0]==="T")===0;
   const gk=p=>flat?(p.group==="T"?"T":"__all"):p.group;const bucket=p=>(p.group==="T")===tFirst?0:1;
   const ps=all.filter(p=>rosterModeOf(p)===(S.rosterMode||"active")).filter(p=>!q||[p.name,p.note].some(v=>(v||"").includes(q)))
     .sort((a,b)=>(a.active===false)-(b.active===false)||(flat?bucket(a)-bucket(b):GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||String(a.group).localeCompare(String(b.group))||ageSortKey(a).localeCompare(ageSortKey(b)))||a.name.localeCompare(b.name,"ko"));
   let h=`<input class="search" id="q" type="search" placeholder="이름 검색" value="${esc(S.q)}"><div class="seg" style="margin-top:10px">${[["active","출석"],["removed","제적"],["grad","졸업"]].map(([m,l])=>`<button data-rmode="${m}" aria-pressed="${(S.rosterMode||"active")===m}">${l} ${(()=>{const L=all.filter(p=>rosterModeOf(p)===m),tc=L.filter(p=>p.group==="T").length;return S.group==="T"?tc+"명":(L.length-tc)+"명"+(tc?` <span style="font-weight:400;opacity:.75">+교사 ${tc}</span>`:"")})()}</button>`).join("")}</div>
-    <div class="seg" style="margin-top:8px" aria-label="정렬">${[["name","ㄱㄴㄷ순"],["age","나이별"]].map(([m,l])=>`<button data-rsort="${m}" aria-pressed="${rosterSort===m}">${l}</button>`).join("")}</div>
+    <div class="seg" style="margin-top:8px" aria-label="정렬">${[["name","ㄱㄴㄷ순"],["age","학년별"]].map(([m,l])=>`<button data-rsort="${m}" aria-pressed="${rosterSort===m}">${l}</button>`).join("")}</div>
     <div class="summary"><div>${(()=>{const act=all.filter(p=>p.active!==false),st=act.filter(p=>p.group!=="T").length,tc=act.length-st;
       /* 학생과 교사를 따로 세요 (교사 칩을 고르면 교사만) */
       return S.group==="T"?`<div class="big num">${tc}<em> 명 교사</em></div>`:`<div class="big num">${st}<em> 명 학생</em>${tc?`<em style="margin-left:10px">교사 </em>${tc}<em> 명</em>`:""}</div>`})()}<div class="sub">${TEAMS[S.team].short} · ${S.group==="all"?"전체":GL[S.group]} · 재적</div></div><div class="spacer"></div>
@@ -2629,7 +2629,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014113846';
+  var BUILD = '20261014113900';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
