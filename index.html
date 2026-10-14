@@ -451,7 +451,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 :root[data-style="church"]{
   --ground:#F6F1E7; --surface:#FFFDF8; --sunk:#EEE6D6; --line:#E1D5BE;
   --ink:#2B2320; --muted:#655949; --accent:#6E1F2E; --accent-ink:#FFF8EC; --accent-soft:#F2E3E1;
-  --gold:#A8843E; --gold-ink:#76591F; --gold-soft:#F4EAD2; --teacher:#F3EEF6; --teacher-line:#DCCFE6; --new:#8E3B5A; --new-soft:#F6E4EA; --danger:#A3261E;
+  --line-accent:#8B6FD6; --line-accent-soft:#E6DEF7; --gold:#A8843E; --gold-ink:#76591F; --gold-soft:#F4EAD2; --teacher:#F3EEF6; --teacher-line:#DCCFE6; --new:#8E3B5A; --new-soft:#F6E4EA; --danger:#A3261E;
   --shadow:0 1px 2px rgba(70,45,20,.06),0 6px 18px rgba(70,45,20,.07);
   --display:"Nanum Myeongjo","Noto Serif KR","AppleMyungjo",serif;
 }
@@ -459,28 +459,28 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
   :root[data-style="church"]:not([data-theme="light"]){
     --ground:#15110E; --surface:#1F1A16; --sunk:#29231E; --line:#3B322A;
     --ink:#F0E7D8; --muted:#AB9C8A; --accent:#D6A35C; --accent-ink:#1E1407; --accent-soft:#3A2C1B;
-    --gold:#D9B36A; --gold-ink:#D9B36A; --gold-soft:#3A3020; --teacher:#272030; --teacher-line:#43375A; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
+    --line-accent:#B9A8F0; --line-accent-soft:#2E2640; --gold:#D9B36A; --gold-ink:#D9B36A; --gold-soft:#3A3020; --teacher:#272030; --teacher-line:#43375A; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
     --shadow:0 1px 2px rgba(0,0,0,.35);
   }
 }
 :root[data-style="church"][data-theme="dark"]{
   --ground:#15110E; --surface:#1F1A16; --sunk:#29231E; --line:#3B322A;
   --ink:#F0E7D8; --muted:#AB9C8A; --accent:#D6A35C; --accent-ink:#1E1407; --accent-soft:#3A2C1B;
-  --gold:#D9B36A; --gold-ink:#D9B36A; --gold-soft:#3A3020; --teacher:#272030; --teacher-line:#43375A; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
+  --line-accent:#B9A8F0; --line-accent-soft:#2E2640; --gold:#D9B36A; --gold-ink:#D9B36A; --gold-soft:#3A3020; --teacher:#272030; --teacher-line:#43375A; --new:#E58FAE; --new-soft:#3D1D29; --danger:#F2867E;
   --shadow:0 1px 2px rgba(0,0,0,.35);
 }
 :root[data-style="church"] body{background:var(--ground) radial-gradient(ellipse at top,rgba(168,132,62,.08),transparent 60%) no-repeat}
-:root[data-style="church"] header.top{border-bottom:1px solid var(--gold);box-shadow:0 1px 0 var(--gold-soft)}
+:root[data-style="church"] header.top{border-bottom:1px solid var(--line-accent);box-shadow:0 1px 0 var(--line-accent-soft)} /* 선: 보라 */
 :root[data-style="church"] .brand h1{font-weight:800;letter-spacing:.02em}
 :root[data-style="church"] .brand h1::before{content:"✝";color:var(--gold);font-weight:400;margin-right:8px;font-size:.85em}
 :root[data-style="church"] h2.sec{font-weight:800;letter-spacing:.01em;display:flex;align-items:center;gap:10px}
-:root[data-style="church"] h2.sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--gold),transparent);opacity:.55}
+:root[data-style="church"] h2.sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line-accent),transparent);opacity:.55}
 :root[data-style="church"] details.fold>summary h2.sec::after{display:none}
 :root[data-style="church"] .sheet h3,:root[data-style="church"] .group-h{font-weight:800}
 :root[data-style="church"] .card,:root[data-style="church"] .dept{border-color:var(--line);box-shadow:var(--shadow)}
-:root[data-style="church"] .dept{border-top:3px solid var(--gold)}
-:root[data-style="church"] .btn.primary{border-color:var(--gold);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
-:root[data-style="church"] nav.tabs{border-top:1px solid var(--gold)}
+:root[data-style="church"] .dept{border-top:3px solid var(--line-accent)}
+:root[data-style="church"] .btn.primary{border-color:var(--line-accent);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+:root[data-style="church"] nav.tabs{border-top:1px solid var(--line-accent)}
 :root[data-style="church"] .teams{border:1px solid var(--line)}
 :root[data-style="church"] .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 
@@ -2859,7 +2859,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014150120';
+  var BUILD = '20261014153148';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
