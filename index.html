@@ -1779,7 +1779,31 @@ function storedCodes(){try{return JSON.parse(localStorage.getItem("ya-codes")||"
 function storeCode(t,code){S._codes={...(S._codes||{}),[t]:code};if(S.remember===false)return;const c=storedCodes();c[t]=code;try{localStorage.setItem("ya-codes",JSON.stringify(c))}catch(_){}}
 function hasStored(){try{return !!(localStorage.getItem("ya-admin")||Object.keys(JSON.parse(localStorage.getItem("ya-codes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-gcodes")||"{}")).length)}catch(_){return false}}
 function forgetDevice(){try{["ya-admin","ya-email","ya-copw","ya-codes","ya-gcodes","ya-photos",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._email="";S._copw="";S._codes={};S._gcodes={};S.photos=new Map();S.view="home";S.book=null;load();toast("이 기기에 기억된 번호와 로그인을 지웠어요")}
-function goDept(t){S.book=null;
+/* ---------- 휴대폰 뒤로 버튼: 앱이 꺼지지 않고 이전 화면으로 ----------
+ * 화면을 옮길 때(부서 들어가기·탭 바꾸기) 이전 화면을 NAV 에 쌓고 브라우저 기록을 하나 더한다.
+ * 창(.overlay)이 열리면 기록을 하나 더해서, 뒤로 버튼은 창부터 닫는다. 버튼으로 창을 닫으면 그 기록을 되돌려 놓는다.
+ * 메인화면에서 뒤로 버튼은 "한 번 더 누르면 종료" 안내 후, 2초 안에 다시 누르면 종료.
+ */
+const NAV=[];let navSkip=0,navByBack=false,navOv=0,navLastBack=0;
+const navTry=f=>{try{f()}catch(_){}};
+function navPush(){NAV.push({view:S.view,team:S.team,tab:S.tab});navTry(()=>history.pushState({nav:NAV.length},""))}
+function navHome(){const n=NAV.length;NAV.length=0;if(n){navSkip++;navTry(()=>history.go(-n))}} /* go(-n)은 popstate 가 한 번만 온다 */
+navTry(()=>{history.replaceState({base:1},"");history.pushState({root:1},"")});
+addEventListener("popstate",()=>{
+  if(navSkip>0){navSkip--;return}
+  const ovs=document.querySelectorAll("body > .overlay");
+  if(ovs.length){navByBack=true;ovs[ovs.length-1].remove();return}
+  if(NAV.length){const s=NAV.pop();S.view=s.view;if(s.view==="dept"){setTeam(s.team);S.tab=s.tab}render();window.scrollTo(0,0);return}
+  if(Date.now()-navLastBack<2000){navTry(()=>history.back());return}
+  navLastBack=Date.now();toast("뒤로 버튼을 한 번 더 누르면 종료돼요");navTry(()=>history.pushState({root:1},""));
+});
+new MutationObserver(()=>{
+  const n=document.querySelectorAll("body > .overlay").length;let need=n-navOv;navOv=n;
+  if(navByBack){need++;navByBack=false} /* 뒤로 버튼으로 닫힌 창은 기록이 이미 하나 빠져 있다 */
+  if(need>0)for(let i=0;i<need;i++)navTry(()=>history.pushState({ov:1},""));
+  else if(need<0){navSkip++;navTry(()=>history.go(need))}
+}).observe(document.body,{childList:true});
+function goDept(t){S.book=null;if(S.view!=="dept"||S.team!==t)navPush();
   S.ev=rdC("ya-ev-"+t);S.lib=rdC("ya-lib-"+t);
   S.schedMode="cal";S.calSel="";S.calMonth="";S.rosterMode="active";setTeam(t);S.view="dept";S.tab="check";
   try{localStorage.setItem("ya-team",S.team)}catch(_){}
@@ -2606,7 +2630,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
     setPersonCall(p,next).then(()=>toast(`${p.name} 대표전화를 ${next==="parent"?"부모님":"학생"} 번호로 정했어요`)).catch(err=>{toast(err.message);load()});
     render();const box=document.querySelector("#pv-contact");if(box)box.innerHTML=contactLines(p);
     return}
-  if(e.target.closest("#brandTitle")&&S.view!=="home"){S.view="home";render();window.scrollTo(0,0);return}
+  if(e.target.closest("#brandTitle")&&S.view!=="home"){navHome();S.view="home";render();window.scrollTo(0,0);return}
   const rm=e.target.closest("[data-rmode]");if(rm){S.rosterMode=rm.dataset.rmode;render();return}
   const rso=e.target.closest("[data-rsort]");if(rso){rosterSort=rso.dataset.rsort;try{localStorage.setItem("ya-rsort",rosterSort)}catch(_){}render();return}
   const rs=e.target.closest("[data-restore]");if(rs){const id=rs.dataset.restore;const p=S.people.get(id);if(p){S.people.set(id,{...p,active:true,leftType:""});render();enqueue("people/"+id,()=>S.db.doc("people/"+id).update({active:true,leftType:""}));toast(p.name+"님을 출석으로 되돌렸어요")}return}
@@ -2657,13 +2681,13 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const px=e.target.closest("[data-promo-xlsx]");if(px)return downloadPromoXlsx([px.dataset.promoXlsx]);
   const po=e.target.closest("[data-promo]");if(po){e.preventDefault();return openPromotion(po.dataset.promo)}
   const en=e.target.closest("[data-enter]");if(en)return enterDept(en.dataset.enter);
-  if(e.target.closest("#homeBtn")){S.view="home";render();window.scrollTo(0,0);return}
+  if(e.target.closest("#homeBtn")){navHome();S.view="home";render();window.scrollTo(0,0);return}
   const cg=e.target.closest("[data-code-gen]");if(cg)return saveDeptCode(cg.dataset.codeGen,randomCode());
   const ce=e.target.closest("[data-code-edit]");if(ce)return openCodeEdit(ce.dataset.codeEdit);
   const cc=e.target.closest("[data-code-clear]");if(cc){if(!cc.dataset.armed){cc.dataset.armed="1";cc.textContent="한 번 더 누르면 해제";return}return saveDeptCode(cc.dataset.codeClear,"")}
   const cp=e.target.closest("[data-copy-code]");if(cp){navigator.clipboard.writeText(cp.dataset.copyCode).then(()=>toast("번호를 복사했어요"),()=>toast("번호를 길게 눌러 복사하세요"));return}
   const g=e.target.closest("[data-g]");if(g&&g.closest("#chips")&&chipDouble(g.dataset.g)&&canRenameClass(g.dataset.g)){openClassRename(S.team,g.dataset.g);return}if(g){S.group=g.dataset.g;try{localStorage.setItem("ya-group",S.group)}catch(_){}render();return}
-  const tab=e.target.closest("[data-tab]");if(tab){S.tab=tab.dataset.tab;render();window.scrollTo(0,0);return}
+  const tab=e.target.closest("[data-tab]");if(tab){if(tab.dataset.tab!==S.tab)navPush();S.tab=tab.dataset.tab;render();window.scrollTo(0,0);return}
   const md=e.target.closest("[data-mode]");if(md){S.statMode=md.dataset.mode;render();return}
   if(e.target.closest("#markAll"))return markAll(S.group);
   if(e.target.closest("#addP")){openPerson.edit=true;openPerson(null);openPerson.edit=false}
@@ -2821,7 +2845,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014141437';
+  var BUILD = '20261014142716';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
