@@ -357,6 +357,17 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .notice{background:var(--gold-soft);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px}
 #pform .form{grid-template-columns:1fr}
 #pform .form label.full{grid-column:auto}
+/* 휴대폰 가로 화면: 창을 가운데 넓게, 칸은 한 줄에 3개, 저장 버튼은 아래에 고정 */
+@media (orientation:landscape) and (max-height:520px){
+  .overlay{align-items:center;padding:6px max(8px,env(safe-area-inset-right,0px)) 6px max(8px,env(safe-area-inset-left,0px))}
+  .sheet{max-width:min(960px,100%);max-height:100%;border-radius:16px;padding:12px 16px 0}
+  .sheet h3{font-size:18px}
+  .sheet .actions{position:sticky;bottom:0;background:var(--surface);margin-top:10px;padding:8px 0 calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);z-index:1}
+  #pform .form{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 10px;margin-top:8px}
+  #pform .form .photo-field{grid-column:1/-1}
+  #pform .form label:has(textarea),#pform .form label.inline{grid-column:span 3}
+  #pform .form input,#pform .form select{height:38px}
+}
 .form label .rep-chk{display:inline-flex;align-items:center;gap:4px;margin-left:auto;font-size:12px;font-weight:600;color:var(--accent)}
 .form label .rep-chk input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 .form .pc-rep{justify-content:space-between}
@@ -2647,7 +2658,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014130804';
+  var BUILD = '20261014131130';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
