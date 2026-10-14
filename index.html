@@ -1710,6 +1710,23 @@ function promoGroups(t,plan=planPromotion(t)){
 }
 const promoMoveRow=m=>`<div class="move ${m.grad?"grad":""}"><span>${esc(m.from)}</span><span class="arrow">→</span><span class="to"${m.out&&!m.grad?' style="color:var(--accent);font-weight:600"':""}>${esc(m.to)}</span><span class="n num">${m.n}명</span>${m.names?`<span class="names">${m.names.map(esc).join(", ")}</span>`:""}</div>`;
 /* 이미 한 등반(되돌리지 않은 것)에서 올라간 학생: 등반 전 자리 → 올라간 자리 */
+/** 등반 대상(남은 사람)과 이미 등반한 학생을 엑셀로. teams: 부서 목록 */
+async function downloadPromoXlsx(teams){
+  if(!await needXLSX())return;
+  const y=promoYear();const H=["부서","반","분반","이름","성별","생일","등반 전","등반 후","메모"];
+  const ord=(t,x)=>-SEQ.findIndex(([a,b])=>a===t&&b===x);
+  const todo=teams.flatMap(t=>planPromotion(t).map(({p,next})=>({t,p,from:stepFrom(t,p),to:stepToLabel(next)})))
+    .sort((a,b)=>PROMO_TEAMS.indexOf(a.t)-PROMO_TEAMS.indexOf(b.t)||ord(a.t,a.from)-ord(b.t,b.from)||a.p.name.localeCompare(b.p.name,"ko"))
+    .map(({t,p,from,to})=>[TEAMS[t].label,classLabelOf(t,p.group),p.section||"",p.name,p.gender||"",p.birthday||"",stepLabel(t,from),to,p.note||""]);
+  const done=teams.flatMap(t=>liveRuns(promoRec(t)).flatMap(x=>(x.moves||[]).map(m=>{const q=S.people.get(m.id)||{};const f=stepFrom(m.team,m);const nx=f?nextStep(m.team,f):null;
+    return [TEAMS[t].label,q.name||"(지운 사람)",f?stepLabel(m.team,f):classLabelOf(m.team,m.group),nx?stepToLabel(nx):"?",new Date(x.at).toLocaleString("ko-KR")]})));
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([H,...todo]);ws["!cols"]=[12,8,5,10,5,10,14,14,24].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws,"등반 대상");
+  if(done.length){const w2=XLSX.utils.aoa_to_sheet([["부서","이름","등반 전","등반 후","등반한 때"],...done]);w2["!cols"]=[12,10,14,14,22].map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,w2,"등반 완료")}
+  if(!todo.length&&!done.length){toast("내려받을 등반 대상이 없어요");return}
+  saveWorkbook(wb,`${y}년 연말 등반 대상${teams.length===1?"_"+TEAMS[teams[0]].short:""}.xlsx`);
+}
 function promoDoneGroups(t){
   const g=new Map();
   for(const x of liveRuns(promoRec(t)))for(const m of x.moves||[]){
@@ -1927,11 +1944,13 @@ function openClassAssign(t){
 const PROMO_TEAMS=["infant","toddler","youth","teen"];
 function renderPromoAdmin(){
   return `<details class="fold" data-fold="promo"${S.fold.promo?" open":""}><summary><h2 class="sec">연말 학년 등반</h2><span class="fold-sum">${promoYear()}년 연말 · 완료 ${PROMO_TEAMS.filter(promoDone).length}곳 / 대상 ${PROMO_TEAMS.length}곳</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">부서마다 따로 진행해요. 각 부서 명단 탭에서도 부서 관리자가 고유번호를 확인한 뒤 실행할 수 있어요. 맨 위 학년은 다음 부서로 올라가고(영아 4세→유아 5세, 유아 7세→유소년, 6학년→중고등 중1), 고3은 졸업해요.</p>
+    <div style="display:flex;justify-content:flex-end;margin:0 0 8px"><button class="btn" data-promo-xlsx="all">전체 명단 엑셀로 내려받기</button></div>
     <div class="card admin-list">${PROMO_TEAMS.map(t=>{const todo=promoGroups(t),done=promoDone(t)?promoDoneGroups(t):[];
       return `<details class="fold promo-team" data-fold="promo-${t}"${S.fold["promo-"+t]?" open":""}><summary><b>${TEAMS[t].label}</b><span class="code none">${esc(promoStatus(t))}</span><button class="btn" data-promo="${t}">등반</button><button class="btn danger" data-promo-undo="${t}">되돌리기</button></summary>
         ${todo.length?`<p class="muted" style="font-size:12px;margin:8px 0 0">등반 대상 ${todo.reduce((a,m)=>a+m.n,0)}명</p><div class="move-list">${todo.map(promoMoveRow).join("")}</div>`:`<p class="muted" style="font-size:13px;margin:8px 0 0">남은 등반 대상이 없어요.</p>`}
         ${noAgeKids(t).length?`<p class="err" style="font-size:12px">나이가 없어 빠지는 ${noAgeKids(t).length}명: ${noAgeKids(t).map(p=>esc(p.name)).join(", ")}</p>`:""}
-        ${done.length?`<p class="muted" style="font-size:12px;margin:10px 0 0">${promoYear()}년 연말에 등반한 학생 ${done.reduce((a,m)=>a+m.n,0)}명</p><div class="move-list">${done.map(promoMoveRow).join("")}</div>`:""}</details>`}).join("")}</div></details>`;
+        ${done.length?`<p class="muted" style="font-size:12px;margin:10px 0 0">${promoYear()}년 연말에 등반한 학생 ${done.reduce((a,m)=>a+m.n,0)}명</p><div class="move-list">${done.map(promoMoveRow).join("")}</div>`:""}
+        ${todo.length||done.length?`<div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn" data-promo-xlsx="${t}">${esc(TEAMS[t].short)} 명단 엑셀로 내려받기</button></div>`:""}</details>`}).join("")}</div></details>`;
 }
 /* ---------- 팀관리자 로그인 · 내 관리번호 변경 ---------- */
 function openTeamAdminLogin(){
@@ -2352,6 +2371,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const pu=e.target.closest("[data-promo-undo]");if(pu){e.preventDefault();return openUndoPromotion(pu.dataset.promoUndo)}
   const cEd=e.target.closest("[data-class-edit]");if(cEd)return openClassEdit(cEd.dataset.classEdit);
   const cAs=e.target.closest("[data-class-assign]");if(cAs)return openClassAssign(cAs.dataset.classAssign);
+  const px=e.target.closest("[data-promo-xlsx]");if(px)return downloadPromoXlsx(px.dataset.promoXlsx==="all"?PROMO_TEAMS:[px.dataset.promoXlsx]);
   const po=e.target.closest("[data-promo]");if(po){e.preventDefault();return openPromotion(po.dataset.promo)}
   const en=e.target.closest("[data-enter]");if(en)return enterDept(en.dataset.enter);
   if(e.target.closest("#homeBtn")){S.view="home";render();window.scrollTo(0,0);return}
@@ -2518,7 +2538,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014090732';
+  var BUILD = '20261014090921';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
