@@ -2253,8 +2253,8 @@ function renderHome(){
   {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
     if(mine.length)h+=rptCard();
     if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`+hrCodesCard(mine)}
+  if(S.isAdmin){if(!S.isCo)h+=renderPromoAdmin();h+=renderStaff();if(!S.isCo)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
   h+=`<div style="margin-top:28px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
-  if(S.isAdmin){if(!S.isCo)h+=renderPromoAdmin();h+=renderStaff();if(!S.isCo)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */
   return h;
 }
 function renderStaff(){
@@ -2663,7 +2663,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014131239';
+  var BUILD = '20261014131317';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
