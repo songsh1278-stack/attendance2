@@ -6,7 +6,7 @@
 <script>(function(){var OK='https://songsh1278-stack.github.io/attendance2/',h=location.hostname;if(location.href.indexOf(OK)!==0&&h!=='localhost'&&h!=='127.0.0.1'&&h!=='')location.replace(OK)})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="교회학교 교육부 주일 출석·달란트·명단 관리">
-<meta name="theme-color" content="#18856B">
+<meta name="theme-color" content="#6E1F2E">
 <meta name="apple-mobile-web-app-title" content="출석부">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta property="og:title" content="신당중앙교회">
@@ -22,7 +22,7 @@
 <title>신당중앙교회 교육팀 출석부</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Jua&family=Do+Hyeon&family=Nanum+Myeongjo:wght@700;800&family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
-<script>/* 디자인·배경색·글자 크기 선택을 화면이 그려지기 전에 적용 */try{var de=document.documentElement,st=localStorage.getItem("ya-style")||"church",bg=localStorage.getItem("ya-bg"),fs=localStorage.getItem("ya-fs");if(st==="church"||st==="navy"||st==="sunset")de.setAttribute("data-style",st);if(bg&&bg.charAt(0)==="#"){de.setAttribute("data-bg","custom");de.style.setProperty("--custom-bg",bg)}else if(bg)de.setAttribute("data-bg",bg);if(fs)de.setAttribute("data-fs",fs)}catch(e){document.documentElement.setAttribute("data-style","church")}</script>
+<script>/* 디자인·배경색·글자 크기 선택을 화면이 그려지기 전에 적용 */try{var de=document.documentElement,st=localStorage.getItem("ya-style")||"church",bg=localStorage.getItem("ya-bg"),fs=localStorage.getItem("ya-fs");if(st==="church"||st==="navy"||st==="sunset")de.setAttribute("data-style",st);if(bg&&bg.charAt(0)==="#"){de.setAttribute("data-bg","custom");de.style.setProperty("--custom-bg",bg)}else if(bg)de.setAttribute("data-bg",bg);if(fs)de.setAttribute("data-fs",fs);var bc={church:"#6E1F2E",navy:"#1F3A5F",sunset:"#E8553F"}[st]||"#18856B",tm=document.querySelector('meta[name="theme-color"]');if(tm&&!(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches))tm.setAttribute("content",bc)}catch(e){document.documentElement.setAttribute("data-style","church")}</script>
 <style>
 :root{
   --ground:#F1F5F2; --surface:#FFFFFF; --sunk:#E6ECE8; --line:#D5DED9;
@@ -515,7 +515,8 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 :root[data-style="church"] body{background:var(--ground) radial-gradient(ellipse at top,rgba(168,132,62,.08),transparent 60%) no-repeat}
 :root[data-style="church"] header.top{border-bottom:1px solid var(--gold);box-shadow:0 1px 0 var(--gold-soft)}
 :root[data-style="church"] .brand h1{font-weight:800;letter-spacing:.02em}
-:root[data-style="church"] .brand h1::before{content:"✝";color:var(--gold);font-weight:400;margin-right:8px;font-size:.85em}
+:root[data-style="church"] .brand h1{position:relative;padding-left:1.05em} /* 십자가를 왼쪽에 따로 두어 두 줄 첫 글자(신·교)를 같은 위치에 */
+:root[data-style="church"] .brand h1::before{content:"✝";color:var(--gold);font-weight:400;font-size:.85em;position:absolute;left:0;top:.1em}
 :root[data-style="church"] h2.sec{font-weight:800;letter-spacing:.01em;display:flex;align-items:center;gap:10px}
 :root[data-style="church"] h2.sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--gold),transparent);opacity:.55}
 :root[data-style="church"] details.fold>summary h2.sec::after{display:none}
@@ -2909,7 +2910,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014153817';
+  var BUILD = '20261014154120';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
