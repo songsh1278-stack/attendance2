@@ -90,6 +90,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .summary .spacer{flex:1}
 .summary .btn{white-space:nowrap;flex:none}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600}
+a.btn{display:inline-block;text-decoration:none;color:var(--ink)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.danger{color:var(--danger)}
 
@@ -2400,9 +2401,22 @@ function openLook(){
   draw();document.body.appendChild(ov);ov._redraw=draw;
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
 }
+/* ---------- 새 주소로 / 최신 화면으로 새로고침 ----------
+ * 공식 주소(GitHub 바로가기 페이지)가 아니면 '예전 주소' 안내와 [새 주소로 새로고침]을 보여 주고,
+ * 공식 주소면 휴대폰에 저장된 화면(캐시)을 지우고 최신 화면을 다시 받는다. */
+const OFFICIAL_URL="https:"+"/"+"/songsh1278-stack.github.io/attendance2/";
+function onOfficialUrl(){const h=location.hostname;return !h||h==="localhost"||h==="127.0.0.1"||location.href.indexOf(OFFICIAL_URL)===0}
+function hardRefresh(){
+  if(!onOfficialUrl()){try{window.top.location.href=OFFICIAL_URL}catch(_){location.href=OFFICIAL_URL}return}
+  toast("최신 화면으로 새로 불러와요…");
+  const clear=window.caches?caches.keys().then(ks=>Promise.all(ks.map(k=>caches.delete(k)))):Promise.resolve();
+  const upd=navigator.serviceWorker?navigator.serviceWorker.getRegistrations().then(rs=>Promise.all(rs.map(r=>r.update().catch(()=>{})))):Promise.resolve();
+  Promise.all([clear,upd]).catch(()=>{}).then(()=>{try{sessionStorage.removeItem("ya-reload")}catch(_){}location.replace(location.pathname+"?v="+Date.now())});
+}
 function renderHome(){
   const k=S.date;
-  let h=`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>부서를 선택해 들어가세요.</p></div><div class="dept-grid">`;
+  let h=(onOfficialUrl()?"":`<div class="notice" style="margin:0 0 12px"><b>예전 주소로 열려 있어요.</b> 바뀐 내용이 보이지 않으면 새 주소로 여세요.<div style="margin-top:8px"><a class="btn primary" href="${OFFICIAL_URL}" target="_top" rel="noopener">↻ 새 주소로 새로고침</a></div></div>`)
+    +`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>부서를 선택해 들어가세요.</p></div><div class="dept-grid">`;
   for(const [t,x] of Object.entries(TEAMS)){
     const ps=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group!=="T");
     const on=ps.filter(p=>isOn(k,p.id)).length;const open=canEnter(t);
@@ -2430,6 +2444,7 @@ function renderHome(){
     if(mine.length)h+=`<h2 class="sec">내 팀 관리자 번호</h2><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div>`+hrCodesCard(mine)}
   if(S.isAdmin){if(!S.isCo)h+=renderPromoAdmin();h+=renderStaff();if(!S.isCo)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
   h+=lookPanel();
+  h+=`<div style="margin-top:10px;text-align:center">${onOfficialUrl()?`<button class="btn" id="hardRefresh">↻ 새로고침 (최신 화면으로)</button>`:`<a class="btn" href="${OFFICIAL_URL}" target="_top" rel="noopener">↻ 새 주소로 새로고침</a>`}</div>`;
   h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   return h;
 }
@@ -2609,6 +2624,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const o=e.target.closest("[data-open]");if(o){openPerson.edit=false;return openPerson(o.dataset.open)}
   const gc=e.target.closest("[data-gcode]");if(gc)return openGradeCodeEntry(gc.dataset.gcode);
   if(e.target.closest("#lookOpen"))return openLook();
+  if(e.target.closest("#hardRefresh"))return hardRefresh();
   const dcb=e.target.closest("[data-dc]");if(dcb){const [t,k]=dcb.dataset.dc.split("|");return setDeptColor(t,k)}
   const lk=e.target.closest("[data-look]");if(lk){const v=lk.dataset.look;setLook("data-style","ya-style",v,(STYLES.find(x=>x[0]===v)||STYLES[0])[1]+" 디자인으로 바꿨어요");if(!v)try{localStorage.setItem("ya-style","basic")}catch(_){}return}
   const fz=e.target.closest("[data-fsz]");if(fz){const v=fz.dataset.fsz;return setLook("data-fs","ya-fs",v,"글자 크기: "+(FONT_SIZES.find(x=>x[0]===v)||FONT_SIZES[1])[1])}
@@ -2845,7 +2861,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261014142946';
+  var BUILD = '20261014143256';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
