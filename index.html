@@ -2326,7 +2326,7 @@ function openTeamAdminLogin(){
       <div class="form"><label class="full">이메일<input id="f-taem" type="email" inputmode="email" autocomplete="off" value="${esc(AUTH().email||reLogin().email||"")}" required></label>
       <label class="inline full"><input type="checkbox" id="f-tar" checked>이 기기에서 기억하기 <span class="muted" style="font-size:12px">(여러 사람이 쓰는 기기면 끄세요)</span></label></div>
       <p class="err" id="taErr" hidden></p>
-      <p style="margin:2px 0 0;font-size:13px;text-align:center"><button type="button" class="btn" data-ask="email" style="font-size:13px;padding:4px 10px">이메일이 등록되지 않았나요? 관리자에게 요청하기</button></p>
+      <p style="margin:2px 0 0;font-size:13px;text-align:center"><button type="button" class="btn" data-ask="email" style="font-size:13px;padding:4px 10px">로그인이 안 되시나요? 관리자에게 요청하기</button></p>
       <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">다음</button></div></form>`
     :step===3
     ?`<form class="sheet" role="dialog" aria-label="공동관리자 로그인"><h3>${who2==="co2"?"공동관리자2":"공동관리자1"} 로그인</h3>
@@ -3070,7 +3070,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261016100434';
+  var BUILD = '20261016100730';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
