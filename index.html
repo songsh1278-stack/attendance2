@@ -1922,6 +1922,7 @@ function openCodeSheet(t){
     <p class="muted" style="margin:0;font-size:14px">팀 관리자 번호 또는 담임 번호를 입력하세요. 담임 번호로 들어가면 자기 반만 보여요. 팀 관리자는 먼저 메인 화면의 [팀관리자 로그인]에서 등록된 이메일로 로그인해 주세요.</p>
     <div class="form"><label class="full">번호<input id="f-code" type="password" autocomplete="off" autocapitalize="off" maxlength="20" required></label><label class="inline full"><input type="checkbox" id="f-remember" checked>이 기기에서 번호 기억하기 <span class="muted" style="font-size:12px">(여러 사람이 쓰는 기기면 끄세요)</span></label></div>
     <p class="err" id="codeErr" hidden>번호가 맞지 않아요. 다시 확인해 주세요.</p>
+    <p style="margin:2px 0 0;font-size:13px;text-align:center"><button type="button" class="btn" data-ask="pw" data-team="${t}" style="font-size:13px;padding:4px 10px">번호를 모르겠나요? 관리자에게 요청하기</button></p>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">들어가기</button></div></form>`;
   document.body.appendChild(ov);
   const inp=ov.querySelector("#f-code");inp.focus();
@@ -2325,18 +2326,21 @@ function openTeamAdminLogin(){
       <div class="form"><label class="full">이메일<input id="f-taem" type="email" inputmode="email" autocomplete="off" value="${esc(AUTH().email||reLogin().email||"")}" required></label>
       <label class="inline full"><input type="checkbox" id="f-tar" checked>이 기기에서 기억하기 <span class="muted" style="font-size:12px">(여러 사람이 쓰는 기기면 끄세요)</span></label></div>
       <p class="err" id="taErr" hidden></p>
+      <p style="margin:2px 0 0;font-size:13px;text-align:center"><button type="button" class="btn" data-ask="email" style="font-size:13px;padding:4px 10px">이메일이 등록되지 않았나요? 관리자에게 요청하기</button></p>
       <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">다음</button></div></form>`
     :step===3
     ?`<form class="sheet" role="dialog" aria-label="공동관리자 로그인"><h3>${who2==="co2"?"공동관리자2":"공동관리자1"} 로그인</h3>
       <p class="muted" style="margin:0;font-size:14px"><b>${esc(who)}</b>님, 2단계: 개인 비밀번호를 입력하세요.</p>
       <div class="form"><label class="full">공동관리자 비밀번호<input id="f-copw" type="password" autocomplete="current-password" required></label></div>
       <p class="err" id="taErr" hidden></p>
+      <p style="margin:2px 0 0;font-size:13px;text-align:center"><button type="button" class="btn" data-ask="pw" style="font-size:13px;padding:4px 10px">비밀번호·번호를 모르겠나요? 관리자에게 요청하기</button></p>
       <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">로그인</button></div></form>`
     :`<form class="sheet" role="dialog" aria-label="팀관리자 로그인"><h3>팀관리자 로그인</h3>
       <p class="muted" style="margin:0;font-size:14px"><b>${esc(who)}</b>님, 2단계: 부서를 고르고 팀 관리자 번호를 입력하세요.</p>
       <div class="form"><label class="full">부서<select id="f-tat">${Object.entries(TEAMS).filter(([t])=>!myTeam||t===myTeam).map(([t,x])=>`<option value="${t}">${x.label}</option>`).join("")}</select></label>
       <label class="full">팀 관리자 번호<input id="f-tac" type="password" inputmode="numeric" autocomplete="off" maxlength="8" required></label></div>
       <p class="err" id="taErr" hidden></p>
+      <p style="margin:2px 0 0;font-size:13px;text-align:center"><button type="button" class="btn" data-ask="pw" style="font-size:13px;padding:4px 10px">비밀번호·번호를 모르겠나요? 관리자에게 요청하기</button></p>
       <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">로그인</button></div></form>`;
     const f=ov.querySelector("#f-taem")||ov.querySelector("#f-copw")||ov.querySelector("#f-tac");if(f)f.focus();
     const sel=ov.querySelector("#f-tat"),tac=ov.querySelector("#f-tac");if(sel&&tac){const fill=()=>{tac.value=(reLogin().codes||{})[sel.value]||""};fill();sel.addEventListener("change",fill)}
@@ -2419,12 +2423,48 @@ function openMyGradeCode(t,g){
     ov.remove();S.book=null;await load();toast("담임 번호를 바꿨어요");
   });
 }
+/* ---------- 관리자에게 요청하기 (로그인 화면) : 총관리자에게 메일로 보내요 (무료) ---------- */
+function openAskAdmin(kind,email,team){
+  const ov=document.createElement("div");ov.className="overlay";
+  const tm=team||(Object.keys(S.scope||{})[0])||"";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="관리자에게 요청하기"><h3>관리자에게 요청하기</h3>
+    <p class="muted" style="margin:0;font-size:14px">이메일 등록이나 비밀번호·번호 문제를 적어 보내면 총관리자에게 메일로 전달돼요. 답을 받을 이메일이나 연락처를 꼭 적어 주세요.</p>
+    <div class="form">
+      <label class="full">요청 종류<select id="f-akd"><option value="email">이메일 등록 요청</option><option value="pw">비밀번호·번호 분실/오류</option><option value="etc">기타 문의</option></select></label>
+      <label>부서<select id="f-atm"><option value="">부서 선택</option>${Object.entries(TEAMS).map(([t,x])=>`<option value="${t}" ${t===tm?"selected":""}>${x.label}</option>`).join("")}</select></label>
+      <label>직책<input id="f-apos" maxlength="30" placeholder="예: 팀장, 담임, 교사"></label>
+      <label class="full">이름<input id="f-anm" maxlength="30" autocomplete="name" required></label>
+      <label class="full">요청사항<textarea id="f-amsg" maxlength="1000" required placeholder="예: 유아부 담임 OOO입니다. 제 이메일을 등록해 주세요."></textarea></label>
+      <label>답 받을 이메일<input id="f-aem" type="email" inputmode="email" autocomplete="email" maxlength="100" value="${esc(email||AUTH().email||reLogin().email||"")}"></label>
+      <label>연락처<input id="f-aph" type="tel" inputmode="tel" autocomplete="tel" maxlength="30" placeholder="010-0000-0000"></label>
+    </div>
+    <p class="err" id="askErr" hidden></p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">보내기</button></div></form>`;
+  document.body.appendChild(ov);
+  const v=id=>ov.querySelector(id).value.trim();
+  ov.querySelector("#f-akd").value=kind==="email"||kind==="pw"?kind:"etc";
+  ov.querySelector("#f-atm").focus();
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+  ov.querySelector("form").addEventListener("submit",async e=>{
+    e.preventDefault();const er=ov.querySelector("#askErr"),btn=ov.querySelector("button[type=submit]");
+    const f={kind:v("#f-akd"),team:v("#f-atm"),pos:v("#f-apos"),name:v("#f-anm"),msg:v("#f-amsg"),email:v("#f-aem"),phone:v("#f-aph")};
+    if(!f.team){er.textContent="부서를 골라 주세요";er.hidden=false;return}
+    if(!f.email&&!f.phone){er.textContent="답을 받을 이메일이나 연락처를 하나는 적어 주세요";er.hidden=false;return}
+    btn.disabled=true;btn.textContent="보내는 중…";
+    try{await call("askAdmin",f);ov.remove();toast("관리자에게 요청을 보냈어요. 확인 후 연락드릴게요")}
+    catch(x){er.textContent=x.message;er.hidden=false;btn.disabled=false;btn.textContent="보내기"}
+  });
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-ask]");if(!b)return;e.preventDefault();
+  const sh=b.closest(".sheet"),em=sh&&(sh.querySelector("#f-taem")||sh.querySelector("#f-aemail")),ts=sh&&sh.querySelector("#f-tat");
+  openAskAdmin(b.dataset.ask,em?em.value.trim():"",ts?ts.value:(b.dataset.team||""))});
 function openAdminLogin(){
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="관리자 로그인"><h3>관리자 로그인</h3>
     <p class="muted" style="margin:0;font-size:14px">${S.adminSet?"구글 시트의 _설정 탭 B1에 적어 둔 관리자 비밀번호를 입력하세요.":"아직 관리자 비밀번호가 없어요. 구글 시트의 _설정 탭(숨김) B1 칸에 비밀번호를 적은 뒤 다시 시도하세요."}</p>
     <div class="form"><label class="full">관리자 비밀번호<input id="f-admin" type="password" autocomplete="current-password" required></label><label class="full">이메일 (등록된 경우)<input id="f-aemail" type="email" inputmode="email" autocomplete="off" value="${esc(AUTH().email||"")}"></label><label class="inline full"><input type="checkbox" id="f-ar" checked>이 기기에서 기억하기 <span class="muted" style="font-size:12px">(여러 사람이 쓰는 기기면 끄세요)</span></label></div>
     <p class="err" id="adminErr" hidden>비밀번호가 맞지 않아요.</p>
+    <p style="margin:2px 0 0;font-size:13px;text-align:center"><button type="button" class="btn" data-ask="pw" style="font-size:13px;padding:4px 10px">관리자에게 요청하기</button></p>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">로그인</button></div></form>`;
   document.body.appendChild(ov);ov.querySelector("#f-admin").focus();
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
@@ -3030,7 +3070,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261016085329';
+  var BUILD = '20261016100434';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
