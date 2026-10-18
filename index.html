@@ -2063,7 +2063,8 @@ function renderPersonPeriods(rows,ks){
   const list=rows.map(r=>{const id="u:"+r.p.id;
     return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${esc(r.p.name)}<small>${esc(GL[r.p.group]||"")}</small></span><span style="flex:1"></span><span class="pp-days num"><b>${r.n}/${ks.length}</b>${talentOn()&&r.p.group!=="T"?` (달란트 ${r.t}개)`:""}</span></summary><div class="sd-in">${body(r.p)}</div></details>`}).join("");
   const ul=(STAT_UNITS.find(u=>u[0]===U)||["",""])[1];
-  return `<h2 class="sec">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>
+  const anyOpen=rows.some(r=>!closed.has("u:"+r.p.id));
+  return `<div style="display:flex;align-items:center;gap:8px"><h2 class="sec" style="flex:1">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>${rows.length?`<button class="btn" data-ppall="${anyOpen?"close":"open"}" style="flex:none;font-size:13px;padding:4px 12px">${anyOpen?"모두 접기":"모두 펼치기"}</button>`:""}</div>
     <p class="muted" style="font-size:12px;margin:-4px 0 8px">${S.editable?"●/○를 누르면 그 주일 출석을 고쳐요 · ":""}이름 옆은 올해 출석/전체 주일 수예요 · ${U==="recent"?"최근 한 달":"연도마다"} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요</p>
     <div class="sd-list">${list||`<div class="empty">사람이 없어요.</div>`}</div>`;
 }
@@ -3212,6 +3213,8 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const g=e.target.closest("[data-g]");if(g&&g.closest("#chips")&&chipDouble(g.dataset.g)&&canRenameClass(g.dataset.g)){openClassRename(S.team,g.dataset.g);return}if(g){S.group=g.dataset.g;try{localStorage.setItem("ya-group",S.group)}catch(_){}render();return}
   const tab=e.target.closest("[data-tab]");if(tab){if(tab.dataset.tab!==S.tab)navPush();S.tab=tab.dataset.tab;render();window.scrollTo(0,0);return}
   if(e.target.closest("[data-attsave]")){attErr="";flushAtt();return}
+  const ppa=e.target.closest("[data-ppall]");if(ppa){const c=S.statClosed||(S.statClosed=new Set()),close=ppa.dataset.ppall==="close";
+    activePeople(S.group).forEach(p=>{const k="u:"+p.id;if(close)c.add(k);else c.delete(k)});saveStatView();render();return}
   const tat=e.target.closest("[data-tatt]");if(tat){if(!S.editable){toast("보기 권한이라 고칠 수 없어요");return}
     const [k,id]=tat.dataset.tatt.split("|"),p=S.people.get(id),on=isOn(k,id);writeAtt(k,{p:{[id]:on?0:1}});
     toast(`${p?p.name+" · ":""}${Number(k.slice(5,7))}/${Number(k.slice(8))} ${on?"결석":"출석"}으로 바꿨어요`);return}
@@ -3384,7 +3387,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018153917';
+  var BUILD = '20261018154000';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
