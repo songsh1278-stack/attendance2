@@ -314,6 +314,8 @@ td.num em{font-style:normal;color:var(--muted);font-size:12px}
 .pp-v{font-size:13px;font-weight:600;white-space:nowrap}
 .pp-v em{font-style:normal;font-weight:500;font-size:12px;color:var(--muted)}
 .pp-row .sd-names{margin-top:0}
+.pp-days{font-size:13px;color:var(--muted);white-space:nowrap}
+.pp-days b{color:var(--ink)}
 .tal-sum{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
 .tal-sum .who{display:flex;flex-direction:column;min-width:0}
 .tal-sum .who span{font-size:12px;color:var(--muted)}
@@ -2048,12 +2050,11 @@ function renderPersonPeriods(rows,ks){
   const chips=(id,list)=>`<div class="sd-names">${list.slice().reverse().map(k=>{const on=isOn(k,id);return `<span class="sd-nm${on?" on":""}" title="${on?"출석":"결석"}">${on?"●":"○"} ${Number(k.slice(5,7))}/${Number(k.slice(8))}</span>`}).join("")}</div>`;
   const cols=periodCols(U,Y).filter(c=>!c.sum).map(c=>({...c,ks:U==="year"?c.ks:c.ks.filter(k=>k<=S.date)})).filter(c=>c.ks.length).reverse();
   const body=p=>{
-    const tal=talentOn()&&p.group!=="T"?`<div class="pp-tal">달란트 <b class="num">${totalTalent(p)}</b></div>`:"";
     const per=cols.map(c=>{const n=c.ks.filter(k=>isOn(k,p.id)).length;
       return `<div class="pp-row"><span class="pp-l">${c.l}</span><span class="pp-v num">${n}/${c.ks.length} <em>(${pct(n,c.ks.length)}%)</em></span>${chips(p.id,c.ks)}</div>`}).join("");
-    return tal+(per||`<p class="muted">기록이 없어요.</p>`)};
+    return per||`<p class="muted">기록이 없어요.</p>`};
   const list=rows.map(r=>{const id="u:"+r.p.id;
-    return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${esc(r.p.name)}<small>${esc(GL[r.p.group]||"")}</small></span></summary><div class="sd-in">${body(r.p)}</div></details>`}).join("");
+    return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${esc(r.p.name)}<small>${esc(GL[r.p.group]||"")}</small></span><span style="flex:1"></span><span class="pp-days num">전체 <b>${ks.length}</b>일 · 출석 <b>${r.n}</b>일</span></summary><div class="sd-in">${body(r.p)}</div></details>`}).join("");
   const ul=(STAT_UNITS.find(u=>u[0]===U)||["",""])[1];
   return `<h2 class="sec">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>
     <p class="muted" style="font-size:12px;margin:-4px 0 8px">사람마다 ${ul} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요 · 단위는 위 [기간별 출석]에서 골라요</p>
@@ -3366,7 +3367,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018152508';
+  var BUILD = '20261018152742';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
