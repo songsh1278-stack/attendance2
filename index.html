@@ -273,6 +273,9 @@ th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line)}
 th{font-size:12px;color:var(--muted);font-weight:600}
 td.r,th.r{text-align:right}
 .tablewrap{overflow-x:auto}
+.att-sum .big{font-size:22px}
+.att-sum .big+.big{margin-top:2px}
+td.num em{font-style:normal;color:var(--muted);font-size:12px}
 .savebar{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:5;margin:16px 0 4px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:var(--shadow)}
 .savebar .sb-tx{flex:1;min-width:0;display:flex;flex-direction:column;font-size:14px}
 .savebar .sb-tx small{font-size:12px;color:var(--muted)}
@@ -2838,6 +2841,8 @@ async function openA2hs(){
     if(e.target.closest("#a2hsInstall")&&deferredInstall){deferredInstall.prompt();const r=await deferredInstall.userChoice.catch(()=>null);deferredInstall=null;ov.remove();if(r&&r.outcome==="accepted")toast("홈 화면에 추가했어요");render()}
   });
 }
+/* 출석 표시: 12/20 (60%). 인원이 없으면 0/0 */
+const attFrac=(on,n)=>`${on}/${n}${n?` <em>(${Math.round(on/n*100)}%)</em>`:""}`;
 function renderAdminSummary(){
   const k=S.date,d=parseKey(k);
   const rows=Object.entries(TEAMS).map(([t,x])=>{
@@ -2846,29 +2851,29 @@ function renderAdminSummary(){
     return {label:x.label,n:st.length,on:st.filter(p=>isOn(k,p.id)).length,tn:tc.length,ton:tc.filter(p=>isOn(k,p.id)).length};
   });
   const sum=f=>rows.reduce((a,r)=>a+r[f],0);
-  return `<details class="fold" data-fold="summary"${S.fold.summary!==false?" open":""}><summary><h2 class="sec">부서별 출석 현황</h2><span class="fold-sum num">${d.getMonth()+1}월 ${d.getDate()}일 주일 · 학생 ${sum("on")}/${sum("n")}명</span></summary><div class="card">
+  const S1={on:sum("on"),n:sum("n")},T1={on:sum("ton"),n:sum("tn")};
+  return `<details class="fold" data-fold="summary"${S.fold.summary!==false?" open":""}><summary><h2 class="sec">부서별 출석 현황</h2><span class="fold-sum num">${d.getMonth()+1}월 ${d.getDate()}일 주일 · 학생 ${attFrac(S1.on,S1.n)}</span></summary><div class="card">
     <div class="datebar" style="margin:0 0 12px"><button class="arrow" data-adate="-7" aria-label="지난 주일">‹</button>
     <div class="date"><strong class="num">${d.getMonth()+1}월 ${d.getDate()}일 주일</strong></div>
     <button class="arrow" data-adate="7" aria-label="다음 주일">›</button></div>
-    <div class="summary" style="margin-bottom:0"><div><div class="big num">${sum("on")}<em> / ${sum("n")}명</em></div><div class="sub num">학생 전체${sum("n")?" · "+Math.round(sum("on")/sum("n")*100)+"%":""} · 교사 ${sum("ton")} / ${sum("tn")}</div></div></div>
-    <table style="margin-top:10px"><thead><tr><th>부서</th><th class="r">학생</th><th class="r">교사</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.label}</td><td class="r num">${r.on}/${r.n}</td><td class="r num">${r.ton}/${r.tn}</td></tr>`).join("")}</tbody></table></div></details>`;
+    <div class="summary att-sum" style="margin-bottom:0"><div><div class="big num">학생 ${attFrac(S1.on,S1.n)}</div><div class="big num">교사 ${attFrac(T1.on,T1.n)}</div></div></div>
+    <table style="margin-top:10px"><thead><tr><th>부서</th><th class="r">학생</th><th class="r">교사</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.label}</td><td class="r num">${attFrac(r.on,r.n)}</td><td class="r num">${attFrac(r.ton,r.tn)}</td></tr>`).join("")}</tbody></table></div></details>`;
 }
 /* 팀 관리자 메인화면: 내 부서의 반별 출석 현황 (분반이 있으면 반 아래에 분반별로) */
 function renderClassSummary(t){
   const k=S.date,d=parseKey(k);
   const all=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false);
   const cnt=ps=>({n:ps.length,on:ps.filter(p=>isOn(k,p.id)).length});
-  const pct=r=>r.n?Math.round(r.on/r.n*100)+"%":"-";
   const rows=[];
   for(const [g,l] of classesOf(t)){const ps=all.filter(p=>p.group===g);rows.push({label:esc(l),...cnt(ps)});
     const ss=sectionsOfKey(t,g);if(ss.length)for(const x of ss)rows.push({label:"&nbsp;&nbsp;└ "+x+"반",sub:true,...cnt(ps.filter(p=>p.section===x))})}
   const st=cnt(all.filter(p=>p.group!=="T")),tc=cnt(all.filter(p=>p.group==="T"));
-  return `<details class="fold" data-fold="cls_${t}"${S.fold["cls_"+t]!==false?" open":""} style="margin-top:12px"><summary><h2 class="sec">${TEAMS[t].label} 반별 출석 현황</h2><span class="fold-sum num">${d.getMonth()+1}월 ${d.getDate()}일 · ${st.on}/${st.n}명</span></summary><div class="card">
+  return `<details class="fold" data-fold="cls_${t}"${S.fold["cls_"+t]!==false?" open":""} style="margin-top:12px"><summary><h2 class="sec">${TEAMS[t].label} 반별 출석 현황</h2><span class="fold-sum num">${d.getMonth()+1}월 ${d.getDate()}일 · 학생 ${attFrac(st.on,st.n)}</span></summary><div class="card">
     <div class="datebar" style="margin:0 0 12px"><button class="arrow" data-adate="-7" aria-label="지난 주일">‹</button>
     <div class="date"><strong class="num">${d.getMonth()+1}월 ${d.getDate()}일 주일</strong></div>
     <button class="arrow" data-adate="7" aria-label="다음 주일">›</button></div>
-    <div class="summary" style="margin-bottom:0"><div><div class="big num">${st.on}<em> / ${st.n}명</em></div><div class="sub num">학생 전체${st.n?" · "+pct(st):""} · 교사 ${tc.on} / ${tc.n}</div></div></div>
-    <table style="margin-top:10px"><thead><tr><th>반</th><th class="r">출석</th><th class="r">출석률</th></tr></thead><tbody>${rows.map(r=>`<tr${r.sub?' class="muted"':""}><td>${r.label}</td><td class="r num">${r.on}/${r.n}</td><td class="r num">${pct(r)}</td></tr>`).join("")}</tbody></table></div></details>`;
+    <div class="summary att-sum" style="margin-bottom:0"><div><div class="big num">학생 ${attFrac(st.on,st.n)}</div><div class="big num">교사 ${attFrac(tc.on,tc.n)}</div></div></div>
+    <table style="margin-top:10px"><thead><tr><th>반</th><th class="r">출석</th></tr></thead><tbody>${rows.map(r=>`<tr${r.sub?' class="muted"':""}><td>${r.label}</td><td class="r num">${attFrac(r.on,r.n)}</td></tr>`).join("")}</tbody></table></div></details>`;
 }
 /* 배경색 선택: 이 기기에만 저장. '기본'을 고르면 원래 배경으로 */
 const BG_COLORS=[["","기본",""],["ivory","상아","#F6F1E7"],["sky","하늘","#EAF1F8"],["pink","연분홍","#F8ECEE"],["lilac","연보라","#F0ECF7"],["mint","연두","#EEF4E6"],["gray","회색","#F0F0EE"],["white","흰색","#FFFFFF"]];
@@ -3408,7 +3413,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018135440';
+  var BUILD = '20261018140513';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
