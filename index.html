@@ -1591,7 +1591,30 @@ function openGuide(){
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
 }
 /* ---------- 활동 기록 (총관리자 전용) ---------- */
-const activityCard=()=>`<details class="fold" data-fold="activity"${S.fold.activity?" open":""}><summary><h2 class="sec">활동 기록</h2></summary><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">로그인, 번호 변경, 명단·반 이동, 일정, 자료실, 설정 기록</span><button class="btn" id="actOpen">기록 보기</button></div></div></details>`;
+const activityCard=()=>`<details class="fold" data-fold="activity"${S.fold.activity?" open":""}><summary><h2 class="sec">활동 기록</h2></summary><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">로그인, 번호 변경, 명단·반 이동, 일정, 자료실, 설정 기록</span><button class="btn" id="actOpen">기록 보기</button></div><div class="admin-row"><b>텔레그램 알림</b><span class="code none">휴대폰 텔레그램으로 받을 기록 종류</span><button class="btn" id="tgOpen">알림 종류</button></div></div></details>`;
+/* 텔레그램으로 받을 알림 종류 고르기 (총관리자 전용) */
+async function openTgKinds(){
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-label="텔레그램 알림 종류"><h3>텔레그램 알림 종류</h3><div id="tgBody"><p class="muted">불러오는 중…</p></div>
+    <p class="err" id="tgErr" hidden></p>
+    <div class="actions"><div class="spacer"></div><button class="btn" data-close>닫기</button><button class="btn primary" id="tgSave" disabled>저장</button></div></div>`;
+  document.body.appendChild(ov);
+  const body=ov.querySelector("#tgBody"),er=ov.querySelector("#tgErr"),save=ov.querySelector("#tgSave");
+  const draw=d=>{body.innerHTML=`<p class="muted" style="margin:0 0 8px;font-size:14px">${d.linked?"체크한 종류만 텔레그램으로 와요. 활동 기록 시트에는 종류와 상관없이 모두 남아요.":"<b>텔레그램이 아직 연결되지 않았어요.</b> 편집기에서 connectTelegram 을 먼저 실행해 주세요."}</p>
+    <div class="card admin-list">${d.kinds.map(x=>`<label class="admin-row" style="cursor:pointer"><input type="checkbox" data-tk="${esc(x.k)}" ${x.on?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><b>${esc(x.label)}</b></label>`).join("")}</div>
+    <p style="margin:8px 0 0"><button type="button" class="btn" id="tgAll">모두 켜기</button> <button type="button" class="btn" id="tgNone">모두 끄기</button></p>`;save.disabled=false};
+  ov.addEventListener("click",async e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    const all=e.target.closest("#tgAll"),none=e.target.closest("#tgNone");
+    if(all||none){ov.querySelectorAll("[data-tk]").forEach(c=>c.checked=!!all);return}
+    if(!e.target.closest("#tgSave"))return;
+    const on={};ov.querySelectorAll("[data-tk]").forEach(c=>on[c.dataset.tk]=c.checked);
+    save.disabled=true;save.textContent="저장 중…";er.hidden=true;
+    try{await call("tgKindsSet",on);ov.remove();toast("텔레그램 알림 종류를 저장했어요")}
+    catch(x){er.textContent=x.message;er.hidden=false;save.disabled=false;save.textContent="저장"}
+  });
+  try{draw(await call("tgKinds"))}catch(x){body.innerHTML="";er.textContent=x.message;er.hidden=false}
+}
 async function openActivityLog(){
   if(!S.isAdmin){toast("총관리자만 볼 수 있어요");return}
   const ov=document.createElement("div");ov.className="overlay";let all=null,tm="all",kd="all",q="",total=0,more=false,busy=false,shown=200;
@@ -3329,6 +3352,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   if(e.target.closest("#xlsUp"))return uploadRoster();
   if(e.target.closest("#xlsExport"))return exportAll();
   if(e.target.closest("#actOpen"))return openActivityLog();
+  if(e.target.closest("#tgOpen"))return openTgKinds();
   if(e.target.closest("#rptOpen")){S.rptStatAt=0;return openReport()}
   if(e.target.closest("#guideOpen"))return openGuide();
   const hs=e.target.closest("[data-hist]");if(hs)return openHistory(hs.dataset.hist);
@@ -3444,7 +3468,7 @@ const API_URL="https:"+"/"+"/script.google.com/macros/s/AKfycbxAIzrJ4PjqNm4lo-1i
 const CLIENT_V=2; /* 서버(MIN_CLIENT)보다 낮으면 예전 화면으로 보고 거절해요 */
 const HAS_GS=typeof google!=="undefined"&&!!(google.script&&google.script.run);
 /* 읽기만 하는 요청은 연결이 끊기면 자동으로 두 번 더 시도해요 (저장 요청은 중복될 수 있어 다시 보내지 않아요) */
-const READ_OPS=new Set(["boot","photos","events","libList","contacts","appUrl","history","activity","gradeCodes","verifyCode","findGradeCode","findEntry","tcodeList","verifyGradeCode","downloadFile","rptGet","rptHwp","rptOrig"]);
+const READ_OPS=new Set(["boot","photos","events","libList","contacts","appUrl","history","activity","tgKinds","gradeCodes","verifyCode","findGradeCode","findEntry","tcodeList","verifyGradeCode","downloadFile","rptGet","rptHwp","rptOrig"]);
 async function callFetch(op,args){
   let t;const ac=typeof AbortController!=="undefined"?new AbortController():null;const tm=ac?setTimeout(()=>ac.abort(),60000):0;
   try{const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({op,auth:AUTH(),args,cv:CLIENT_V}),redirect:"follow",signal:ac?ac.signal:undefined});
@@ -3561,7 +3585,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261019081534';
+  var BUILD = '20261019081911';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
