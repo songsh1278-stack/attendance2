@@ -2131,7 +2131,7 @@ const STAT_UNITS=[["month","월별"],["quarter","분기"],["half","반기"],["ye
 const statUnit=()=>STAT_UNITS.some(u=>u[0]===S.statUnit)?S.statUnit:"month";
 const dayLabel=k=>Number(k.slice(5,7))+"월 "+Number(k.slice(8))+"일";
 function renderStatPeriods(){
-  const U=statUnit(),Y=Number(S.date.slice(0,4)),open=S.statOpen||(S.statOpen=new Set());
+  const U=statUnit(),Y=Number(S.date.slice(0,4)),closed=S.statClosed||(S.statClosed=new Set());
   if(U==="year"){const yrs=statYears();if(yrs.some(y=>!S.years.has(y)))setTimeout(()=>ensureYears(yrs).catch(()=>{}),0)}
   const ps=activePeople(S.group),stu=S.group==="T"?ps:ps.filter(p=>p.group!=="T"),tch=S.group==="T"?[]:ps.filter(p=>p.group==="T");
   const sIds=stu.map(p=>p.id),tIds=tch.map(p=>p.id),unit=S.group==="T"?"교사":TEAMS[S.team].unit;
@@ -2143,15 +2143,15 @@ function renderStatPeriods(){
       const y=gp.filter(p=>a[p.id]),n=gp.filter(p=>!a[p.id]);
       return `<div class="sd-g"><div class="sd-gh"><b>${esc(GL[g]||"")}</b><span class="num">${y.length}/${gp.length}</span></div>
         <div class="sd-names">${y.map(p=>`<button class="sd-nm on" data-open="${p.id}">${esc(p.name)}</button>`).join("")}${n.length?`<span class="sd-ab">결석</span>${n.map(p=>`<button class="sd-nm" data-open="${p.id}">${esc(p.name)}</button>`).join("")}`:""}</div></div>`}).join("");
-    return `<details class="sd day" data-sk="${id}" ${open.has(id)?"open":""}><summary><span class="sd-l">${dayLabel(k)}</span>${bar(pct(on,sIds.length))}<span class="sd-v num"><b>${on}/${sIds.length}</b><small>${pct(on,sIds.length)}%${tIds.length?` · 교사 ${tOn}/${tIds.length}`:""}</small></span></summary><div class="sd-in">${gs||`<p class="muted">사람이 없어요.</p>`}</div></details>`};
+    return `<details class="sd day" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${dayLabel(k)}</span>${bar(pct(on,sIds.length))}<span class="sd-v num"><b>${on}/${sIds.length}</b><small>${pct(on,sIds.length)}%${tIds.length?` · 교사 ${tOn}/${tIds.length}`:""}</small></span></summary><div class="sd-in">${gs||`<p class="muted">사람이 없어요.</p>`}</div></details>`};
   let list;
   if(U==="day")list=yearKeys().slice().reverse().map(dayRow).join("");
   else list=periodCols(U,Y).filter(c=>!c.sum).map(c=>({...c,ks:U==="year"?c.ks:c.ks.filter(k=>k<=S.date)})).filter(c=>c.ks.length).reverse().map(c=>{
     const n=attCount(sIds,c.ks),tn=attCount(tIds,c.ks),w=c.ks.length,id="p:"+U+":"+c.l,r=pct(n,sIds.length*w);
-    return `<details class="sd" data-sk="${id}" ${open.has(id)?"open":""}><summary><span class="sd-l">${c.l}<small>주일 ${w}번</small></span>${bar(r)}<span class="sd-v num"><b>${r}%</b><small>평균 ${(n/w).toFixed(1)}명${tIds.length?` · 교사 ${(tn/w).toFixed(1)}명`:""}</small></span></summary><div class="sd-in">${c.ks.slice().reverse().map(dayRow).join("")}</div></details>`}).join("");
+    return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${c.l}<small>주일 ${w}번</small></span>${bar(r)}<span class="sd-v num"><b>${r}%</b><small>평균 ${(n/w).toFixed(1)}명${tIds.length?` · 교사 ${(tn/w).toFixed(1)}명`:""}</small></span></summary><div class="sd-in">${c.ks.slice().reverse().map(dayRow).join("")}</div></details>`}).join("");
   return `<h2 class="sec">기간별 ${esc(unit)} 출석 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>
     <div class="pstat-ctl"><div class="seg sm">${STAT_UNITS.map(([v,l])=>`<button data-sunit="${v}" aria-pressed="${U===v}">${l}</button>`).join("")}</div><button class="btn" id="pstatXls" style="flex:none">엑셀로 받기</button></div>
-    <p class="muted" style="font-size:12px;margin:6px 0 8px">${U==="day"?"주일을 누르면 반별 출석·결석 명단이 펼쳐져요":"기간을 누르면 주일별로, 주일을 누르면 반별 출석·결석 명단이 펼쳐져요"} · 출석률은 ${esc(unit)} 기준 · 사람은 지금 명단 기준</p>
+    <p class="muted" style="font-size:12px;margin:6px 0 8px">기간마다 주일별, 주일마다 반별 출석·결석 명단이 펼쳐져 있어요 (누르면 접혀요) · 출석률은 ${esc(unit)} 기준 · 사람은 지금 명단 기준</p>
     <div class="sd-list">${list||`<div class="empty">출석 기록이 없어요.</div>`}</div>`;
 }
 function renderBday(){
@@ -3428,7 +3428,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018144435';
+  var BUILD = '20261018144535';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
