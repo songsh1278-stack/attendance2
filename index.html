@@ -326,6 +326,11 @@ td.num em{font-style:normal;color:var(--muted);font-size:12px}
 .pp-head h2.sec{flex:1 0 auto;margin-bottom:0}
 .pp-head .btn{flex:none}
 .pp-sort{flex:none;display:flex;gap:4px}
+.dept-stat td small{display:block;font-size:11px;color:var(--muted);font-weight:500}
+.dept-stat td em{font-style:normal;font-size:11px;color:var(--muted)}
+.dept-stat th,.dept-stat td{white-space:nowrap;padding:8px 4px}
+.dept-stat td b{font-size:15px}
+.dept-stat tr.sum td{border-top:2px solid var(--line);border-bottom:0}
 /* 개인별 누적 제목줄 버튼은 모두 같은 크기 */
 .pp-b{height:32px;padding:0 11px;font-size:13px;border-radius:10px;line-height:1;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
 .pp-b[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700}
@@ -2027,6 +2032,7 @@ function renderStats(){
     h+=`<p class="muted" style="font-size:13px;margin:12px 0 0">${S.date.slice(0,4)}년 1월부터 선택한 주일까지, 기록이 있는 주일 ${ks.length}번 기준</p>`;
     h+=renderStatPeriods();
     h+=renderPersonPeriods(ps,ks);
+    if(S.isAdmin)h+=renderDeptStats();
   }
   return h;
 }
@@ -2112,6 +2118,28 @@ function renderPersonPeriods(rows,ks){
   return `${head}
     <p class="muted" style="font-size:12px;margin:6px 0 8px">${S.editable?"●/○를 누르면 그 주일 출석을 고쳐요 · ":""}이름 옆은 올해 출석/전체 주일 수예요 · ${U==="recent"?"최근 한 달":U==="week"?"이번 주":"연도마다"} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요</p>
     <div class="sd-list">${list||`<div class="empty">사람이 없어요.</div>`}</div>`;
+}
+/* 총관리자: 부서별 통계. 부서마다 이번 주·최근 한 달·올해 학생 출석과 교사 출석 (그 부서가 체크한 주일만 세요) */
+function renderDeptStats(){
+  const y=S.date.slice(0,4),e=parseKey(S.date),b=new Date(e);b.setDate(b.getDate()-30);const bk=keyOf(b);
+  const pct=(n,d)=>d?Math.round(n/d*100):0;
+  const cell=(n,ids,ks)=>{if(!ks.length||!ids.length)return `<td class="r muted">–</td>`;const r=pct(n,ids.length*ks.length);
+    return `<td class="r num"><b>${r}%</b><small>${ks.length===1?`${n}/${ids.length}`:`${(n/ks.length).toFixed(1)}명`}</small></td>`};
+  const sum={};const rows=Object.entries(TEAMS).map(([t,x])=>{
+    const all=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false),st=all.filter(p=>p.group!=="T").map(p=>p.id),tc=all.filter(p=>p.group==="T").map(p=>p.id),ids=st.concat(tc);
+    /* 이 부서가 실제로 출석을 체크한 주일 */
+    const ks=[...S.att.keys()].filter(k=>k.startsWith(y)&&k<=S.date&&ids.some(id=>(attOf(k).p||{})[id])).sort();
+    const wk=ks.filter(k=>k===S.date),mo=ks.filter(k=>k>bk);
+    return {t,label:x.label,st,tc,wk,mo,ks};
+  });
+  const body=rows.map(r=>`<tr><td><b>${esc(TEAMS[r.t].short)}</b><small>학생 ${r.st.length}·교사 ${r.tc.length}</small></td>${cell(attCount(r.st,r.wk),r.st,r.wk)}${cell(attCount(r.st,r.mo),r.st,r.mo)}${cell(attCount(r.st,r.ks),r.st,r.ks)}${cell(attCount(r.tc,r.ks),r.tc,r.ks)}</tr>`).join("");
+  /* 합계: 부서마다의 출석을 더해요 */
+  const tot=f=>rows.reduce((a,r)=>{const ids=f==="tc"?r.tc:r.st,ks=f==="wk"?r.wk:f==="mo"?r.mo:r.ks;return [a[0]+attCount(ids,ks),a[1]+ids.length*ks.length,a[2]+ks.length]},[0,0,0]);
+  const tcell=f=>{const [n,d]=tot(f);return d?`<td class="r num"><b>${pct(n,d)}%</b></td>`:`<td class="r muted">–</td>`};
+  return `<h2 class="sec">부서별 통계 <span class="muted" style="font-size:13px;font-weight:500">총관리자</span></h2>
+    <p class="muted" style="font-size:12px;margin:-4px 0 8px">위는 출석률, 아래는 이번 주 출석/재적 또는 주일 평균 인원 · 이번 주·한 달(최근 30일)·올해는 학생, 교사는 올해 · 부서마다 출석을 체크한 주일만 세요</p>
+    <div class="card tablewrap dept-stat" style="padding:4px 10px"><table><thead><tr><th>부서</th><th class="r">이번 주</th><th class="r">한 달</th><th class="r">올해</th><th class="r">교사</th></tr></thead>
+    <tbody>${body}<tr class="sum"><td><b>전체</b></td>${tcell("wk")}${tcell("mo")}${tcell("yr")}${tcell("tc")}</tr></tbody></table></div>`;
 }
 /* 누적 화면의 기간 목록: 기간(월·분기·반기·연)을 펼치면 주일별, 주일을 펼치면 반별 출석·결석 명단 */
 const STAT_UNITS=[["week","이번 주"],["recent","최근 한 달"],["year","연도별"]];
@@ -3436,7 +3464,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018162325';
+  var BUILD = '20261018162817';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
