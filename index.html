@@ -325,8 +325,10 @@ td.num em{font-style:normal;color:var(--muted);font-size:12px}
 .pp-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
 .pp-head h2.sec{flex:1 0 auto;margin-bottom:0}
 .pp-head .btn{flex:none}
-.pp-sort{flex:none;margin:0}
-.pp-sort button{padding:5px 10px;font-size:12px}
+.pp-sort{flex:none;display:flex;gap:4px}
+/* 개인별 누적 제목줄 버튼은 모두 같은 크기 */
+.pp-b{height:32px;padding:0 11px;font-size:13px;border-radius:10px;line-height:1;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+.pp-b[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700}
 .pp-gh:first-child{margin-top:0}
 .att-tg{cursor:pointer}
 .att-tg:hover{border-color:var(--accent)}
@@ -2103,7 +2105,11 @@ function renderPersonPeriods(rows,ks){
   const list=PS==="grade"?GROUPS.map(([g,l])=>{const gr=rows.filter(r=>r.p.group===g);return gr.length?`<div class="pp-gh">${esc(l)} <span class="muted">${gr.length}명</span></div>${gr.map(one).join("")}`:""}).join(""):rows.map(one).join("");
   const ul=(STAT_UNITS.find(u=>u[0]===U)||["",""])[1];
   const anyOpen=rows.some(r=>!closed.has("u:"+r.p.id));
-  return `<div class="pp-head"><h2 class="sec">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>${rows.length?`<div class="seg sm pp-sort">${[["name","ㄱㄴ순"],["att","출석순"],["grade","학년별"]].map(([v,l])=>`<button data-ppsort="${v}" aria-pressed="${PS===v}">${l}</button>`).join("")}</div><button class="btn" data-ppall="${anyOpen?"close":"open"}" style="flex:none;font-size:13px;padding:4px 12px">${anyOpen?"모두 접기":"모두 펼치기"}</button>`:""}</div>
+  /* 창 접기: 개인별 누적 목록 전체를 숨기고 제목만 남겨요 (모두 접기는 사람 칸만 접어요) */
+  const hid=!!S.ppHidden,win=`<button class="btn pp-b" data-ppwin>${hid?"창 펼치기":"창 접기"}</button>`;
+  const head=`<div class="pp-head"><h2 class="sec">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>${rows.length&&!hid?`<div class="pp-sort">${[["name","ㄱㄴ순"],["att","출석순"],["grade","학년별"]].map(([v,l])=>`<button class="btn pp-b" data-ppsort="${v}" aria-pressed="${PS===v}">${l}</button>`).join("")}</div><button class="btn pp-b" data-ppall="${anyOpen?"close":"open"}">${anyOpen?"모두 접기":"모두 펼치기"}</button>`:""}${win}</div>`;
+  if(hid)return head;
+  return `${head}
     <p class="muted" style="font-size:12px;margin:6px 0 8px">${S.editable?"●/○를 누르면 그 주일 출석을 고쳐요 · ":""}이름 옆은 올해 출석/전체 주일 수예요 · ${U==="recent"?"최근 한 달":U==="week"?"이번 주":"연도마다"} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요</p>
     <div class="sd-list">${list||`<div class="empty">사람이 없어요.</div>`}</div>`;
 }
@@ -3149,8 +3155,8 @@ function openPerson(id){
 document.addEventListener("change",e=>{const c=e.target.closest&&e.target.closest("[data-bgcustom]");if(c)setBg(c.value);const d=e.target.closest&&e.target.closest("[data-dccustom]");if(d&&/^#[0-9a-f]{6}$/i.test(d.value))setDeptColor(d.value)});
 /* 통계 화면의 펼침·접힘과 단위는 이 기기에 기억해 두고, 다시 열어도 마지막 상태로 보여 줘요 */
 const STAT_KEY="ya-statview";
-(()=>{try{const v=JSON.parse(localStorage.getItem(STAT_KEY)||"null");if(v){S.statOpen=new Set(v.open||[]);S.statClosed=new Set(v.closed||[]);if(v.unit)S.statUnit=v.unit;S.ppSort=v.ppSort||(v.byGrade?"grade":"att")}}catch(_){}})();
-function saveStatView(){try{const cut=x=>[...(x||[])].slice(-400);localStorage.setItem(STAT_KEY,JSON.stringify({open:cut(S.statOpen),closed:cut(S.statClosed),unit:S.statUnit||"",ppSort:S.ppSort||"att"}))}catch(_){}}
+(()=>{try{const v=JSON.parse(localStorage.getItem(STAT_KEY)||"null");if(v){S.statOpen=new Set(v.open||[]);S.statClosed=new Set(v.closed||[]);if(v.unit)S.statUnit=v.unit;S.ppSort=v.ppSort||(v.byGrade?"grade":"att");S.ppHidden=!!v.ppHidden}}catch(_){}})();
+function saveStatView(){try{const cut=x=>[...(x||[])].slice(-400);localStorage.setItem(STAT_KEY,JSON.stringify({open:cut(S.statOpen),closed:cut(S.statClosed),unit:S.statUnit||"",ppSort:S.ppSort||"att",ppHidden:!!S.ppHidden}))}catch(_){}}
 document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.dataset&&d.dataset.sk){const k=d.dataset.sk;
   if(d.dataset.dopen){const c=S.statClosed||(S.statClosed=new Set());if(d.open)c.delete(k);else c.add(k)} /* 처음부터 펼친 칸은 접은 것만 기억 */
   else{const o=S.statOpen||(S.statOpen=new Set());if(d.open)o.add(k);else o.delete(k)}
@@ -3255,6 +3261,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const tab=e.target.closest("[data-tab]");if(tab){if(tab.dataset.tab!==S.tab)navPush();S.tab=tab.dataset.tab;render();window.scrollTo(0,0);return}
   if(e.target.closest("[data-attsave]")){attErr="";flushAtt();return}
   const pps=e.target.closest("[data-ppsort]");if(pps){S.ppSort=pps.dataset.ppsort;saveStatView();render();return}
+  if(e.target.closest("[data-ppwin]")){S.ppHidden=!S.ppHidden;saveStatView();render();return}
   const ppa=e.target.closest("[data-ppall]");if(ppa){const c=S.statClosed||(S.statClosed=new Set()),close=ppa.dataset.ppall==="close";
     activePeople(S.group).forEach(p=>{const k="u:"+p.id;if(close)c.add(k);else c.delete(k)});saveStatView();render();return}
   const tat=e.target.closest("[data-tatt]");if(tat){if(!S.editable){toast("보기 권한이라 고칠 수 없어요");return}
@@ -3429,7 +3436,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018161818';
+  var BUILD = '20261018162149';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
