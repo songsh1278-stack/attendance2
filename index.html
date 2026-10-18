@@ -1631,7 +1631,7 @@ async function openActivityLog(){
     const lab=tm==="all"?"":TEAMS[tm].label;const qq=q.trim();
     const f=all.filter(x=>(!lab||x.team===lab)&&(kd==="all"||x.kind===kd)&&(!qq||[x.name,x.text,x.by,x.kind].some(v=>(v||"").includes(qq))));
     ov.querySelector("#alCount").textContent=(lab||kd!=="all"||qq?`${f.length}건 / `:"")+`${all.length}${more?"/"+total:""}건`;
-    list.innerHTML=f.length?f.slice(0,shown).map(x=>`<div class="hist-item"><span class="when">${esc(x.at.slice(0,10))}<br>${esc(x.at.slice(11))}</span><span class="what"><span class="hist-kind ${x.kind==="교사"||x.kind==="담임"?"t":""}">${esc(x.kind)}</span>${x.team?`<span class="muted" style="font-size:12px">${esc(x.team.replace("교육팀",""))} </span>`:""}${x.name?`<b>${esc(x.name)}</b> `:""}${esc(x.text)}${askBack(x)?` <button class="btn" data-reply="${all.indexOf(x)}" style="font-size:12px;padding:2px 10px">답장</button>`:""}<span class="by">${esc(x.by)}</span></span></div>`).join(""):`<p class="muted">${more?"불러온 기록 중에는 없어요.":"기록이 없어요."}</p>`;
+    list.innerHTML=f.length?f.slice(0,shown).map(x=>`<div class="hist-item"><span class="when">${esc(x.at.slice(0,10))}<br>${esc(x.at.slice(11))}</span><span class="what"><span class="hist-kind ${x.kind==="교사"||x.kind==="담임"?"t":""}">${esc(x.kind)}</span>${x.team?`<span class="muted" style="font-size:12px">${esc(x.team.replace("교육팀",""))} </span>`:""}${x.name?`<b>${esc(x.name)}</b> `:""}${esc(x.text)}${askBack(x)?` <button class="btn" data-reply="${all.indexOf(x)}" style="font-size:12px;padding:2px 10px">답장</button>`:""}<span class="by">${esc(x.by==="번호 없음"?"확인 안 된 사용자":x.by)}</span></span></div>`).join(""):`<p class="muted">${more?"불러온 기록 중에는 없어요.":"기록이 없어요."}</p>`;
     if(f.length>shown||more)list.insertAdjacentHTML("beforeend",`<p style="text-align:center;margin:10px 0"><button class="btn" id="alMore" ${busy?"disabled":""}>${busy?"더 불러오는 중…":"더 보기"}</button></p>`);
   };
   const setKinds=()=>{const sel=ov.querySelector("#alKind");const kinds=[...new Set(all.map(x=>x.kind))].sort((a,b)=>a.localeCompare(b,"ko"));
@@ -3542,7 +3542,7 @@ async function loadPhotos(){
 }
 function applyBoot(d){
   if(d.tk){S._tk=d.tk;if(S.remember!==false)try{localStorage.setItem("ya-tk",JSON.stringify(d.tk))}catch(_){}}
-  S.hrMe=d.hrMe||{};S.gcChanged=d.gcChanged||{};S.rptOk=!!d.rptOk;S.isAdmin=!!d.isAdmin;S.isCo=!!d.isCo;S.isCo2=!!d.isCo2;S.me=d.me||"";S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
+  S.hrMe=d.hrMe||{};S.gcChanged=d.gcChanged||{};S.rptOk=!!d.rptOk;S.isAdmin=!!d.isAdmin;if(d.adminBad){try{localStorage.removeItem("ya-admin")}catch(_){}S._admin="";toast("이 기기에 기억된 총관리자 비밀번호가 맞지 않아 지웠어요. 다시 로그인해 주세요")}S.isCo=!!d.isCo;S.isCo2=!!d.isCo2;S.me=d.me||"";S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
   S.staff=d.staff||[];S.scope=d.scope||{};S.settings=d.settings||{};S.people=new Map((d.people||[]).map(p=>[p.id,p]));setTeam(S.team);
   S.att=new Map(Object.entries(d.att||{}));
   [attFly,attBuf].forEach(B=>Object.keys(B).forEach(k=>S.att.set(k,mergeAtt(S.att.get(k)||{date:k,p:{},t:{}},B[k])))); // 보내는 중이거나 아직 안 보낸 체크는 유지
@@ -3585,7 +3585,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261019081911';
+  var BUILD = '20261019083551';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
