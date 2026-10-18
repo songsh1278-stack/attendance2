@@ -994,7 +994,7 @@ function openHomeroomCodes(){
   if(!canManageGrades())return;
   const ov=document.createElement("div");ov.className="overlay";let codes=null,editing="";
   const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="담임 권한 관리"><h3>${TEAMS[S.team].label} 담임 권한</h3>
-    <p class="muted" style="margin:0;font-size:14px">반마다 담임 번호를 만들어 담임 선생님께 알려 주세요. 번호는 <b>영문과 숫자를 모두 넣은 6자리 이상</b>(대소문자 구분 없음)이에요. 담임 번호로 들어오면 <b>자기 반만</b> 출석·달란트·명단(연락처 포함)을 관리할 수 있어요. 다른 반, 교사 명단, 연말 등반은 보이지 않아요.</p>
+    <p class="muted" style="margin:0;font-size:14px">반마다 담임 번호를 만들어 담임 선생님께 알려 주세요. 번호는 <b>영문과 숫자를 모두 넣은 6자리 이상</b>(대소문자 구분 없음)이에요. 담임 번호로 들어오면 <b>자기 반만</b> 출석·달란트·명단(연락처 포함)을 관리할 수 있어요. 다른 반, 교사 명단, 연말 등반은 보이지 않아요. 한 선생님이 두 반을 맡으면(예: 고2·고3) <b>[직접 입력]으로 두 반에 같은 번호</b>를 넣어 주세요. 그 번호 하나로 두 반을 함께 관리해요.</p>
     <div class="admin-list card" style="margin-top:12px">${codes?classesOf(S.team).map(([g,gl])=>{const code=codes[g]||"";const hr=hrText((S.classes.get(S.team+"_"+g)||{}).teacher);if(editing===g)return `<form class="admin-row" data-gform="${g}"><b style="min-width:56px">${gl}</b><input id="f-gc-${g}" maxlength="20" autocapitalize="off" placeholder="${gradeCodeRule(S.team)}" value="${esc(code)}" autocomplete="off" style="flex:1;min-width:110px;height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:16px;letter-spacing:.1em;background:var(--ground);color:var(--ink)"><button class="btn primary" type="submit">저장</button><button class="btn" type="button" data-gcancel>취소</button></form>`;
       return `<div class="admin-row"><b style="min-width:56px">${gl}</b><span class="code num ${code?"":"none"}">${code?esc(code):"번호 없음"}</span>${hr?`<span class="muted" style="font-size:12px">담임 ${esc(hr)}</span>`:""}
       ${code?`<button class="btn" data-copy-c="${esc(code)}">복사</button>`:""}<button class="btn" data-ggen="${g}">${code?"새 번호":"번호 만들기"}</button><button class="btn" data-gedit="${g}">직접 입력</button>${code?`<button class="btn danger" data-gclear="${g}">해제</button>`:""}</div>`}).join(""):`<p class="muted">불러오는 중…</p>`}</div>
@@ -2418,8 +2418,10 @@ function openMyGradeCode(t,g){
     const btn=ov.querySelector('[type="submit"]');btn.disabled=true;
     try{await tracked(call("changeGradeCode",t,g,{code:v,old:ov0}))}catch(x){btn.disabled=false;err(x.message);if(/지금/.test(x.message))o.select();else a.select();return}
     /* 이 기기에 저장된 번호도 새 번호로 바꿔요 (안 바꾸면 다음 새로고침 때 로그아웃돼요) */
-    const k=t+"_"+g;S._gcodes={...(S._gcodes||{}),[k]:v};
-    try{const c=JSON.parse(localStorage.getItem("ya-gcodes")||"{}");if(k in c){c[k]=v;localStorage.setItem("ya-gcodes",JSON.stringify(c))}}catch(_){}
+    /* 같은 번호로 함께 열던 다른 반 번호도 같이 바꿔요 */
+    const k=t+"_"+g,was=q=>q===k||(q.indexOf(t+"_")===0&&String(S._gcodes[q]||"").toLowerCase()===ov0.toLowerCase());
+    S._gcodes={...(S._gcodes||{})};Object.keys(S._gcodes).filter(was).forEach(q=>S._gcodes[q]=v);S._gcodes[k]=v;
+    try{const c=JSON.parse(localStorage.getItem("ya-gcodes")||"{}");let n=0;Object.keys(c).forEach(q=>{if(q===k||(q.indexOf(t+"_")===0&&String(c[q]||"").toLowerCase()===ov0.toLowerCase())){c[q]=v;n++}});if(n)localStorage.setItem("ya-gcodes",JSON.stringify(c))}catch(_){}
     ov.remove();S.book=null;await load();toast("담임 번호를 바꿨어요");
   });
 }
@@ -3070,7 +3072,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261016100730';
+  var BUILD = '20261018115415';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
