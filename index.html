@@ -2004,6 +2004,7 @@ function periodCols(U,Y){
   const keys=[...S.att.keys()].filter(k=>k<=tk).sort();
   let cols;
   if(U==="year")cols=statYears().map(y=>({l:y+"년",ks:keys.filter(k=>k.startsWith(y+"-"))}));
+  else if(U==="week")cols=[{l:`이번 주 (${Number(S.date.slice(5,7))}/${Number(S.date.slice(8))})`,ks:keys.filter(k=>k===S.date)}]; /* 고른 주일 하나 */
   else if(U==="recent"){/* 최근 한 달: 고른 주일부터 30일 전까지 */const e=parseKey(S.date),b=new Date(e);b.setDate(b.getDate()-30);const bk=keyOf(b),ks=keys.filter(k=>k>bk&&k<=S.date);
     cols=[{l:"최근 한 달",ks}];if(ks.length)cols[0].l=`최근 한 달 (${Number(ks[0].slice(5,7))}/${Number(ks[0].slice(8))}~${Number(ks[ks.length-1].slice(5,7))}/${Number(ks[ks.length-1].slice(8))})`}
   else if(U==="day")cols=keys.filter(k=>k.startsWith(Y+"-")&&k<=S.date).map(k=>({l:Number(k.slice(5,7))+"/"+Number(k.slice(8)),ks:[k]}));
@@ -2044,7 +2045,7 @@ async function exportPeriodStats(){
     aoa.push(["출석 인원","",...ks.map(k=>ps.filter(p=>isOn(k,p.id)).length),"",""]);
     const ws=XLSX.utils.aoa_to_sheet(aoa);ws["!cols"]=aoa[0].map((_,i)=>({wch:i<2?10:i>=ks.length+2?9:5}));ws["!freeze"]={xSplit:2,ySplit:1};
     XLSX.utils.book_append_sheet(wb,ws,"개인 일자별");}
-  const unitL={day:"일별",month:"월별",quarter:"분기별",half:"반기별",year:"연별",recent:"최근한달"}[U];
+  const unitL={day:"일별",month:"월별",quarter:"분기별",half:"반기별",year:"연별",recent:"최근한달",week:"이번주"}[U];
   saveWorkbook(wb,`${TEAMS[S.team].short}_출석통계_${U==="year"?"연도별":Y+"년_"+unitL}.xlsx`);
 }
 /* 개인별 누적: 사람을 펼치면 달란트와, 고른 단위(월·분기·반기·연)마다 출석 횟수 옆에 주일별 출석(●)·결석(○)이 바로 보여요 */
@@ -2065,12 +2066,12 @@ function renderPersonPeriods(rows,ks){
   const ul=(STAT_UNITS.find(u=>u[0]===U)||["",""])[1];
   const anyOpen=rows.some(r=>!closed.has("u:"+r.p.id));
   return `<div style="display:flex;align-items:center;gap:8px"><h2 class="sec" style="flex:1">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>${rows.length?`<button class="btn" data-ppall="${anyOpen?"close":"open"}" style="flex:none;font-size:13px;padding:4px 12px">${anyOpen?"모두 접기":"모두 펼치기"}</button>`:""}</div>
-    <p class="muted" style="font-size:12px;margin:-4px 0 8px">${S.editable?"●/○를 누르면 그 주일 출석을 고쳐요 · ":""}이름 옆은 올해 출석/전체 주일 수예요 · ${U==="recent"?"최근 한 달":"연도마다"} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요</p>
+    <p class="muted" style="font-size:12px;margin:-4px 0 8px">${S.editable?"●/○를 누르면 그 주일 출석을 고쳐요 · ":""}이름 옆은 올해 출석/전체 주일 수예요 · ${U==="recent"?"최근 한 달":U==="week"?"이번 주":"연도마다"} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요</p>
     <div class="sd-list">${list||`<div class="empty">사람이 없어요.</div>`}</div>`;
 }
 /* 누적 화면의 기간 목록: 기간(월·분기·반기·연)을 펼치면 주일별, 주일을 펼치면 반별 출석·결석 명단 */
-const STAT_UNITS=[["recent","최근 한 달"],["year","연도별"]];
-const statUnit=()=>S.statUnit==="recent"?"recent":"year"; /* 기간 단위: 연도별, 최근 한 달 */
+const STAT_UNITS=[["week","이번 주"],["recent","최근 한 달"],["year","연도별"]];
+const statUnit=()=>S.statUnit==="recent"||S.statUnit==="week"?S.statUnit:"year"; /* 기간 단위: 이번 주, 최근 한 달, 연도별 */
 const dayLabel=k=>Number(k.slice(5,7))+"월 "+Number(k.slice(8))+"일";
 function renderStatPeriods(){
   const U=statUnit(),Y=Number(S.date.slice(0,4)),closed=S.statClosed||(S.statClosed=new Set()),open=S.statOpen||(S.statOpen=new Set());
@@ -3387,7 +3388,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018154000';
+  var BUILD = '20261018154313';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
