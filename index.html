@@ -273,6 +273,14 @@ th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line)}
 th{font-size:12px;color:var(--muted);font-weight:600}
 td.r,th.r{text-align:right}
 .tablewrap{overflow-x:auto}
+.savebar{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:5;margin:16px 0 4px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:var(--shadow)}
+.savebar .sb-tx{flex:1;min-width:0;display:flex;flex-direction:column;font-size:14px}
+.savebar .sb-tx small{font-size:12px;color:var(--muted)}
+.savebar .sb-ic{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;color:#fff;background:var(--accent)}
+.savebar .sb-ic.err{background:var(--danger)}
+.savebar .sb-ic.wait{background:none;border:2px dashed var(--accent)}
+.savebar .sb-ic.spin{background:none;border:3px solid var(--line);border-top-color:var(--accent);animation:sbspin .8s linear infinite}
+@keyframes sbspin{to{transform:rotate(360deg)}}
 .pstat-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
 .pstat-ctl .seg{margin-top:0;flex:1;min-width:150px}
 .pstat-ctl select{height:36px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:0 8px;font-size:14px}
@@ -712,27 +720,44 @@ function onWriteError(e){
   console.error(e);
   toast((e&&e.message)||"저장하지 못했어요. 잠시 후 다시 시도해 주세요");load();
 }
-/* 출석 체크는 바로 보내지 않고 잠깐(0.8초) 모았다가 한 번에 보낸다. 20명을 눌러도 서버 요청은 한두 번 */
-const attBuf={};let attTimer=null;
+/* 출석 체크는 바로 보내지 않고 잠깐(0.8초) 모았다가 한 번에 보낸다. 20명을 눌러도 서버 요청은 한두 번.
+   보내는 중에 또 체크하면 줄줄이 보내지 않고 모아 두었다가, 앞 요청이 끝나면 한 번에 보낸다.
+   진행 상황은 출석 화면 아래 저장 막대(#attBar)에 보여 준다. */
+const attBuf={},attFly={};let attTimer=null,attErr="",attAt="";
 function mergeAtt(cur,body){return {...cur,p:{...cur.p,...(body.p||{})},t:{...cur.t,...(body.t||{})},m:{...(cur.m||{}),...(body.m||{})}}}
+const attCnt=b=>b?new Set(["p","t","m"].flatMap(f=>Object.keys(b[f]||{}))).size:0;
 function writeAtt(k,body){
-  S.att.set(k,mergeAtt(S.att.get(k)||{date:k,p:{},t:{}},body));render();
-  if(!S.db)return;
-  attBuf[k]=mergeAtt(attBuf[k]||{p:{},t:{}},body);
-  if(attTimer)return;
-  pending++;$("#sync").textContent="저장 중…";
-  attTimer=setTimeout(flushAtt,800);
+  S.att.set(k,mergeAtt(S.att.get(k)||{date:k,p:{},t:{}},body));
+  if(S.db){attBuf[k]=mergeAtt(attBuf[k]||{p:{},t:{}},body);attErr="";if(!attTimer)attTimer=setTimeout(flushAtt,800)}
+  render();
 }
 function flushAtt(){
-  if(!attTimer)return;clearTimeout(attTimer);attTimer=null;
-  const jobs=Object.keys(attBuf).map(k=>{const b=attBuf[k];delete attBuf[k];
-    const body={};["p","t","m"].forEach(f=>{if(b[f]&&Object.keys(b[f]).length)body[f]=b[f]});
-    return enqueue("att/"+k,()=>S.db.doc("att/"+k).update(body))});
-  Promise.allSettled(jobs).then(()=>{pending--;if(!pending)$("#sync").textContent="저장됨"});
+  if(attTimer){clearTimeout(attTimer);attTimer=null}
+  Object.keys(attBuf).forEach(k=>{if(!attFly[k])sendAtt(k)});attBarUpd();
 }
+function sendAtt(k){
+  const b=attBuf[k];delete attBuf[k];if(!b)return;
+  const body={};["p","t","m"].forEach(f=>{if(b[f]&&Object.keys(b[f]).length)body[f]=b[f]});if(!Object.keys(body).length)return;
+  attFly[k]=b;attBarUpd();
+  tracked(call("write","update","att/"+k,body)).then(()=>{attAt=new Date().toTimeString().slice(0,5)},e=>{
+    if(e&&e.net){attBuf[k]=mergeAtt(b,attBuf[k]||{p:{},t:{}});attErr=e.message} /* 연결 문제: 다시 보낼 수 있게 남겨 둔다 (그 사이 새로 누른 것이 우선) */
+    else onWriteError(e);
+  }).finally(()=>{delete attFly[k];if(attBuf[k]&&!attErr&&!attTimer)sendAtt(k);attBarUpd()});
+}
+/* 출석 화면 아래 저장 막대: 기다림 → 저장 중 → 저장됨 / 실패하면 [다시 저장] */
+function attBarHtml(){
+  const wait=Object.values(attBuf).reduce((s,b)=>s+attCnt(b),0),fly=Object.values(attFly).reduce((s,b)=>s+attCnt(b),0);
+  if(attErr&&wait)return `<span class="sb-ic err">!</span><span class="sb-tx"><b>저장하지 못한 체크 ${wait}개</b><small>${esc(attErr)}</small></span><button class="btn primary" data-attsave>다시 저장</button>`;
+  if(fly)return `<span class="sb-ic spin"></span><span class="sb-tx"><b>저장 중… ${fly}명</b><small>${wait?`이어서 ${wait}명 더 저장해요`:"잠시만 기다려 주세요. 화면을 닫아도 저장은 계속돼요"}</small></span>`;
+  if(wait)return `<span class="sb-ic wait"></span><span class="sb-tx"><b>체크 ${wait}개 저장 대기</b><small>곧 자동으로 저장돼요</small></span><button class="btn primary" data-attsave>지금 저장</button>`;
+  return `<span class="sb-ic ok">✓</span><span class="sb-tx"><b>모두 저장됨</b><small>${attAt?attAt+" 마지막 저장 · ":""}체크하면 자동으로 저장돼요</small></span>`;
+}
+function attBarUpd(){const el=document.querySelector("#attBar");if(el)el.innerHTML=attBarHtml()}
 /* 화면을 떠나거나 다른 앱으로 갈 때는 기다리지 않고 바로 보낸다 */
 addEventListener("pagehide",flushAtt);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)flushAtt()});
+/* 저장 안 된 체크가 있으면 창을 닫기 전에 물어본다 */
+addEventListener("beforeunload",e=>{if(Object.keys(attBuf).length||Object.keys(attFly).length){flushAtt();e.preventDefault();e.returnValue=""}});
 function togglePresent(id){if(!S.editable)return;writeAtt(S.date,{p:{[id]:isOn(S.date,id)?0:1}})}
 const talentTimers={};
 function bumpTalent(id,delta){
@@ -1880,6 +1905,7 @@ function renderCheck(){
     const un=gp.filter(p=>!secOf(p));
     if(un.length)h+=`<div class="sec-h"><span class="badge" style="background:var(--muted)">미배정</span><span class="c">"분반 수정"에서 반을 정해 주세요</span></div><div class="list">${un.map(personRow).join("")}</div>`;
   }
+  if(S.editable)h+=`<div id="attBar" class="savebar" role="status" aria-live="polite">${attBarHtml()}</div>`;
   return h;
 }
 /** 학년별 정렬 열쇠 (같은 학년 안에서 어린 사람 먼저). 영아부는 나이(0세→4세) 먼저. 생일 연도가 있으면 늦게 태어난 순, 연도를 모르면 그 뒤에 가나다순 */
@@ -1978,20 +2004,53 @@ function renderStats(){
   return h;
 }
 /* 기간별 통계: 개인·학년·전체 × 월·분기·반기·연. 기록이 있는 주일만 세고, 사람은 지금 명단(재적) 기준 */
+const statYears=()=>[...new Set([...(S.allYears||[]),...S.years].map(Number))].filter(Boolean).sort((a,b)=>a-b);
+/** 기간 칸: [{l:이름, ks:그 기간 주일 날짜들, sum:합계칸}] */
+function periodCols(U,Y){
+  const td=new Date(),tk=td.getFullYear()+"-"+String(td.getMonth()+1).padStart(2,"0")+"-"+String(td.getDate()).padStart(2,"0");
+  const keys=[...S.att.keys()].filter(k=>k<=tk).sort();
+  let cols;
+  if(U==="year")cols=statYears().map(y=>({l:y+"년",ks:keys.filter(k=>k.startsWith(y+"-"))}));
+  else{const n=U==="month"?12:U==="quarter"?4:2,per=12/n;
+    cols=Array.from({length:n},(_,i)=>({l:U==="month"?(i+1)+"월":U==="quarter"?(i+1)+"분기":(i?"하반기":"상반기"),ks:keys.filter(k=>k.startsWith(Y+"-")&&Math.floor((Number(k.slice(5,7))-1)/per)===i)}))}
+  cols.push({l:U==="year"?"전체":"합계",ks:[].concat(...cols.map(c=>c.ks)),sum:true});
+  return cols;
+}
+const attCount=(ids,ks)=>ks.reduce((s,k)=>{const a=attOf(k).p||{};return s+ids.filter(id=>a[id]).length},0);
+/** 보기별 줄: [{l, sub, ps}] (개인은 한 사람씩) */
+function periodRows(B){
+  if(B==="person")return activePeople(S.group).map(p=>({l:p.name,sub:GL[p.group]||"",ps:[p],person:true}));
+  if(B==="grade")return GROUPS.map(([g,l])=>{const ps=activePeople(g);return {l,sub:ps.length+"명",ps}});
+  const st=activePeople("all").filter(p=>p.group!=="T"),tc=activePeople("T");
+  return [[TEAMS[S.team].unit+" 전체",st],["교사",tc],["모두",st.concat(tc)]].map(([l,ps])=>({l,sub:ps.length+"명",ps}));
+}
+/* 기간별 통계를 엑셀로: 개인·학년·전체 세 시트, 지금 고른 연도·단위 기준 */
+async function exportPeriodStats(){
+  if(!await needXLSX())return;
+  const U=S.statUnit||"month",Y=Number(S.statYear||S.date.slice(0,4)),cols=periodCols(U,Y);
+  const wb=XLSX.utils.book_new();
+  [["person","개인"],["grade","학년"],["total","전체"]].forEach(([B,name])=>{
+    const rows=periodRows(B),aoa=[];
+    if(B==="person"){
+      aoa.push(["이름","반",...cols.map(c=>c.l)]);aoa.push(["주일 수","",...cols.map(c=>c.ks.length)]);
+      rows.forEach(r=>aoa.push([r.l,r.sub,...cols.map(c=>c.ks.length?attCount([r.ps[0].id],c.ks):"")]));
+    }else{
+      aoa.push(["구분","인원",...cols.flatMap(c=>[c.l+" 출석률(%)",c.l+" 평균 인원"])]);aoa.push(["주일 수","",...cols.flatMap(c=>[c.ks.length,""])]);
+      rows.forEach(r=>{const ids=r.ps.map(p=>p.id);aoa.push([r.l,r.ps.length,...cols.flatMap(c=>{if(!c.ks.length||!ids.length)return ["",""];const n=attCount(ids,c.ks);return [Math.round(n/(ids.length*c.ks.length)*1000)/10,Math.round(n/c.ks.length*10)/10]})])});
+    }
+    const ws=XLSX.utils.aoa_to_sheet(aoa);ws["!cols"]=aoa[0].map((_,i)=>({wch:i<2?12:B==="person"?7:12}));
+    XLSX.utils.book_append_sheet(wb,ws,name);
+  });
+  const unitL={month:"월별",quarter:"분기별",half:"반기별",year:"연별"}[U];
+  saveWorkbook(wb,`${TEAMS[S.team].short}_출석통계_${U==="year"?"연도별":Y+"년_"+unitL}.xlsx`);
+}
 function renderPeriodStats(){
   const U=S.statUnit||"month",B=S.statBy||"grade";
-  const td=new Date(),tk=td.getFullYear()+"-"+String(td.getMonth()+1).padStart(2,"0")+"-"+String(td.getDate()).padStart(2,"0");
-  const yrs=[...new Set([...(S.allYears||[]),...S.years].map(Number))].filter(Boolean).sort((a,b)=>a-b);
+  const yrs=statYears();
   const Y=Number(S.statYear||S.date.slice(0,4));
   const need=U==="year"?yrs:[Y];
   if(need.some(y=>!S.years.has(y)))setTimeout(()=>ensureYears(need).catch(()=>{}),0);
-  const keys=[...S.att.keys()].filter(k=>k<=tk).sort();
-  let cols;
-  if(U==="year")cols=yrs.map(y=>({l:y+"년",ks:keys.filter(k=>k.startsWith(y+"-"))}));
-  else{const n=U==="month"?12:U==="quarter"?4:2,per=12/n;
-    cols=Array.from({length:n},(_,i)=>({l:U==="month"?(i+1)+"월":U==="quarter"?(i+1)+"분기":(i?"하반기":"상반기"),ks:keys.filter(k=>k.startsWith(Y+"-")&&Math.floor((Number(k.slice(5,7))-1)/per)===i)}))}
-  const allKs=[].concat(...cols.map(c=>c.ks));cols.push({l:U==="year"?"전체":"합계",ks:allKs,sum:true});
-  const cnt=(ids,ks)=>ks.reduce((s,k)=>{const a=attOf(k).p||{};return s+ids.filter(id=>a[id]).length},0);
+  const cols=periodCols(U,Y),cnt=attCount;
   const shade=r=>`background:color-mix(in srgb,var(--accent) ${Math.round(r*42)}%,transparent)`;
   const none=`<td class="pc muted">–</td>`;
   /* 묶음(학년·전체): 출석률 + 주일 평균 인원 */
@@ -2000,23 +2059,16 @@ function renderPeriodStats(){
   /* 개인: 출석 횟수 / 주일 수 */
   const perCell=(id,c)=>{if(!c.ks.length)return none;const n=cnt([id],c.ks),r=n/c.ks.length;
     return `<td class="pc num${c.sum?" sum":""}" style="${shade(r)}" title="${c.l}: ${n}/${c.ks.length}번 (${Math.round(r*100)}%)"><b>${n}</b><small>/${c.ks.length}</small></td>`};
-  const ids=ps=>ps.map(p=>p.id);
-  let rows="";
-  if(B==="person"){
-    const ps=activePeople(S.group);
-    rows=ps.map(p=>`<tr><th class="pn"><button class="linkish" data-open="${p.id}">${esc(p.name)}</button><small class="muted">${esc(GL[p.group]||"")}</small></th>${cols.map(c=>perCell(p.id,c)).join("")}</tr>`).join("");
-    if(!ps.length)rows=`<tr><td colspan="${cols.length+1}" class="muted">사람이 없어요.</td></tr>`;
-  }else if(B==="grade"){
-    rows=GROUPS.map(([g,l])=>{const ps=activePeople(g);return `<tr><th class="pn">${esc(l)}<small class="muted">${ps.length}명</small></th>${cols.map(c=>grpCell(ids(ps),c)).join("")}</tr>`}).join("");
-  }else{
-    const st=activePeople("all").filter(p=>p.group!=="T"),tc=activePeople("T");
-    rows=[[TEAMS[S.team].unit+" 전체",st],["교사",tc],["모두",st.concat(tc)]].map(([l,ps])=>`<tr><th class="pn">${esc(l)}<small class="muted">${ps.length}명</small></th>${cols.map(c=>grpCell(ids(ps),c)).join("")}</tr>`).join("");
-  }
+  const R=periodRows(B);
+  let rows=R.map(r=>r.person
+    ?`<tr><th class="pn"><button class="linkish" data-open="${r.ps[0].id}">${esc(r.l)}</button><small class="muted">${esc(r.sub)}</small></th>${cols.map(c=>perCell(r.ps[0].id,c)).join("")}</tr>`
+    :`<tr><th class="pn">${esc(r.l)}<small class="muted">${esc(r.sub)}</small></th>${cols.map(c=>grpCell(r.ps.map(p=>p.id),c)).join("")}</tr>`).join("");
+  if(!R.length)rows=`<tr><td colspan="${cols.length+1}" class="muted">사람이 없어요.</td></tr>`;
   const seg=(attr,cur,list)=>`<div class="seg sm">${list.map(([v,l])=>`<button ${attr}="${v}" aria-pressed="${cur===v}">${l}</button>`).join("")}</div>`;
   return `<div class="pstat-ctl">
       ${U==="year"?"":`<select id="stYear" aria-label="연도">${(yrs.includes(Y)?yrs:yrs.concat([Y]).sort()).map(y=>`<option value="${y}" ${y===Y?"selected":""}>${y}년</option>`).join("")}</select>`}
       ${seg("data-sunit",U,[["month","월"],["quarter","분기"],["half","반기"],["year","연"]])}
-      ${seg("data-sby",B,[["person","개인"],["grade","학년"],["total","전체"]])}</div>
+      ${seg("data-sby",B,[["person","개인"],["grade","학년"],["total","전체"]])}<button class="btn" id="pstatXls" style="flex:none">엑셀로 받기</button></div>
     <p class="muted" style="font-size:12px;margin:8px 0 0">${B==="person"?"칸: 출석 횟수 / 그 기간 주일 수"+(S.group==="all"?"":" · "+esc(GL[S.group]||"")+"만"):"칸: 출석률(%) · 주일 평균 출석 인원"} · 기록이 있는 주일만 세요 · 사람은 지금 명단 기준 · 색이 진할수록 출석이 많아요</p>
     <div class="card tablewrap" style="padding:0;margin-top:8px"><table class="ptab"><thead><tr><th class="pn">${B==="person"?"이름":B==="grade"?"반":"구분"}</th>${cols.map(c=>`<th class="pc${c.sum?" sum":""}">${c.l}<small class="muted">${c.ks.length?c.ks.length+"주":"기록 없음"}</small></th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
@@ -3091,6 +3143,8 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const cp=e.target.closest("[data-copy-code]");if(cp){navigator.clipboard.writeText(cp.dataset.copyCode).then(()=>toast("번호를 복사했어요"),()=>toast("번호를 길게 눌러 복사하세요"));return}
   const g=e.target.closest("[data-g]");if(g&&g.closest("#chips")&&chipDouble(g.dataset.g)&&canRenameClass(g.dataset.g)){openClassRename(S.team,g.dataset.g);return}if(g){S.group=g.dataset.g;try{localStorage.setItem("ya-group",S.group)}catch(_){}render();return}
   const tab=e.target.closest("[data-tab]");if(tab){if(tab.dataset.tab!==S.tab)navPush();S.tab=tab.dataset.tab;render();window.scrollTo(0,0);return}
+  if(e.target.closest("[data-attsave]")){attErr="";flushAtt();return}
+  if(e.target.closest("#pstatXls"))return exportPeriodStats();
   const md=e.target.closest("[data-mode]");if(md){S.statMode=md.dataset.mode;render();return}
   const su=e.target.closest("[data-sunit]");if(su){S.statUnit=su.dataset.sunit;render();return}
   const sb=e.target.closest("[data-sby]");if(sb){S.statBy=sb.dataset.sby;render();return}
@@ -3211,7 +3265,7 @@ function applyBoot(d){
   S.gcChanged=d.gcChanged||{};S.rptOk=!!d.rptOk;S.isAdmin=!!d.isAdmin;S.isCo=!!d.isCo;S.isCo2=!!d.isCo2;S.me=d.me||"";S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
   S.staff=d.staff||[];S.scope=d.scope||{};S.settings=d.settings||{};S.people=new Map((d.people||[]).map(p=>[p.id,p]));setTeam(S.team);
   S.att=new Map(Object.entries(d.att||{}));
-  Object.keys(attBuf).forEach(k=>S.att.set(k,mergeAtt(S.att.get(k)||{date:k,p:{},t:{}},attBuf[k]))); // 아직 안 보낸 체크는 유지
+  [attFly,attBuf].forEach(B=>Object.keys(B).forEach(k=>S.att.set(k,mergeAtt(S.att.get(k)||{date:k,p:{},t:{}},B[k])))); // 보내는 중이거나 아직 안 보낸 체크는 유지
   S.classes=new Map(Object.entries(d.classes||{}));
   S.promos=new Map(Object.entries(d.promos||{}));
   if(autoDate&&realSunday()<START&&S.date===START_KEY){autoDate=false;const ks=[...S.att.keys()].filter(k=>k>=START_KEY&&Object.keys(S.att.get(k).p||{}).length).sort();if(ks.length)S.date=ks.pop()}
@@ -3251,7 +3305,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018125303';
+  var BUILD = '20261018130256';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
