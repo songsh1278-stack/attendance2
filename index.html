@@ -298,6 +298,9 @@ td.num em{font-style:normal;color:var(--muted);font-size:12px}
 .savebar .sb-ic.wait{background:none;border:2px dashed var(--accent)}
 .savebar .sb-ic.spin{background:none;border:3px solid var(--line);border-top-color:var(--accent);animation:sbspin .8s linear infinite}
 @keyframes sbspin{to{transform:rotate(360deg)}}
+.savebar.sb-float{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));bottom:auto;transform:translateX(-50%);z-index:30;margin:0;width:min(440px,calc(100% - 32px));transition:opacity .3s;animation:sbin .25s ease-out}
+.savebar.sb-float.sb-out{opacity:0}
+@keyframes sbin{from{opacity:0;transform:translate(-50%,-8px)}}
 .pstat-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
 .pstat-ctl .seg{margin-top:0;flex:1;min-width:220px}
 .sd-list{display:flex;flex-direction:column;gap:6px}
@@ -742,6 +745,21 @@ try{const t=localStorage.getItem("ya-team");if(t)S.team=t;const g=localStorage.g
 setTeam(S.team);
 
 function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
+/* 로그인 확인 중 안내: 처음 로그인은 서버가 깨어나느라 시간이 걸려요. 저장 막대처럼 위에 띄웠다가 끝나면 사라져요.
+   확인하는 동안 버튼을 막아 여러 번 보내지 않게 해요. holder: 그 창(폼 또는 overlay) */
+function loginBar(on){
+  let el=document.querySelector("#loginBar");clearTimeout(loginBar.t);
+  if(!on){if(el){el.classList.add("sb-out");loginBar.t=setTimeout(()=>el.remove(),300)}return}
+  if(!el){el=document.createElement("div");el.id="loginBar";el.className="savebar sb-float";el.setAttribute("role","status");el.setAttribute("aria-live","polite");document.body.appendChild(el)}
+  el.classList.remove("sb-out");
+  el.innerHTML=`<span class="sb-ic spin"></span><span class="sb-tx"><b>확인 중… 잠시만 기다려 주세요</b><small>처음 로그인은 10초쯤 걸릴 수 있어요. 버튼을 다시 누르지 않아도 돼요</small></span>`;
+}
+function loginBusy(holder,fn){return async e=>{
+  e.preventDefault();if(holder.dataset.busy)return;
+  holder.dataset.busy="1";const b=holder.querySelector("button[type=submit]"),t0=b?b.textContent:"";if(b){b.disabled=true;b.textContent="확인 중…"}
+  loginBar(true);
+  try{return await fn(e)}finally{delete holder.dataset.busy;if(b&&b.isConnected){b.disabled=false;b.textContent=t0}loginBar(false)}
+}}
 
 /* ---------- derived ---------- */
 function activePeople(group){
@@ -1106,10 +1124,10 @@ function openGradeCodeEntry(g){
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">확인</button></div></form>`;
   document.body.appendChild(ov);const inp=ov.querySelector("#f-gcode");inp.focus();
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
-  ov.querySelector("form").addEventListener("submit",async e=>{
+  ov.querySelector("form").addEventListener("submit",loginBusy(ov,async e=>{
     e.preventDefault();const code=inp.value.trim();let ok=false;try{ok=await call("verifyGradeCode",S.team,g,code)}catch(err){toast(err.message);return}
     if(ok){storeGradeCode(S.team+"_"+g,code);ov.remove();S.book=null;render()}else{ov.querySelector("#gcErr").hidden=false;inp.select()}
-  });
+  }));
 }
 function openGradeManage(){
   const B=S.book;if(!B||!B.dept)return;
@@ -2307,15 +2325,15 @@ function openCodeSheet(t){
   const inp=ov.querySelector("#f-code");inp.focus();
   {const R=reLogin(),gk=Object.keys(R.gcodes||{}).find(k=>k.indexOf(t+"_")===0);inp.value=(R.codes||{})[t]||(gk?R.gcodes[gk]:"")}
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
-  ov.querySelector("form").addEventListener("submit",async e=>{
+  ov.querySelector("form").addEventListener("submit",loginBusy(ov,async e=>{
     e.preventDefault();const code=inp.value.trim();
     S.remember=!!(ov.querySelector("#f-remember")||{checked:true}).checked;let ok=false,r=null,w=null;try{ok=await call("verifyCode",t,code,AUTH().email);if(!ok)r=await call("findEntry",t,code)}catch(err){const ce=ov.querySelector("#codeErr");ce.textContent=err.message;ce.hidden=false;return}
     if(ok){storeCode(t,code)}
     else if(r&&r.kind==="teacher"){storeTCode(r.pid,code);storeWho(t,null)}
-    else if(r&&r.kind==="class"){storeGradeCode(t+"_"+r.g,code);w=await pickHomeroomName(t,r);storeWho(t,w)}
+    else if(r&&r.kind==="class"){storeGradeCode(t+"_"+r.g,code);loginBar(false);w=await pickHomeroomName(t,r);loginBar(true);storeWho(t,w)}
     if(ok||r){ov.remove();await load();goDept(t);if(ok&&canManageGrades())setTimeout(openHomeroomCodes,250);
       toast(ok?"팀 관리자로 들어왔어요":r.kind==="teacher"?`${r.name} 선생님으로 들어왔어요`+(r.grades&&r.grades.length?"":" (담임으로 배치된 반이 없어요)"):`${TEAMS[t].short} ${Object.fromEntries(classesOf(t))[r.g]||""} 담임${w?" "+w.name+" 선생님":""}으로 들어왔어요`)}else{const ce=ov.querySelector("#codeErr");ce.textContent="번호가 맞지 않아요. 다시 확인해 주세요.";ce.hidden=false;inp.select()}
-  });
+  }));
 }
 /* 담임 번호: 네 자리, 첫 자리는 부서마다 고정(영아 1 · 유아 2 · 유소년 3 · 중고등 4), 뒤 세 자리는 자유 */
 const GRADE_PREFIX={infant:"1",toddler:"2",youth:"3",teen:"4"};
@@ -2729,7 +2747,7 @@ function openTeamAdminLogin(){
   };
   draw();document.body.appendChild(ov);
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
-  ov.addEventListener("submit",async e=>{
+  ov.addEventListener("submit",loginBusy(ov,async e=>{
     e.preventDefault();
     if(step===1){
       const email=ov.querySelector("#f-taem").value.trim();S.remember=!!ov.querySelector("#f-tar").checked;
@@ -2747,7 +2765,7 @@ function openTeamAdminLogin(){
     let ok=false,g=null;try{ok=await call("verifyCode",t,code,AUTH().email);if(!ok)g=await call("findEntry",t,code)}catch(x){err(x.message);return}
     if(!ok){err(g?"담임 번호예요. 메인 화면에서 부서 카드를 눌러 입력해 주세요.":"번호가 맞지 않아요. 다시 확인해 주세요.");inp.select();return}
     storeCode(t,code);ov.remove();await load();goDept(t);toast(`${TEAMS[t].label} 팀 관리자로 들어왔어요`);
-  });
+  }));
 }
 function openMyCode(t){
   if(!TEAMS[t]||!deptLocked(t)||!(S.isAdmin||((S.scope||{})[t]||{}).level==="dept")){toast("팀 관리자로 로그인한 뒤에 바꿀 수 있어요");return}
@@ -2878,12 +2896,12 @@ function openAdminLogin(){
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">로그인</button></div></form>`;
   document.body.appendChild(ov);ov.querySelector("#f-admin").focus();
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
-  ov.querySelector("form").addEventListener("submit",async e=>{
+  ov.querySelector("form").addEventListener("submit",loginBusy(ov,async e=>{
     e.preventDefault();const pw=ov.querySelector("#f-admin").value,em=ov.querySelector("#f-aemail").value.trim();S.remember=!!ov.querySelector("#f-ar").checked;
     const r=await call("adminLogin",pw,em).catch(err=>({ok:false,error:err.message}));
     if(r.ok){if(S.remember!==false)try{localStorage.setItem("ya-admin",pw)}catch(_){}S._admin=pw;storeEmail(em);ov.remove();await load();toast("관리자로 로그인했어요")}
     else{const el=ov.querySelector("#adminErr");el.textContent=r.error?r.error:r.configured===false?"시트에 관리자 비밀번호가 아직 없어요.":"비밀번호가 맞지 않아요.";el.hidden=false}
-  });
+  }));
 }
 /* ---------- 홈 화면에 바로가기 ---------- */
 let deferredInstall=null;
@@ -3533,7 +3551,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018213807';
+  var BUILD = '20261018214125';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
