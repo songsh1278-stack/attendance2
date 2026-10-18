@@ -335,6 +335,7 @@ td.num em{font-style:normal;color:var(--muted);font-size:12px}
 .dept-stat tr.grade td b{font-size:13px;color:var(--ink)}
 .dept-stat tr.grade td:first-child{padding-left:10px}
 .dept-stat tr.dr td{border-top:2px solid var(--line)}
+.dept-stat .dg-btn{display:block;margin-top:4px;height:26px;padding:0 8px;font-size:11px;border-radius:8px}
 /* 개인별 누적 제목줄 버튼은 모두 같은 크기 */
 .pp-b{height:32px;padding:0 11px;font-size:13px;border-radius:10px;line-height:1;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
 .pp-b[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700}
@@ -2036,7 +2037,8 @@ function renderStats(){
     h+=`<p class="muted" style="font-size:13px;margin:12px 0 0">${S.date.slice(0,4)}년 1월부터 선택한 주일까지, 기록이 있는 주일 ${ks.length}번 기준</p>`;
     h+=renderStatPeriods();
     h+=renderPersonPeriods(ps,ks);
-    if(S.isAdmin)h+=renderDeptStats();
+    /* 공동관리자 이상은 부서별 통계(부서마다 [학년별 열기]), 팀 관리자는 자기 부서 학년별 통계 */
+    if(S.isAdmin)h+=renderDeptStats();else if(canManageGrades())h+=renderGradeStats();
   }
   return h;
 }
@@ -2123,31 +2125,46 @@ function renderPersonPeriods(rows,ks){
     <p class="muted" style="font-size:12px;margin:6px 0 8px">${S.editable?"●/○를 누르면 그 주일 출석을 고쳐요 · ":""}이름 옆은 올해 출석/전체 주일 수예요 · ${U==="recent"?"최근 한 달":U==="week"?"이번 주":"연도마다"} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요</p>
     <div class="sd-list">${list||`<div class="empty">사람이 없어요.</div>`}</div>`;
 }
-/* 총관리자: 학년별 통계(부서와 그 아래 학년). 부서마다 이번 주·최근 한 달·올해 학생 출석과 교사 출석 (그 부서가 체크한 주일만 세요) */
-function renderDeptStats(){
+/* 출석 통계 표 (학년별·부서별 공통). 부서마다 그 부서가 실제로 출석을 체크한 주일만 세요 */
+function statTeamRow(t){
   const y=S.date.slice(0,4),e=parseKey(S.date),b=new Date(e);b.setDate(b.getDate()-30);const bk=keyOf(b);
-  const pct=(n,d)=>d?Math.round(n/d*100):0;
-  const cell=(n,ids,ks)=>{if(!ks.length||!ids.length)return `<td class="r muted">–</td>`;const r=pct(n,ids.length*ks.length);
-    return `<td class="r num"><b>${r}%</b><small>${ks.length===1?`${n}/${ids.length}`:`${(n/ks.length).toFixed(1)}명`}</small></td>`};
-  const sum={};const rows=Object.entries(TEAMS).map(([t,x])=>{
-    const all=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false),st=all.filter(p=>p.group!=="T").map(p=>p.id),tc=all.filter(p=>p.group==="T").map(p=>p.id),ids=st.concat(tc);
-    /* 이 부서가 실제로 출석을 체크한 주일 */
-    const ks=[...S.att.keys()].filter(k=>k.startsWith(y)&&k<=S.date&&ids.some(id=>(attOf(k).p||{})[id])).sort();
-    const wk=ks.filter(k=>k===S.date),mo=ks.filter(k=>k>bk);
-    /* 학년(반)별: 같은 부서가 체크한 주일 기준 */
-    const gr=classesOf(t).map(([g,l])=>({l,ids:all.filter(p=>p.group===g).map(p=>p.id)})).filter(x=>x.ids.length);
-    return {t,label:x.label,st,tc,wk,mo,ks,gr};
-  });
-  const body=rows.map(r=>`<tr class="dr"><td><b>${esc(TEAMS[r.t].short)}</b><small>학생 ${r.st.length}·교사 ${r.tc.length}</small></td>${cell(attCount(r.st,r.wk),r.st,r.wk)}${cell(attCount(r.st,r.mo),r.st,r.mo)}${cell(attCount(r.st,r.ks),r.st,r.ks)}${cell(attCount(r.tc,r.ks),r.tc,r.ks)}</tr>`+
-    r.gr.map(g=>`<tr class="grade"><td>└ ${esc(g.l)}<small>${g.ids.length}명</small></td>${cell(attCount(g.ids,r.wk),g.ids,r.wk)}${cell(attCount(g.ids,r.mo),g.ids,r.mo)}${cell(attCount(g.ids,r.ks),g.ids,r.ks)}<td></td></tr>`).join("")).join("");
-  /* 합계: 부서마다의 출석을 더해요 */
-  const tot=f=>rows.reduce((a,r)=>{const ids=f==="tc"?r.tc:r.st,ks=f==="wk"?r.wk:f==="mo"?r.mo:r.ks;return [a[0]+attCount(ids,ks),a[1]+ids.length*ks.length,a[2]+ks.length]},[0,0,0]);
-  const tcell=f=>{const [n,d]=tot(f);return d?`<td class="r num"><b>${pct(n,d)}%</b></td>`:`<td class="r muted">–</td>`};
-  /* 처음에는 접혀 있고, 펼친 상태는 기기에 기억해요 */
-  return `<details class="fold" data-sk="deptstat" ${(S.statOpen||new Set()).has("deptstat")?"open":""} style="margin-top:12px"><summary><h2 class="sec">학년별 통계 <span class="muted" style="font-size:13px;font-weight:500">총관리자</span></h2></summary>
-    <p class="muted" style="font-size:12px;margin:4px 0 8px">부서 아래 └ 줄은 학년(반)별이에요 · 위는 출석률, 아래는 이번 주 출석/재적 또는 주일 평균 인원 · 이번 주·한 달(최근 30일)·올해는 학생, 교사는 올해 · 부서마다 출석을 체크한 주일만 세요</p>
-    <div class="card tablewrap dept-stat" style="padding:4px 10px"><table><thead><tr><th>부서</th><th class="r">이번 주</th><th class="r">한 달</th><th class="r">올해</th><th class="r">교사</th></tr></thead>
-    <tbody>${body}<tr class="sum"><td><b>전체</b></td>${tcell("wk")}${tcell("mo")}${tcell("yr")}${tcell("tc")}</tr></tbody></table></div></details>`;
+  const all=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false),st=all.filter(p=>p.group!=="T").map(p=>p.id),tc=all.filter(p=>p.group==="T").map(p=>p.id),ids=st.concat(tc);
+  const ks=[...S.att.keys()].filter(k=>k.startsWith(y)&&k<=S.date&&ids.some(id=>(attOf(k).p||{})[id])).sort();
+  const gr=classesOf(t).map(([g,l])=>({l,ids:all.filter(p=>p.group===g).map(p=>p.id)})).filter(x=>x.ids.length);
+  return {t,st,tc,ks,wk:ks.filter(k=>k===S.date),mo:ks.filter(k=>k>bk),gr};
+}
+const statPct=(n,d)=>d?Math.round(n/d*100):0;
+/* 칸: 위는 출석률, 아래는 이번 주면 출석/재적, 여러 주일이면 주일 평균 인원 */
+function statCell(ids,ks){if(!ks.length||!ids.length)return `<td class="r muted">–</td>`;const n=attCount(ids,ks);
+  return `<td class="r num"><b>${statPct(n,ids.length*ks.length)}%</b><small>${ks.length===1?`${n}/${ids.length}`:`${(n/ks.length).toFixed(1)}명`}</small></td>`}
+const statFold=(key,title,who,note,head,body)=>`<details class="fold" data-sk="${key}" ${(S.statOpen||new Set()).has(key)?"open":""} style="margin-top:12px"><summary><h2 class="sec">${title} <span class="muted" style="font-size:13px;font-weight:500">${who}</span></h2></summary>
+    <p class="muted" style="font-size:12px;margin:4px 0 8px">${note}</p>
+    <div class="card tablewrap dept-stat" style="padding:4px 10px"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></details>`;
+/* 팀 관리자 이상: 지금 부서의 학년(반)별 통계 */
+function renderGradeStats(){
+  const r=statTeamRow(S.team);
+  const body=r.gr.map(g=>`<tr><td><b>${esc(g.l)}</b><small>${g.ids.length}명</small></td>${statCell(g.ids,r.wk)}${statCell(g.ids,r.mo)}${statCell(g.ids,r.ks)}</tr>`).join("")
+    +`<tr class="sum"><td><b>학생 전체</b><small>${r.st.length}명</small></td>${statCell(r.st,r.wk)}${statCell(r.st,r.mo)}${statCell(r.st,r.ks)}</tr>`
+    +(r.tc.length?`<tr class="grade"><td>교사<small>${r.tc.length}명</small></td>${statCell(r.tc,r.wk)}${statCell(r.tc,r.mo)}${statCell(r.tc,r.ks)}</tr>`:"");
+  return statFold("gradestat","학년별 통계",esc(TEAMS[S.team].short)+" · 팀 관리자",
+    "위는 출석률, 아래는 이번 주 출석/재적 또는 주일 평균 인원 · 한 달은 최근 30일 · 부서가 출석을 체크한 주일만 세요",
+    `<th>학년</th><th class="r">이번 주</th><th class="r">한 달</th><th class="r">올해</th>`,body);
+}
+/* 공동관리자 이상: 모든 부서 비교 */
+function renderDeptStats(){
+  const rows=Object.keys(TEAMS).map(statTeamRow);
+  /* 부서마다 [학년별 열기]를 누르면 그 아래에 학년(반) 줄이 펼쳐져요 (기기에 기억) */
+  const op=S.statOpen||(S.statOpen=new Set());
+  const body=rows.map(r=>{const k="dg:"+r.t,o=op.has(k);
+    return `<tr class="dr"><td><b>${esc(TEAMS[r.t].short)}</b><small>학생 ${r.st.length}·교사 ${r.tc.length}</small>${r.gr.length?`<button class="btn dg-btn" data-dgrade="${r.t}">${o?"학년별 닫기":"학년별 열기"}</button>`:""}</td>${statCell(r.st,r.wk)}${statCell(r.st,r.mo)}${statCell(r.st,r.ks)}${statCell(r.tc,r.ks)}</tr>`
+      +(o?r.gr.map(g=>`<tr class="grade"><td>└ ${esc(g.l)}<small>${g.ids.length}명</small></td>${statCell(g.ids,r.wk)}${statCell(g.ids,r.mo)}${statCell(g.ids,r.ks)}<td></td></tr>`).join(""):"")}).join("");
+  /* 전체: 부서마다의 출석을 더해요 */
+  const tot=f=>rows.reduce((a,r)=>{const ids=f==="tc"?r.tc:r.st,ks=f==="wk"?r.wk:f==="mo"?r.mo:r.ks;return [a[0]+attCount(ids,ks),a[1]+ids.length*ks.length]},[0,0]);
+  const tcell=f=>{const [n,d]=tot(f);return d?`<td class="r num"><b>${statPct(n,d)}%</b></td>`:`<td class="r muted">–</td>`};
+  return statFold("deptstat","부서별 통계","공동관리자 이상",
+    "부서마다 [학년별 열기]를 누르면 학년(반)별로 펼쳐져요 · 위는 출석률, 아래는 이번 주 출석/재적 또는 주일 평균 인원 · 이번 주·한 달(최근 30일)·올해는 학생, 교사는 올해 · 부서마다 출석을 체크한 주일만 세요",
+    `<th>부서</th><th class="r">이번 주</th><th class="r">한 달</th><th class="r">올해</th><th class="r">교사</th>`,
+    body+`<tr class="sum"><td><b>전체</b></td>${tcell("wk")}${tcell("mo")}${tcell("yr")}${tcell("tc")}</tr>`);
 }
 /* 누적 화면의 기간 목록: 기간(월·분기·반기·연)을 펼치면 주일별, 주일을 펼치면 반별 출석·결석 명단 */
 const STAT_UNITS=[["week","이번 주"],["recent","최근 한 달"],["year","연도별"]];
@@ -3297,6 +3314,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const tab=e.target.closest("[data-tab]");if(tab){if(tab.dataset.tab!==S.tab)navPush();S.tab=tab.dataset.tab;render();window.scrollTo(0,0);return}
   if(e.target.closest("[data-attsave]")){attErr="";flushAtt();return}
   const pps=e.target.closest("[data-ppsort]");if(pps){S.ppSort=pps.dataset.ppsort;saveStatView();render();return}
+  const dg=e.target.closest("[data-dgrade]");if(dg){const o=S.statOpen||(S.statOpen=new Set()),k="dg:"+dg.dataset.dgrade;if(o.has(k))o.delete(k);else o.add(k);saveStatView();render();return}
   if(e.target.closest("[data-ppwin]")){S.ppHidden=!S.ppHidden;saveStatView();render();return}
   const ppa=e.target.closest("[data-ppall]");if(ppa){const c=S.statClosed||(S.statClosed=new Set()),close=ppa.dataset.ppall==="close";
     activePeople(S.group).forEach(p=>{const k="u:"+p.id;if(close)c.add(k);else c.delete(k)});saveStatView();render();return}
@@ -3472,7 +3490,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018163412';
+  var BUILD = '20261018163837';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
