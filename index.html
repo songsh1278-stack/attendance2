@@ -2105,9 +2105,9 @@ function renderPersonPeriods(rows,ks){
   const list=PS==="grade"?GROUPS.map(([g,l])=>{const gr=rows.filter(r=>r.p.group===g);return gr.length?`<div class="pp-gh">${esc(l)} <span class="muted">${gr.length}명</span></div>${gr.map(one).join("")}`:""}).join(""):rows.map(one).join("");
   const ul=(STAT_UNITS.find(u=>u[0]===U)||["",""])[1];
   const anyOpen=rows.some(r=>!closed.has("u:"+r.p.id));
-  /* 창 접기: 개인별 누적 목록 전체를 숨기고 제목만 남겨요 (모두 접기는 사람 칸만 접어요) */
-  const hid=!!S.ppHidden,win=`<button class="btn pp-b" data-ppwin>${hid?"창 펼치기":"창 접기"}</button>`;
-  const head=`<div class="pp-head"><h2 class="sec">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>${rows.length&&!hid?`<div class="pp-sort">${[["name","ㄱㄴ순"],["att","출석순"],["grade","학년별"]].map(([v,l])=>`<button class="btn pp-b" data-ppsort="${v}" aria-pressed="${PS===v}">${l}</button>`).join("")}</div><button class="btn pp-b" data-ppall="${anyOpen?"close":"open"}">${anyOpen?"모두 접기":"모두 펼치기"}</button>`:""}${win}</div>`;
+  /* 모두 접기: 개인별 누적 목록 전체를 숨기고 제목만 남겨요 (창 접기는 사람 칸만 접어요) */
+  const hid=!!S.ppHidden,win=`<button class="btn pp-b" data-ppwin>${hid?"모두 펼치기":"모두 접기"}</button>`;
+  const head=`<div class="pp-head"><h2 class="sec">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>${rows.length&&!hid?`<div class="pp-sort">${[["name","ㄱㄴ순"],["att","출석순"],["grade","학년별"]].map(([v,l])=>`<button class="btn pp-b" data-ppsort="${v}" aria-pressed="${PS===v}">${l}</button>`).join("")}</div><button class="btn pp-b" data-ppall="${anyOpen?"close":"open"}">${anyOpen?"창 접기":"창 펼치기"}</button>`:""}${win}</div>`;
   if(hid)return head;
   return `${head}
     <p class="muted" style="font-size:12px;margin:6px 0 8px">${S.editable?"●/○를 누르면 그 주일 출석을 고쳐요 · ":""}이름 옆은 올해 출석/전체 주일 수예요 · ${U==="recent"?"최근 한 달":U==="week"?"이번 주":"연도마다"} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요</p>
@@ -3436,7 +3436,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018162149';
+  var BUILD = '20261018162325';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
