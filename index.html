@@ -1966,7 +1966,7 @@ function renderTalent(){
   const md=k=>Number(k.slice(5,7))+"/"+Number(k.slice(8));
   let h=`<div class="summary"><div><div class="big num">${tot}<em> 달란트</em></div><div class="sub">${TEAMS[S.team].short} ${S.group==="all"?"전체":GL[S.group]} · ${S.date.slice(0,4)}년 누적 (선택한 주일까지)</div></div></div>
     <p class="muted" style="font-size:12px;margin:0 0 10px">달란트 현황을 보는 화면이에요. 달란트는 출석 탭에서 주고, 사람 정보는 명단 탭에서 고쳐요.</p>
-    <div class="seg" style="margin:0 0 10px"><button data-talmode="person" aria-pressed="${mode==="person"}">사람별</button><button data-talmode="class" aria-pressed="${mode==="class"}">반별</button></div>`;
+    <div class="seg" style="margin:0 0 10px"><button data-talmode="person" aria-pressed="${mode==="person"}">사람별</button><button data-talmode="class" aria-pressed="${mode==="class"}">학년별</button></div>`;
   if(!ps.length)return h+`<div class="empty">명단이 없어요. 명단 탭에서 추가해 주세요.</div>`;
   const ks=yearKeys().slice().reverse();
   if(mode==="person"){
@@ -3394,7 +3394,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018154659';
+  var BUILD = '20261018154744';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
