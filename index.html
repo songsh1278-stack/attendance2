@@ -323,6 +323,9 @@ td.num em{font-style:normal;color:var(--muted);font-size:12px}
 .tal-sum .who span{font-size:12px;color:var(--muted)}
 .tal-tot{flex:none;min-width:56px;text-align:right;font-size:18px;font-weight:700}
 .tal-chip b{color:var(--gold-ink);margin-left:3px}
+.tal-ed{display:inline-flex;align-items:center;gap:4px;padding:2px 4px 2px 9px}
+.tal-ed input{width:44px;height:24px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--gold-ink);font-weight:700;text-align:center;font-size:13px;padding:0 2px}
+.tal-ed input::placeholder{color:var(--muted);font-weight:400}
 
 .sd-v.one em{font-style:normal;font-size:12px;color:var(--muted)}
 .sd-in{padding:0 10px 10px 26px;display:flex;flex-direction:column;gap:6px}
@@ -1968,7 +1971,8 @@ function renderTalent(){
     const sorted=[...ps].sort((a,b)=>totalTalent(b)-totalTalent(a)||a.name.localeCompare(b.name,"ko"));
     h+=`<p class="muted" style="font-size:12px;margin:0 0 8px">이름을 누르면 주일마다 받은 달란트가 펼쳐져요</p><div class="sd-list">${sorted.map(p=>{const id="tp:"+p.id,got=ks.filter(k=>talentOf(k,p.id)>0),adj=talentAdj(p);
       return `<details class="sd" data-sk="${id}" ${open.has(id)?"open":""}><summary><span class="tal-sum">${avatar(p)}<span class="who"><b>${esc(p.name)} <span class="muted" style="font-size:12px;font-weight:500">${GL[p.group]||""}</span></b><span>이번 주 ${talentOf(S.date,p.id)}${adj?` · 직접 조정 ${adj>0?"+":""}${adj}`:""}</span></span></span><span class="tal-tot num" aria-label="${esc(p.name)} 누적 달란트">${totalTalent(p)}</span></summary>
-        <div class="sd-in">${got.length?`<div class="sd-names">${got.map(k=>`<span class="sd-nm on tal-chip">${md(k)}<b class="num">${talentOf(k,p.id)}</b></span>`).join("")}</div>`:`<p class="muted" style="margin:0;font-size:13px">올해 받은 달란트가 없어요.</p>`}${adj?`<p class="muted" style="margin:0;font-size:12px">직접 조정 ${adj>0?"+":""}${adj} 포함</p>`:""}</div></details>`}).join("")}</div>`;
+        <div class="sd-in">${S.editable?(ks.length?`<div class="sd-names">${ks.map(k=>`<label class="sd-nm tal-ed${talentOf(k,p.id)>0?" on":""}">${md(k)}<input type="number" min="0" inputmode="numeric" class="num" data-tpast="${k}|${p.id}" value="${talentOf(k,p.id)||""}" placeholder="0" aria-label="${esc(p.name)} ${md(k)} 달란트"></label>`).join("")}</div><p class="muted" style="margin:0;font-size:12px">숫자를 고치면 그 주일 달란트가 바로 바뀌어요 (비우면 0)</p>`:`<p class="muted" style="margin:0;font-size:13px">올해 출석 기록이 없어요.</p>`)
+          :got.length?`<div class="sd-names">${got.map(k=>`<span class="sd-nm on tal-chip">${md(k)}<b class="num">${talentOf(k,p.id)}</b></span>`).join("")}</div>`:`<p class="muted" style="margin:0;font-size:13px">올해 받은 달란트가 없어요.</p>`}${adj?`<p class="muted" style="margin:0;font-size:12px">직접 조정 ${adj>0?"+":""}${adj} 포함</p>`:""}</div></details>`}).join("")}</div>`;
   }else{
     /* 반별: 반마다 달란트 합계·1인 평균, 펼치면 그 반 학생 순위 (처음부터 펼쳐 둬요) */
     const gs=classesOf(S.team).filter(([g])=>S.group==="all"||S.group===g).map(([g,l])=>[g,l,ps.filter(p=>p.group===g)]).filter(x=>x[2].length);
@@ -3235,6 +3239,14 @@ document.addEventListener("change",e=>{
   const v=Math.max(0,Math.floor(Number(e.target.value)||0));e.target.value=v;
   if(v!==talentOf(S.date,id)){clearTimeout(talentTimers[S.date+id]);writeAtt(S.date,{t:{[id]:v}})}
 });
+/* 달란트 메뉴: 지난 주일 달란트 고치기 */
+document.addEventListener("change",e=>{
+  const tp=e.target.dataset&&e.target.dataset.tpast;if(!tp)return;if(!S.editable){toast("보기 권한이라 고칠 수 없어요");render();return}
+  const [k,id]=tp.split("|"),v=Math.max(0,Math.floor(Number(e.target.value)||0));
+  if(v===talentOf(k,id))return;const p=S.people.get(id);writeAtt(k,{t:{[id]:v}});
+  toast(`${p?p.name+" · ":""}${Number(k.slice(5,7))}/${Number(k.slice(8))} 달란트 ${v}개로 바꿨어요`);
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.tpast)e.target.blur()});
 document.addEventListener("change",e=>{
   const id=e.target.dataset&&e.target.dataset.total;if(!id)return;
   const v=Math.max(0,Math.floor(Number(e.target.value)||0));e.target.value=v;
@@ -3372,7 +3384,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018153735';
+  var BUILD = '20261018153847';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
