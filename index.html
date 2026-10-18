@@ -276,6 +276,14 @@ td.r,th.r{text-align:right}
 .att-sum>div{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px}
 .att-sum .big{font-size:13px;line-height:1.4}
 .att-sum .big em{font-size:12px}
+/* 부서별 출석 현황 한 줄: 학생 빨강, 교사 파랑 */
+.dept-line{margin:0 0 6px;font-size:13px;font-weight:700;color:var(--muted)}
+.dept-line em{font-style:normal;font-weight:500;opacity:.8}
+.dept-line .st{color:#C62828}
+.dept-line .tc{color:#1565C0}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .dept-line .st{color:#FF8A80}:root:not([data-theme="light"]) .dept-line .tc{color:#8AB4F8}}
+:root[data-theme="dark"] .dept-line .st{color:#FF8A80}
+:root[data-theme="dark"] .dept-line .tc{color:#8AB4F8}
 td.num em{font-style:normal;color:var(--muted);font-size:12px}
 .savebar{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:5;margin:16px 0 4px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:var(--shadow)}
 .savebar .sb-tx{flex:1;min-width:0;display:flex;flex-direction:column;font-size:14px}
@@ -2852,11 +2860,12 @@ function renderAdminSummary(){
     return {label:x.label,n:st.length,on:st.filter(p=>isOn(k,p.id)).length,tn:tc.length,ton:tc.filter(p=>isOn(k,p.id)).length};
   });
   const sum=f=>rows.reduce((a,r)=>a+r[f],0);
-  const S1={on:sum("on"),n:sum("n")};
+  const S1={on:sum("on"),n:sum("n")},T1={on:sum("ton"),n:sum("tn")};
   return `<details class="fold" data-fold="summary"${S.fold.summary!==false?" open":""}><summary><h2 class="sec">부서별 출석 현황</h2><span class="fold-sum num">${d.getMonth()+1}월 ${d.getDate()}일 주일 · 학생 ${attFrac(S1.on,S1.n)}</span></summary><div class="card">
     <div class="datebar" style="margin:0 0 12px"><button class="arrow" data-adate="-7" aria-label="지난 주일">‹</button>
     <div class="date"><strong class="num">${d.getMonth()+1}월 ${d.getDate()}일 주일</strong></div>
     <button class="arrow" data-adate="7" aria-label="다음 주일">›</button></div>
+    <p class="dept-line num"><span class="st">학생 ${attFrac(S1.on,S1.n)}</span>, <span class="tc">교사 ${attFrac(T1.on,T1.n)}</span></p>
     <table><thead><tr><th>부서</th><th class="r">학생</th><th class="r">교사</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.label}</td><td class="r num">${attFrac(r.on,r.n)}</td><td class="r num">${attFrac(r.ton,r.tn)}</td></tr>`).join("")}</tbody></table></div></details>`;
 }
 /* 팀 관리자 메인화면: 내 부서의 반별 출석 현황 (분반이 있으면 반 아래에 분반별로) */
@@ -3413,7 +3422,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018141305';
+  var BUILD = '20261018141443';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
