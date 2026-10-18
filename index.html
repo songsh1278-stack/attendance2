@@ -2065,7 +2065,7 @@ function renderPersonPeriods(rows,ks){
       return `<div class="pp-row"><span class="pp-l">${c.l}</span><span class="pp-v num">${n}/${c.ks.length} <em>(${pct(n,c.ks.length)}%)</em></span>${chips(p.id,c.ks)}</div>`}).join("");
     return per||`<p class="muted">기록이 없어요.</p>`};
   const one=r=>{const id="u:"+r.p.id;
-    return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${esc(r.p.name)}<small>${esc(GL[r.p.group]||"")}</small></span><span style="flex:1"></span><span class="pp-days num"><b>${r.n}/${ks.length}</b>${talentOn()&&r.p.group!=="T"?` (달란트 ${r.t}개)`:""}</span></summary><div class="sd-in">${body(r.p)}</div></details>`};
+    return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${esc(r.p.name)}<small>${esc(GL[r.p.group]||"")}</small></span><span style="flex:1"></span><span class="pp-days num">출석 <b>${r.n}/${ks.length}</b>${talentOn()&&r.p.group!=="T"?` (달란트 ${r.t}개)`:""}</span></summary><div class="sd-in">${body(r.p)}</div></details>`};
   /* 학년별로 보기: 반 순서대로 묶고 제목을 달아요 (반 안에서는 출석이 많은 순) */
   const list=S.ppByGrade?GROUPS.map(([g,l])=>{const gr=rows.filter(r=>r.p.group===g);return gr.length?`<div class="pp-gh">${esc(l)} <span class="muted">${gr.length}명</span></div>${gr.map(one).join("")}`:""}).join(""):rows.map(one).join("");
   const ul=(STAT_UNITS.find(u=>u[0]===U)||["",""])[1];
@@ -3394,7 +3394,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018154744';
+  var BUILD = '20261018154858';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
