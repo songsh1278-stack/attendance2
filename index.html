@@ -314,6 +314,9 @@ td.num em{font-style:normal;color:var(--muted);font-size:12px}
 .pp-v{font-size:13px;font-weight:600;white-space:nowrap}
 .pp-v em{font-style:normal;font-weight:500;font-size:12px;color:var(--muted)}
 .pp-row .sd-names{margin-top:0}
+/* 개인별 누적: 넓은 화면에서는 옆으로 나란히(2칸), 좁은 화면은 한 칸 */
+.pp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:6px;align-items:start}
+.pp-grid .sd-in{padding-left:12px}
 .sd-v.one em{font-style:normal;font-size:12px;color:var(--muted)}
 .sd-in{padding:0 10px 10px 26px;display:flex;flex-direction:column;gap:6px}
 .sd.day{border-radius:10px;background:var(--ground)}
@@ -2121,7 +2124,7 @@ function renderPersonPeriods(rows,ks){
   const ul=(STAT_UNITS.find(u=>u[0]===U)||["",""])[1];
   return `<h2 class="sec">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>
     <p class="muted" style="font-size:12px;margin:-4px 0 8px">사람마다 ${ul} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요 · 단위는 위 [기간별 출석]에서 골라요</p>
-    <div class="sd-list">${list||`<div class="empty">사람이 없어요.</div>`}</div>`;
+    <div class="sd-list pp-grid">${list||`<div class="empty">사람이 없어요.</div>`}</div>`;
 }
 /* 누적 화면의 기간 목록: 기간(월·분기·반기·연)을 펼치면 주일별, 주일을 펼치면 반별 출석·결석 명단 */
 const STAT_UNITS=[["month","월별"],["quarter","분기"],["half","반기"],["year","연별"]];
@@ -3425,7 +3428,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018144148';
+  var BUILD = '20261018144435';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
