@@ -2081,6 +2081,13 @@ async function exportPeriodStats(){
     const ws=XLSX.utils.aoa_to_sheet(aoa);ws["!cols"]=aoa[0].map((_,i)=>({wch:i<2?12:B==="person"?7:12}));
     XLSX.utils.book_append_sheet(wb,ws,name);
   });
+  /* 개인 일자별: 단위와 상관없이 올해 주일마다 출석(O)·결석(-), 맨 끝에 출석 합계·출석률 */
+  {const ks=yearKeys(),ps=activePeople(S.group);
+    const aoa=[["이름","반",...ks.map(k=>Number(k.slice(5,7))+"/"+Number(k.slice(8))),"출석","출석률(%)"]];
+    ps.forEach(p=>{const on=ks.map(k=>isOn(k,p.id));const n=on.filter(Boolean).length;aoa.push([p.name,GL[p.group]||"",...on.map(v=>v?"O":"-"),n,ks.length?Math.round(n/ks.length*1000)/10:""])});
+    aoa.push(["출석 인원","",...ks.map(k=>ps.filter(p=>isOn(k,p.id)).length),"",""]);
+    const ws=XLSX.utils.aoa_to_sheet(aoa);ws["!cols"]=aoa[0].map((_,i)=>({wch:i<2?10:i>=ks.length+2?9:5}));ws["!freeze"]={xSplit:2,ySplit:1};
+    XLSX.utils.book_append_sheet(wb,ws,"개인 일자별");}
   const unitL={day:"일별",month:"월별",quarter:"분기별",half:"반기별",year:"연별"}[U];
   saveWorkbook(wb,`${TEAMS[S.team].short}_출석통계_${U==="year"?"연도별":Y+"년_"+unitL}.xlsx`);
 }
@@ -3399,7 +3406,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018134936';
+  var BUILD = '20261018135138';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
