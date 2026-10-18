@@ -52,7 +52,7 @@
 html,body{margin:0}
 [hidden]{display:none!important}
 img{max-width:100%}
-body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent;word-break:keep-all;overflow-wrap:break-word} /* 한글은 단어 단위로 줄바꿈, 너무 긴 낱말만 쪼개요 */
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -66,9 +66,12 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .datebar{display:flex;align-items:center;gap:8px;margin-top:10px}
 .datebar .arrow{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:18px;display:grid;place-items:center}
 .datebar .date{flex:1;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;height:40px;display:flex;align-items:center;justify-content:center;gap:8px;position:relative}
-.datebar .date strong{font-size:16px}
+.datebar .date strong{font-size:16px;white-space:nowrap}
+/* 좁은 휴대폰: 날짜와 '이번 주' 표시가 한 줄에 들어가게 */
+@media (max-width:380px){.datebar{gap:6px}.datebar .arrow{width:36px}.datebar .date{gap:5px;padding:0 4px}.datebar .date strong{font-size:14px}.today-tag{font-size:10px;padding:1px 5px}}
+@media (max-width:330px){.datebar .date strong{font-size:13px}}
 .datebar .date input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
-.today-tag{font-size:11px;background:var(--accent-soft);color:var(--accent);padding:1px 7px;border-radius:99px;font-weight:600}
+.today-tag{white-space:nowrap;flex:none;font-size:11px;background:var(--accent-soft);color:var(--accent);padding:1px 7px;border-radius:99px;font-weight:600}
 .teams{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px;background:var(--sunk);border-radius:12px;padding:3px}
 .teams button{border:0;background:none;border-radius:9px;padding:7px 2px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap}
 .teams button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
@@ -86,7 +89,8 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .ring span{width:44px;height:44px;border-radius:50%;background:var(--ground);display:grid;place-items:center;font-size:13px;font-weight:700}
 .summary .big{font-size:26px;font-weight:700;line-height:1.1}
 .summary .big em{font-style:normal;color:var(--muted);font-size:16px;font-weight:500}
-.summary .sub{color:var(--muted);font-size:13px}
+.summary .sub{color:var(--muted);font-size:13px;word-break:keep-all}
+.nw{white-space:nowrap}
 .summary .spacer{flex:1}
 .summary .btn{white-space:nowrap;flex:none}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600}
@@ -161,7 +165,7 @@ nav.tabs button{font-size:11px;white-space:nowrap}
 .icon-btn.tel{color:var(--accent)}
 .icon-btn.has{color:var(--gold-ink);border-color:var(--gold);background:var(--gold-soft)}
 .memo-line{color:var(--gold-ink)!important;font-size:12px;font-weight:600}
-@media (max-width:440px){.row{gap:6px}.row .avatar{width:34px;height:34px;font-size:12px}.who b{font-size:15px}}
+
 .chipset{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .chipset button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 11px;font-size:13px}
 .cal-head{display:flex;align-items:center;gap:8px;margin:14px 0 8px}
@@ -228,7 +232,7 @@ nav.tabs button{font-size:11px;white-space:nowrap}
 .who{flex:1;min-width:0;display:flex;flex-direction:column;background:none;border:0;text-align:left;padding:0}
 .who b{font-size:16px;font-weight:600;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .who span{font-size:12px;color:var(--muted)}
-.tag{font-size:11px;font-weight:600;padding:0 7px;border-radius:99px;line-height:18px}
+.tag{white-space:nowrap;font-size:11px;font-weight:600;padding:0 7px;border-radius:99px;line-height:18px}
 .tag.new{background:var(--new-soft);color:var(--new)}
 .tag.bd{background:var(--gold-soft);color:var(--gold-ink)}
 .tag.role{background:var(--sunk);color:var(--muted)}
@@ -317,6 +321,10 @@ td.num em{font-style:normal;color:var(--muted);font-size:12px}
 .pp-days{font-size:13px;color:var(--muted);white-space:nowrap}
 .pp-days b{color:var(--ink)}
 .pp-gh{font-weight:700;font-size:14px;margin:10px 2px 2px}
+/* 개인별 누적 제목줄: 좁으면 버튼들이 제목 아래 줄로 내려가요 */
+.pp-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.pp-head h2.sec{flex:1 0 auto;margin-bottom:0}
+.pp-head .btn{flex:none}
 .pp-sort{flex:none;margin:0}
 .pp-sort button{padding:5px 10px;font-size:12px}
 .pp-gh:first-child{margin-top:0}
@@ -349,7 +357,7 @@ details.fold>summary::-webkit-details-marker{display:none}
 details.fold>summary::after{content:"펼치기 ▾";margin-left:auto;font-size:13px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
 details.fold[open]>summary::after{content:"접기 ▴"}
 .seg{display:flex;background:var(--sunk);border-radius:10px;padding:3px;gap:3px;margin-top:14px}
-.seg button{flex:1;border:0;background:none;border-radius:8px;padding:7px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button{word-break:keep-all;flex:1;border:0;background:none;border-radius:8px;padding:7px;font-size:13px;font-weight:600;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow),inset 0 0 0 1px var(--line)}
 :root[data-style] .seg button[aria-pressed="true"]{color:var(--accent);box-shadow:var(--shadow),inset 0 0 0 1px var(--accent)}
 
@@ -612,6 +620,14 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .rpt-tbl{width:100%;min-width:560px;border-collapse:collapse;font-size:12.5px;line-height:1.5;margin:0}
 .rpt-tbl th,.rpt-tbl td{border:1px solid #333;padding:6px 7px;vertical-align:middle;white-space:pre-wrap;text-align:left;color:#111;background:#fff;font-weight:400}
 .rpt-tbl th,.rpt-tbl td.c{text-align:center}
+/* 좁은 휴대폰용은 맨 끝에 둬야 위의 기본값을 덮어요 */
+@media (max-width:440px){.row{gap:6px}.row .avatar{width:34px;height:34px;font-size:12px}.who b{font-size:15px}}
+/* 좁은 휴대폰(400px 이하): 이름이 한 글자씩 세로로 꺾이지 않게 버튼·달란트 칸·사진을 조금 줄여요 */
+.who b{word-break:keep-all}
+@media (max-width:400px){.row{gap:5px;padding:8px 7px 8px 6px}.row .avatar{width:28px;height:28px;font-size:11px}.who-wrap{gap:6px}
+  .row .check,.row .icon-btn.big{width:40px;height:40px;border-radius:11px}.icon-btn.big svg{width:18px;height:18px}
+  .talent{padding:2px 1px 2px 2px}.talent input{width:30px;height:42px;font-size:15px}.talent .arrows button{width:26px;height:20px}}
+@media (max-width:340px){.row .avatar{display:none}.row .check,.row .icon-btn.big{width:38px;height:38px}}
 </style>
 </head>
 <body>
@@ -1880,7 +1896,7 @@ function renderCheck(){
   const on=stu.filter(p=>isOn(k,p.id)).length;const pct=stu.length?Math.round(on/stu.length*100):0;
   const talent=ps.reduce((a,p)=>a+talentOf(k,p.id),0);
   let h=`<div class="summary"><div class="ring" style="--p:${pct}"><span class="num">${pct}%</span></div>
-    <div><div class="big num">${on}<em> / ${stu.length}명</em></div><div class="sub num">${TEAMS[S.team].short} ${S.group==="all"?"전체":GL[S.group]} 출석${talentOn()?` · 달란트 ${talent}`:""}${tch.length?` · 교사 ${tch.filter(p=>isOn(k,p.id)).length} / ${tch.length}`:""}</div></div>
+    <div><div class="big num">${on}<em> / ${stu.length}명</em></div><div class="sub num">${TEAMS[S.team].short} ${S.group==="all"?"전체":GL[S.group]} 출석${talentOn()?` · <span class="nw">달란트 ${talent}</span>`:""}${tch.length?` · <span class="nw">교사 ${tch.filter(p=>isOn(k,p.id)).length}/${tch.length}</span>`:""}</div></div>
     <div class="spacer"></div>${S.editable&&ps.length?`<button class="btn" id="markAll">${ps.every(p=>isOn(k,p.id))?"전체 해제":"전체 출석"}</button>`:""}</div>`;
   if(!S.editable)h+=`<div class="notice">보기 권한으로 열려 있어 출석을 바꿀 수 없어요. 편집 권한이 필요하면 담당자에게 요청하세요.</div>`;
   const groups=S.group==="all"?GROUPS.map(g=>g[0]):[S.group];
@@ -2075,8 +2091,8 @@ function renderPersonPeriods(rows,ks){
   const list=PS==="grade"?GROUPS.map(([g,l])=>{const gr=rows.filter(r=>r.p.group===g);return gr.length?`<div class="pp-gh">${esc(l)} <span class="muted">${gr.length}명</span></div>${gr.map(one).join("")}`:""}).join(""):rows.map(one).join("");
   const ul=(STAT_UNITS.find(u=>u[0]===U)||["",""])[1];
   const anyOpen=rows.some(r=>!closed.has("u:"+r.p.id));
-  return `<div style="display:flex;align-items:center;gap:8px"><h2 class="sec" style="flex:1">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>${rows.length?`<div class="seg sm pp-sort">${[["name","가나다순"],["att","출석순"],["grade","학년별"]].map(([v,l])=>`<button data-ppsort="${v}" aria-pressed="${PS===v}">${l}</button>`).join("")}</div><button class="btn" data-ppall="${anyOpen?"close":"open"}" style="flex:none;font-size:13px;padding:4px 12px">${anyOpen?"모두 접기":"모두 펼치기"}</button>`:""}</div>
-    <p class="muted" style="font-size:12px;margin:-4px 0 8px">${S.editable?"●/○를 누르면 그 주일 출석을 고쳐요 · ":""}이름 옆은 올해 출석/전체 주일 수예요 · ${U==="recent"?"최근 한 달":U==="week"?"이번 주":"연도마다"} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요</p>
+  return `<div class="pp-head"><h2 class="sec">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>${rows.length?`<div class="seg sm pp-sort">${[["name","ㄱㄴ순"],["att","출석순"],["grade","학년별"]].map(([v,l])=>`<button data-ppsort="${v}" aria-pressed="${PS===v}">${l}</button>`).join("")}</div><button class="btn" data-ppall="${anyOpen?"close":"open"}" style="flex:none;font-size:13px;padding:4px 12px">${anyOpen?"모두 접기":"모두 펼치기"}</button>`:""}</div>
+    <p class="muted" style="font-size:12px;margin:6px 0 8px">${S.editable?"●/○를 누르면 그 주일 출석을 고쳐요 · ":""}이름 옆은 올해 출석/전체 주일 수예요 · ${U==="recent"?"최근 한 달":U==="week"?"이번 주":"연도마다"} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요</p>
     <div class="sd-list">${list||`<div class="empty">사람이 없어요.</div>`}</div>`;
 }
 /* 누적 화면의 기간 목록: 기간(월·분기·반기·연)을 펼치면 주일별, 주일을 펼치면 반별 출석·결석 명단 */
@@ -3401,7 +3417,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018155310';
+  var BUILD = '20261018161542';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
