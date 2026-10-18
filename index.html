@@ -290,6 +290,7 @@ td.r,th.r{text-align:right}
 :root[data-theme="dark"] .dept-line .tc{color:#8AB4F8}
 td.num em{font-style:normal;color:var(--muted);font-size:12px}
 .savebar{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:5;margin:16px 0 4px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:var(--shadow)}
+.savebar.sb-hide{display:none}
 .savebar .sb-tx{flex:1;min-width:0;display:flex;flex-direction:column;font-size:14px}
 .savebar .sb-tx small{font-size:12px;color:var(--muted)}
 .savebar .sb-ic{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;color:#fff;background:var(--accent)}
@@ -814,7 +815,7 @@ function onWriteError(e){
 /* 출석 체크는 바로 보내지 않고 잠깐(0.8초) 모았다가 한 번에 보낸다. 20명을 눌러도 서버 요청은 한두 번.
    보내는 중에 또 체크하면 줄줄이 보내지 않고 모아 두었다가, 앞 요청이 끝나면 한 번에 보낸다.
    진행 상황은 출석 화면 아래 저장 막대(#attBar)에 보여 준다. */
-const attBuf={},attFly={};let attTimer=null,attErr="",attAt="";
+const attBuf={},attFly={};let attTimer=null,attErr="",attAt="",attOkUntil=0,attOkTimer=null;
 function mergeAtt(cur,body){return {...cur,p:{...cur.p,...(body.p||{})},t:{...cur.t,...(body.t||{})},m:{...(cur.m||{}),...(body.m||{})}}}
 const attCnt=b=>b?new Set(["p","t","m"].flatMap(f=>Object.keys(b[f]||{}))).size:0;
 function writeAtt(k,body){
@@ -830,12 +831,17 @@ function sendAtt(k){
   const b=attBuf[k];delete attBuf[k];if(!b)return;
   const body={};["p","t","m"].forEach(f=>{if(b[f]&&Object.keys(b[f]).length)body[f]=b[f]});if(!Object.keys(body).length)return;
   attFly[k]=b;attBarUpd();
-  tracked(call("write","update","att/"+k,body)).then(()=>{attAt=new Date().toTimeString().slice(0,5)},e=>{
+  tracked(call("write","update","att/"+k,body)).then(()=>{
+    attAt=new Date().toTimeString().slice(0,5);
+    attOkUntil=Date.now()+2500;clearTimeout(attOkTimer);attOkTimer=setTimeout(attBarUpd,2600);
+  },e=>{
     if(e&&e.net){attBuf[k]=mergeAtt(b,attBuf[k]||{p:{},t:{}});attErr=e.message} /* 연결 문제: 다시 보낼 수 있게 남겨 둔다 (그 사이 새로 누른 것이 우선) */
     else onWriteError(e);
   }).finally(()=>{delete attFly[k];if(attBuf[k]&&!attErr&&!attTimer)sendAtt(k);attBarUpd()});
 }
-/* 출석 화면 아래 저장 막대: 기다림 → 저장 중 → 저장됨 / 실패하면 [다시 저장] */
+/* 출석 화면 아래 저장 막대: 기다림 → 저장 중 → 저장됨 / 실패하면 [다시 저장]
+   "모두 저장됨"은 저장 직후 2.5초만 보여 주고 숨긴다 (명단을 가리지 않게) */
+function attBarIdle(){return !Object.keys(attBuf).length&&!Object.keys(attFly).length&&Date.now()>=attOkUntil}
 function attBarHtml(){
   const wait=Object.values(attBuf).reduce((s,b)=>s+attCnt(b),0),fly=Object.values(attFly).reduce((s,b)=>s+attCnt(b),0);
   if(attErr&&wait)return `<span class="sb-ic err">!</span><span class="sb-tx"><b>저장하지 못한 체크 ${wait}개</b><small>${esc(attErr)}</small></span><button class="btn primary" data-attsave>다시 저장</button>`;
@@ -843,7 +849,7 @@ function attBarHtml(){
   if(wait)return `<span class="sb-ic wait"></span><span class="sb-tx"><b>체크 ${wait}개 저장 대기</b><small>곧 자동으로 저장돼요</small></span><button class="btn primary" data-attsave>지금 저장</button>`;
   return `<span class="sb-ic ok">✓</span><span class="sb-tx"><b>모두 저장됨</b><small>${attAt?attAt+" 마지막 저장 · ":""}체크하면 자동으로 저장돼요</small></span>`;
 }
-function attBarUpd(){const el=document.querySelector("#attBar");if(el)el.innerHTML=attBarHtml()}
+function attBarUpd(){const el=document.querySelector("#attBar");if(el){el.innerHTML=attBarHtml();el.classList.toggle("sb-hide",attBarIdle())}}
 /* 화면을 떠나거나 다른 앱으로 갈 때는 기다리지 않고 바로 보낸다 */
 addEventListener("pagehide",flushAtt);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)flushAtt()});
@@ -1544,7 +1550,7 @@ function openGuide(){
     <h4>1. 앱 설치 (처음 한 번)</h4><ol><li>주소 <b class="guide-url">팀 관리자가 알려 준 앱 주소</b> 를 열어요. 팀 관리자가 보낸 링크를 눌러도 돼요.</li><li><b>안드로이드</b>: 크롬 오른쪽 위 <b>︙</b> → <b>홈 화면에 추가</b> (또는 앱 설치)</li><li><b>아이폰</b>: 사파리 아래 <b>공유 버튼</b> → <b>홈 화면에 추가</b></li><li>카카오톡에서 열었다면 먼저 <b>다른 브라우저로 열기</b>를 눌러요.</li></ol>
     <h4>2. 들어가기</h4><ol><li>메인에서 <b>우리 부서</b> 카드 → <b>담임 번호</b> 넣기</li><li>우리 반 담임이 여러 명이면 <b>본인 이름을 고르는 창</b>이 떠요. 내 이름을 고르면 그 이름으로 로그인되고, 활동 기록에도 내 이름이 남아요.</li><li>제목 옆에 "담임 · 2학년"처럼 보이면 성공!</li><li>내 휴대폰이면 "이 기기에서 번호 기억하기"를 켜 두세요. 다음부터 바로 들어가요.</li><li>두 반을 맡았으면(예: 고2·고3) 팀 관리자가 두 반에 같은 번호를 줄 수 있어요. 그 번호 하나로 두 반이 함께 열려요.</li></ol>
     <h4>2-1. 내 비밀번호 (담임이 여러 명인 반)</h4><ol><li>들어온 뒤 <b>메뉴 설정 → 내 담임 번호 → [내 비밀번호 만들기]</b>를 눌러요. 지금 번호(반 담임 번호)를 확인하고, 나만 쓰는 비밀번호(영문+숫자 6자리 이상)를 정해요.</li><li>다음부터는 메인에서 <b>내 비밀번호만</b> 넣으면 바로 내 이름으로 들어와요. 같은 반 다른 선생님 번호에는 영향이 없어요.</li><li>내 비밀번호를 만든 뒤에는 반 담임 번호로 들어와도 내 이름을 고를 수 없어요(다른 사람이 내 이름으로 들어오지 못하게).</li><li>바꿀 때는 같은 곳의 <b>[내 비밀번호 변경]</b>. 잊어버렸으면 팀 관리자에게 <b>초기화</b>를 부탁하세요.</li></ol>
-    <h4>3. 출결메모 (주일 출석)</h4><ol><li>위쪽 날짜가 오늘 주일인지 확인해요. ‹ › 로 다른 주일로 가요.</li><li><b>체크 칸</b>: 누르면 출석, 다시 누르면 취소</li><li><b>메모</b>: 결석 이유 적기 ("감기·아픔" 같은 버튼도 있어요)</li><li><b>전화</b>: 누르면 그 학생의 <b>대표전화</b>로 바로 걸려요. 대표전화는 학생마다 명단 [수정]에서 <b>[대표]</b>에 체크한 번호예요. 체크하지 않았으면 영아·유아부는 부모님, 유소년·중고등부는 학생 번호예요 (없으면 다른 번호). 컴퓨터에서는 번호 창이 떠요.</li><li>숫자 칸(달란트 등): ▲▼ 를 누르거나 숫자를 눌러 적어요. 달란트는 여기서만 줘요.</li><li><b>담임 선생님 출석</b>: 우리 반 담임 줄 바로 아래에 선생님 이름이 <b>연보라색 줄</b>로 나와요. 거기서 선생님 출석·메모도 체크해요. (교사 명단의 이름과 담임 이름이 같아야 나와요)</li><li><b>저장</b>: 따로 저장 버튼을 누르지 않아도 체크하면 자동으로 저장돼요. 화면 아래 <b>저장 막대</b>에서 "저장 대기 → 저장 중… → ✓ 모두 저장됨"을 확인하세요. 바로 보내려면 <b>[지금 저장]</b>, 인터넷이 끊겨 못 했으면 <b>[다시 저장]</b>을 눌러요.</li></ol>
+    <h4>3. 출결메모 (주일 출석)</h4><ol><li>위쪽 날짜가 오늘 주일인지 확인해요. ‹ › 로 다른 주일로 가요.</li><li><b>체크 칸</b>: 누르면 출석, 다시 누르면 취소</li><li><b>메모</b>: 결석 이유 적기 ("감기·아픔" 같은 버튼도 있어요)</li><li><b>전화</b>: 누르면 그 학생의 <b>대표전화</b>로 바로 걸려요. 대표전화는 학생마다 명단 [수정]에서 <b>[대표]</b>에 체크한 번호예요. 체크하지 않았으면 영아·유아부는 부모님, 유소년·중고등부는 학생 번호예요 (없으면 다른 번호). 컴퓨터에서는 번호 창이 떠요.</li><li>숫자 칸(달란트 등): ▲▼ 를 누르거나 숫자를 눌러 적어요. 달란트는 여기서만 줘요.</li><li><b>담임 선생님 출석</b>: 우리 반 담임 줄 바로 아래에 선생님 이름이 <b>연보라색 줄</b>로 나와요. 거기서 선생님 출석·메모도 체크해요. (교사 명단의 이름과 담임 이름이 같아야 나와요)</li><li><b>저장</b>: 따로 저장 버튼을 누르지 않아도 체크하면 자동으로 저장돼요. 화면 아래 <b>저장 막대</b>에서 "저장 대기 → 저장 중… → ✓ 모두 저장됨"을 확인하세요. 다 저장되면 막대는 잠깐 뒤 저절로 사라져요. 바로 보내려면 <b>[지금 저장]</b>, 인터넷이 끊겨 못 했으면 <b>[다시 저장]</b>을 눌러요.</li></ol>
     <h4>4. 명단 (연락처 포함)</h4><ol><li><b>[+ 사람 추가]</b>로 새 학생을 넣어요. 연락처·주소도 같이 적을 수 있어요.</li><li>이름을 누르면 보호자·부모 연락처와 주소가 보여요. <b>[전화]</b>, <b>[복사]</b>도 여기서.</li><li><b>[수정]</b>: 사진·반·생일·메모·연락처·주소를 한 창에서 위에서 아래로 차례대로 고쳐요. 컴퓨터에서는 사진 파일을 창 위로 <b>끌어다 놓아도</b> 돼요.</li><li><b>[삭제]</b>: 이름을 누른 창에서 눌러요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li>사람 정보는 <b>명단 탭에서만</b> 고칠 수 있어요. 다른 탭에서는 보기만 해요.</li><li><b>대표전화</b>: [수정]에서 부모 연락처·학생 연락처 옆 <b>[대표]</b> 중 하나에 체크하고 저장해요. 출결메모의 <b>[전화]</b>를 누르면 그 번호로 바로 걸려요. 이름을 누른 창에서 전화기 아이콘을 눌러 바꿀 수도 있어요.</li><li>명단에서 <b>연보라색</b> 줄은 선생님이에요.</li><li>연락처가 잠겨 있으면 명단 위쪽 <b>연락처</b> 줄의 <b>[번호 입력]</b>에 담임 번호를 넣어요.</li></ol>
     <h4>4-1. 통계 (출석 한눈에 보기)</h4><ol><li><b>기간별 학생 출석</b>: <b>[이번 주] [최근 한 달] [연도별]</b> 중 하나를 골라요. 이번 주는 펼치면 반별 출석·결석 명단이 바로 보이고, 최근 한 달·연도별은 기간 → 주일 → 반별 명단 순서로 펼쳐져요. 처음에는 최근 기간과 이번 주일만 펼쳐져 있어요.</li><li><b>개인별 누적</b>: 이름 옆에 <b>출석 34/42 (달란트 120개)</b>처럼 올해 출석/전체 주일 수와 달란트가 나와요. 이름을 펼치면 주일마다 출석(●)·결석(○)이 보여요(위에서 이번 주를 골라도 여기는 최근 한 달).</li><li><b>지난 출석 고치기</b>: 개인별 누적의 <b>●/○를 누르면</b> 그 주일 출석이 바뀌어요. 잘못 눌렀으면 한 번 더 누르면 돼요.</li><li><b>[ㄱㄴ순] [출석순] [학년별]</b>로 순서를 바꾸고, <b>[창 접기]</b>는 사람 칸만, <b>[모두 접기]</b>는 개인별 누적 전체를 접어요.</li><li><b>[엑셀로 받기]</b>: 개인·학년·전체와 <b>개인 일자별</b>(주일마다 O/-) 시트가 한 파일에 담겨요.</li><li>펼치고 접은 상태와 고른 탭·순서는 이 기기에 기억돼요.</li></ol>
     <h4>5. 생일 · 달란트</h4><ol><li><b>생일</b>: 이번 주·이번 달·다음 달 생일. 생일이 없는 사람은 맨 아래에 모여요. 음력 생일은 [수정]에서 "음력 생일"에 체크하면 그 해 양력 날짜로 바꿔 보여 줘요. 연도 없이 3/15처럼 날짜만 적어도 되고, 학생은 학년에 맞는 출생연도가 자동으로 붙어요(교사는 연도 없이 날짜만).</li><li><b>달란트</b>: <b>[사람별]</b>은 누적 순위예요. 이름을 펼치면 주일마다 받은 달란트 칸이 나오고, <b>숫자를 고치면 지난 주일 달란트도 바로 바뀌어요</b>(비우면 0). <b>[학년별]</b>은 반마다 합계·1인 평균·학생 순위예요.</li><li>이번 주 달란트는 지금처럼 출결메모에서 줘요.</li><li>달란트·생일·일정 엑셀은 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b> 파일에 들어 있어요.</li></ol>
@@ -1939,7 +1945,7 @@ function renderCheck(){
     const un=gp.filter(p=>!secOf(p));
     if(un.length)h+=`<div class="sec-h"><span class="badge" style="background:var(--muted)">미배정</span><span class="c">"분반 수정"에서 반을 정해 주세요</span></div><div class="list">${un.map(personRow).join("")}</div>`;
   }
-  if(S.editable)h+=`<div id="attBar" class="savebar" role="status" aria-live="polite">${attBarHtml()}</div>`;
+  if(S.editable)h+=`<div id="attBar" class="savebar${attBarIdle()?" sb-hide":""}" role="status" aria-live="polite">${attBarHtml()}</div>`;
   return h;
 }
 /** 학년별 정렬 열쇠 (같은 학년 안에서 어린 사람 먼저). 영아부는 나이(0세→4세) 먼저. 생일 연도가 있으면 늦게 태어난 순, 연도를 모르면 그 뒤에 가나다순 */
@@ -3492,7 +3498,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018164152';
+  var BUILD = '20261018165823';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
