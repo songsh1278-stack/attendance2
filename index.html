@@ -2136,10 +2136,11 @@ function renderDeptStats(){
   /* 합계: 부서마다의 출석을 더해요 */
   const tot=f=>rows.reduce((a,r)=>{const ids=f==="tc"?r.tc:r.st,ks=f==="wk"?r.wk:f==="mo"?r.mo:r.ks;return [a[0]+attCount(ids,ks),a[1]+ids.length*ks.length,a[2]+ks.length]},[0,0,0]);
   const tcell=f=>{const [n,d]=tot(f);return d?`<td class="r num"><b>${pct(n,d)}%</b></td>`:`<td class="r muted">–</td>`};
-  return `<h2 class="sec">부서별 통계 <span class="muted" style="font-size:13px;font-weight:500">총관리자</span></h2>
-    <p class="muted" style="font-size:12px;margin:-4px 0 8px">위는 출석률, 아래는 이번 주 출석/재적 또는 주일 평균 인원 · 이번 주·한 달(최근 30일)·올해는 학생, 교사는 올해 · 부서마다 출석을 체크한 주일만 세요</p>
+  /* 처음에는 접혀 있고, 펼친 상태는 기기에 기억해요 */
+  return `<details class="fold" data-sk="deptstat" ${(S.statOpen||new Set()).has("deptstat")?"open":""} style="margin-top:12px"><summary><h2 class="sec">부서별 통계 <span class="muted" style="font-size:13px;font-weight:500">총관리자</span></h2></summary>
+    <p class="muted" style="font-size:12px;margin:4px 0 8px">위는 출석률, 아래는 이번 주 출석/재적 또는 주일 평균 인원 · 이번 주·한 달(최근 30일)·올해는 학생, 교사는 올해 · 부서마다 출석을 체크한 주일만 세요</p>
     <div class="card tablewrap dept-stat" style="padding:4px 10px"><table><thead><tr><th>부서</th><th class="r">이번 주</th><th class="r">한 달</th><th class="r">올해</th><th class="r">교사</th></tr></thead>
-    <tbody>${body}<tr class="sum"><td><b>전체</b></td>${tcell("wk")}${tcell("mo")}${tcell("yr")}${tcell("tc")}</tr></tbody></table></div>`;
+    <tbody>${body}<tr class="sum"><td><b>전체</b></td>${tcell("wk")}${tcell("mo")}${tcell("yr")}${tcell("tc")}</tr></tbody></table></div></details>`;
 }
 /* 누적 화면의 기간 목록: 기간(월·분기·반기·연)을 펼치면 주일별, 주일을 펼치면 반별 출석·결석 명단 */
 const STAT_UNITS=[["week","이번 주"],["recent","최근 한 달"],["year","연도별"]];
@@ -3464,7 +3465,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018162817';
+  var BUILD = '20261018163126';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
