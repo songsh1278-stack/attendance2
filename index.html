@@ -1388,6 +1388,98 @@ function uploadPhotos(){
     if(bad.length)alertBox("열 수 없는 사진이 있어요",bad.join(", ")+" 사진은 열지 못해 건너뛰었어요.");
   });
 }
+/* ---- 예전 출석부 엑셀 올리기: 반마다 시트(시트 이름 앞 숫자 = 반, '교사'가 들어가면 교사), 월·일 머리줄 아래에 사람 줄(출석 체크)과 달란트 줄 ---- */
+const oldNm=s=>String(s==null?"":s).split("\n")[0].replace(/[(（].*$/,"").replace(/\s/g,"");
+/** 시트들을 읽어 [{sheet, group, rows:[{name, att:{날짜:true/false}, tal:{날짜:수}}]}] 와 날짜 목록을 돌려준다 */
+function parseOldAttBook(wb,year,team){
+  const out=[],dates=new Set(),cls=classesOf(team);let moved=0;
+  /* 작년 달력을 그대로 쓴 칸(예: 10/5·10/12)은 가장 가까운 주일로 맞춘다 */
+  const sunKey=(m,d)=>{const x=new Date(year,m-1,d);if(x.getMonth()!==m-1)return "";const w=x.getDay();if(w){x.setDate(x.getDate()+(w<=3?-w:7-w));moved++}
+    return x.getFullYear()===year?x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0"):""};
+  wb.SheetNames.forEach(sn=>{
+    const ws=wb.Sheets[sn];if(!ws||!ws["!ref"])return;
+    const R=XLSX.utils.decode_range(ws["!ref"]);
+    const v=(r,c)=>{const x=ws[XLSX.utils.encode_cell({r,c})];return x?x.v:undefined};
+    const txt=(r,c)=>String(v(r,c)==null?"":v(r,c)).replace(/\s/g,"");
+    /* 머리줄: 앞쪽 칸에 '월'이 있는 줄, 바로 아래 '일'이 있는 줄 */
+    let mr=-1,lc=-1;
+    for(let r=0;r<=Math.min(R.e.r,12)&&mr<0;r++)for(let c=0;c<8;c++)if(txt(r,c)==="월"&&txt(r+1,c)==="일"){mr=r;lc=c;break}
+    if(mr<0)return;
+    const cols=[];let m=0;
+    for(let c=lc+1;c<=R.e.c;c++){const mv=v(mr,c);if(typeof mv==="number"&&mv>=1&&mv<=12)m=mv;const d=v(mr+1,c);
+      if(m&&typeof d==="number"&&d>=1&&d<=31){const k=sunKey(m,d);if(k)cols.push([c,k])}}
+    if(!cols.length)return;
+    const isT=sn.indexOf("교사")>=0,num=(sn.match(/^\s*(\d+)/)||[])[1];
+    const group=isT?"T":num?(cls.some(([k])=>k===num)?num:((cls[Number(num)-1]||[])[0]||"")):"";
+    const rows=[];
+    for(let r=mr+2;r<=R.e.r;r++){
+      const marks=cols.filter(([c])=>typeof v(r,c)==="boolean");if(!marks.length)continue;
+      let name="";for(let c=0;c<=lc;c++){const x=v(r,c);if(typeof x==="string"&&oldNm(x)&&!/^\d/.test(x)){name=oldNm(x);break}}
+      if(!name)continue;
+      const att={},tal={};cols.forEach(([c,k])=>{if(typeof v(r,c)==="boolean")att[k]=v(r,c)});
+      /* 바로 아래 줄이 달란트 줄이면 그 주일 달란트 */
+      let hasT=false;for(let c=0;c<=lc;c++)if(txt(r+1,c)==="달란트")hasT=true;
+      if(hasT)cols.forEach(([c,k])=>{const t=v(r+1,c);if(typeof t==="number"&&t>0)tal[k]=t});
+      rows.push({name,att,tal});
+    }
+    if(rows.length)out.push({sheet:sn,group,rows});
+  });
+  /* 아무도 출석하지 않은 날짜(아직 안 쓴 칸)와 오늘 뒤 날짜는 뺀다 */
+  const td=new Date(),tk=td.getFullYear()+"-"+String(td.getMonth()+1).padStart(2,"0")+"-"+String(td.getDate()).padStart(2,"0");
+  out.forEach(s=>s.rows.forEach(r=>Object.keys(r.att).forEach(k=>{if(r.att[k]&&k<=tk)dates.add(k)})));
+  return {sheets:out,dates:[...dates].sort(),moved};
+}
+function uploadOldAtt(){
+  if(!canManageGrades()){toast("팀 관리자만 올릴 수 있어요");return}
+  loadXLSX().catch(()=>{});
+  const inp=document.createElement("input");inp.type="file";inp.accept=".xlsx,.xls";
+  inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;if(!await needXLSX())return;
+    const year=Number((f.name.match(/20\d\d/)||[])[0]||S.date.slice(0,4));
+    let P;try{P=parseOldAttBook(XLSX.read(await f.arrayBuffer(),{type:"array"}),year,S.team)}catch(e){alertBox("파일을 읽지 못했어요",e.message);return}
+    if(!P.dates.length){alertBox("올릴 출석 기록이 없어요","반마다 시트가 있고, '월'·'일' 머리줄 아래에 이름과 출석 체크가 있는 출석부 파일인지 확인해 주세요.");return}
+    /* 명단과 맞추기: 같은 반의 같은 이름 → 없으면 부서 안에서 이름이 하나뿐인 사람 */
+    const mine=[...S.people.values()].filter(p=>teamOf(p)===S.team);
+    const ok=[],miss=[];
+    P.sheets.forEach(sh=>sh.rows.forEach(r=>{
+      let c=mine.filter(p=>oldNm(p.name)===r.name&&(sh.group==="T"?p.group==="T":p.group!=="T"));
+      if(c.length>1&&sh.group)c=c.filter(p=>p.group===sh.group);
+      if(c.length===1)ok.push({p:c[0],r,sheet:sh.sheet});else miss.push({r,sheet:sh.sheet,why:c.length?"같은 이름이 여러 명":"명단에 없음"});
+    }));
+    const ov=document.createElement("div");ov.className="overlay";let mode="add";
+    const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="예전 출석부 올리기"><h3>${esc(TEAMS[S.team].label)} 예전 출석부 올리기</h3>
+      <p style="margin:6px 0 0;font-size:15px"><b>${esc(f.name)}</b> · ${year}년 주일 <b>${P.dates.length}번</b> (${Number(P.dates[0].slice(5,7))}/${Number(P.dates[0].slice(8))} ~ ${Number(P.dates[P.dates.length-1].slice(5,7))}/${Number(P.dates[P.dates.length-1].slice(8))})</p>
+      ${P.moved?`<p class="muted" style="margin:4px 0 0;font-size:12px">일요일이 아닌 날짜 칸 ${P.moved}개(작년 달력)는 가장 가까운 주일로 맞췄어요.</p>`:""}
+      <p style="margin:4px 0 0;font-size:14px">명단과 맞은 사람 <b>${ok.length}명</b>${miss.length?` · 못 맞춘 사람 <b style="color:var(--danger)">${miss.length}명</b>`:""}</p>
+      ${miss.length?`<div class="card" style="margin-top:8px;max-height:22vh;overflow:auto;font-size:13px">${miss.map(x=>`<div>${esc(x.r.name)} <span class="muted">(${esc(x.sheet)} · ${x.why})</span></div>`).join("")}<p class="muted" style="margin:6px 0 0;font-size:12px">이 사람들은 건너뛰어요. 명단에 먼저 넣거나 이름을 맞춘 뒤 다시 올리면 돼요.</p></div>`:""}
+      <div class="form" style="margin-top:10px"><label class="inline full"><input type="radio" name="om" value="add" ${mode==="add"?"checked":""}> <span><b>더하기</b> (추천) — 엑셀에서 출석한 날과 받은 달란트만 넣어요. 앱에 이미 있는 출석은 지우지 않아요.</span></label>
+      <label class="inline full"><input type="radio" name="om" value="over" ${mode==="over"?"checked":""}> <span><b>덮어쓰기</b> — 엑셀의 출석·결석·달란트로 그 날짜들을 바꿔요. 앱에서 체크한 내용이 엑셀과 다르면 엑셀 쪽으로 바뀌어요.</span></label></div>
+      <p class="err" id="oaErr" hidden></p><p class="muted" id="oaProg" style="font-size:13px;margin:6px 0 0"></p>
+      <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" id="oaGo" ${ok.length?"":"disabled"}>${ok.length}명 출석 기록 올리기</button></div></div>`};
+    draw();document.body.appendChild(ov);let busy=false;
+    ov.addEventListener("change",e=>{if(e.target.name==="om")mode=e.target.value});
+    ov.addEventListener("click",async e=>{
+      if(!busy&&(e.target===ov||e.target.closest("[data-close]")))return ov.remove();
+      if(!e.target.closest("#oaGo")||busy)return;busy=true;
+      const go=ov.querySelector("#oaGo"),prog=ov.querySelector("#oaProg");go.disabled=true;ov.querySelector("[data-close]").disabled=true;
+      let done=0,fail=[];
+      for(const k of P.dates){
+        const body={p:{},t:{}};
+        ok.forEach(({p,r})=>{const a=r.att[k];if(a===undefined)return;
+          if(a)body.p[p.id]=1;else if(mode==="over")body.p[p.id]=0;
+          if(p.group!=="T"){const t=r.tal[k];if(t)body.t[p.id]=t;else if(mode==="over")body.t[p.id]=0}});
+        if(!Object.keys(body.t).length)delete body.t;
+        if(!Object.keys(body.p).length&&!body.t){done++;continue}
+        prog.textContent=`올리는 중… ${Number(k.slice(5,7))}월 ${Number(k.slice(8))}일 (${done+1}/${P.dates.length})`;
+        try{await tracked(call("write","update","att/"+k,body))}catch(x){fail.push(k+" "+x.message);if(!x.net)break}
+        done++;
+      }
+      ov.remove();await load(true);
+      if(fail.length)alertBox("일부를 올리지 못했어요",fail.join("\n")+"\n\n다시 올리면 빠진 날짜가 채워져요 (더하기는 몇 번 올려도 같아요).");
+      else toast(`주일 ${P.dates.length}번, ${ok.length}명 출석 기록을 올렸어요`);
+    });
+  };
+  inp.click();
+}
 /* ---- 자료실 ---- */
 async function loadLib(){
   if(S.libLoading)return;S.libLoading=true;const team=S.team;
@@ -2005,7 +2097,7 @@ function renderRoster(){
     <div class="summary"><div>${(()=>{const act=all.filter(p=>p.active!==false),st=act.filter(p=>p.group!=="T").length,tc=act.length-st;
       /* 학생과 교사를 따로 세요 (교사 칩을 고르면 교사만) */
       return S.group==="T"?`<div class="big num">${tc}<em> 명 교사</em></div>`:`<div class="big num">${st}<em> 명 학생</em>${tc?`<em style="margin-left:10px">교사 </em>${tc}<em> 명</em>`:""}</div>`})()}<div class="sub">${TEAMS[S.team].short} · ${S.group==="all"?"전체":GL[S.group]} · 재적</div></div><div class="spacer"></div>
-    ${canManageGrades()||(isHomeroom()&&S.editable)?`<button class="btn" id="goSet">메뉴 설정</button>`:""}${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()&&S.editable?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div><div class="homeroom" data-set style="margin-top:4px"><span class="lbl">사진</span><span class="none" style="font-size:13px">신상명세서 엑셀 속 사진(또는 이름으로 된 사진 파일)을 한 번에</span><span class="spacer"></span><button id="photoUp">올리기</button></div>`:""}${canManageGrades()?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
+    ${canManageGrades()||(isHomeroom()&&S.editable)?`<button class="btn" id="goSet">메뉴 설정</button>`:""}${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()&&S.editable?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div><div class="homeroom" data-set style="margin-top:4px"><span class="lbl">사진</span><span class="none" style="font-size:13px">신상명세서 엑셀 속 사진(또는 이름으로 된 사진 파일)을 한 번에</span><span class="spacer"></span><button id="photoUp">올리기</button></div>${canManageGrades()?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">출석부</span><span class="none" style="font-size:13px">예전 엑셀 출석부의 출석·달란트를 한 번에</span><span class="spacer"></span><button id="oldAttUp">올리기</button></div>`:""}`:""}${canManageGrades()?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
   /* 반(학년)마다 제목 줄과 인원. 영아처럼 나이가 따로 있으면 나이별 인원도 */
   const ageCnt=list=>{if(!isFlex(S.team))return "";const m=new Map();list.forEach(p=>{if(p.group==="T")return;const a=ageLabel(p)||"나이 모름";m.set(a,(m.get(a)||0)+1)});
     return [...m].sort((x,y)=>(parseInt(x[0])||99)-(parseInt(y[0])||99)).map(([a,n])=>`${a} ${n}명`).join(" · ")};
@@ -3232,6 +3324,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   if(e.target.closest("#xlsTpl"))return downloadTemplate();
   if(e.target.closest("#xlsUp"))return uploadRoster();
   if(e.target.closest("#photoUp"))return uploadPhotos();
+  if(e.target.closest("#oldAttUp"))return uploadOldAtt();
   if(e.target.closest("#xlsExport"))return exportAll();
   if(e.target.closest("#actOpen"))return openActivityLog();
   if(e.target.closest("#rptOpen")){S.rptStatAt=0;return openReport()}
@@ -3450,7 +3543,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018151041';
+  var BUILD = '20261018151620';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
