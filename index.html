@@ -247,6 +247,10 @@ nav.tabs button{font-size:11px;white-space:nowrap}
 .photo-field{grid-column:1/-1;display:flex;align-items:center;gap:12px}
 .photo-field .btns{display:flex;gap:8px;flex-wrap:wrap}
 .photo-field input[type=file]{display:none}
+.photo-field{border:2px dashed transparent;border-radius:14px;padding:4px;transition:border-color .15s,background .15s}
+.photo-field.drop{border-color:var(--accent);background:var(--sunk)}
+.photo-field .drop-hint{flex-basis:100%;font-size:12px}
+@media (hover:none){.photo-field .drop-hint{display:none}}
 .sheet-head{display:flex;align-items:center;gap:14px}
 .check-box{flex:none;display:flex;flex-direction:column;align-items:center}
 .check-lbl{font-size:11px;color:var(--accent);text-align:center;margin-top:2px;font-weight:600}
@@ -1271,6 +1275,8 @@ function renderSchedule(){
   if(!E.canEdit)h+=`<p class="muted" style="font-size:12px;margin-top:14px">일정 추가와 수정은 팀 관리자가 할 수 있어요.</p>`;
   return h;
 }
+/* 파일을 엉뚱한 곳에 떨어뜨려도 브라우저가 그 파일을 열면서 앱을 벗어나지 않게 해요 */
+["dragover","drop"].forEach(n=>window.addEventListener(n,e=>{if([...((e.dataTransfer||{}).types||[])].includes("Files"))e.preventDefault()}));
 function fileToB64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const s=String(r.result);res(s.slice(s.indexOf(",")+1))};r.readAsDataURL(f)})}
 async function downloadShared(fid){
   try{toast("내려받는 중…");const d=await call("downloadFile",S.team,fid);const bin=atob(d.b64);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
@@ -2730,7 +2736,7 @@ function openPerson(id){
       <div class="photo-field"><span id="ph-prev">${avatar(p,"lg")}</span><div class="btns">
         <label class="btn" for="f-photo" style="display:inline-flex;align-items:center;color:var(--ink);font-size:13px">사진 선택</label>
         <input type="file" id="f-photo" accept="image/\*">
-        <button type="button" class="btn danger" id="ph-del" ${photoOf(p)?"":"hidden"}>사진 삭제</button></div></div>
+        <button type="button" class="btn danger" id="ph-del" ${photoOf(p)?"":"hidden"}>사진 삭제</button><span class="drop-hint muted">또는 사진을 여기로 끌어다 놓으세요</span></div></div>
       ${formFields(teamOf(p)).map(([f,l])=>f==="team"?`<label>${l}<select id="f-team" name="team">${Object.entries(TEAMS).filter(([t])=>!isHomeroom()||t===S.team).map(([t,x])=>`<option value="${t}" ${teamOf(p)===t?"selected":""}>${x.label}</option>`).join("")}</select></label>`
         :f==="section"?`<label>${l}<select id="f-section" name="section">${[""].concat(sectionsOfKey(teamOf(p),p.group)).map(v=>`<option value="${v}" ${(secOf(p)||"")===v?"selected":""}>${v?v+"반":"없음"}</option>`).join("")}</select></label>`
         :f==="age"?(isFlex(teamOf(p))?`<label>${l}<select id="f-age" name="age"><option value="">모름</option>${TEAMS[teamOf(p)].groups.map(([a,al])=>`<option value="${a}" ${p.age===a?"selected":""}>${al}</option>`).join("")}</select></label>`:"")
@@ -2763,8 +2769,16 @@ function openPerson(id){
   const fPhoto=ov.querySelector("#f-photo");
   if(fPhoto){
     const showPrev=()=>{ov.querySelector("#ph-prev").innerHTML=avatar({...p,id:"",name:form.querySelector("#f-name").value||p.name,photo},"lg");ov.querySelector("#ph-del").hidden=!photo};
-    fPhoto.addEventListener("change",async()=>{const file=fPhoto.files&&fPhoto.files[0];if(!file)return;
-      try{photo=await resizeImage(file);showPrev()}catch(_){toast("이 사진은 열 수 없어요. JPG나 PNG로 다시 골라 주세요")}fPhoto.value=""});
+    const pick=async file=>{if(!file)return;if(file.type&&file.type.indexOf("image")!==0){toast("사진 파일만 올릴 수 있어요");return}
+      try{photo=await resizeImage(file);showPrev()}catch(_){toast("이 사진은 열 수 없어요. JPG나 PNG로 다시 골라 주세요")}};
+    fPhoto.addEventListener("change",async()=>{await pick(fPhoto.files&&fPhoto.files[0]);fPhoto.value=""});
+    /* 사진을 창 위로 끌어다 놓아도 돼요 */
+    const pf=ov.querySelector(".photo-field"),hasFile=e=>[...((e.dataTransfer||{}).types||[])].includes("Files");
+    let dragN=0;
+    ov.addEventListener("dragenter",e=>{if(!hasFile(e))return;e.preventDefault();dragN++;pf.classList.add("drop")});
+    ov.addEventListener("dragover",e=>{if(!hasFile(e))return;e.preventDefault();e.dataTransfer.dropEffect="copy"});
+    ov.addEventListener("dragleave",()=>{if(dragN&&!--dragN)pf.classList.remove("drop")});
+    ov.addEventListener("drop",e=>{if(!hasFile(e))return;e.preventDefault();dragN=0;pf.classList.remove("drop");pick([...e.dataTransfer.files].find(f=>String(f.type).indexOf("image")===0)||e.dataTransfer.files[0])});
     ov.querySelector("#ph-del").addEventListener("click",()=>{photo="";showPrev()});
   }
   const tSel=ov.querySelector("#f-team");
@@ -3072,7 +3086,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018115415';
+  var BUILD = '20261018115733';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
