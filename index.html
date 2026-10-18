@@ -316,6 +316,8 @@ td.num em{font-style:normal;color:var(--muted);font-size:12px}
 .pp-row .sd-names{margin-top:0}
 .pp-days{font-size:13px;color:var(--muted);white-space:nowrap}
 .pp-days b{color:var(--ink)}
+.pp-gh{font-weight:700;font-size:14px;margin:10px 2px 2px}
+.pp-gh:first-child{margin-top:0}
 .att-tg{cursor:pointer}
 .att-tg:hover{border-color:var(--accent)}
 .tal-sum{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
@@ -2062,11 +2064,13 @@ function renderPersonPeriods(rows,ks){
     const per=cols.map(c=>{const n=c.ks.filter(k=>isOn(k,p.id)).length;
       return `<div class="pp-row"><span class="pp-l">${c.l}</span><span class="pp-v num">${n}/${c.ks.length} <em>(${pct(n,c.ks.length)}%)</em></span>${chips(p.id,c.ks)}</div>`}).join("");
     return per||`<p class="muted">기록이 없어요.</p>`};
-  const list=rows.map(r=>{const id="u:"+r.p.id;
-    return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${esc(r.p.name)}<small>${esc(GL[r.p.group]||"")}</small></span><span style="flex:1"></span><span class="pp-days num"><b>${r.n}/${ks.length}</b>${talentOn()&&r.p.group!=="T"?` (달란트 ${r.t}개)`:""}</span></summary><div class="sd-in">${body(r.p)}</div></details>`}).join("");
+  const one=r=>{const id="u:"+r.p.id;
+    return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${esc(r.p.name)}<small>${esc(GL[r.p.group]||"")}</small></span><span style="flex:1"></span><span class="pp-days num"><b>${r.n}/${ks.length}</b>${talentOn()&&r.p.group!=="T"?` (달란트 ${r.t}개)`:""}</span></summary><div class="sd-in">${body(r.p)}</div></details>`};
+  /* 학년별로 보기: 반 순서대로 묶고 제목을 달아요 (반 안에서는 출석이 많은 순) */
+  const list=S.ppByGrade?GROUPS.map(([g,l])=>{const gr=rows.filter(r=>r.p.group===g);return gr.length?`<div class="pp-gh">${esc(l)} <span class="muted">${gr.length}명</span></div>${gr.map(one).join("")}`:""}).join(""):rows.map(one).join("");
   const ul=(STAT_UNITS.find(u=>u[0]===U)||["",""])[1];
   const anyOpen=rows.some(r=>!closed.has("u:"+r.p.id));
-  return `<div style="display:flex;align-items:center;gap:8px"><h2 class="sec" style="flex:1">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>${rows.length?`<button class="btn" data-ppall="${anyOpen?"close":"open"}" style="flex:none;font-size:13px;padding:4px 12px">${anyOpen?"모두 접기":"모두 펼치기"}</button>`:""}</div>
+  return `<div style="display:flex;align-items:center;gap:8px"><h2 class="sec" style="flex:1">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>${rows.length?`<button class="btn" data-ppgrade style="flex:none;font-size:13px;padding:4px 12px">${S.ppByGrade?"출석순으로 보기":"학년별로 보기"}</button><button class="btn" data-ppall="${anyOpen?"close":"open"}" style="flex:none;font-size:13px;padding:4px 12px">${anyOpen?"모두 접기":"모두 펼치기"}</button>`:""}</div>
     <p class="muted" style="font-size:12px;margin:-4px 0 8px">${S.editable?"●/○를 누르면 그 주일 출석을 고쳐요 · ":""}이름 옆은 올해 출석/전체 주일 수예요 · ${U==="recent"?"최근 한 달":U==="week"?"이번 주":"연도마다"} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요</p>
     <div class="sd-list">${list||`<div class="empty">사람이 없어요.</div>`}</div>`;
 }
@@ -3110,8 +3114,8 @@ function openPerson(id){
 document.addEventListener("change",e=>{const c=e.target.closest&&e.target.closest("[data-bgcustom]");if(c)setBg(c.value);const d=e.target.closest&&e.target.closest("[data-dccustom]");if(d&&/^#[0-9a-f]{6}$/i.test(d.value))setDeptColor(d.value)});
 /* 통계 화면의 펼침·접힘과 단위는 이 기기에 기억해 두고, 다시 열어도 마지막 상태로 보여 줘요 */
 const STAT_KEY="ya-statview";
-(()=>{try{const v=JSON.parse(localStorage.getItem(STAT_KEY)||"null");if(v){S.statOpen=new Set(v.open||[]);S.statClosed=new Set(v.closed||[]);if(v.unit)S.statUnit=v.unit}}catch(_){}})();
-function saveStatView(){try{const cut=x=>[...(x||[])].slice(-400);localStorage.setItem(STAT_KEY,JSON.stringify({open:cut(S.statOpen),closed:cut(S.statClosed),unit:S.statUnit||""}))}catch(_){}}
+(()=>{try{const v=JSON.parse(localStorage.getItem(STAT_KEY)||"null");if(v){S.statOpen=new Set(v.open||[]);S.statClosed=new Set(v.closed||[]);if(v.unit)S.statUnit=v.unit;S.ppByGrade=!!v.byGrade}}catch(_){}})();
+function saveStatView(){try{const cut=x=>[...(x||[])].slice(-400);localStorage.setItem(STAT_KEY,JSON.stringify({open:cut(S.statOpen),closed:cut(S.statClosed),unit:S.statUnit||"",byGrade:!!S.ppByGrade}))}catch(_){}}
 document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.dataset&&d.dataset.sk){const k=d.dataset.sk;
   if(d.dataset.dopen){const c=S.statClosed||(S.statClosed=new Set());if(d.open)c.delete(k);else c.add(k)} /* 처음부터 펼친 칸은 접은 것만 기억 */
   else{const o=S.statOpen||(S.statOpen=new Set());if(d.open)o.add(k);else o.delete(k)}
@@ -3215,6 +3219,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const g=e.target.closest("[data-g]");if(g&&g.closest("#chips")&&chipDouble(g.dataset.g)&&canRenameClass(g.dataset.g)){openClassRename(S.team,g.dataset.g);return}if(g){S.group=g.dataset.g;try{localStorage.setItem("ya-group",S.group)}catch(_){}render();return}
   const tab=e.target.closest("[data-tab]");if(tab){if(tab.dataset.tab!==S.tab)navPush();S.tab=tab.dataset.tab;render();window.scrollTo(0,0);return}
   if(e.target.closest("[data-attsave]")){attErr="";flushAtt();return}
+  if(e.target.closest("[data-ppgrade]")){S.ppByGrade=!S.ppByGrade;saveStatView();render();return}
   const ppa=e.target.closest("[data-ppall]");if(ppa){const c=S.statClosed||(S.statClosed=new Set()),close=ppa.dataset.ppall==="close";
     activePeople(S.group).forEach(p=>{const k="u:"+p.id;if(close)c.add(k);else c.delete(k)});saveStatView();render();return}
   const tat=e.target.closest("[data-tatt]");if(tat){if(!S.editable){toast("보기 권한이라 고칠 수 없어요");return}
@@ -3389,7 +3394,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018154434';
+  var BUILD = '20261018154659';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
