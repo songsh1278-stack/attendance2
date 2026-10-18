@@ -628,6 +628,18 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
   .row .check,.row .icon-btn.big{width:40px;height:40px;border-radius:11px}.icon-btn.big svg{width:18px;height:18px}
   .talent{padding:2px 1px 2px 2px}.talent input{width:30px;height:42px;font-size:15px}.talent .arrows button{width:26px;height:20px}}
 @media (max-width:340px){.row .avatar{display:none}.row .check,.row .icon-btn.big{width:38px;height:38px}}
+/* 휴대폰을 가로로 돌렸을 때(높이가 낮음): 머리는 같이 스크롤, 아래 메뉴·저장 막대는 낮게 — 내용이 보일 자리를 넉넉히 */
+@media (orientation:landscape) and (max-height:520px){
+  header.top{position:relative;top:auto;padding-block:8px 6px}
+  header.top .datebar{margin-top:6px}
+  nav.tabs button{flex-direction:row;justify-content:center;gap:6px;padding:6px 0 7px;font-size:12px}
+  nav.tabs svg{width:18px;height:18px}
+  .app{padding-block-end:64px}
+  .savebar{bottom:calc(42px + env(safe-area-inset-bottom,0px));padding:6px 10px;margin:10px 0 2px}
+  .savebar .sb-tx{flex-direction:row;align-items:baseline;gap:8px}
+  .savebar .sb-tx small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .toast{bottom:calc(52px + env(safe-area-inset-bottom,0px))}
+}
 </style>
 </head>
 <body>
@@ -3417,7 +3429,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018161542';
+  var BUILD = '20261018161818';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
