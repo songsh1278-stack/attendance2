@@ -397,6 +397,13 @@ details.fold[open]>summary::after{content:"접기 ▴"}
 .dept .range{font-size:13px;color:var(--muted)}
 .dept .stat{margin-top:auto;word-break:keep-all;font-size:13px;font-weight:600;color:var(--accent)}
 .dept .lock{flex:none;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--muted);background:var(--sunk);border-radius:99px;padding:1px 7px}
+/* 담임·팀 관리자처럼 부서 카드가 하나뿐이면 휴대폰 폭에 꽉 차고 화면 높이에 맞춰 크게 */
+.dept-grid.solo{grid-template-columns:1fr}
+.dept-grid.solo .dept{min-height:clamp(170px,34vh,300px);padding:22px 20px;gap:10px}
+.dept-grid.solo .dept .name{font-size:clamp(24px,7vw,32px)}
+.dept-grid.solo .dept .range{font-size:15px}
+.dept-grid.solo .dept .stat{font-size:clamp(16px,4.6vw,20px)}
+.dept-grid.solo .dept .lock{font-size:13px;padding:3px 10px}
 .lock-ic{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
 .admin-list{display:flex;flex-direction:column;padding:4px 14px}
 .admin-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
@@ -3058,9 +3065,11 @@ function hardRefresh(){
 function renderHome(){
   const k=S.date;
   let h=(onOfficialUrl()?"":`<div class="notice" style="margin:0 0 12px"><b>예전 주소로 열려 있어요.</b> 바뀐 내용이 보이지 않으면 새 주소로 여세요.<div style="margin-top:8px"><a class="btn primary" href="${OFFICIAL_URL}" target="_top" rel="noopener">↻ 새 주소로 새로고침</a></div></div>`)
-    +`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>${myDepts().length?"내 부서로 들어가세요.":"부서를 선택해 들어가세요."}</p></div><div class="dept-grid">`;
-  /* 팀 관리자·담임은 번호로 들어간 부서만 보여요 (다른 부서는 이 기기 번호를 지우면 다시 보여요) */
-  for(const [t,x] of Object.entries(TEAMS).filter(([t])=>!myDepts().length||myDepts().includes(t))){
+    +`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>${myDepts().length?"내 부서로 들어가세요.":"부서를 선택해 들어가세요."}</p></div>`;
+  /* 팀 관리자·담임은 번호로 들어간 부서만 보여요 (다른 부서는 이 기기 번호를 지우면 다시 보여요). 하나뿐이면 크게 */
+  const homeDepts=Object.entries(TEAMS).filter(([t])=>!myDepts().length||myDepts().includes(t));
+  h+=`<div class="dept-grid${homeDepts.length===1?" solo":""}">`;
+  for(const [t,x] of homeDepts){
     const ps=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group!=="T");
     const on=ps.filter(p=>isOn(k,p.id)).length;const open=canEnter(t);
     h+=`<button class="dept${deptColor()?" tinted":""}" data-enter="${t}"${deptColor()?` style="--dept-bg:${deptColor()}"`:""}><span class="top"><span class="name">${x.label}</span>${!canEnter(t)?`<span class="lock">${LOCK_SVG}번호</span>`:""}</span>
@@ -3562,7 +3571,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018214834';
+  var BUILD = '20261018215006';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
