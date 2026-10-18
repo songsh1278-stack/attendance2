@@ -1949,15 +1949,15 @@ function setTotalTalent(id,v){
   if(S.db)enqueue("people/"+id,()=>S.db.doc("people/"+id).update({talentAdj:{[y]:adj}}));
   toast("달란트를 고쳤어요");
 }
-/* 달란트: 누적 순위(사람별)와 주일별. 사람을 펼치면 주일마다 받은 달란트, 주일을 펼치면 그날 받은 사람. 이름을 눌러도 정보 창은 열지 않아요 */
+/* 달란트: 누적 순위(사람별)와 반별. 사람을 펼치면 주일마다 받은 달란트, 반을 펼치면 그 반 학생 순위. 이름을 눌러도 정보 창은 열지 않아요 */
 function renderTalent(){
   const ps=activePeople(S.group).filter(p=>p.group!=="T");
-  const tot=ps.reduce((a,p)=>a+totalTalent(p),0),mode=S.talMode==="date"?"date":"person";
+  const tot=ps.reduce((a,p)=>a+totalTalent(p),0),mode=S.talMode==="class"?"class":"person";
   const open=S.statOpen||(S.statOpen=new Set()),closed=S.statClosed||(S.statClosed=new Set());
   const md=k=>Number(k.slice(5,7))+"/"+Number(k.slice(8));
   let h=`<div class="summary"><div><div class="big num">${tot}<em> 달란트</em></div><div class="sub">${TEAMS[S.team].short} ${S.group==="all"?"전체":GL[S.group]} · ${S.date.slice(0,4)}년 누적 (선택한 주일까지)</div></div></div>
     <p class="muted" style="font-size:12px;margin:0 0 10px">달란트 현황을 보는 화면이에요. 달란트는 출석 탭에서 주고, 사람 정보는 명단 탭에서 고쳐요.</p>
-    <div class="seg" style="margin:0 0 10px"><button data-talmode="person" aria-pressed="${mode==="person"}">사람별</button><button data-talmode="date" aria-pressed="${mode==="date"}">주일별</button></div>`;
+    <div class="seg" style="margin:0 0 10px"><button data-talmode="person" aria-pressed="${mode==="person"}">사람별</button><button data-talmode="class" aria-pressed="${mode==="class"}">반별</button></div>`;
   if(!ps.length)return h+`<div class="empty">명단이 없어요. 명단 탭에서 추가해 주세요.</div>`;
   const ks=yearKeys().slice().reverse();
   if(mode==="person"){
@@ -1966,10 +1966,12 @@ function renderTalent(){
       return `<details class="sd" data-sk="${id}" ${open.has(id)?"open":""}><summary><span class="tal-sum">${avatar(p)}<span class="who"><b>${esc(p.name)} <span class="muted" style="font-size:12px;font-weight:500">${GL[p.group]||""}</span></b><span>이번 주 ${talentOf(S.date,p.id)}${adj?` · 직접 조정 ${adj>0?"+":""}${adj}`:""}</span></span></span><span class="tal-tot num" aria-label="${esc(p.name)} 누적 달란트">${totalTalent(p)}</span></summary>
         <div class="sd-in">${got.length?`<div class="sd-names">${got.map(k=>`<span class="sd-nm on tal-chip">${md(k)}<b class="num">${talentOf(k,p.id)}</b></span>`).join("")}</div>`:`<p class="muted" style="margin:0;font-size:13px">올해 받은 달란트가 없어요.</p>`}${adj?`<p class="muted" style="margin:0;font-size:12px">직접 조정 ${adj>0?"+":""}${adj} 포함</p>`:""}</div></details>`}).join("")}</div>`;
   }else{
-    /* 주일별: 최근 주일은 처음부터 펼쳐 둬요 */
-    h+=`<p class="muted" style="font-size:12px;margin:0 0 8px">주일을 누르면 그날 달란트를 받은 사람이 펼쳐져요</p><div class="sd-list">${ks.map((k,i)=>{const id="td:"+k,got=ps.map(p=>[p,talentOf(k,p.id)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]||a[0].name.localeCompare(b[0].name,"ko")),sum=got.reduce((a,x)=>a+x[1],0);
-      return `<details class="sd" data-sk="${id}" ${i===0?`data-dopen="1" ${closed.has(id)?"":"open"}`:open.has(id)?"open":""}><summary><span class="sd-l">${dayLabel(k)}<small>${got.length}명</small></span><span style="flex:1"></span><span class="tal-tot num">${sum}</span></summary>
-        <div class="sd-in">${got.length?`<div class="sd-names">${got.map(([p,v])=>`<span class="sd-nm on tal-chip">${esc(p.name)}<b class="num">${v}</b></span>`).join("")}</div>`:`<p class="muted" style="margin:0;font-size:13px">이날 받은 달란트가 없어요.</p>`}</div></details>`}).join("")||`<div class="empty">올해 출석 기록이 없어요.</div>`}</div>`;
+    /* 반별: 반마다 달란트 합계·1인 평균, 펼치면 그 반 학생 순위 (처음부터 펼쳐 둬요) */
+    const gs=classesOf(S.team).filter(([g])=>S.group==="all"||S.group===g).map(([g,l])=>[g,l,ps.filter(p=>p.group===g)]).filter(x=>x[2].length);
+    h+=`<p class="muted" style="font-size:12px;margin:0 0 8px">반을 누르면 접혀요</p><div class="sd-list">${gs.map(([g,l,gp])=>{const id="tc:"+S.team+"_"+g,sum=gp.reduce((a,p)=>a+totalTalent(p),0),wk=gp.reduce((a,p)=>a+talentOf(S.date,p.id),0);
+      const sorted=[...gp].sort((a,b)=>totalTalent(b)-totalTalent(a)||a.name.localeCompare(b.name,"ko"));
+      return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${esc(l)}<small>${gp.length}명 · 1인 평균 ${(sum/gp.length).toFixed(1)} · 이번 주 ${wk}</small></span><span style="flex:1"></span><span class="tal-tot num">${sum}</span></summary>
+        <div class="sd-in">${sorted.map((p,i)=>`<div class="pp-row"><span class="pp-l">${i+1}. ${esc(p.name)}</span><span class="pp-v num" style="margin-left:auto">${totalTalent(p)}</span></div>`).join("")}</div></details>`}).join("")||`<div class="empty">학생이 없어요.</div>`}</div>`;
   }
   return h;
 }
@@ -3364,7 +3366,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018152405';
+  var BUILD = '20261018152508';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
