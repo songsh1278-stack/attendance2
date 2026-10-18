@@ -2927,7 +2927,11 @@ function openPerson(id){
     delete body.id;
     const nid=id||("p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
     if(body.order==null)body.order=999;
-    S.people.set(nid,{...body,id:nid});if(photo!==photo0||!id)S.photos.set(nid,[photo?-1:0,photo]);render();close();
+    S.people.set(nid,{...body,id:nid});if(photo!==photo0||!id)S.photos.set(nid,[photo?-1:0,photo]);
+    /* 교사 이름을 고치면 반 담임 칸도 화면에서 바로 바꿔요 (서버도 같이 바꿔요) */
+    if(id&&p.group==="T"&&body.group==="T"&&p.name&&body.name!==p.name&&teamOf(p)===body.team){const rn=v=>hrJoin(hrNames(v||"").map(n=>n===p.name?body.name:n));
+      S.classes.forEach((c,k)=>{if(k.indexOf(body.team+"_")!==0)return;const t={};Object.keys(c.teachers||{}).forEach(s=>t[s]=rn(c.teachers[s]));S.classes.set(k,{...c,teacher:rn(c.teacher),teachers:t})})}
+    render();close();
     if(S.db)enqueue("people/"+nid,()=>S.db.doc("people/"+nid)[id?"update":"set"](body));
     const repTeam=body.team;if(pcShown&&repSel&&body.group!=="T"&&personCallOn(repTeam)&&canContact(body.group)&&repSel!==callFirstOf(body.group,repTeam,id)){const np={...body,id:nid};
       if(id)setPersonCall(np,repSel).catch(err=>{toast(err.message);load()});else{const rs=repSel;enqueue("people/"+nid,()=>setPersonCall(np,rs).catch(err=>{toast(err.message);load()}))}}
@@ -3191,7 +3195,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018121259';
+  var BUILD = '20261018124830';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
