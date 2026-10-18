@@ -2046,7 +2046,7 @@ function renderStats(){
   {
     const ks=yearKeys();
     const ps=activePeople(S.group).map(p=>({p,n:ks.filter(kk=>isOn(kk,p.id)).length,t:totalTalent(p)}))
-      .sort((a,b)=>b.n-a.n||b.t-a.t||a.p.name.localeCompare(b.p.name,"ko"));
+      .sort((a,b)=>(a.p.group==="T")-(b.p.group==="T")||b.n-a.n||b.t-a.t||a.p.name.localeCompare(b.p.name,"ko")); /* 학생 먼저, 교사는 아래 */
     const weekly=ks.map(kk=>({kk,n:[...S.people.values()].filter(p=>teamOf(p)===S.team&&p.group!=="T"&&isOn(kk,p.id)).length}));
     const max=Math.max(1,...weekly.map(w=>w.n));
     h+=`<p class="muted" style="font-size:13px;margin:12px 0 0">${S.date.slice(0,4)}년 1월부터 선택한 주일까지, 기록이 있는 주일 ${ks.length}번 기준</p>`;
@@ -3426,7 +3426,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018145143';
+  var BUILD = '20261018145526';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
