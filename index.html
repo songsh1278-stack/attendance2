@@ -636,7 +636,7 @@ const pickGroupsOf=groupsOf;
 const isClassKey=g=>g!=="T";
 const ageLabel=p=>isFlex(teamOf(p))&&p.group!=="T"&&p.age?(Object.fromEntries(TEAMS[teamOf(p)].groups.concat(...FLEX_TEAMS.map(t=>TEAMS[t].groups)))[p.age]||""):"";
 let GROUPS,GL;
-const S={promos:new Map(),view:"home",depts:new Map(),codes:{},isAdmin:false,people:new Map(),att:new Map(),classes:new Map(),date:null,team:"youth",group:"all",tab:"check",q:"",statMode:"week",db:null,ready:false,editable:true,fold:{}};
+const S={promos:new Map(),view:"home",depts:new Map(),codes:{},isAdmin:false,people:new Map(),att:new Map(),classes:new Map(),date:null,team:"youth",group:"all",tab:"check",q:"",statMode:"year",db:null,ready:false,editable:true,fold:{}};
 function setTeam(t){S.team=TEAMS[t]?t:"youth";const sc=(S.scope||{})[S.team];GROUPS=groupsOf(S.team).filter(([g])=>!sc||sc.level!=="grade"||sc.grades.includes(g));GL=Object.fromEntries(groupsOf(S.team));if(S.group!=="all"&&!GROUPS.some(x=>x[0]===S.group))S.group="all"}
 const TL=(t=S.team)=>((S.settings||{})[t]||{}).talentLabel||"달란트";
 const talentOn=(t=S.team)=>((S.settings||{})[t]||{}).talent!==false;
@@ -2031,18 +2031,9 @@ function renderTalent(){
   return h;
 }
 function renderStats(){
-  const k=S.date;
-  let h=`<div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px"><span class="muted" style="font-size:13px;text-align:right">자료실을 제외한 모든 메뉴의 자료는 여기서 내려받습니다</span><button class="btn" id="xlsExport" style="flex:none">엑셀로 내보내기</button></div><div class="seg"><button data-mode="week" aria-pressed="${S.statMode==="week"}">이번 주일</button><button data-mode="year" aria-pressed="${S.statMode==="year"}">${S.date.slice(0,4)}년 누적</button></div>`;
-  if(S.statMode==="period")S.statMode="year";
-  if(S.statMode==="week"){
-    const rows=GROUPS.map(([g,l])=>{const ps=activePeople(g);const on=ps.filter(p=>isOn(k,p.id)).length;const t=ps.reduce((a,p)=>a+talentOf(k,p.id),0);return {g,l,n:ps.length,on,t}});
-    const st=rows.filter(r=>r.g!=="T");const tr=rows.find(r=>r.g==="T")||{on:0,n:0};const sOn=st.reduce((a,r)=>a+r.on,0),sN=st.reduce((a,r)=>a+r.n,0);
-    h+=`<div class="summary"><div><div class="big num">${sOn}<em> / ${sN} ${TEAMS[S.team].unit}</em></div><div class="sub num">교사 ${tr.on} / ${tr.n}</div></div></div>
-    <div class="card bars">${rows.map(r=>`<div class="bar"><span>${r.l}</span><div class="track"><div class="fill" style="width:${r.n?r.on/r.n*100:0}%"></div></div><span class="v num">${r.on}/${r.n}</span></div>`+(r.g==="T"?"":sectionsOf(r.g).map(sec=>{const sp=activePeople(r.g).filter(p=>secOf(p)===sec);const so=sp.filter(p=>isOn(k,p.id)).length;return `<div class="bar" style="font-size:13px"><span class="muted">└ ${sec}반</span><div class="track" style="height:10px"><div class="fill" style="width:${sp.length?so/sp.length*100:0}%;opacity:.7"></div></div><span class="v num">${so}/${sp.length}</span></div>`}).join(""))).join("")}</div>
-    ${talentOn()?`<h2 class="sec">달란트 현황</h2><div class="card tablewrap"><table><thead><tr><th>반</th><th class="r">재적</th><th class="r">이번 주</th><th class="r">누적</th><th class="r">1인 평균</th></tr></thead><tbody>
-    ${st.map(r=>{const ps=activePeople(r.g);const tot=ps.reduce((a,p)=>a+totalTalent(p),0);return `<tr><td>${r.l}</td><td class="r num">${r.n}</td><td class="r num">${r.t}</td><td class="r num">${tot}</td><td class="r num">${r.n?(tot/r.n).toFixed(1):"-"}</td></tr>`}).join("")}
-    </tbody></table></div>`:""}`;
-  }else{
+  let h=`<div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px"><span class="muted" style="font-size:13px;text-align:right">자료실을 제외한 모든 메뉴의 자료는 여기서 내려받습니다</span><button class="btn" id="xlsExport" style="flex:none">엑셀로 내보내기</button></div>`;
+  /* 통계는 올해 누적만 보여요 (이번 주일 보기는 없앴어요) */
+  {
     const ks=yearKeys();
     const ps=activePeople(S.group).map(p=>({p,n:ks.filter(kk=>isOn(kk,p.id)).length,t:totalTalent(p)}))
       .sort((a,b)=>b.n-a.n||b.t-a.t||a.p.name.localeCompare(b.p.name,"ko"));
@@ -2107,7 +2098,7 @@ async function exportPeriodStats(){
 }
 /* 개인별 누적: 사람을 펼치면 위에서 고른 단위(월·분기·반기·연)별 출석, 기간을 펼치면 주일마다 출석(●)·결석(○). 일별이면 바로 주일 목록 */
 function renderPersonPeriods(rows,ks){
-  const U=statUnit(),Y=Number(S.date.slice(0,4)),open=S.statOpen||(S.statOpen=new Set());
+  const U=statUnit(),Y=Number(S.date.slice(0,4)),open=S.statOpen||(S.statOpen=new Set()),closed=S.statClosed||(S.statClosed=new Set());
   const pct=(n,d)=>d?Math.round(n/d*100):0,bar=r=>`<span class="sd-bar"><i style="width:${r}%"></i></span>`;
   const chips=(id,list)=>`<div class="sd-names">${list.slice().reverse().map(k=>{const on=isOn(k,id);return `<span class="sd-nm${on?" on":""}" title="${on?"출석":"결석"}">${on?"●":"○"} ${Number(k.slice(5,7))}/${Number(k.slice(8))}</span>`}).join("")}</div>`;
   const cols=U==="day"?[]:periodCols(U,Y).filter(c=>!c.sum).map(c=>({...c,ks:U==="year"?c.ks:c.ks.filter(k=>k<=S.date)})).filter(c=>c.ks.length).reverse();
@@ -2116,10 +2107,10 @@ function renderPersonPeriods(rows,ks){
     return cols.map(c=>{const n=c.ks.filter(k=>isOn(k,p.id)).length,id="u:"+p.id+":"+U+":"+c.l;
       return `<details class="sd day" data-sk="${id}" ${open.has(id)?"open":""}><summary><span class="sd-l">${c.l}</span>${bar(pct(n,c.ks.length))}<span class="sd-v num"><b>${n}/${c.ks.length}</b><small>${pct(n,c.ks.length)}%</small></span></summary><div class="sd-in">${chips(p.id,c.ks)}</div></details>`}).join("")||`<p class="muted">기록이 없어요.</p>`};
   const list=rows.map(r=>{const id="u:"+r.p.id;
-    return `<details class="sd" data-sk="${id}" ${open.has(id)?"open":""}><summary><span class="sd-l">${esc(r.p.name)}<small>${esc(GL[r.p.group]||"")}</small></span>${bar(pct(r.n,ks.length))}<span class="sd-v num"><b>${r.n}/${ks.length}</b><small>${pct(r.n,ks.length)}%${talentOn()&&r.p.group!=="T"?` · 달란트 ${r.t}`:""}</small></span></summary><div class="sd-in">${body(r.p)}<button class="btn" data-open="${r.p.id}" style="align-self:flex-start;font-size:12px;padding:4px 10px">정보 보기</button></div></details>`}).join("");
+    return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${esc(r.p.name)}<small>${esc(GL[r.p.group]||"")}</small></span>${bar(pct(r.n,ks.length))}<span class="sd-v num"><b>${r.n}/${ks.length}</b><small>${pct(r.n,ks.length)}%${talentOn()&&r.p.group!=="T"?` · 달란트 ${r.t}`:""}</small></span></summary><div class="sd-in">${body(r.p)}</div></details>`}).join("");
   const ul=(STAT_UNITS.find(u=>u[0]===U)||["",""])[1];
   return `<h2 class="sec">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>
-    <p class="muted" style="font-size:12px;margin:-4px 0 8px">이름을 누르면 ${U==="day"?"주일마다 출석(●)·결석(○)이":ul+" 출석이, 기간을 누르면 주일마다 출석(●)·결석(○)이"} 펼쳐져요 · 단위는 위 [기간별 출석]에서 골라요</p>
+    <p class="muted" style="font-size:12px;margin:-4px 0 8px">${U==="day"?"사람마다 주일별 출석(●)·결석(○)이":"사람마다 "+ul+" 출석이 펼쳐져 있고, 기간을 누르면 주일마다 출석(●)·결석(○)이"} 보여요 · 이름을 누르면 접혀요 · 단위는 위 [기간별 출석]에서 골라요</p>
     <div class="sd-list">${list||`<div class="empty">사람이 없어요.</div>`}</div>`;
 }
 /* 누적 화면의 기간 목록: 기간(월·분기·반기·연)을 펼치면 주일별, 주일을 펼치면 반별 출석·결석 명단 */
@@ -3161,7 +3152,9 @@ function openPerson(id){
 
 /* ---------- events ---------- */
 document.addEventListener("change",e=>{const c=e.target.closest&&e.target.closest("[data-bgcustom]");if(c)setBg(c.value);const d=e.target.closest&&e.target.closest("[data-dccustom]");if(d&&/^#[0-9a-f]{6}$/i.test(d.value))setDeptColor(d.value)});
-document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.dataset&&d.dataset.sk){const o=S.statOpen||(S.statOpen=new Set());if(d.open)o.add(d.dataset.sk);else o.delete(d.dataset.sk)}},true);
+document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.dataset&&d.dataset.sk){const k=d.dataset.sk;
+  if(d.dataset.dopen){const c=S.statClosed||(S.statClosed=new Set());if(d.open)c.delete(k);else c.add(k);return} /* 처음부터 펼친 칸은 접은 것만 기억 */
+  const o=S.statOpen||(S.statOpen=new Set());if(d.open)o.add(k);else o.delete(k)}},true);
 document.addEventListener("toggle",e=>{const f=e.target;if(f.dataset&&f.dataset.fold)S.fold[f.dataset.fold]=f.open},true);
 document.addEventListener("click",e=>{const ad=e.target.closest("[data-adate]");
 if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
@@ -3422,7 +3415,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018141443';
+  var BUILD = '20261018143428';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
