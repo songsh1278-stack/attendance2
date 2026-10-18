@@ -2104,8 +2104,9 @@ function renderPersonPeriods(rows,ks){
   const cols=U==="day"?[]:periodCols(U,Y).filter(c=>!c.sum).map(c=>({...c,ks:U==="year"?c.ks:c.ks.filter(k=>k<=S.date)})).filter(c=>c.ks.length).reverse();
   const body=p=>{
     if(U==="day")return ks.length?chips(p.id,ks):`<p class="muted">기록이 없어요.</p>`;
-    return cols.map(c=>{const n=c.ks.filter(k=>isOn(k,p.id)).length,id="u:"+p.id+":"+U+":"+c.l;
-      return `<details class="sd day" data-sk="${id}" ${open.has(id)?"open":""}><summary><span class="sd-l">${c.l}</span>${bar(pct(n,c.ks.length))}<span class="sd-v num"><b>${n}/${c.ks.length}</b><small>${pct(n,c.ks.length)}%</small></span></summary><div class="sd-in">${chips(p.id,c.ks)}</div></details>`}).join("")||`<p class="muted">기록이 없어요.</p>`};
+    /* 가장 최근 기간(예: 이번 달)은 처음부터 펼쳐 둬요. 접으면 접힌 채로 기억 */
+    return cols.map((c,i)=>{const n=c.ks.filter(k=>isOn(k,p.id)).length,id="u:"+p.id+":"+U+":"+c.l;
+      return `<details class="sd day" data-sk="${id}" ${i===0?`data-dopen="1" ${closed.has(id)?"":"open"}`:open.has(id)?"open":""}><summary><span class="sd-l">${c.l}</span>${bar(pct(n,c.ks.length))}<span class="sd-v num"><b>${n}/${c.ks.length}</b><small>${pct(n,c.ks.length)}%</small></span></summary><div class="sd-in">${chips(p.id,c.ks)}</div></details>`}).join("")||`<p class="muted">기록이 없어요.</p>`};
   const list=rows.map(r=>{const id="u:"+r.p.id;
     return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${esc(r.p.name)}<small>${esc(GL[r.p.group]||"")}</small></span><span style="flex:1"></span><span class="sd-v num"><b>${r.n}/${ks.length}</b><small>${pct(r.n,ks.length)}%${talentOn()&&r.p.group!=="T"?` · 달란트 ${r.t}`:""}</small></span></summary><div class="sd-in">${body(r.p)}</div></details>`}).join("");
   const ul=(STAT_UNITS.find(u=>u[0]===U)||["",""])[1];
@@ -2114,7 +2115,7 @@ function renderPersonPeriods(rows,ks){
     <div class="sd-list">${list||`<div class="empty">사람이 없어요.</div>`}</div>`;
 }
 /* 누적 화면의 기간 목록: 기간(월·분기·반기·연)을 펼치면 주일별, 주일을 펼치면 반별 출석·결석 명단 */
-const STAT_UNITS=[["day","일별"],["month","월별"],["quarter","분기"],["half","반기"],["year","연별"]];
+const STAT_UNITS=[["month","월별"],["quarter","분기"],["half","반기"],["year","연별"]];
 const statUnit=()=>STAT_UNITS.some(u=>u[0]===S.statUnit)?S.statUnit:"month";
 const dayLabel=k=>Number(k.slice(5,7))+"월 "+Number(k.slice(8))+"일";
 function renderStatPeriods(){
@@ -3415,7 +3416,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018143504';
+  var BUILD = '20261018143659';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
