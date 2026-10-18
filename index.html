@@ -282,14 +282,27 @@ td.r,th.r{text-align:right}
 .savebar .sb-ic.spin{background:none;border:3px solid var(--line);border-top-color:var(--accent);animation:sbspin .8s linear infinite}
 @keyframes sbspin{to{transform:rotate(360deg)}}
 .pstat-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
-.pstat-ctl .seg{margin-top:0;flex:1;min-width:150px}
-.pstat-ctl select{height:36px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:0 8px;font-size:14px}
-.ptab th,.ptab td{padding:6px 8px;white-space:nowrap}
-.ptab .pc{text-align:center;min-width:52px}
-.ptab .pc small,.ptab .pn small{display:block;font-size:11px;font-weight:500}
-.ptab .pc.sum{border-left:2px solid var(--line)}
-.ptab .pn{position:sticky;left:0;z-index:1;background:var(--surface);text-align:left;font-weight:600}
-.ptab .linkish{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer}
+.pstat-ctl .seg{margin-top:0;flex:1;min-width:220px}
+.sd-list{display:flex;flex-direction:column;gap:6px}
+.sd{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.sd>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer}
+.sd>summary::-webkit-details-marker{display:none}
+.sd>summary::before{content:"›";flex:none;color:var(--muted);font-size:18px;line-height:1;transition:transform .15s}
+.sd[open]>summary::before{transform:rotate(90deg)}
+.sd-l{min-width:72px;font-weight:600;display:flex;flex-direction:column}
+.sd-l small,.sd-v small{font-size:11px;font-weight:500;color:var(--muted)}
+.sd-bar{flex:1;height:8px;border-radius:4px;background:var(--sunk);overflow:hidden}
+.sd-bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.sd-v{min-width:88px;text-align:right;display:flex;flex-direction:column}
+.sd-in{padding:0 10px 10px 26px;display:flex;flex-direction:column;gap:6px}
+.sd.day{border-radius:10px;background:var(--ground)}
+.sd.day>summary{padding:8px 10px}
+.sd-g{border-top:1px solid var(--line);padding-top:6px}
+.sd-gh{display:flex;justify-content:space-between;font-size:13px}
+.sd-names{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;align-items:center}
+.sd-nm{border:1px solid var(--line);background:none;border-radius:999px;padding:2px 9px;font-size:12px;color:var(--muted);cursor:pointer}
+.sd-nm.on{border-color:var(--accent);color:var(--ink);font-weight:600}
+.sd-ab{font-size:11px;color:var(--muted);margin:0 2px 0 6px}
 h2.sec{font-family:var(--display);font-weight:400;font-size:19px;margin:22px 0 10px}
 details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
 details.fold>summary h2.sec{margin-bottom:6px}
@@ -1979,8 +1992,8 @@ function renderTalent(){
 }
 function renderStats(){
   const k=S.date;
-  let h=`<div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px"><span class="muted" style="font-size:13px;text-align:right">자료실을 제외한 모든 메뉴의 자료는 여기서 내려받습니다</span><button class="btn" id="xlsExport" style="flex:none">엑셀로 내보내기</button></div><div class="seg"><button data-mode="week" aria-pressed="${S.statMode==="week"}">이번 주일</button><button data-mode="year" aria-pressed="${S.statMode==="year"}">${S.date.slice(0,4)}년 누적</button><button data-mode="period" aria-pressed="${S.statMode==="period"}">기간별</button></div>`;
-  if(S.statMode==="period")return h+renderPeriodStats();
+  let h=`<div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px"><span class="muted" style="font-size:13px;text-align:right">자료실을 제외한 모든 메뉴의 자료는 여기서 내려받습니다</span><button class="btn" id="xlsExport" style="flex:none">엑셀로 내보내기</button></div><div class="seg"><button data-mode="week" aria-pressed="${S.statMode==="week"}">이번 주일</button><button data-mode="year" aria-pressed="${S.statMode==="year"}">${S.date.slice(0,4)}년 누적</button></div>`;
+  if(S.statMode==="period")S.statMode="year";
   if(S.statMode==="week"){
     const rows=GROUPS.map(([g,l])=>{const ps=activePeople(g);const on=ps.filter(p=>isOn(k,p.id)).length;const t=ps.reduce((a,p)=>a+talentOf(k,p.id),0);return {g,l,n:ps.length,on,t}});
     const st=rows.filter(r=>r.g!=="T");const tr=rows.find(r=>r.g==="T")||{on:0,n:0};const sOn=st.reduce((a,r)=>a+r.on,0),sN=st.reduce((a,r)=>a+r.n,0);
@@ -1996,6 +2009,7 @@ function renderStats(){
     const weekly=ks.map(kk=>({kk,n:[...S.people.values()].filter(p=>teamOf(p)===S.team&&p.group!=="T"&&isOn(kk,p.id)).length}));
     const max=Math.max(1,...weekly.map(w=>w.n));
     h+=`<p class="muted" style="font-size:13px;margin:12px 0 0">${S.date.slice(0,4)}년 1월부터 선택한 주일까지, 기록이 있는 주일 ${ks.length}번 기준</p>`;
+    h+=renderStatPeriods();
     if(weekly.length)h+=`<h2 class="sec">주일별 ${TEAMS[S.team].unit} 출석</h2><div class="card" style="overflow-x:auto"><svg viewBox="0 0 ${Math.max(300,weekly.length*22)} 130" style="width:100%;min-width:${Math.min(600,weekly.length*22)}px;height:130px">
       ${weekly.map((w,i)=>{const hh=w.n/max*90;return `<rect x="${i*22+4}" y="${104-hh}" width="14" height="${hh}" rx="3" fill="var(--accent)"/><text x="${i*22+11}" y="${100-hh}" font-size="9" text-anchor="middle" fill="var(--muted)">${w.n}</text><text x="${i*22+11}" y="120" font-size="8" text-anchor="middle" fill="var(--muted)">${Number(w.kk.slice(5,7))}/${Number(w.kk.slice(8))}</text>`}).join("")}</svg></div>`;
     h+=`<h2 class="sec">개인별 누적 ${S.group==="all"?"":"· "+GL[S.group]}</h2><div class="card tablewrap"><table><thead><tr><th>이름</th><th>반</th><th class="r">출석</th>${talentOn()?`<th class="r">달란트</th>`:""}</tr></thead><tbody>
@@ -2003,7 +2017,7 @@ function renderStats(){
   }
   return h;
 }
-/* 기간별 통계: 개인·학년·전체 × 월·분기·반기·연. 기록이 있는 주일만 세고, 사람은 지금 명단(재적) 기준 */
+/* 기간 통계 계산: 일·월·분기·반기·연. 기록이 있는 주일만 세고, 사람은 지금 명단(재적) 기준 */
 const statYears=()=>[...new Set([...(S.allYears||[]),...S.years].map(Number))].filter(Boolean).sort((a,b)=>a-b);
 /** 기간 칸: [{l:이름, ks:그 기간 주일 날짜들, sum:합계칸}] */
 function periodCols(U,Y){
@@ -2011,6 +2025,7 @@ function periodCols(U,Y){
   const keys=[...S.att.keys()].filter(k=>k<=tk).sort();
   let cols;
   if(U==="year")cols=statYears().map(y=>({l:y+"년",ks:keys.filter(k=>k.startsWith(y+"-"))}));
+  else if(U==="day")cols=keys.filter(k=>k.startsWith(Y+"-")&&k<=S.date).map(k=>({l:Number(k.slice(5,7))+"/"+Number(k.slice(8)),ks:[k]}));
   else{const n=U==="month"?12:U==="quarter"?4:2,per=12/n;
     cols=Array.from({length:n},(_,i)=>({l:U==="month"?(i+1)+"월":U==="quarter"?(i+1)+"분기":(i?"하반기":"상반기"),ks:keys.filter(k=>k.startsWith(Y+"-")&&Math.floor((Number(k.slice(5,7))-1)/per)===i)}))}
   cols.push({l:U==="year"?"전체":"합계",ks:[].concat(...cols.map(c=>c.ks)),sum:true});
@@ -2024,10 +2039,10 @@ function periodRows(B){
   const st=activePeople("all").filter(p=>p.group!=="T"),tc=activePeople("T");
   return [[TEAMS[S.team].unit+" 전체",st],["교사",tc],["모두",st.concat(tc)]].map(([l,ps])=>({l,sub:ps.length+"명",ps}));
 }
-/* 기간별 통계를 엑셀로: 개인·학년·전체 세 시트, 지금 고른 연도·단위 기준 */
+/* 누적 통계를 엑셀로: 개인·학년·전체 세 시트, 지금 고른 단위 기준 (일별이면 주일마다 한 칸) */
 async function exportPeriodStats(){
   if(!await needXLSX())return;
-  const U=S.statUnit||"month",Y=Number(S.statYear||S.date.slice(0,4)),cols=periodCols(U,Y);
+  const U=statUnit(),Y=Number(S.date.slice(0,4)),cols=periodCols(U,Y);
   const wb=XLSX.utils.book_new();
   [["person","개인"],["grade","학년"],["total","전체"]].forEach(([B,name])=>{
     const rows=periodRows(B),aoa=[];
@@ -2041,36 +2056,36 @@ async function exportPeriodStats(){
     const ws=XLSX.utils.aoa_to_sheet(aoa);ws["!cols"]=aoa[0].map((_,i)=>({wch:i<2?12:B==="person"?7:12}));
     XLSX.utils.book_append_sheet(wb,ws,name);
   });
-  const unitL={month:"월별",quarter:"분기별",half:"반기별",year:"연별"}[U];
+  const unitL={day:"일별",month:"월별",quarter:"분기별",half:"반기별",year:"연별"}[U];
   saveWorkbook(wb,`${TEAMS[S.team].short}_출석통계_${U==="year"?"연도별":Y+"년_"+unitL}.xlsx`);
 }
-function renderPeriodStats(){
-  const U=S.statUnit||"month",B=S.statBy||"grade";
-  const yrs=statYears();
-  const Y=Number(S.statYear||S.date.slice(0,4));
-  const need=U==="year"?yrs:[Y];
-  if(need.some(y=>!S.years.has(y)))setTimeout(()=>ensureYears(need).catch(()=>{}),0);
-  const cols=periodCols(U,Y),cnt=attCount;
-  const shade=r=>`background:color-mix(in srgb,var(--accent) ${Math.round(r*42)}%,transparent)`;
-  const none=`<td class="pc muted">–</td>`;
-  /* 묶음(학년·전체): 출석률 + 주일 평균 인원 */
-  const grpCell=(ids,c)=>{if(!c.ks.length||!ids.length)return none;const n=cnt(ids,c.ks),r=n/(ids.length*c.ks.length);
-    return `<td class="pc num${c.sum?" sum":""}" style="${shade(r)}" title="${c.l}: 주일 ${c.ks.length}번 · 연인원 ${n}명"><b>${Math.round(r*100)}%</b><small>평균 ${(n/c.ks.length).toFixed(1)}명</small></td>`};
-  /* 개인: 출석 횟수 / 주일 수 */
-  const perCell=(id,c)=>{if(!c.ks.length)return none;const n=cnt([id],c.ks),r=n/c.ks.length;
-    return `<td class="pc num${c.sum?" sum":""}" style="${shade(r)}" title="${c.l}: ${n}/${c.ks.length}번 (${Math.round(r*100)}%)"><b>${n}</b><small>/${c.ks.length}</small></td>`};
-  const R=periodRows(B);
-  let rows=R.map(r=>r.person
-    ?`<tr><th class="pn"><button class="linkish" data-open="${r.ps[0].id}">${esc(r.l)}</button><small class="muted">${esc(r.sub)}</small></th>${cols.map(c=>perCell(r.ps[0].id,c)).join("")}</tr>`
-    :`<tr><th class="pn">${esc(r.l)}<small class="muted">${esc(r.sub)}</small></th>${cols.map(c=>grpCell(r.ps.map(p=>p.id),c)).join("")}</tr>`).join("");
-  if(!R.length)rows=`<tr><td colspan="${cols.length+1}" class="muted">사람이 없어요.</td></tr>`;
-  const seg=(attr,cur,list)=>`<div class="seg sm">${list.map(([v,l])=>`<button ${attr}="${v}" aria-pressed="${cur===v}">${l}</button>`).join("")}</div>`;
-  return `<div class="pstat-ctl">
-      ${U==="year"?"":`<select id="stYear" aria-label="연도">${(yrs.includes(Y)?yrs:yrs.concat([Y]).sort()).map(y=>`<option value="${y}" ${y===Y?"selected":""}>${y}년</option>`).join("")}</select>`}
-      ${seg("data-sunit",U,[["month","월"],["quarter","분기"],["half","반기"],["year","연"]])}
-      ${seg("data-sby",B,[["person","개인"],["grade","학년"],["total","전체"]])}<button class="btn" id="pstatXls" style="flex:none">엑셀로 받기</button></div>
-    <p class="muted" style="font-size:12px;margin:8px 0 0">${B==="person"?"칸: 출석 횟수 / 그 기간 주일 수"+(S.group==="all"?"":" · "+esc(GL[S.group]||"")+"만"):"칸: 출석률(%) · 주일 평균 출석 인원"} · 기록이 있는 주일만 세요 · 사람은 지금 명단 기준 · 색이 진할수록 출석이 많아요</p>
-    <div class="card tablewrap" style="padding:0;margin-top:8px"><table class="ptab"><thead><tr><th class="pn">${B==="person"?"이름":B==="grade"?"반":"구분"}</th>${cols.map(c=>`<th class="pc${c.sum?" sum":""}">${c.l}<small class="muted">${c.ks.length?c.ks.length+"주":"기록 없음"}</small></th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>`;
+/* 누적 화면의 기간 목록: 기간(월·분기·반기·연)을 펼치면 주일별, 주일을 펼치면 반별 출석·결석 명단 */
+const STAT_UNITS=[["day","일별"],["month","월별"],["quarter","분기"],["half","반기"],["year","연별"]];
+const statUnit=()=>STAT_UNITS.some(u=>u[0]===S.statUnit)?S.statUnit:"month";
+const dayLabel=k=>Number(k.slice(5,7))+"월 "+Number(k.slice(8))+"일";
+function renderStatPeriods(){
+  const U=statUnit(),Y=Number(S.date.slice(0,4)),open=S.statOpen||(S.statOpen=new Set());
+  if(U==="year"){const yrs=statYears();if(yrs.some(y=>!S.years.has(y)))setTimeout(()=>ensureYears(yrs).catch(()=>{}),0)}
+  const ps=activePeople(S.group),stu=S.group==="T"?ps:ps.filter(p=>p.group!=="T"),tch=S.group==="T"?[]:ps.filter(p=>p.group==="T");
+  const sIds=stu.map(p=>p.id),tIds=tch.map(p=>p.id),unit=S.group==="T"?"교사":TEAMS[S.team].unit;
+  const pct=(n,d)=>d?Math.round(n/d*100):0;
+  const bar=r=>`<span class="sd-bar"><i style="width:${r}%"></i></span>`;
+  /* 주일 한 번: 펼치면 반별로 출석한 사람 / 결석한 사람 */
+  const dayRow=k=>{const a=attOf(k).p||{},on=sIds.filter(id=>a[id]).length,tOn=tIds.filter(id=>a[id]).length,id="d:"+k;
+    const gs=(S.group==="all"?GROUPS.map(g=>g[0]):[S.group]).map(g=>{const gp=ps.filter(p=>p.group===g);if(!gp.length)return "";
+      const y=gp.filter(p=>a[p.id]),n=gp.filter(p=>!a[p.id]);
+      return `<div class="sd-g"><div class="sd-gh"><b>${esc(GL[g]||"")}</b><span class="num">${y.length}/${gp.length}</span></div>
+        <div class="sd-names">${y.map(p=>`<button class="sd-nm on" data-open="${p.id}">${esc(p.name)}</button>`).join("")}${n.length?`<span class="sd-ab">결석</span>${n.map(p=>`<button class="sd-nm" data-open="${p.id}">${esc(p.name)}</button>`).join("")}`:""}</div></div>`}).join("");
+    return `<details class="sd day" data-sk="${id}" ${open.has(id)?"open":""}><summary><span class="sd-l">${dayLabel(k)}</span>${bar(pct(on,sIds.length))}<span class="sd-v num"><b>${on}/${sIds.length}</b><small>${pct(on,sIds.length)}%${tIds.length?` · 교사 ${tOn}/${tIds.length}`:""}</small></span></summary><div class="sd-in">${gs||`<p class="muted">사람이 없어요.</p>`}</div></details>`};
+  let list;
+  if(U==="day")list=yearKeys().slice().reverse().map(dayRow).join("");
+  else list=periodCols(U,Y).filter(c=>!c.sum).map(c=>({...c,ks:U==="year"?c.ks:c.ks.filter(k=>k<=S.date)})).filter(c=>c.ks.length).reverse().map(c=>{
+    const n=attCount(sIds,c.ks),tn=attCount(tIds,c.ks),w=c.ks.length,id="p:"+U+":"+c.l,r=pct(n,sIds.length*w);
+    return `<details class="sd" data-sk="${id}" ${open.has(id)?"open":""}><summary><span class="sd-l">${c.l}<small>주일 ${w}번</small></span>${bar(r)}<span class="sd-v num"><b>${r}%</b><small>평균 ${(n/w).toFixed(1)}명${tIds.length?` · 교사 ${(tn/w).toFixed(1)}명`:""}</small></span></summary><div class="sd-in">${c.ks.slice().reverse().map(dayRow).join("")}</div></details>`}).join("");
+  return `<h2 class="sec">기간별 ${esc(unit)} 출석 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>
+    <div class="pstat-ctl"><div class="seg sm">${STAT_UNITS.map(([v,l])=>`<button data-sunit="${v}" aria-pressed="${U===v}">${l}</button>`).join("")}</div><button class="btn" id="pstatXls" style="flex:none">엑셀로 받기</button></div>
+    <p class="muted" style="font-size:12px;margin:6px 0 8px">${U==="day"?"주일을 누르면 반별 출석·결석 명단이 펼쳐져요":"기간을 누르면 주일별로, 주일을 누르면 반별 출석·결석 명단이 펼쳐져요"} · 출석률은 ${esc(unit)} 기준 · 사람은 지금 명단 기준</p>
+    <div class="sd-list">${list||`<div class="empty">출석 기록이 없어요.</div>`}</div>`;
 }
 function renderBday(){
   const d=parseKey(S.date);const m=d.getMonth()+1,y=d.getFullYear();
@@ -3049,7 +3064,7 @@ function openPerson(id){
 
 /* ---------- events ---------- */
 document.addEventListener("change",e=>{const c=e.target.closest&&e.target.closest("[data-bgcustom]");if(c)setBg(c.value);const d=e.target.closest&&e.target.closest("[data-dccustom]");if(d&&/^#[0-9a-f]{6}$/i.test(d.value))setDeptColor(d.value)});
-document.addEventListener("change",e=>{if(e.target.id==="stYear"){S.statYear=Number(e.target.value);render()}});
+document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.dataset&&d.dataset.sk){const o=S.statOpen||(S.statOpen=new Set());if(d.open)o.add(d.dataset.sk);else o.delete(d.dataset.sk)}},true);
 document.addEventListener("toggle",e=>{const f=e.target;if(f.dataset&&f.dataset.fold)S.fold[f.dataset.fold]=f.open},true);
 document.addEventListener("click",e=>{const ad=e.target.closest("[data-adate]");
 if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
@@ -3147,7 +3162,6 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   if(e.target.closest("#pstatXls"))return exportPeriodStats();
   const md=e.target.closest("[data-mode]");if(md){S.statMode=md.dataset.mode;render();return}
   const su=e.target.closest("[data-sunit]");if(su){S.statUnit=su.dataset.sunit;render();return}
-  const sb=e.target.closest("[data-sby]");if(sb){S.statBy=sb.dataset.sby;render();return}
   if(e.target.closest("#markAll"))return markAll(S.group);
   if(e.target.closest("#addP")){openPerson.edit=true;openPerson(null);openPerson.edit=false}
 });
@@ -3305,7 +3319,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018130256';
+  var BUILD = '20261018133257';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
