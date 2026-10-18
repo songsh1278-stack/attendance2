@@ -1998,6 +1998,8 @@ function periodCols(U,Y){
   const keys=[...S.att.keys()].filter(k=>k<=tk).sort();
   let cols;
   if(U==="year")cols=statYears().map(y=>({l:y+"년",ks:keys.filter(k=>k.startsWith(y+"-"))}));
+  else if(U==="recent"){/* 최근 한 달: 고른 주일부터 30일 전까지 */const e=parseKey(S.date),b=new Date(e);b.setDate(b.getDate()-30);const bk=keyOf(b),ks=keys.filter(k=>k>bk&&k<=S.date);
+    cols=[{l:"최근 한 달",ks}];if(ks.length)cols[0].l=`최근 한 달 (${Number(ks[0].slice(5,7))}/${Number(ks[0].slice(8))}~${Number(ks[ks.length-1].slice(5,7))}/${Number(ks[ks.length-1].slice(8))})`}
   else if(U==="day")cols=keys.filter(k=>k.startsWith(Y+"-")&&k<=S.date).map(k=>({l:Number(k.slice(5,7))+"/"+Number(k.slice(8)),ks:[k]}));
   else{const n=U==="month"?12:U==="quarter"?4:2,per=12/n;
     cols=Array.from({length:n},(_,i)=>({l:U==="month"?(i+1)+"월":U==="quarter"?(i+1)+"분기":(i?"하반기":"상반기"),ks:keys.filter(k=>k.startsWith(Y+"-")&&Math.floor((Number(k.slice(5,7))-1)/per)===i)}))}
@@ -2036,7 +2038,7 @@ async function exportPeriodStats(){
     aoa.push(["출석 인원","",...ks.map(k=>ps.filter(p=>isOn(k,p.id)).length),"",""]);
     const ws=XLSX.utils.aoa_to_sheet(aoa);ws["!cols"]=aoa[0].map((_,i)=>({wch:i<2?10:i>=ks.length+2?9:5}));ws["!freeze"]={xSplit:2,ySplit:1};
     XLSX.utils.book_append_sheet(wb,ws,"개인 일자별");}
-  const unitL={day:"일별",month:"월별",quarter:"분기별",half:"반기별",year:"연별"}[U];
+  const unitL={day:"일별",month:"월별",quarter:"분기별",half:"반기별",year:"연별",recent:"최근한달"}[U];
   saveWorkbook(wb,`${TEAMS[S.team].short}_출석통계_${U==="year"?"연도별":Y+"년_"+unitL}.xlsx`);
 }
 /* 개인별 누적: 사람을 펼치면 달란트와, 고른 단위(월·분기·반기·연)마다 출석 횟수 옆에 주일별 출석(●)·결석(○)이 바로 보여요 */
@@ -2057,8 +2059,8 @@ function renderPersonPeriods(rows,ks){
     <div class="sd-list">${list||`<div class="empty">사람이 없어요.</div>`}</div>`;
 }
 /* 누적 화면의 기간 목록: 기간(월·분기·반기·연)을 펼치면 주일별, 주일을 펼치면 반별 출석·결석 명단 */
-const STAT_UNITS=[["year","연도별"]];
-const statUnit=()=>"year"; /* 기간 단위는 연도별만 남겼어요 */
+const STAT_UNITS=[["year","연도별"],["recent","최근 한 달"]];
+const statUnit=()=>S.statUnit==="recent"?"recent":"year"; /* 기간 단위: 연도별, 최근 한 달 */
 const dayLabel=k=>Number(k.slice(5,7))+"월 "+Number(k.slice(8))+"일";
 function renderStatPeriods(){
   const U=statUnit(),Y=Number(S.date.slice(0,4)),closed=S.statClosed||(S.statClosed=new Set()),open=S.statOpen||(S.statOpen=new Set());
@@ -3362,7 +3364,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018153313';
+  var BUILD = '20261018153614';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
