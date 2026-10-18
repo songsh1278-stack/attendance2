@@ -273,6 +273,15 @@ th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line)}
 th{font-size:12px;color:var(--muted);font-weight:600}
 td.r,th.r{text-align:right}
 .tablewrap{overflow-x:auto}
+.pstat-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.pstat-ctl .seg{margin-top:0;flex:1;min-width:150px}
+.pstat-ctl select{height:36px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:0 8px;font-size:14px}
+.ptab th,.ptab td{padding:6px 8px;white-space:nowrap}
+.ptab .pc{text-align:center;min-width:52px}
+.ptab .pc small,.ptab .pn small{display:block;font-size:11px;font-weight:500}
+.ptab .pc.sum{border-left:2px solid var(--line)}
+.ptab .pn{position:sticky;left:0;z-index:1;background:var(--surface);text-align:left;font-weight:600}
+.ptab .linkish{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer}
 h2.sec{font-family:var(--display);font-weight:400;font-size:19px;margin:22px 0 10px}
 details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
 details.fold>summary h2.sec{margin-bottom:6px}
@@ -1944,7 +1953,8 @@ function renderTalent(){
 }
 function renderStats(){
   const k=S.date;
-  let h=`<div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px"><span class="muted" style="font-size:13px;text-align:right">자료실을 제외한 모든 메뉴의 자료는 여기서 내려받습니다</span><button class="btn" id="xlsExport" style="flex:none">엑셀로 내보내기</button></div><div class="seg"><button data-mode="week" aria-pressed="${S.statMode==="week"}">이번 주일</button><button data-mode="year" aria-pressed="${S.statMode==="year"}">${S.date.slice(0,4)}년 누적</button></div>`;
+  let h=`<div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px"><span class="muted" style="font-size:13px;text-align:right">자료실을 제외한 모든 메뉴의 자료는 여기서 내려받습니다</span><button class="btn" id="xlsExport" style="flex:none">엑셀로 내보내기</button></div><div class="seg"><button data-mode="week" aria-pressed="${S.statMode==="week"}">이번 주일</button><button data-mode="year" aria-pressed="${S.statMode==="year"}">${S.date.slice(0,4)}년 누적</button><button data-mode="period" aria-pressed="${S.statMode==="period"}">기간별</button></div>`;
+  if(S.statMode==="period")return h+renderPeriodStats();
   if(S.statMode==="week"){
     const rows=GROUPS.map(([g,l])=>{const ps=activePeople(g);const on=ps.filter(p=>isOn(k,p.id)).length;const t=ps.reduce((a,p)=>a+talentOf(k,p.id),0);return {g,l,n:ps.length,on,t}});
     const st=rows.filter(r=>r.g!=="T");const tr=rows.find(r=>r.g==="T")||{on:0,n:0};const sOn=st.reduce((a,r)=>a+r.on,0),sN=st.reduce((a,r)=>a+r.n,0);
@@ -1966,6 +1976,49 @@ function renderStats(){
     ${ps.map(r=>`<tr><td>${esc(r.p.name)}</td><td class="muted">${GL[r.p.group]}</td><td class="r num">${r.n}</td>${talentOn()?`<td class="r num">${r.p.group==="T"?"-":r.t}</td>`:""}</tr>`).join("")}</tbody></table></div>`;
   }
   return h;
+}
+/* 기간별 통계: 개인·학년·전체 × 월·분기·반기·연. 기록이 있는 주일만 세고, 사람은 지금 명단(재적) 기준 */
+function renderPeriodStats(){
+  const U=S.statUnit||"month",B=S.statBy||"grade";
+  const td=new Date(),tk=td.getFullYear()+"-"+String(td.getMonth()+1).padStart(2,"0")+"-"+String(td.getDate()).padStart(2,"0");
+  const yrs=[...new Set([...(S.allYears||[]),...S.years].map(Number))].filter(Boolean).sort((a,b)=>a-b);
+  const Y=Number(S.statYear||S.date.slice(0,4));
+  const need=U==="year"?yrs:[Y];
+  if(need.some(y=>!S.years.has(y)))setTimeout(()=>ensureYears(need).catch(()=>{}),0);
+  const keys=[...S.att.keys()].filter(k=>k<=tk).sort();
+  let cols;
+  if(U==="year")cols=yrs.map(y=>({l:y+"년",ks:keys.filter(k=>k.startsWith(y+"-"))}));
+  else{const n=U==="month"?12:U==="quarter"?4:2,per=12/n;
+    cols=Array.from({length:n},(_,i)=>({l:U==="month"?(i+1)+"월":U==="quarter"?(i+1)+"분기":(i?"하반기":"상반기"),ks:keys.filter(k=>k.startsWith(Y+"-")&&Math.floor((Number(k.slice(5,7))-1)/per)===i)}))}
+  const allKs=[].concat(...cols.map(c=>c.ks));cols.push({l:U==="year"?"전체":"합계",ks:allKs,sum:true});
+  const cnt=(ids,ks)=>ks.reduce((s,k)=>{const a=attOf(k).p||{};return s+ids.filter(id=>a[id]).length},0);
+  const shade=r=>`background:color-mix(in srgb,var(--accent) ${Math.round(r*42)}%,transparent)`;
+  const none=`<td class="pc muted">–</td>`;
+  /* 묶음(학년·전체): 출석률 + 주일 평균 인원 */
+  const grpCell=(ids,c)=>{if(!c.ks.length||!ids.length)return none;const n=cnt(ids,c.ks),r=n/(ids.length*c.ks.length);
+    return `<td class="pc num${c.sum?" sum":""}" style="${shade(r)}" title="${c.l}: 주일 ${c.ks.length}번 · 연인원 ${n}명"><b>${Math.round(r*100)}%</b><small>평균 ${(n/c.ks.length).toFixed(1)}명</small></td>`};
+  /* 개인: 출석 횟수 / 주일 수 */
+  const perCell=(id,c)=>{if(!c.ks.length)return none;const n=cnt([id],c.ks),r=n/c.ks.length;
+    return `<td class="pc num${c.sum?" sum":""}" style="${shade(r)}" title="${c.l}: ${n}/${c.ks.length}번 (${Math.round(r*100)}%)"><b>${n}</b><small>/${c.ks.length}</small></td>`};
+  const ids=ps=>ps.map(p=>p.id);
+  let rows="";
+  if(B==="person"){
+    const ps=activePeople(S.group);
+    rows=ps.map(p=>`<tr><th class="pn"><button class="linkish" data-open="${p.id}">${esc(p.name)}</button><small class="muted">${esc(GL[p.group]||"")}</small></th>${cols.map(c=>perCell(p.id,c)).join("")}</tr>`).join("");
+    if(!ps.length)rows=`<tr><td colspan="${cols.length+1}" class="muted">사람이 없어요.</td></tr>`;
+  }else if(B==="grade"){
+    rows=GROUPS.map(([g,l])=>{const ps=activePeople(g);return `<tr><th class="pn">${esc(l)}<small class="muted">${ps.length}명</small></th>${cols.map(c=>grpCell(ids(ps),c)).join("")}</tr>`}).join("");
+  }else{
+    const st=activePeople("all").filter(p=>p.group!=="T"),tc=activePeople("T");
+    rows=[[TEAMS[S.team].unit+" 전체",st],["교사",tc],["모두",st.concat(tc)]].map(([l,ps])=>`<tr><th class="pn">${esc(l)}<small class="muted">${ps.length}명</small></th>${cols.map(c=>grpCell(ids(ps),c)).join("")}</tr>`).join("");
+  }
+  const seg=(attr,cur,list)=>`<div class="seg sm">${list.map(([v,l])=>`<button ${attr}="${v}" aria-pressed="${cur===v}">${l}</button>`).join("")}</div>`;
+  return `<div class="pstat-ctl">
+      ${U==="year"?"":`<select id="stYear" aria-label="연도">${(yrs.includes(Y)?yrs:yrs.concat([Y]).sort()).map(y=>`<option value="${y}" ${y===Y?"selected":""}>${y}년</option>`).join("")}</select>`}
+      ${seg("data-sunit",U,[["month","월"],["quarter","분기"],["half","반기"],["year","연"]])}
+      ${seg("data-sby",B,[["person","개인"],["grade","학년"],["total","전체"]])}</div>
+    <p class="muted" style="font-size:12px;margin:8px 0 0">${B==="person"?"칸: 출석 횟수 / 그 기간 주일 수"+(S.group==="all"?"":" · "+esc(GL[S.group]||"")+"만"):"칸: 출석률(%) · 주일 평균 출석 인원"} · 기록이 있는 주일만 세요 · 사람은 지금 명단 기준 · 색이 진할수록 출석이 많아요</p>
+    <div class="card tablewrap" style="padding:0;margin-top:8px"><table class="ptab"><thead><tr><th class="pn">${B==="person"?"이름":B==="grade"?"반":"구분"}</th>${cols.map(c=>`<th class="pc${c.sum?" sum":""}">${c.l}<small class="muted">${c.ks.length?c.ks.length+"주":"기록 없음"}</small></th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 function renderBday(){
   const d=parseKey(S.date);const m=d.getMonth()+1,y=d.getFullYear();
@@ -2944,6 +2997,7 @@ function openPerson(id){
 
 /* ---------- events ---------- */
 document.addEventListener("change",e=>{const c=e.target.closest&&e.target.closest("[data-bgcustom]");if(c)setBg(c.value);const d=e.target.closest&&e.target.closest("[data-dccustom]");if(d&&/^#[0-9a-f]{6}$/i.test(d.value))setDeptColor(d.value)});
+document.addEventListener("change",e=>{if(e.target.id==="stYear"){S.statYear=Number(e.target.value);render()}});
 document.addEventListener("toggle",e=>{const f=e.target;if(f.dataset&&f.dataset.fold)S.fold[f.dataset.fold]=f.open},true);
 document.addEventListener("click",e=>{const ad=e.target.closest("[data-adate]");
 if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
@@ -3038,6 +3092,8 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const g=e.target.closest("[data-g]");if(g&&g.closest("#chips")&&chipDouble(g.dataset.g)&&canRenameClass(g.dataset.g)){openClassRename(S.team,g.dataset.g);return}if(g){S.group=g.dataset.g;try{localStorage.setItem("ya-group",S.group)}catch(_){}render();return}
   const tab=e.target.closest("[data-tab]");if(tab){if(tab.dataset.tab!==S.tab)navPush();S.tab=tab.dataset.tab;render();window.scrollTo(0,0);return}
   const md=e.target.closest("[data-mode]");if(md){S.statMode=md.dataset.mode;render();return}
+  const su=e.target.closest("[data-sunit]");if(su){S.statUnit=su.dataset.sunit;render();return}
+  const sb=e.target.closest("[data-sby]");if(sb){S.statBy=sb.dataset.sby;render();return}
   if(e.target.closest("#markAll"))return markAll(S.group);
   if(e.target.closest("#addP")){openPerson.edit=true;openPerson(null);openPerson.edit=false}
 });
@@ -3195,7 +3251,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018124830';
+  var BUILD = '20261018125303';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
