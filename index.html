@@ -1303,183 +1303,6 @@ async function loadEvents(){
 }
 /* 일정 → 자료실 순서로 하나씩 미리 불러와요 (서버에 요청이 한꺼번에 몰리지 않게) */
 function preloadSched(){return loadEvents().then(()=>loadLib()).catch(()=>{})}
-/* ---- 사진 한꺼번에 올리기: 신상명세서 엑셀(이름 줄에 붙은 사진) 또는 이름으로 된 사진 파일 ---- */
-const nmKey=s=>String(s||"").split("\n")[0].replace(/[(（].*$/,"").replace(/\s/g,"");
-const IMG_MIME={png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",gif:"image/gif",bmp:"image/bmp",webp:"image/webp"};
-/** 엑셀 파일 속 그림을 꺼내, 그림이 놓인 줄의 이름·학년과 묶는다 */
-function xlsxPhotos(buf){
-  const u8=new Uint8Array(buf),cfb=XLSX.CFB.read(u8,{type:"array"}),F={},td=new TextDecoder();
-  cfb.FullPaths.forEach((p,i)=>{const e=cfb.FileIndex[i];if(e&&e.content&&e.content.length)F[p.slice(p.indexOf("/")+1)]=e.content});
-  const txt=p=>F[p]?td.decode(F[p]):"";
-  const res=(dir,t)=>{if(t[0]==="/")return t.slice(1);const a=dir.split("/").filter(Boolean);t.split("/").forEach(s=>{if(s==="..")a.pop();else if(s&&s!==".")a.push(s)});return a.join("/")};
-  const rels=p=>{const i=p.lastIndexOf("/"),dir=p.slice(0,i),o={};
-    for(const m of txt(dir+"/_rels/"+p.slice(i+1)+".rels").matchAll(/<Relationship\b[^>]*>/g)){const id=(m[0].match(/Id="([^"]+)"/)||[])[1],tg=(m[0].match(/Target="([^"]+)"/)||[])[1];if(id&&tg)o[id]=res(dir,tg)}return o};
-  const wb=XLSX.read(u8,{type:"array"}),wr=rels("xl/workbook.xml"),out=[];
-  [...txt("xl/workbook.xml").matchAll(/<sheet\b[^>]*>/g)].forEach((m,si)=>{
-    const ws=wb.Sheets[wb.SheetNames[si]],path=wr[(m[0].match(/r:id="([^"]+)"/)||[])[1]];if(!ws||!path)return;
-    const cell=(r,c)=>{const x=ws[XLSX.utils.encode_cell({r,c})];return x?String(x.w!=null?x.w:x.v):""};
-    let nc=-1,gc=-1;for(let r=0;r<10&&nc<0;r++)for(let c=0;c<30;c++){const k=cell(r,c).replace(/\s/g,"");if(k==="이름"||k==="성명")nc=c;else if(k==="학년"||k==="반")gc=c}
-    if(nc<0)return;
-    Object.values(rels(path)).filter(d=>d.indexOf("drawings/")>=0).forEach(d=>{
-      const dr=rels(d);
-      for(const a of txt(d).matchAll(/<xdr:(twoCellAnchor|oneCellAnchor)\b[\s\S]*?<\/xdr:(twoCellAnchor|oneCellAnchor)>/g)){
-        const blk=t=>(a[0].match(new RegExp("<xdr:"+t+">([\\s\\S]*?)</xdr:"+t+">"))||[])[1]||"";
-        const num=(s,t)=>Number((s.match(new RegExp("<xdr:"+t+">(-?\\d+)<"))||[])[1]||0);
-        const fr=blk("from"),to=blk("to"),img=dr[(a[0].match(/r:embed="([^"]+)"/)||[])[1]];if(!fr||!img||!F[img])continue;
-        /* 그림이 다음 줄로 넘어가 있으면 더 많이 걸친 줄로 */
-        const r0=num(fr,"row"),r1=to?num(to,"row"):r0,row=r1>r0&&num(fr,"rowOff")>num(to,"rowOff")?r1:r0;
-        const ext=img.split(".").pop().toLowerCase();if(!IMG_MIME[ext])continue;
-        const name=nmKey(cell(row,nc));if(!name)continue;
-        out.push({name,grade:gc>=0?cell(row,gc).replace(/\s/g,""):"",blob:new Blob([F[img]],{type:IMG_MIME[ext]}),src:(row+1)+"행"});
-      }
-    });
-  });
-  return out;
-}
-async function photosFromFiles(files){
-  let out=[];
-  for(const f of files){
-    if(/[.]xlsx$/i.test(f.name)){if(!await needXLSX())return null;try{out=out.concat(xlsxPhotos(await f.arrayBuffer()))}catch(e){alertBox("엑셀에서 사진을 꺼내지 못했어요",f.name+": "+e.message)}continue}
-    if(String(f.type).indexOf("image")!==0)continue;
-    const base=f.name.replace(/[.][^.]+$/,""),g=(base.match(/[중고]\s*[1-3]/)||[""])[0].replace(/\s/g,"");
-    out.push({name:nmKey(base.replace(/[중고]\s*[1-3]/,"").replace(/[_\-.0-9]/g," ")),grade:g,blob:f,src:f.name});
-  }
-  return out;
-}
-function uploadPhotos(){
-  const ov=document.createElement("div");ov.className="overlay";let items=[];
-  const mine=[...S.people.values()].filter(p=>teamOf(p)===S.team&&p.active!==false&&(!isHomeroom()||(p.group!=="T"&&myScope().grades.includes(p.group))));
-  const gl=p=>String(GL[p.group]||"").replace(/\s/g,"");
-  const match=x=>{let c=mine.filter(p=>nmKey(p.name)===x.name);if(c.length>1&&x.grade)c=c.filter(p=>gl(p)===x.grade);return c.length===1?c[0]:c.length?"many":null};
-  const draw=()=>{
-    const ok=items.filter(x=>x.p&&x.p!=="many");
-    ov.innerHTML=`<div class="sheet" role="dialog" aria-label="사진 한꺼번에 올리기"><h3>${esc(TEAMS[S.team].label)} 사진 한꺼번에 올리기</h3>
-      <div id="phZone" class="drop-zone" style="padding:14px;text-align:center;border-color:var(--line)">
-        <p style="margin:0 0 8px;font-size:14px">학생 신상명세서 엑셀(.xlsx)이나, 파일 이름이 학생 이름인 사진(예: <b>고2_김서연.jpg</b>)을 끌어다 놓거나 골라 주세요.</p>
-        <label class="btn" for="f-phs" style="display:inline-flex;color:var(--ink)">파일 고르기</label><input type="file" id="f-phs" multiple accept=".xlsx,image/*" hidden></div>
-      ${items.length?`<p style="margin:10px 0 4px;font-size:14px">사진 <b>${items.length}장</b> · 명단과 맞은 사람 <b>${ok.length}명</b>${items.length>ok.length?` · 못 맞춘 사진 <b>${items.length-ok.length}장</b>`:""}</p>
-      <div class="card" style="padding:4px 12px;max-height:46vh;overflow:auto">${items.map((x,i)=>`<label class="file-row" style="cursor:${x.p&&x.p!=="many"?"pointer":"default"}"><input type="checkbox" data-phi="${i}" ${x.on?"checked":""} ${x.p&&x.p!=="many"?"":"disabled"}><img class="avatar" src="${x.url}" alt=""><span class="nm"><b>${esc(x.name)}</b>${x.grade?" · "+esc(x.grade):""} <span class="muted" style="font-size:12px">${esc(x.src)}</span><br><span style="font-size:12px;${x.p&&x.p!=="many"?"":"color:var(--danger)"}">${x.p==="many"?"같은 이름이 여러 명이라 고를 수 없어요":!x.p?"명단에 없는 이름이에요":"→ "+esc(x.p.name)+" ("+esc(GL[x.p.group]||"")+")"+(x.grade&&gl(x.p)!==x.grade?" · 학년이 명단과 달라요":"")+(photoOf(x.p)?" · 지금 사진을 바꿔요":"")}</span></span></label>`).join("")}</div>`:""}
-      <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>닫기</button>${items.length?`<button type="button" class="btn primary" id="phSave" ${items.some(x=>x.on)?"":"disabled"}>선택한 ${items.filter(x=>x.on).length}명 사진 저장</button>`:""}</div></div>`;
-  };
-  const add=async files=>{const got=await photosFromFiles(files);if(!got)return;if(!got.length){toast("올릴 수 있는 사진을 찾지 못했어요");return}
-    got.forEach(x=>{x.p=match(x);x.on=!!(x.p&&x.p!=="many");x.url=URL.createObjectURL(x.blob)});
-    /* 한 사람에게 사진이 여러 장이면 처음 것만 */
-    const seen=new Set();got.forEach(x=>{if(x.on){if(seen.has(x.p.id))x.on=false;else seen.add(x.p.id)}});
-    items=items.concat(got);draw()};
-  const close=()=>{items.forEach(x=>URL.revokeObjectURL(x.url));ov.remove()};
-  draw();document.body.appendChild(ov);
-  let dn=0;
-  ov.addEventListener("dragenter",e=>{if(!dragHasFile(e))return;e.preventDefault();dn++;const z=ov.querySelector("#phZone");if(z)z.classList.add("drop")});
-  ov.addEventListener("dragover",e=>{if(!dragHasFile(e))return;e.preventDefault();e.dataTransfer.dropEffect="copy"});
-  ov.addEventListener("dragleave",()=>{if(dn&&!--dn){const z=ov.querySelector("#phZone");if(z)z.classList.remove("drop")}});
-  ov.addEventListener("drop",e=>{if(!dragHasFile(e))return;e.preventDefault();dn=0;add([...e.dataTransfer.files])});
-  ov.addEventListener("change",e=>{if(e.target.id==="f-phs"){const fs=[...e.target.files];e.target.value="";if(fs.length)add(fs);return}
-    const c=e.target.closest("[data-phi]");if(c){items[+c.dataset.phi].on=c.checked;draw()}});
-  ov.addEventListener("click",async e=>{
-    if(e.target===ov||e.target.closest("[data-close]"))return close();
-    const sv=e.target.closest("#phSave");if(!sv)return;sv.disabled=true;sv.textContent="저장하는 중…";
-    let n=0,bad=[];
-    for(const x of items.filter(x=>x.on)){
-      let d="";try{d=await resizeImage(x.blob)}catch(_){bad.push(x.name);continue}
-      const id=x.p.id;S.photos.set(id,[-1,d]);n++;
-      if(S.db)enqueue("people/"+id,()=>S.db.doc("people/"+id).update({photo:d}));
-    }
-    close();render();toast(`${n}명 사진을 저장했어요`);
-    if(bad.length)alertBox("열 수 없는 사진이 있어요",bad.join(", ")+" 사진은 열지 못해 건너뛰었어요.");
-  });
-}
-/* ---- 예전 출석부 엑셀 올리기: 반마다 시트(시트 이름 앞 숫자 = 반, '교사'가 들어가면 교사), 월·일 머리줄 아래에 사람 줄(출석 체크)과 달란트 줄 ---- */
-const oldNm=s=>String(s==null?"":s).split("\n")[0].replace(/[(（].*$/,"").replace(/\s/g,"");
-/** 시트들을 읽어 [{sheet, group, rows:[{name, att:{날짜:true/false}, tal:{날짜:수}}]}] 와 날짜 목록을 돌려준다 */
-function parseOldAttBook(wb,year,team){
-  const out=[],dates=new Set(),cls=classesOf(team);let moved=0;
-  /* 작년 달력을 그대로 쓴 칸(예: 10/5·10/12)은 가장 가까운 주일로 맞춘다 */
-  const sunKey=(m,d)=>{const x=new Date(year,m-1,d);if(x.getMonth()!==m-1)return "";const w=x.getDay();if(w){x.setDate(x.getDate()+(w<=3?-w:7-w));moved++}
-    return x.getFullYear()===year?x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0"):""};
-  wb.SheetNames.forEach(sn=>{
-    const ws=wb.Sheets[sn];if(!ws||!ws["!ref"])return;
-    const R=XLSX.utils.decode_range(ws["!ref"]);
-    const v=(r,c)=>{const x=ws[XLSX.utils.encode_cell({r,c})];return x?x.v:undefined};
-    const txt=(r,c)=>String(v(r,c)==null?"":v(r,c)).replace(/\s/g,"");
-    /* 머리줄: 앞쪽 칸에 '월'이 있는 줄, 바로 아래 '일'이 있는 줄 */
-    let mr=-1,lc=-1;
-    for(let r=0;r<=Math.min(R.e.r,12)&&mr<0;r++)for(let c=0;c<8;c++)if(txt(r,c)==="월"&&txt(r+1,c)==="일"){mr=r;lc=c;break}
-    if(mr<0)return;
-    const cols=[];let m=0;
-    for(let c=lc+1;c<=R.e.c;c++){const mv=v(mr,c);if(typeof mv==="number"&&mv>=1&&mv<=12)m=mv;const d=v(mr+1,c);
-      if(m&&typeof d==="number"&&d>=1&&d<=31){const k=sunKey(m,d);if(k)cols.push([c,k])}}
-    if(!cols.length)return;
-    const isT=sn.indexOf("교사")>=0,num=(sn.match(/^\s*(\d+)/)||[])[1];
-    const group=isT?"T":num?(cls.some(([k])=>k===num)?num:((cls[Number(num)-1]||[])[0]||"")):"";
-    const rows=[];
-    for(let r=mr+2;r<=R.e.r;r++){
-      const marks=cols.filter(([c])=>typeof v(r,c)==="boolean");if(!marks.length)continue;
-      let name="";for(let c=0;c<=lc;c++){const x=v(r,c);if(typeof x==="string"&&oldNm(x)&&!/^\d/.test(x)){name=oldNm(x);break}}
-      if(!name)continue;
-      const att={},tal={};cols.forEach(([c,k])=>{if(typeof v(r,c)==="boolean")att[k]=v(r,c)});
-      /* 바로 아래 줄이 달란트 줄이면 그 주일 달란트 */
-      let hasT=false;for(let c=0;c<=lc;c++)if(txt(r+1,c)==="달란트")hasT=true;
-      if(hasT)cols.forEach(([c,k])=>{const t=v(r+1,c);if(typeof t==="number"&&t>0)tal[k]=t});
-      rows.push({name,att,tal});
-    }
-    if(rows.length)out.push({sheet:sn,group,rows});
-  });
-  /* 아무도 출석하지 않은 날짜(아직 안 쓴 칸)와 오늘 뒤 날짜는 뺀다 */
-  const td=new Date(),tk=td.getFullYear()+"-"+String(td.getMonth()+1).padStart(2,"0")+"-"+String(td.getDate()).padStart(2,"0");
-  out.forEach(s=>s.rows.forEach(r=>Object.keys(r.att).forEach(k=>{if(r.att[k]&&k<=tk)dates.add(k)})));
-  return {sheets:out,dates:[...dates].sort(),moved};
-}
-function uploadOldAtt(){
-  if(!canManageGrades()){toast("팀 관리자만 올릴 수 있어요");return}
-  loadXLSX().catch(()=>{});
-  const inp=document.createElement("input");inp.type="file";inp.accept=".xlsx,.xls";
-  inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;if(!await needXLSX())return;
-    const year=Number((f.name.match(/20\d\d/)||[])[0]||S.date.slice(0,4));
-    let P;try{P=parseOldAttBook(XLSX.read(await f.arrayBuffer(),{type:"array"}),year,S.team)}catch(e){alertBox("파일을 읽지 못했어요",e.message);return}
-    if(!P.dates.length){alertBox("올릴 출석 기록이 없어요","반마다 시트가 있고, '월'·'일' 머리줄 아래에 이름과 출석 체크가 있는 출석부 파일인지 확인해 주세요.");return}
-    /* 명단과 맞추기: 같은 반의 같은 이름 → 없으면 부서 안에서 이름이 하나뿐인 사람 */
-    const mine=[...S.people.values()].filter(p=>teamOf(p)===S.team);
-    const ok=[],miss=[];
-    P.sheets.forEach(sh=>sh.rows.forEach(r=>{
-      let c=mine.filter(p=>oldNm(p.name)===r.name&&(sh.group==="T"?p.group==="T":p.group!=="T"));
-      if(c.length>1&&sh.group)c=c.filter(p=>p.group===sh.group);
-      if(c.length===1)ok.push({p:c[0],r,sheet:sh.sheet});else miss.push({r,sheet:sh.sheet,why:c.length?"같은 이름이 여러 명":"명단에 없음"});
-    }));
-    const ov=document.createElement("div");ov.className="overlay";let mode="add";
-    const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="예전 출석부 올리기"><h3>${esc(TEAMS[S.team].label)} 예전 출석부 올리기</h3>
-      <p style="margin:6px 0 0;font-size:15px"><b>${esc(f.name)}</b> · ${year}년 주일 <b>${P.dates.length}번</b> (${Number(P.dates[0].slice(5,7))}/${Number(P.dates[0].slice(8))} ~ ${Number(P.dates[P.dates.length-1].slice(5,7))}/${Number(P.dates[P.dates.length-1].slice(8))})</p>
-      ${P.moved?`<p class="muted" style="margin:4px 0 0;font-size:12px">일요일이 아닌 날짜 칸 ${P.moved}개(작년 달력)는 가장 가까운 주일로 맞췄어요.</p>`:""}
-      <p style="margin:4px 0 0;font-size:14px">명단과 맞은 사람 <b>${ok.length}명</b>${miss.length?` · 못 맞춘 사람 <b style="color:var(--danger)">${miss.length}명</b>`:""}</p>
-      ${miss.length?`<div class="card" style="margin-top:8px;max-height:22vh;overflow:auto;font-size:13px">${miss.map(x=>`<div>${esc(x.r.name)} <span class="muted">(${esc(x.sheet)} · ${x.why})</span></div>`).join("")}<p class="muted" style="margin:6px 0 0;font-size:12px">이 사람들은 건너뛰어요. 명단에 먼저 넣거나 이름을 맞춘 뒤 다시 올리면 돼요.</p></div>`:""}
-      <div class="form" style="margin-top:10px"><label class="inline full"><input type="radio" name="om" value="add" ${mode==="add"?"checked":""}> <span><b>더하기</b> (추천) — 엑셀에서 출석한 날과 받은 달란트만 넣어요. 앱에 이미 있는 출석은 지우지 않아요.</span></label>
-      <label class="inline full"><input type="radio" name="om" value="over" ${mode==="over"?"checked":""}> <span><b>덮어쓰기</b> — 엑셀의 출석·결석·달란트로 그 날짜들을 바꿔요. 앱에서 체크한 내용이 엑셀과 다르면 엑셀 쪽으로 바뀌어요.</span></label></div>
-      <p class="err" id="oaErr" hidden></p><p class="muted" id="oaProg" style="font-size:13px;margin:6px 0 0"></p>
-      <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" id="oaGo" ${ok.length?"":"disabled"}>${ok.length}명 출석 기록 올리기</button></div></div>`};
-    draw();document.body.appendChild(ov);let busy=false;
-    ov.addEventListener("change",e=>{if(e.target.name==="om")mode=e.target.value});
-    ov.addEventListener("click",async e=>{
-      if(!busy&&(e.target===ov||e.target.closest("[data-close]")))return ov.remove();
-      if(!e.target.closest("#oaGo")||busy)return;busy=true;
-      const go=ov.querySelector("#oaGo"),prog=ov.querySelector("#oaProg");go.disabled=true;ov.querySelector("[data-close]").disabled=true;
-      let done=0,fail=[];
-      for(const k of P.dates){
-        const body={p:{},t:{}};
-        ok.forEach(({p,r})=>{const a=r.att[k];if(a===undefined)return;
-          if(a)body.p[p.id]=1;else if(mode==="over")body.p[p.id]=0;
-          if(p.group!=="T"){const t=r.tal[k];if(t)body.t[p.id]=t;else if(mode==="over")body.t[p.id]=0}});
-        if(!Object.keys(body.t).length)delete body.t;
-        if(!Object.keys(body.p).length&&!body.t){done++;continue}
-        prog.textContent=`올리는 중… ${Number(k.slice(5,7))}월 ${Number(k.slice(8))}일 (${done+1}/${P.dates.length})`;
-        try{await tracked(call("write","update","att/"+k,body))}catch(x){fail.push(k+" "+x.message);if(!x.net)break}
-        done++;
-      }
-      ov.remove();await load(true);
-      if(fail.length)alertBox("일부를 올리지 못했어요",fail.join("\n")+"\n\n다시 올리면 빠진 날짜가 채워져요 (더하기는 몇 번 올려도 같아요).");
-      else toast(`주일 ${P.dates.length}번, ${ok.length}명 출석 기록을 올렸어요`);
-    });
-  };
-  inp.click();
-}
 /* ---- 자료실 ---- */
 async function loadLib(){
   if(S.libLoading)return;S.libLoading=true;const team=S.team;
@@ -1671,7 +1494,7 @@ function openGuide(){
     <h4>2. 들어가기</h4><ol><li>메인에서 <b>우리 부서</b> 카드 → <b>담임 번호</b> 넣기</li><li>우리 반 담임이 여러 명이면 <b>본인 이름을 고르는 창</b>이 떠요. 내 이름을 고르면 그 이름으로 로그인되고, 활동 기록에도 내 이름이 남아요.</li><li>제목 옆에 "담임 · 2학년"처럼 보이면 성공!</li><li>내 휴대폰이면 "이 기기에서 번호 기억하기"를 켜 두세요. 다음부터 바로 들어가요.</li><li>두 반을 맡았으면(예: 고2·고3) 팀 관리자가 두 반에 같은 번호를 줄 수 있어요. 그 번호 하나로 두 반이 함께 열려요.</li></ol>
     <h4>2-1. 내 비밀번호 (담임이 여러 명인 반)</h4><ol><li>들어온 뒤 <b>메뉴 설정 → 내 담임 번호 → [내 비밀번호 만들기]</b>를 눌러요. 지금 번호(반 담임 번호)를 확인하고, 나만 쓰는 비밀번호(영문+숫자 6자리 이상)를 정해요.</li><li>다음부터는 메인에서 <b>내 비밀번호만</b> 넣으면 바로 내 이름으로 들어와요. 같은 반 다른 선생님 번호에는 영향이 없어요.</li><li>내 비밀번호를 만든 뒤에는 반 담임 번호로 들어와도 내 이름을 고를 수 없어요(다른 사람이 내 이름으로 들어오지 못하게).</li><li>바꿀 때는 같은 곳의 <b>[내 비밀번호 변경]</b>. 잊어버렸으면 팀 관리자에게 <b>초기화</b>를 부탁하세요.</li></ol>
     <h4>3. 출결메모 (주일 출석)</h4><ol><li>위쪽 날짜가 오늘 주일인지 확인해요. ‹ › 로 다른 주일로 가요.</li><li><b>체크 칸</b>: 누르면 출석, 다시 누르면 취소</li><li><b>메모</b>: 결석 이유 적기 ("감기·아픔" 같은 버튼도 있어요)</li><li><b>전화</b>: 누르면 그 학생의 <b>대표전화</b>로 바로 걸려요. 대표전화는 학생마다 명단 [수정]에서 <b>[대표]</b>에 체크한 번호예요. 체크하지 않았으면 영아·유아부는 부모님, 유소년·중고등부는 학생 번호예요 (없으면 다른 번호). 컴퓨터에서는 번호 창이 떠요.</li><li>숫자 칸(달란트 등): ▲▼ 를 누르거나 숫자를 눌러 적어요. 달란트는 여기서만 줘요.</li><li><b>담임 선생님 출석</b>: 우리 반 담임 줄 바로 아래에 선생님 이름이 <b>연보라색 줄</b>로 나와요. 거기서 선생님 출석·메모도 체크해요. (교사 명단의 이름과 담임 이름이 같아야 나와요)</li><li><b>저장</b>: 따로 저장 버튼을 누르지 않아도 체크하면 자동으로 저장돼요. 화면 아래 <b>저장 막대</b>에서 "저장 대기 → 저장 중… → ✓ 모두 저장됨"을 확인하세요. 바로 보내려면 <b>[지금 저장]</b>, 인터넷이 끊겨 못 했으면 <b>[다시 저장]</b>을 눌러요.</li></ol>
-    <h4>4. 명단 (연락처 포함)</h4><ol><li><b>[+ 사람 추가]</b>로 새 학생을 넣어요. 연락처·주소도 같이 적을 수 있어요.</li><li>이름을 누르면 보호자·부모 연락처와 주소가 보여요. <b>[전화]</b>, <b>[복사]</b>도 여기서.</li><li><b>[수정]</b>: 사진·반·생일·메모·연락처·주소를 한 창에서 위에서 아래로 차례대로 고쳐요. 컴퓨터에서는 사진 파일을 창 위로 <b>끌어다 놓아도</b> 돼요.</li><li><b>사진 한꺼번에</b>: 명단 탭 <b>사진</b> 줄의 <b>[올리기]</b>에 학생 신상명세서 엑셀(사진이 들어 있는 파일)이나 이름으로 된 사진 파일(예: 고2_김서연.jpg)을 넣으면, 이름에 맞춰 사진이 들어가요. 확인 목록을 보고 [저장]을 눌러요.</li><li><b>[삭제]</b>: 이름을 누른 창에서 눌러요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li>사람 정보는 <b>명단 탭에서만</b> 고칠 수 있어요. 다른 탭에서는 보기만 해요.</li><li><b>대표전화</b>: [수정]에서 부모 연락처·학생 연락처 옆 <b>[대표]</b> 중 하나에 체크하고 저장해요. 출결메모의 <b>[전화]</b>를 누르면 그 번호로 바로 걸려요. 이름을 누른 창에서 전화기 아이콘을 눌러 바꿀 수도 있어요.</li><li>명단에서 <b>연보라색</b> 줄은 선생님이에요.</li><li>연락처가 잠겨 있으면 명단 위쪽 <b>연락처</b> 줄의 <b>[번호 입력]</b>에 담임 번호를 넣어요.</li></ol>
+    <h4>4. 명단 (연락처 포함)</h4><ol><li><b>[+ 사람 추가]</b>로 새 학생을 넣어요. 연락처·주소도 같이 적을 수 있어요.</li><li>이름을 누르면 보호자·부모 연락처와 주소가 보여요. <b>[전화]</b>, <b>[복사]</b>도 여기서.</li><li><b>[수정]</b>: 사진·반·생일·메모·연락처·주소를 한 창에서 위에서 아래로 차례대로 고쳐요. 컴퓨터에서는 사진 파일을 창 위로 <b>끌어다 놓아도</b> 돼요.</li><li><b>[삭제]</b>: 이름을 누른 창에서 눌러요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li>사람 정보는 <b>명단 탭에서만</b> 고칠 수 있어요. 다른 탭에서는 보기만 해요.</li><li><b>대표전화</b>: [수정]에서 부모 연락처·학생 연락처 옆 <b>[대표]</b> 중 하나에 체크하고 저장해요. 출결메모의 <b>[전화]</b>를 누르면 그 번호로 바로 걸려요. 이름을 누른 창에서 전화기 아이콘을 눌러 바꿀 수도 있어요.</li><li>명단에서 <b>연보라색</b> 줄은 선생님이에요.</li><li>연락처가 잠겨 있으면 명단 위쪽 <b>연락처</b> 줄의 <b>[번호 입력]</b>에 담임 번호를 넣어요.</li></ol>
     <h4>4-1. 통계 (출석 한눈에 보기)</h4><ol><li><b>통계</b> 탭 → <b>[2026년 누적]</b>에서 <b>일별·월별·분기·반기·연별</b> 중 하나를 골라요.</li><li><b>기간별 출석</b>: 기간을 누르면 주일별로, 주일을 누르면 반별로 출석한 사람·결석한 사람이 펼쳐져요.</li><li><b>개인별 누적</b>: 이름을 누르면 고른 단위별 출석이, 기간을 누르면 주일마다 출석(●)·결석(○)이 보여요.</li><li><b>[엑셀로 받기]</b>: 개인·학년·전체와 <b>개인 일자별</b>(주일마다 O/-) 시트가 한 파일에 담겨요.</li></ol>
     <h4>5. 생일 · 달란트</h4><ol><li><b>생일</b>: 이번 주·이번 달·다음 달 생일. 생일이 없는 사람은 맨 아래에 모여요. 음력 생일은 [수정]에서 "음력 생일"에 체크하면 그 해 양력 날짜로 바꿔 보여 줘요. 연도 없이 3/15처럼 날짜만 적어도 되고, 학생은 학년에 맞는 출생연도가 자동으로 붙어요(교사는 연도 없이 날짜만).</li><li><b>달란트</b>: 올해 누적 순위를 보는 화면이에요 (고치기는 출결메모에서).</li><li>달란트·생일·일정 엑셀은 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b> 파일에 들어 있어요.</li></ol>
     <h4>6. 출석 · 제적 · 졸업</h4><ol><li>명단 위쪽 <b>[출석] [제적] [졸업]</b> 을 눌러 나눠 봐요.</li><li>더 이상 안 나오는 학생: 이름 → [수정] → 상태를 <b>제적</b>으로. 졸업한 학생은 <b>졸업</b>으로.</li><li>제적·졸업 학생은 출석 명단에서 빠지지만 기록은 그대로 남아요.</li><li>다시 나오면 [제적] 목록에서 <b>[출석으로]</b>를 눌러요.</li></ol>
@@ -2097,7 +1920,7 @@ function renderRoster(){
     <div class="summary"><div>${(()=>{const act=all.filter(p=>p.active!==false),st=act.filter(p=>p.group!=="T").length,tc=act.length-st;
       /* 학생과 교사를 따로 세요 (교사 칩을 고르면 교사만) */
       return S.group==="T"?`<div class="big num">${tc}<em> 명 교사</em></div>`:`<div class="big num">${st}<em> 명 학생</em>${tc?`<em style="margin-left:10px">교사 </em>${tc}<em> 명</em>`:""}</div>`})()}<div class="sub">${TEAMS[S.team].short} · ${S.group==="all"?"전체":GL[S.group]} · 재적</div></div><div class="spacer"></div>
-    ${canManageGrades()||(isHomeroom()&&S.editable)?`<button class="btn" id="goSet">메뉴 설정</button>`:""}${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()&&S.editable?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div><div class="homeroom" data-set style="margin-top:4px"><span class="lbl">사진</span><span class="none" style="font-size:13px">신상명세서 엑셀 속 사진(또는 이름으로 된 사진 파일)을 한 번에</span><span class="spacer"></span><button id="photoUp">올리기</button></div>${canManageGrades()?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">출석부</span><span class="none" style="font-size:13px">예전 엑셀 출석부의 출석·달란트를 한 번에</span><span class="spacer"></span><button id="oldAttUp">올리기</button></div>`:""}`:""}${canManageGrades()?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
+    ${canManageGrades()||(isHomeroom()&&S.editable)?`<button class="btn" id="goSet">메뉴 설정</button>`:""}${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()&&S.editable?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div>`:""}${canManageGrades()?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
   /* 반(학년)마다 제목 줄과 인원. 영아처럼 나이가 따로 있으면 나이별 인원도 */
   const ageCnt=list=>{if(!isFlex(S.team))return "";const m=new Map();list.forEach(p=>{if(p.group==="T")return;const a=ageLabel(p)||"나이 모름";m.set(a,(m.get(a)||0)+1)});
     return [...m].sort((x,y)=>(parseInt(x[0])||99)-(parseInt(y[0])||99)).map(([a,n])=>`${a} ${n}명`).join(" · ")};
@@ -3323,8 +3146,6 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   if(e.target.closest("#talentRename"))return openTalentRename();
   if(e.target.closest("#xlsTpl"))return downloadTemplate();
   if(e.target.closest("#xlsUp"))return uploadRoster();
-  if(e.target.closest("#photoUp"))return uploadPhotos();
-  if(e.target.closest("#oldAttUp"))return uploadOldAtt();
   if(e.target.closest("#xlsExport"))return exportAll();
   if(e.target.closest("#actOpen"))return openActivityLog();
   if(e.target.closest("#rptOpen")){S.rptStatAt=0;return openReport()}
@@ -3543,7 +3364,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018151620';
+  var BUILD = '20261018152405';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
