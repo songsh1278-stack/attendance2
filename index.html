@@ -250,7 +250,9 @@ nav.tabs button{font-size:11px;white-space:nowrap}
 .photo-field{border:2px dashed transparent;border-radius:14px;padding:4px;transition:border-color .15s,background .15s}
 .photo-field.drop{border-color:var(--accent);background:var(--sunk)}
 .photo-field .drop-hint{flex-basis:100%;font-size:12px}
-@media (hover:none){.photo-field .drop-hint{display:none}}
+.drop-zone{border:2px dashed transparent;border-radius:14px;transition:border-color .15s,background .15s}
+.drop-zone.drop{border-color:var(--accent);background:var(--sunk)}
+@media (hover:none){.drop-hint{display:none}}
 .sheet-head{display:flex;align-items:center;gap:14px}
 .check-box{flex:none;display:flex;flex-direction:column;align-items:center}
 .check-lbl{font-size:11px;color:var(--accent);text-align:center;margin-top:2px;font-weight:600}
@@ -1201,6 +1203,91 @@ async function loadEvents(){
 }
 /* 일정 → 자료실 순서로 하나씩 미리 불러와요 (서버에 요청이 한꺼번에 몰리지 않게) */
 function preloadSched(){return loadEvents().then(()=>loadLib()).catch(()=>{})}
+/* ---- 사진 한꺼번에 올리기: 신상명세서 엑셀(이름 줄에 붙은 사진) 또는 이름으로 된 사진 파일 ---- */
+const nmKey=s=>String(s||"").split("\n")[0].replace(/[(（].*$/,"").replace(/\s/g,"");
+const IMG_MIME={png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",gif:"image/gif",bmp:"image/bmp",webp:"image/webp"};
+/** 엑셀 파일 속 그림을 꺼내, 그림이 놓인 줄의 이름·학년과 묶는다 */
+function xlsxPhotos(buf){
+  const u8=new Uint8Array(buf),cfb=XLSX.CFB.read(u8,{type:"array"}),F={},td=new TextDecoder();
+  cfb.FullPaths.forEach((p,i)=>{const e=cfb.FileIndex[i];if(e&&e.content&&e.content.length)F[p.slice(p.indexOf("/")+1)]=e.content});
+  const txt=p=>F[p]?td.decode(F[p]):"";
+  const res=(dir,t)=>{if(t[0]==="/")return t.slice(1);const a=dir.split("/").filter(Boolean);t.split("/").forEach(s=>{if(s==="..")a.pop();else if(s&&s!==".")a.push(s)});return a.join("/")};
+  const rels=p=>{const i=p.lastIndexOf("/"),dir=p.slice(0,i),o={};
+    for(const m of txt(dir+"/_rels/"+p.slice(i+1)+".rels").matchAll(/<Relationship\b[^>]*>/g)){const id=(m[0].match(/Id="([^"]+)"/)||[])[1],tg=(m[0].match(/Target="([^"]+)"/)||[])[1];if(id&&tg)o[id]=res(dir,tg)}return o};
+  const wb=XLSX.read(u8,{type:"array"}),wr=rels("xl/workbook.xml"),out=[];
+  [...txt("xl/workbook.xml").matchAll(/<sheet\b[^>]*>/g)].forEach((m,si)=>{
+    const ws=wb.Sheets[wb.SheetNames[si]],path=wr[(m[0].match(/r:id="([^"]+)"/)||[])[1]];if(!ws||!path)return;
+    const cell=(r,c)=>{const x=ws[XLSX.utils.encode_cell({r,c})];return x?String(x.w!=null?x.w:x.v):""};
+    let nc=-1,gc=-1;for(let r=0;r<10&&nc<0;r++)for(let c=0;c<30;c++){const k=cell(r,c).replace(/\s/g,"");if(k==="이름"||k==="성명")nc=c;else if(k==="학년"||k==="반")gc=c}
+    if(nc<0)return;
+    Object.values(rels(path)).filter(d=>d.indexOf("drawings/")>=0).forEach(d=>{
+      const dr=rels(d);
+      for(const a of txt(d).matchAll(/<xdr:(twoCellAnchor|oneCellAnchor)\b[\s\S]*?<\/xdr:(twoCellAnchor|oneCellAnchor)>/g)){
+        const blk=t=>(a[0].match(new RegExp("<xdr:"+t+">([\\s\\S]*?)</xdr:"+t+">"))||[])[1]||"";
+        const num=(s,t)=>Number((s.match(new RegExp("<xdr:"+t+">(-?\\d+)<"))||[])[1]||0);
+        const fr=blk("from"),to=blk("to"),img=dr[(a[0].match(/r:embed="([^"]+)"/)||[])[1]];if(!fr||!img||!F[img])continue;
+        /* 그림이 다음 줄로 넘어가 있으면 더 많이 걸친 줄로 */
+        const r0=num(fr,"row"),r1=to?num(to,"row"):r0,row=r1>r0&&num(fr,"rowOff")>num(to,"rowOff")?r1:r0;
+        const ext=img.split(".").pop().toLowerCase();if(!IMG_MIME[ext])continue;
+        const name=nmKey(cell(row,nc));if(!name)continue;
+        out.push({name,grade:gc>=0?cell(row,gc).replace(/\s/g,""):"",blob:new Blob([F[img]],{type:IMG_MIME[ext]}),src:(row+1)+"행"});
+      }
+    });
+  });
+  return out;
+}
+async function photosFromFiles(files){
+  let out=[];
+  for(const f of files){
+    if(/[.]xlsx$/i.test(f.name)){if(!await needXLSX())return null;try{out=out.concat(xlsxPhotos(await f.arrayBuffer()))}catch(e){alertBox("엑셀에서 사진을 꺼내지 못했어요",f.name+": "+e.message)}continue}
+    if(String(f.type).indexOf("image")!==0)continue;
+    const base=f.name.replace(/[.][^.]+$/,""),g=(base.match(/[중고]\s*[1-3]/)||[""])[0].replace(/\s/g,"");
+    out.push({name:nmKey(base.replace(/[중고]\s*[1-3]/,"").replace(/[_\-.0-9]/g," ")),grade:g,blob:f,src:f.name});
+  }
+  return out;
+}
+function uploadPhotos(){
+  const ov=document.createElement("div");ov.className="overlay";let items=[];
+  const mine=[...S.people.values()].filter(p=>teamOf(p)===S.team&&p.active!==false&&(!isHomeroom()||(p.group!=="T"&&myScope().grades.includes(p.group))));
+  const gl=p=>String(GL[p.group]||"").replace(/\s/g,"");
+  const match=x=>{let c=mine.filter(p=>nmKey(p.name)===x.name);if(c.length>1&&x.grade)c=c.filter(p=>gl(p)===x.grade);return c.length===1?c[0]:c.length?"many":null};
+  const draw=()=>{
+    const ok=items.filter(x=>x.p&&x.p!=="many");
+    ov.innerHTML=`<div class="sheet" role="dialog" aria-label="사진 한꺼번에 올리기"><h3>${esc(TEAMS[S.team].label)} 사진 한꺼번에 올리기</h3>
+      <div id="phZone" class="drop-zone" style="padding:14px;text-align:center;border-color:var(--line)">
+        <p style="margin:0 0 8px;font-size:14px">학생 신상명세서 엑셀(.xlsx)이나, 파일 이름이 학생 이름인 사진(예: <b>고2_김서연.jpg</b>)을 끌어다 놓거나 골라 주세요.</p>
+        <label class="btn" for="f-phs" style="display:inline-flex;color:var(--ink)">파일 고르기</label><input type="file" id="f-phs" multiple accept=".xlsx,image/*" hidden></div>
+      ${items.length?`<p style="margin:10px 0 4px;font-size:14px">사진 <b>${items.length}장</b> · 명단과 맞은 사람 <b>${ok.length}명</b>${items.length>ok.length?` · 못 맞춘 사진 <b>${items.length-ok.length}장</b>`:""}</p>
+      <div class="card" style="padding:4px 12px;max-height:46vh;overflow:auto">${items.map((x,i)=>`<label class="file-row" style="cursor:${x.p&&x.p!=="many"?"pointer":"default"}"><input type="checkbox" data-phi="${i}" ${x.on?"checked":""} ${x.p&&x.p!=="many"?"":"disabled"}><img class="avatar" src="${x.url}" alt=""><span class="nm"><b>${esc(x.name)}</b>${x.grade?" · "+esc(x.grade):""} <span class="muted" style="font-size:12px">${esc(x.src)}</span><br><span style="font-size:12px;${x.p&&x.p!=="many"?"":"color:var(--danger)"}">${x.p==="many"?"같은 이름이 여러 명이라 고를 수 없어요":!x.p?"명단에 없는 이름이에요":"→ "+esc(x.p.name)+" ("+esc(GL[x.p.group]||"")+")"+(x.grade&&gl(x.p)!==x.grade?" · 학년이 명단과 달라요":"")+(photoOf(x.p)?" · 지금 사진을 바꿔요":"")}</span></span></label>`).join("")}</div>`:""}
+      <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>닫기</button>${items.length?`<button type="button" class="btn primary" id="phSave" ${items.some(x=>x.on)?"":"disabled"}>선택한 ${items.filter(x=>x.on).length}명 사진 저장</button>`:""}</div></div>`;
+  };
+  const add=async files=>{const got=await photosFromFiles(files);if(!got)return;if(!got.length){toast("올릴 수 있는 사진을 찾지 못했어요");return}
+    got.forEach(x=>{x.p=match(x);x.on=!!(x.p&&x.p!=="many");x.url=URL.createObjectURL(x.blob)});
+    /* 한 사람에게 사진이 여러 장이면 처음 것만 */
+    const seen=new Set();got.forEach(x=>{if(x.on){if(seen.has(x.p.id))x.on=false;else seen.add(x.p.id)}});
+    items=items.concat(got);draw()};
+  const close=()=>{items.forEach(x=>URL.revokeObjectURL(x.url));ov.remove()};
+  draw();document.body.appendChild(ov);
+  let dn=0;
+  ov.addEventListener("dragenter",e=>{if(!dragHasFile(e))return;e.preventDefault();dn++;const z=ov.querySelector("#phZone");if(z)z.classList.add("drop")});
+  ov.addEventListener("dragover",e=>{if(!dragHasFile(e))return;e.preventDefault();e.dataTransfer.dropEffect="copy"});
+  ov.addEventListener("dragleave",()=>{if(dn&&!--dn){const z=ov.querySelector("#phZone");if(z)z.classList.remove("drop")}});
+  ov.addEventListener("drop",e=>{if(!dragHasFile(e))return;e.preventDefault();dn=0;add([...e.dataTransfer.files])});
+  ov.addEventListener("change",e=>{if(e.target.id==="f-phs"){const fs=[...e.target.files];e.target.value="";if(fs.length)add(fs);return}
+    const c=e.target.closest("[data-phi]");if(c){items[+c.dataset.phi].on=c.checked;draw()}});
+  ov.addEventListener("click",async e=>{
+    if(e.target===ov||e.target.closest("[data-close]"))return close();
+    const sv=e.target.closest("#phSave");if(!sv)return;sv.disabled=true;sv.textContent="저장하는 중…";
+    let n=0,bad=[];
+    for(const x of items.filter(x=>x.on)){
+      let d="";try{d=await resizeImage(x.blob)}catch(_){bad.push(x.name);continue}
+      const id=x.p.id;S.photos.set(id,[-1,d]);n++;
+      if(S.db)enqueue("people/"+id,()=>S.db.doc("people/"+id).update({photo:d}));
+    }
+    close();render();toast(`${n}명 사진을 저장했어요`);
+    if(bad.length)alertBox("열 수 없는 사진이 있어요",bad.join(", ")+" 사진은 열지 못해 건너뛰었어요.");
+  });
+}
 /* ---- 자료실 ---- */
 async function loadLib(){
   if(S.libLoading)return;S.libLoading=true;const team=S.team;
@@ -1214,18 +1301,27 @@ function renderLibrary(){
   const L=S.lib;if(!L||L.team!==S.team){if(!S.libLoading)setTimeout(loadLib,0);return `<div class="empty">자료실을 불러오는 중…</div>`}
   if(L.error)return `<div class="notice">${esc(L.error)}</div>`;
   let h=`<h2 class="sec">${esc(TEAMS[S.team].label)} 자료실</h2><p class="muted" style="font-size:13px;margin:-4px 0 10px">일정과 상관없이 부서에서 함께 쓰는 파일이에요. 담임 선생님도 올리고 지울 수 있고, [보내기]로 메일로 전할 수 있어요.${L.admin?" 엑셀·워드·파워포인트·텍스트·CSV 파일은 [온라인 작성]을 누르면 내려받지 않고 구글 시트·문서·슬라이드로 열어 고칠 수 있고, 고친 내용은 미리보기·내려받기·메일에 바로 반영돼요(엑셀 매크로는 작동하지 않아요). 작성본 링크는 밖으로 알리지 마세요.":""}</p>`;
-  if(L.canEdit)h+=`<div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">${L.admin?`<select id="f-lvis" aria-label="공개 범위" style="height:38px;border:1px solid var(--line);border-radius:10px;background:var(--ground);padding:0 8px;color:var(--ink)"><option value="all">전체 보기</option><option value="admin">관리자만 보기</option></select>`:""}<button class="btn primary" id="libAdd">+ 파일 올리기 (10MB까지)</button>${L.admin?`<span class="muted" style="font-size:12px;flex-basis:100%">전체 보기: 담임도 볼 수 있어요 · 관리자만 보기: 팀 관리자와 총관리자만</span>`:""}</div>`;
+  if(L.canEdit)h+=`<div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">${L.admin?`<select id="f-lvis" aria-label="공개 범위" style="height:38px;border:1px solid var(--line);border-radius:10px;background:var(--ground);padding:0 8px;color:var(--ink)"><option value="all">전체 보기</option><option value="admin">관리자만 보기</option></select>`:""}<button class="btn primary" id="libAdd">+ 파일 올리기 (10MB까지)</button><span class="drop-hint muted" style="font-size:12px">또는 파일을 여기로 끌어다 놓으세요</span>${L.admin?`<span class="muted" style="font-size:12px;flex-basis:100%">전체 보기: 담임도 볼 수 있어요 · 관리자만 보기: 팀 관리자와 총관리자만</span>`:""}</div>`;
   h+=L.files.length?`<div class="card" style="padding:4px 12px">${L.files.map(f=>`<div class="file-row"><span class="nm">${f.vis==="admin"?`<span class="vis-badge">관리자만 보기</span>`:""}${esc(f.name)}<br><span class="muted" style="font-size:12px">${f.size?Math.max(1,Math.round(f.size/1024))+"KB · ":""}${esc(f.updated||"")}${f.by?" · "+esc(f.by):""}${f.doc?" · 작성본 내용이 자동 반영돼요":""}</span></span><button class="btn primary" data-lview="${f.id}">미리보기</button><button class="btn" data-ldl="${f.id}">내려받기</button>${L.admin?`<button class="btn" data-lsend="${f.id}">보내기</button>`:""}${L.admin&&DOC_EXT.test(f.name)?(f.doc?`<a class="btn primary" href="${esc(f.doc.url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">열기/수정</a>`:`<button class="btn" data-ldoc="${f.id}">온라인 작성</button>`):""}${L.admin?`<button class="btn" data-lvis="${f.id}" data-v="${f.vis==="admin"?"all":"admin"}">${f.vis==="admin"?"전체 공개로":"관리자만 보기로"}</button>`:""}${L.admin||f.mine?`<button class="btn danger" data-ldel="${f.id}">삭제</button>`:""}</div>`).join("")}</div>`
     :`<div class="empty">아직 올린 파일이 없어요. 위에서 파일을 올려 보세요.</div>`;
-  return h;
+  return L.canEdit?`<div id="libZone" class="drop-zone">${h}</div>`:h;
 }
 function libPick(){
   const vis=(document.querySelector("#f-lvis")||{}).value||"all";
   const inp=document.createElement("input");inp.type="file";
-  inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;if(f.size>10*1024*1024){alertBox("파일이 너무 커요","10MB까지 올릴 수 있어요.");return}
-    try{toast("올리는 중…");const files=await tracked(call("libUpload",S.team,{name:f.name,mime:f.type,b64:await fileToB64(f),vis}));S.lib={...S.lib,files};wrC("ya-lib-"+S.team,S.lib);render();toast("파일을 올렸어요")}
-    catch(e){alertBox("올리지 못했어요",e.message)}};
+  inp.onchange=()=>{const f=inp.files&&inp.files[0];if(f)libUploadFiles([f],vis)};
   inp.click();
+}
+/* 자료실 파일 올리기 (고르기·끌어다 놓기 같이 써요). 여러 개면 하나씩 차례로 */
+async function libUploadFiles(list,vis){
+  const big=list.filter(f=>f.size>10*1024*1024),ok=list.filter(f=>f.size<=10*1024*1024);
+  if(big.length)alertBox("파일이 너무 커요","10MB까지 올릴 수 있어요: "+big.map(f=>f.name).join(", "));
+  let n=0;
+  for(const f of ok){
+    try{toast(ok.length>1?`올리는 중… (${n+1}/${ok.length})`:"올리는 중…");const files=await tracked(call("libUpload",S.team,{name:f.name,mime:f.type,b64:await fileToB64(f),vis}));S.lib={...S.lib,files};wrC("ya-lib-"+S.team,S.lib);render();n++}
+    catch(e){alertBox("올리지 못했어요",f.name+": "+e.message);break}
+  }
+  if(n)toast(n>1?`파일 ${n}개를 올렸어요`:"파일을 올렸어요");
 }
 async function libAction(op,fid,v,msg){
   try{const files=await tracked(v===null?call(op,S.team,fid):call(op,S.team,fid,v));S.lib={...S.lib,files};wrC("ya-lib-"+S.team,S.lib);render();toast(msg)}catch(e){alertBox("처리하지 못했어요",e.message)}
@@ -1276,7 +1372,15 @@ function renderSchedule(){
   return h;
 }
 /* 파일을 엉뚱한 곳에 떨어뜨려도 브라우저가 그 파일을 열면서 앱을 벗어나지 않게 해요 */
-["dragover","drop"].forEach(n=>window.addEventListener(n,e=>{if([...((e.dataTransfer||{}).types||[])].includes("Files"))e.preventDefault()}));
+const dragHasFile=e=>[...((e.dataTransfer||{}).types||[])].includes("Files");
+["dragover","drop"].forEach(n=>window.addEventListener(n,e=>{if(dragHasFile(e))e.preventDefault()}));
+/* 자료실: 파일을 자료실 위로 끌어다 놓으면 올려요 (창이 떠 있을 때는 그 창이 받아요) */
+let libDragN=0;
+const libZoneOf=e=>!document.querySelector(".overlay")&&e.target.closest&&e.target.closest("#libZone");
+document.addEventListener("dragenter",e=>{const z=dragHasFile(e)&&libZoneOf(e);if(!z)return;libDragN++;z.classList.add("drop")});
+document.addEventListener("dragleave",e=>{const z=libZoneOf(e);if(z&&libDragN&&!--libDragN)z.classList.remove("drop")});
+document.addEventListener("drop",e=>{const z=document.querySelector("#libZone");libDragN=0;if(z)z.classList.remove("drop");
+  if(!dragHasFile(e)||!libZoneOf(e))return;e.preventDefault();const fs=[...e.dataTransfer.files];if(fs.length)libUploadFiles(fs,(document.querySelector("#f-lvis")||{}).value||"all")});
 function fileToB64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const s=String(r.result);res(s.slice(s.indexOf(",")+1))};r.readAsDataURL(f)})}
 async function downloadShared(fid){
   try{toast("내려받는 중…");const d=await call("downloadFile",S.team,fid);const bin=atob(d.b64);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
@@ -1798,7 +1902,7 @@ function renderRoster(){
     <div class="summary"><div>${(()=>{const act=all.filter(p=>p.active!==false),st=act.filter(p=>p.group!=="T").length,tc=act.length-st;
       /* 학생과 교사를 따로 세요 (교사 칩을 고르면 교사만) */
       return S.group==="T"?`<div class="big num">${tc}<em> 명 교사</em></div>`:`<div class="big num">${st}<em> 명 학생</em>${tc?`<em style="margin-left:10px">교사 </em>${tc}<em> 명</em>`:""}</div>`})()}<div class="sub">${TEAMS[S.team].short} · ${S.group==="all"?"전체":GL[S.group]} · 재적</div></div><div class="spacer"></div>
-    ${canManageGrades()||(isHomeroom()&&S.editable)?`<button class="btn" id="goSet">메뉴 설정</button>`:""}${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()&&S.editable?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div>`:""}${canManageGrades()?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
+    ${canManageGrades()||(isHomeroom()&&S.editable)?`<button class="btn" id="goSet">메뉴 설정</button>`:""}${S.editable?`<button class="btn primary" id="addP">+ 사람 추가</button>`:""}</div>${canManageGrades()&&S.editable?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">설정</span><span class="none" style="font-size:13px">달란트 ${talentOn()?"사용 중":"사용 안 함"}</span><span class="spacer"></span>${talentOn()?`<button id="talentRename">이름 바꾸기</button>`:""}<button id="talentToggle">${talentOn()?"사용 안 함으로":"달란트 사용하기"}</button></div>`:""}${(canManageGrades()||isHomeroom())&&S.editable?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">엑셀</span><span class="none" style="font-size:13px">${isHomeroom()?"우리 반 명단·주소록을 엑셀로 한 번에":"명단·주소록을 엑셀로 한 번에"}</span><span class="spacer"></span><button id="xlsTpl">양식 받기</button><button id="xlsUp">올리기</button></div><div class="homeroom" data-set style="margin-top:4px"><span class="lbl">사진</span><span class="none" style="font-size:13px">신상명세서 엑셀 속 사진(또는 이름으로 된 사진 파일)을 한 번에</span><span class="spacer"></span><button id="photoUp">올리기</button></div>`:""}${canManageGrades()?`<div class="homeroom" data-set style="margin-top:4px"><span class="lbl">이력</span><span class="none" style="font-size:13px">학생·교사의 반 이동, 등반, 담임 기록</span><span class="spacer"></span><button id="histAll">이력 보기</button></div>`:""}${classBar(S.team)}${promoBar(S.team)}${contactScopeBar()}<div class="list">`;
   /* 반(학년)마다 제목 줄과 인원. 영아처럼 나이가 따로 있으면 나이별 인원도 */
   const ageCnt=list=>{if(!isFlex(S.team))return "";const m=new Map();list.forEach(p=>{if(p.group==="T")return;const a=ageLabel(p)||"나이 모름";m.set(a,(m.get(a)||0)+1)});
     return [...m].sort((x,y)=>(parseInt(x[0])||99)-(parseInt(y[0])||99)).map(([a,n])=>`${a} ${n}명`).join(" · ")};
@@ -2878,6 +2982,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   if(e.target.closest("#talentRename"))return openTalentRename();
   if(e.target.closest("#xlsTpl"))return downloadTemplate();
   if(e.target.closest("#xlsUp"))return uploadRoster();
+  if(e.target.closest("#photoUp"))return uploadPhotos();
   if(e.target.closest("#xlsExport"))return exportAll();
   if(e.target.closest("#actOpen"))return openActivityLog();
   if(e.target.closest("#rptOpen")){S.rptStatAt=0;return openReport()}
@@ -3086,7 +3191,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018115733';
+  var BUILD = '20261018121259';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
