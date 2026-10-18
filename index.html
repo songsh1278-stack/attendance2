@@ -2050,7 +2050,8 @@ async function exportPeriodStats(){
 }
 /* 개인별 누적: 사람을 펼치면 달란트와, 고른 단위(월·분기·반기·연)마다 출석 횟수 옆에 주일별 출석(●)·결석(○)이 바로 보여요 */
 function renderPersonPeriods(rows,ks){
-  const U=statUnit(),Y=Number(S.date.slice(0,4)),closed=S.statClosed||(S.statClosed=new Set());
+  /* 위에서 이번 주를 골라도 개인별 누적은 최근 한 달로 보여요 */
+  const U=statUnit()==="week"?"recent":statUnit(),Y=Number(S.date.slice(0,4)),closed=S.statClosed||(S.statClosed=new Set());
   const pct=(n,d)=>d?Math.round(n/d*100):0;
   /* 편집 권한이 있으면 ●/○를 눌러 지난 출석을 고칠 수 있어요 */
   const ed=!!S.editable;
@@ -3388,7 +3389,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018154313';
+  var BUILD = '20261018154434';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
