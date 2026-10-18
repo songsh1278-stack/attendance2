@@ -316,6 +316,8 @@ td.num em{font-style:normal;color:var(--muted);font-size:12px}
 .pp-row .sd-names{margin-top:0}
 .pp-days{font-size:13px;color:var(--muted);white-space:nowrap}
 .pp-days b{color:var(--ink)}
+.att-tg{cursor:pointer}
+.att-tg:hover{border-color:var(--accent)}
 .tal-sum{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
 .tal-sum .who{display:flex;flex-direction:column;min-width:0}
 .tal-sum .who span{font-size:12px;color:var(--muted)}
@@ -2045,7 +2047,10 @@ async function exportPeriodStats(){
 function renderPersonPeriods(rows,ks){
   const U=statUnit(),Y=Number(S.date.slice(0,4)),closed=S.statClosed||(S.statClosed=new Set());
   const pct=(n,d)=>d?Math.round(n/d*100):0;
-  const chips=(id,list)=>`<div class="sd-names">${list.slice().reverse().map(k=>{const on=isOn(k,id);return `<span class="sd-nm${on?" on":""}" title="${on?"출석":"결석"}">${on?"●":"○"} ${Number(k.slice(5,7))}/${Number(k.slice(8))}</span>`}).join("")}</div>`;
+  /* 편집 권한이 있으면 ●/○를 눌러 지난 출석을 고칠 수 있어요 */
+  const ed=!!S.editable;
+  const chips=(id,list)=>`<div class="sd-names">${list.slice().reverse().map(k=>{const on=isOn(k,id),tx=`${on?"●":"○"} ${Number(k.slice(5,7))}/${Number(k.slice(8))}`;
+    return ed?`<button type="button" class="sd-nm att-tg${on?" on":""}" data-tatt="${k}|${id}" title="${on?"출석 · 누르면 결석으로":"결석 · 누르면 출석으로"}">${tx}</button>`:`<span class="sd-nm${on?" on":""}" title="${on?"출석":"결석"}">${tx}</span>`}).join("")}</div>`;
   const cols=periodCols(U,Y).filter(c=>!c.sum).map(c=>({...c,ks:U==="year"?c.ks:c.ks.filter(k=>k<=S.date)})).filter(c=>c.ks.length).reverse();
   const body=p=>{
     const per=cols.map(c=>{const n=c.ks.filter(k=>isOn(k,p.id)).length;
@@ -2055,7 +2060,7 @@ function renderPersonPeriods(rows,ks){
     return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${esc(r.p.name)}<small>${esc(GL[r.p.group]||"")}</small></span><span style="flex:1"></span><span class="pp-days num"><b>${r.n}/${ks.length}</b>${talentOn()&&r.p.group!=="T"?` (달란트 ${r.t}개)`:""}</span></summary><div class="sd-in">${body(r.p)}</div></details>`}).join("");
   const ul=(STAT_UNITS.find(u=>u[0]===U)||["",""])[1];
   return `<h2 class="sec">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>
-    <p class="muted" style="font-size:12px;margin:-4px 0 8px">이름 옆은 올해 출석/전체 주일 수예요 · ${U==="recent"?"최근 한 달":"연도마다"} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요</p>
+    <p class="muted" style="font-size:12px;margin:-4px 0 8px">${S.editable?"●/○를 누르면 그 주일 출석을 고쳐요 · ":""}이름 옆은 올해 출석/전체 주일 수예요 · ${U==="recent"?"최근 한 달":"연도마다"} 출석 횟수와 주일별 출석(●)·결석(○)이 보여요 · 이름을 누르면 접혀요</p>
     <div class="sd-list">${list||`<div class="empty">사람이 없어요.</div>`}</div>`;
 }
 /* 누적 화면의 기간 목록: 기간(월·분기·반기·연)을 펼치면 주일별, 주일을 펼치면 반별 출석·결석 명단 */
@@ -3203,6 +3208,9 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const g=e.target.closest("[data-g]");if(g&&g.closest("#chips")&&chipDouble(g.dataset.g)&&canRenameClass(g.dataset.g)){openClassRename(S.team,g.dataset.g);return}if(g){S.group=g.dataset.g;try{localStorage.setItem("ya-group",S.group)}catch(_){}render();return}
   const tab=e.target.closest("[data-tab]");if(tab){if(tab.dataset.tab!==S.tab)navPush();S.tab=tab.dataset.tab;render();window.scrollTo(0,0);return}
   if(e.target.closest("[data-attsave]")){attErr="";flushAtt();return}
+  const tat=e.target.closest("[data-tatt]");if(tat){if(!S.editable){toast("보기 권한이라 고칠 수 없어요");return}
+    const [k,id]=tat.dataset.tatt.split("|"),p=S.people.get(id),on=isOn(k,id);writeAtt(k,{p:{[id]:on?0:1}});
+    toast(`${p?p.name+" · ":""}${Number(k.slice(5,7))}/${Number(k.slice(8))} ${on?"결석":"출석"}으로 바꿨어요`);return}
   if(e.target.closest("#pstatXls"))return exportPeriodStats();
   const md=e.target.closest("[data-mode]");if(md){S.statMode=md.dataset.mode;render();return}
   const tm=e.target.closest("[data-talmode]");if(tm){S.talMode=tm.dataset.talmode;render();return}
@@ -3364,7 +3372,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261018153638';
+  var BUILD = '20261018153735';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
