@@ -749,6 +749,7 @@ S.date=keyOf(lastSunday());
 {const _n=new Date(),_y=_n.getFullYear();S.years=new Set(_n.getMonth()<2?[_y-1,_y]:[_y]);S.years.add(Number(S.date.slice(0,4)));S.allYears=[];S.photos=new Map();S.ver="";S.vers={};S.lastBoot=0;
  try{const j=JSON.parse(localStorage.getItem("ya-photos")||"null");if(j)S.photos=new Map(Object.entries(j))}catch(_){}}
 try{const t=localStorage.getItem("ya-team");if(t)S.team=t;const g=localStorage.getItem("ya-group");if(g)S.group=g}catch(e){}
+try{if(localStorage.getItem("ya-fold-summary")==="0")S.fold.summary=false}catch(e){}
 setTeam(S.team);
 
 function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
@@ -3326,7 +3327,7 @@ document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.dataset&&d.datas
   if(d.dataset.dopen){const c=S.statClosed||(S.statClosed=new Set());if(d.open)c.delete(k);else c.add(k)} /* 처음부터 펼친 칸은 접은 것만 기억 */
   else{const o=S.statOpen||(S.statOpen=new Set());if(d.open)o.add(k);else o.delete(k)}
   saveStatView()}},true);
-document.addEventListener("toggle",e=>{const f=e.target;if(f.dataset&&f.dataset.fold)S.fold[f.dataset.fold]=f.open},true);
+document.addEventListener("toggle",e=>{const f=e.target;if(f.dataset&&f.dataset.fold){S.fold[f.dataset.fold]=f.open;if(f.dataset.fold==="summary")try{f.open?localStorage.removeItem("ya-fold-summary"):localStorage.setItem("ya-fold-summary","0")}catch(_){}}},true);
 document.addEventListener("click",e=>{const ad=e.target.closest("[data-adate]");
 if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   if(d<START){toast("기록은 시작 주일부터 있어요");return}
@@ -3603,7 +3604,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261020070957';
+  var BUILD = '20261020071150';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
