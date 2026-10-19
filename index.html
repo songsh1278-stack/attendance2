@@ -2902,7 +2902,7 @@ function openAskAdmin(kind,email,team){
     <p class="muted" style="margin:0;font-size:14px">이메일 등록이나 비밀번호·번호 문제를 적어 보내면 총관리자에게 메일로 전달돼요. 답을 받을 이메일이나 연락처를 꼭 적어 주세요.</p>
     <div class="form">
       <label class="full">요청 종류<select id="f-akd"><option value="email">이메일 등록 요청</option><option value="pw">비밀번호·번호 분실/오류</option><option value="etc">기타 문의</option></select></label>
-      <label>부서<select id="f-atm"><option value="">부서 선택</option>${Object.entries(TEAMS).map(([t,x])=>`<option value="${t}" ${t===tm?"selected":""}>${x.label}</option>`).join("")}</select></label>
+      <label>부서<select id="f-atm"><option value="">부서 선택</option>${Object.entries(TEAMS).map(([t,x])=>`<option value="${t}" ${t===tm?"selected":""}>${x.label}</option>`).join("")}<option value="co">공동관리자</option></select></label>
       <label>직책<input id="f-apos" maxlength="30" placeholder="예: 팀장, 담임, 교사"></label>
       <label class="full">이름<input id="f-anm" maxlength="30" autocomplete="name" required></label>
       <label class="full">요청사항<textarea id="f-amsg" maxlength="1000" required placeholder="예: 유아부 담임 OOO입니다. 제 이메일을 등록해 주세요."></textarea></label>
@@ -3597,7 +3597,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261019161726';
+  var BUILD = '20261019164308';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
