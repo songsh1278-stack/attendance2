@@ -444,6 +444,7 @@ nav.tabs div{max-width:640px;margin:0 auto;display:flex}
 nav.tabs button{flex:1;border:0;background:none;padding:9px 0 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--muted);font-weight:500}
 nav.tabs svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 nav.tabs button[aria-current="page"]{color:var(--accent)}
+nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:10.5px}
 
 .overlay{position:fixed;inset:0;z-index:20;background:rgba(10,20,17,.45);display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);width:100%;max-width:640px;max-height:92%;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
@@ -687,6 +688,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
   <button data-tab="schedule"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M9 3.5v3M15 3.5v3M8 13h2M12 13h2M8 16.5h2"/></svg>일정</button>
   <button data-tab="check"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12.5l3 3 5-6"/></svg>출결메모</button>
   <button data-tab="roster"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.2c2.3.1 4 1.6 4.5 4.3"/></svg>명단</button>
+  <button data-tab="prenew" hidden><svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.2"/><path d="M4.5 19c.6-3.2 2.8-5 5.5-5 1.3 0 2.5.4 3.4 1.2"/><path d="M18 13.5v6M15 16.5h6"/></svg>예비신입생</button>
   <button data-tab="bday"><svg viewBox="0 0 24 24"><path d="M5 20h14v-7H5z"/><path d="M4 13h16M12 13V9M9 9h6"/><path d="M12 6.5c-.8-.8-.8-2 0-3 .8 1 .8 2.2 0 3z"/></svg>생일</button>
   <button data-tab="talent"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5v9M9.5 9.5h3.8a1.7 1.7 0 010 3.4h-2.6a1.7 1.7 0 000 3.4h3.8"/></svg>달란트</button>
   <button data-tab="stats"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>통계</button>
@@ -916,7 +918,7 @@ function renderChips(){
   const items=[["all","전체"],...GROUPS].map(([g,l])=>{
     const ps=activePeople(g).filter(p=>g!=="all"||p.group!=="T");const on=ps.filter(p=>isOn(k,p.id)).length;
     return `<button class="chip" data-g="${g}" aria-pressed="${S.group===g}"${canRenameClass(g)?` title="더블클릭(휴대폰은 두 번 톡톡)하면 반 이름을 바꿀 수 있어요"`:""}>${l}${S.tab==="check"?`<span class="c num">${on}/${ps.length}</span>`:S.tab==="roster"?`<span class="c num">${rosterCnt(g)}</span>`:""}</button>`});
-  $("#chips").innerHTML=items.join("");$("#chips").hidden=S.tab==="schedule";
+  $("#chips").innerHTML=items.join("");$("#chips").hidden=S.tab==="schedule"||S.tab==="prenew";
 }
 function renderTeams(){
   const home=S.view==="home";document.body.classList.toggle("home",home);
@@ -939,7 +941,7 @@ function renderDate(){
   $("#todayTag").hidden=S.date!==keyOf(lastSunday());$("#todayTag").textContent=realSunday()<START?"시작 주일":"이번 주";
   $("#datePick").min=START_KEY;$("#prev").disabled=S.date<=START_KEY;
   $("#datePick").value=S.date;
-  $("#datebar").hidden=S.tab==="roster"||S.tab==="schedule";
+  $("#datebar").hidden=S.tab==="roster"||S.tab==="schedule"||S.tab==="prenew";
 }
 const safePhoto=v=>typeof v==="string"&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v)?v:"";
 const photoOf=p=>{const ph=safePhoto(p.photo);if(ph)return ph;const c=p.id&&S.photos.get(p.id);return c?c[1]:""};
@@ -2298,6 +2300,24 @@ function renderStatPeriods(){
     <p class="muted" style="font-size:12px;margin:6px 0 8px">최근 기간과 이번 주일은 펼쳐져 있어요 · 기간을 누르면 주일별로, 주일을 누르면 반별 출석·결석 명단이 펼쳐져요 · 출석률은 ${esc(unit)} 기준 · 사람은 지금 명단 기준</p>
     <div class="sd-list">${list||`<div class="empty">출석 기록이 없어요.</div>`}</div>`;
 }
+/* ---------- 예비 신입생 (12월 ~ 아래 부서 연말 등반을 마칠 때까지) ----------
+   바로 아래 부서의 맨 위 학년·나이(영아 4세→유아, 유아 7세→유소년, 6학년→중고등) 중 등반 전인 학생.
+   기간·권한(부서 전체를 보는 사람, 첫 학년 담임)은 서버가 정해서 보내요(S.preNew[부서]). 보기 전용 */
+const preNewOn=(t=S.team)=>!!(S.preNew&&S.preNew[t]&&PROMO_TEAMS.indexOf(t)>0);
+function renderPreNew(){
+  const t=S.team,from=PROMO_TEAMS[PROMO_TEAMS.indexOf(t)-1];const list=(S.preNew[t]||[]).slice();
+  let h=`<div class="summary"><div><div class="big num">${list.length}<em> 명 예비 신입생</em></div><div class="sub">${esc(stepLabel(from,lastStep(from)))} → ${esc(stepLabel(t,TEAMS[t].groups[0][0]))}</div></div></div>
+    <p class="muted" style="font-size:13px;margin:8px 0 0">${esc(TEAMS[from].label)} 연말 등반을 마칠 때까지 보여요. 등반하면 이 부서 명단으로 옮겨와요.</p>`;
+  if(!list.length)return h+`<p class="muted" style="margin-top:16px">예비 신입생이 없어요.</p>`;
+  const gk=p=>classLabelOf(from,p.group)+(p.section?` ${p.section}반`:"");
+  list.sort((a,b)=>gk(a).localeCompare(gk(b),"ko")||a.name.localeCompare(b.name,"ko"));
+  const m=list.filter(p=>p.gender==="남").length,f=list.filter(p=>p.gender==="여").length;
+  if(m||f)h+=`<div class="homeroom" style="margin-top:8px"><span class="lbl">성별</span><span class="none num" style="font-size:13px">남 ${m}명 · 여 ${f}명</span></div>`;
+  const row=p=>`<div class="row"><span class="who" style="padding:2px 4px"><b>${esc(p.name)}${p.gender?` <span class="muted" style="font-size:12px;font-weight:500">${esc(p.gender)}</span>`:""}</b><span class="num">${p.birthday?esc(bdText(p)):"생일 미등록"}</span></span></div>`;
+  /* 아래 부서 반(분반)별로 묶어요 */
+  const keys=[...new Set(list.map(gk))];
+  return h+keys.map(k=>{const gp=list.filter(p=>gk(p)===k);return `<div class="group-h"><span>${esc(TEAMS[from].short)} ${esc(k)}<span class="num">(${gp.length}명)</span></span></div><div class="list">${gp.map(row).join("")}</div>`}).join("");
+}
 function renderBday(){
   const d=parseKey(S.date);const m=d.getMonth()+1,y=d.getFullYear();
   const ps=activePeople(S.group).filter(p=>bdMD(p.birthday));
@@ -3181,11 +3201,12 @@ function render(){
   if(S.view==="dept"&&!canEnter(S.team))S.view="home";
   renderTeams();
   {const tt=document.querySelector('[data-tab="talent"]');if(tt)tt.hidden=!talentOn();if(S.tab==="talent"&&!talentOn())S.tab="check";}
+  {const pt=document.querySelector('[data-tab="prenew"]');if(pt)pt.hidden=!preNewOn();if(S.tab==="prenew"&&!preNewOn())S.tab="check";}
   if(S.view==="home"){$("#view").innerHTML=renderHome();return}
   setTeam(S.team);renderDate();renderChips();
   const v=$("#view");const ae=document.activeElement;const focusQ=ae&&ae.id==="q";const pos=focusQ?ae.selectionStart:0;
   const tvAttr=ae&&ae.dataset?(ae.dataset.tv?"tv":ae.dataset.total?"total":null):null;const tvId=tvAttr&&ae.dataset[tvAttr],tvVal=tvId?ae.value:null;
-  v.innerHTML=S.tab==="schedule"?renderSchedule():S.tab==="check"?renderCheck():S.tab==="roster"?renderRoster():S.tab==="stats"?renderStats():S.tab==="talent"?renderTalent():renderBday();
+  v.innerHTML=S.tab==="schedule"?renderSchedule():S.tab==="check"?renderCheck():S.tab==="roster"?renderRoster():S.tab==="stats"?renderStats():S.tab==="talent"?renderTalent():S.tab==="prenew"?renderPreNew():renderBday();
   if(focusQ){const q=$("#q");q.focus();q.setSelectionRange(pos,pos)}
   if(tvId){const el=v.querySelector(`[data-${tvAttr}="${tvId}"]`);if(el){el.value=tvVal;el.focus()}}
   document.querySelectorAll("nav.tabs button").forEach(b=>b.dataset.tab===S.tab?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));relabel();if((S.tab==="check"||S.tab==="roster")&&(!S.book||S.book.team!==S.team)&&!S.bookLoading)setTimeout(loadContacts,0);
@@ -3562,7 +3583,7 @@ async function loadPhotos(){
 function applyBoot(d){
   if(d.tk){S._tk=d.tk;if(S.remember!==false)try{localStorage.setItem("ya-tk",JSON.stringify(d.tk))}catch(_){}}
   S.hrMe=d.hrMe||{};S.gcChanged=d.gcChanged||{};S.rptOk=!!d.rptOk;S.isAdmin=!!d.isAdmin;if(d.adminBad){try{localStorage.removeItem("ya-admin")}catch(_){}S._admin="";toast("이 기기에 기억된 총관리자 비밀번호가 맞지 않아 지웠어요. 다시 로그인해 주세요")}S.isCo=!!d.isCo;S.isCo2=!!d.isCo2;S.me=d.me||"";S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
-  S.staff=d.staff||[];S.scope=d.scope||{};S.settings=d.settings||{};S.people=new Map((d.people||[]).map(p=>[p.id,p]));setTeam(S.team);
+  S.staff=d.staff||[];S.preNew=d.preNew||null;S.scope=d.scope||{};S.settings=d.settings||{};S.people=new Map((d.people||[]).map(p=>[p.id,p]));setTeam(S.team);
   S.att=new Map(Object.entries(d.att||{}));
   [attFly,attBuf].forEach(B=>Object.keys(B).forEach(k=>S.att.set(k,mergeAtt(S.att.get(k)||{date:k,p:{},t:{}},B[k])))); // 보내는 중이거나 아직 안 보낸 체크는 유지
   S.classes=new Map(Object.entries(d.classes||{}));
@@ -3604,7 +3625,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261020071217';
+  var BUILD = '20261020071809';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
