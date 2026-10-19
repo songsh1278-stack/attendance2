@@ -2308,7 +2308,6 @@ function renderPreNew(){
   const t=S.team,from=PROMO_TEAMS[PROMO_TEAMS.indexOf(t)-1];const list=(S.preNew[t]||[]).slice();
   let h=`<div class="summary"><div><div class="big num">${list.length}<em> 명 예비 신입생</em></div><div class="sub">${esc(stepLabel(from,lastStep(from)))} → ${esc(stepLabel(t,TEAMS[t].groups[0][0]))}</div></div></div>
     <p class="muted" style="font-size:13px;margin:8px 0 0">${esc(TEAMS[from].label)} 연말 등반을 마칠 때까지 보여요. 등반하면 이 부서 명단으로 옮겨와요.</p>`;
-  {const mo=new Date().getMonth()+1;if(mo!==12&&mo>6)h+=`<p class="muted" style="font-size:13px;margin:6px 0 0;color:var(--accent)">미리 보기: 12월 전에는 총관리자에게만 보여요.</p>`}
   if(!list.length)return h+`<p class="muted" style="margin-top:16px">예비 신입생이 없어요.</p>`;
   const gk=p=>classLabelOf(from,p.group)+(p.section?` ${p.section}반`:"");
   list.sort((a,b)=>gk(a).localeCompare(gk(b),"ko")||a.name.localeCompare(b.name,"ko"));
@@ -3626,7 +3625,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261020072242';
+  var BUILD = '20261020072609';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
