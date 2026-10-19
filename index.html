@@ -2959,6 +2959,12 @@ function device(){
   const iosChrome=ios&&/CriOS/i.test(ua);
   return {ios,android,inapp,kakao,samsung,iosChrome,mobile:ios||android};
 }
+/* 로그인 기록에 남길 기기 이름 (예: 휴대폰·아이폰, PC·윈도우). 브라우저가 알려 주는 값이라 참고용이에요 */
+function devLabel(){
+  const ua=navigator.userAgent||"",d=device();
+  const kind=d.ios?(/iPad/i.test(ua)||!/iPhone|iPod/i.test(ua)?"태블릿·아이패드":"휴대폰·아이폰"):d.android?(/Mobile/i.test(ua)?"휴대폰·안드로이드":"태블릿·안드로이드"):/Windows/i.test(ua)?"PC·윈도우":/Macintosh/i.test(ua)?"PC·맥":/CrOS/i.test(ua)?"PC·크롬북":/Linux/i.test(ua)?"PC·리눅스":"기타 기기";
+  return kind+(d.kakao?"·카카오톡":isStandalone()?"·홈 화면 앱":"");
+}
 function isStandalone(){try{return window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true||(window.top&&window.top.navigator&&window.top.navigator.standalone===true)}catch(_){return false}}
 function showA2hs(){if(isStandalone())return false;try{return localStorage.getItem("ya-a2hs-hide")!=="1"}catch(_){return true}}
 let appUrl="";
@@ -3472,7 +3478,7 @@ $("#next").onclick=()=>{const d=parseKey(S.date);d.setDate(d.getDate()+7);S.date
 $("#datePick").onchange=e=>{if(e.target.value){S.date=keyOf(toSunday(parseKey(e.target.value)));needYear();render()}};
 
 /* ---------- data (Google Apps Script) ---------- */
-function AUTH(){let tcodes={...(S._tcodes||{})},who={...(S._who||{})},tk={...(S._tk||{})},admin=S._admin||"",codes={...(S._codes||{})},gcodes={...(S._gcodes||{})},email=S._email||"",copw=S._copw||"";try{admin=localStorage.getItem("ya-admin")||admin;email=localStorage.getItem("ya-email")||email;copw=localStorage.getItem("ya-copw")||copw;tk={...tk,...(JSON.parse(localStorage.getItem("ya-tk")||"null")||{})};codes={...codes,...(JSON.parse(localStorage.getItem("ya-codes")||"null")||{})};gcodes={...gcodes,...(JSON.parse(localStorage.getItem("ya-gcodes")||"null")||{})};tcodes={...tcodes,...(JSON.parse(localStorage.getItem("ya-tcodes")||"null")||{})};who={...(JSON.parse(localStorage.getItem("ya-who")||"null")||{}),...who}}catch(_){}return{admin,codes,gcodes,tcodes,who,email,copw,tk}}
+function AUTH(){let tcodes={...(S._tcodes||{})},who={...(S._who||{})},tk={...(S._tk||{})},admin=S._admin||"",codes={...(S._codes||{})},gcodes={...(S._gcodes||{})},email=S._email||"",copw=S._copw||"";try{admin=localStorage.getItem("ya-admin")||admin;email=localStorage.getItem("ya-email")||email;copw=localStorage.getItem("ya-copw")||copw;tk={...tk,...(JSON.parse(localStorage.getItem("ya-tk")||"null")||{})};codes={...codes,...(JSON.parse(localStorage.getItem("ya-codes")||"null")||{})};gcodes={...gcodes,...(JSON.parse(localStorage.getItem("ya-gcodes")||"null")||{})};tcodes={...tcodes,...(JSON.parse(localStorage.getItem("ya-tcodes")||"null")||{})};who={...(JSON.parse(localStorage.getItem("ya-who")||"null")||{}),...who}}catch(_){}return{admin,codes,gcodes,tcodes,who,email,copw,tk,dv:devLabel()}}
 function storeEmail(v){v=String(v||"").trim().toLowerCase();if(!v)return;S._email=v;if(S.remember===false)return;try{localStorage.setItem("ya-email",v)}catch(_){}}
 let pending=0;
 // GitHub 페이지에서 열면 google.script.run 이 없으므로 웹앱 주소(doPost)로 직접 보낸다.
@@ -3597,7 +3603,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261019170036';
+  var BUILD = '20261019175715';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
