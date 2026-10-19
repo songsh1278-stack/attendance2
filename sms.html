@@ -1,0 +1,58 @@
+<!doctype html>
+<!-- 텔레그램 답장의 [문자로 보내기] 버튼이 여는 페이지: 받는 번호와 내용을 채운 채 휴대폰 문자 앱을 연다 (Code.gs tgReply_) -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>문자로 답장하기</title>
+<style>
+  :root { --bg: #f6f7f9; --card: #fff; --fg: #1f2328; --muted: #6b7280; --line: #e5e7eb; --accent: #2563eb; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #111418; --card: #1b1f24; --fg: #e6e8eb; --muted: #9aa3ad; --line: #2d333b; --accent: #4c8dff; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+  main { max-width: 480px; margin: 0 auto; padding: 24px 16px; }
+  h1 { font-size: 20px; margin: 0 0 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+  .k { font-size: 13px; color: var(--muted); }
+  .to { font-size: 20px; font-weight: 600; }
+  .msg { white-space: pre-wrap; word-break: break-word; }
+  a.btn, button { display: block; width: 100%; text-align: center; padding: 14px; border-radius: 10px; font-size: 17px; text-decoration: none; border: 1px solid var(--line); background: var(--card); color: var(--fg); margin-bottom: 10px; cursor: pointer; }
+  a.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .muted { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>문자로 답장하기</h1>
+  <div id="ok" hidden>
+    <div class="card"><div class="k">받는 사람</div><div class="to" id="to"></div></div>
+    <div class="card"><div class="k">보낼 내용</div><div class="msg" id="body"></div></div>
+    <a class="btn primary" id="go" href="#">문자 앱 열기</a>
+    <button type="button" id="copy">내용 복사하기</button>
+    <p class="muted">문자 앱이 열리면 내용을 확인하고 [보내기]를 누르세요. 앱이 안 열리면 내용을 복사해서 직접 보내 주세요.</p>
+  </div>
+  <p id="bad" hidden>받는 번호가 없어요. 텔레그램 알림의 연락처를 확인해 주세요.</p>
+</main>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var to = (q.get('to') || '').replace(/[^0-9+]/g, ''), body = q.get('body') || '';
+  if (!to) { document.getElementById('bad').hidden = false; return; }
+  document.getElementById('ok').hidden = false;
+  document.getElementById('to').textContent = to.replace(/^(01\d)(\d{3,4})(\d{4})$/, '$1-$2-$3');
+  document.getElementById('body').textContent = body;
+  // 아이폰은 sms:번호&body=, 안드로이드는 sms:번호?body=
+  var ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var url = 'sms:' + to + (body ? (ios ? '&' : '?') + 'body=' + encodeURIComponent(body) : '');
+  var go = document.getElementById('go');
+  go.href = url;
+  document.getElementById('copy').addEventListener('click', function () {
+    var b = this, done = function () { b.textContent = '복사했어요'; };
+    if (navigator.clipboard) navigator.clipboard.writeText(body).then(done, function () {});
+  });
+  try { location.href = url; } catch (e) {}
+})();
+</script>
+</body>
+</html>
