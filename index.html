@@ -1682,7 +1682,7 @@ const askBack=x=>{if(x.kind!=="요청")return null;const m=(x.text||"").match(/�
 /* 활동 기록의 요청에 바로 답장: 이메일은 서버에서 보내고, 문자는 기기의 문자 앱을 열어요 */
 function openAskReply(x){
   const bk=askBack(x);if(!bk)return;
-  const ask=(x.text||"").replace(/\s*〔회신 [^〕]*〕/,"");
+  const ask=(x.text||"").replace(/\s*〔(회신|기기) [^〕]*〕/g,"");
   const ov=document.createElement("div");ov.className="overlay";let how=bk.email?"mail":"sms";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="요청에 답장"><h3>${esc(x.name||"요청")}님께 답장</h3>
     <p class="muted" style="margin:0;font-size:13px;white-space:pre-wrap">${esc(ask)}</p>
@@ -3603,7 +3603,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261019175908';
+  var BUILD = '20261019180032';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
