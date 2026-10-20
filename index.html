@@ -1605,8 +1605,8 @@ function openGuide(){
   getAppUrl().then(u=>{const b=ov.querySelector(".guide-url");if(b&&u)b.textContent=u.split(":"+"/"+"/").pop().replace(/[/]$/,"")});
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
 }
-/* ---------- 활동 기록 (총관리자 전용) ---------- */
-const activityCard=()=>`<details class="fold" data-fold="activity"${S.fold.activity?" open":""}><summary><h2 class="sec">활동 기록</h2></summary><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">로그인, 번호 변경, 명단·반 이동, 일정, 자료실, 설정 기록</span><button class="btn" id="actOpen">기록 보기</button></div><div class="admin-row"><b>텔레그램 알림</b><span class="code none">휴대폰 텔레그램으로 받을 기록 종류</span><button class="btn" id="tgOpen">알림 종류</button></div></div></details>`;
+/* ---------- 활동 기록 (총관리자·공동관리자1. 텔레그램 알림 종류·답장은 총관리자만) ---------- */
+const activityCard=()=>`<details class="fold" data-fold="activity"${S.fold.activity?" open":""}><summary><h2 class="sec">활동 기록</h2></summary><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">로그인, 번호 변경, 명단·반 이동, 일정, 자료실, 설정 기록</span><button class="btn" id="actOpen">기록 보기</button></div>${S.isCo?"":`<div class="admin-row"><b>텔레그램 알림</b><span class="code none">휴대폰 텔레그램으로 받을 기록 종류</span><button class="btn" id="tgOpen">알림 종류</button></div>`}</div></details>`;
 /* 텔레그램으로 받을 알림 종류 고르기 (총관리자 전용) */
 async function openTgKinds(){
   const ov=document.createElement("div");ov.className="overlay";
@@ -1631,7 +1631,7 @@ async function openTgKinds(){
   try{draw(await call("tgKinds"))}catch(x){body.innerHTML="";er.textContent=x.message;er.hidden=false}
 }
 async function openActivityLog(){
-  if(!S.isAdmin){toast("총관리자만 볼 수 있어요");return}
+  if(!S.isAdmin||S.isCo2){toast("총관리자·공동관리자1만 볼 수 있어요");return}
   const ov=document.createElement("div");ov.className="overlay";let all=null,tm="all",kd="all",q="",total=0,more=false,busy=false,shown=200;
   ov.innerHTML=`<div class="sheet" role="dialog" aria-label="활동 기록"><h3>활동 기록 <span class="muted" style="font-family:var(--body);font-size:14px" id="alCount"></span></h3>
     <div class="seg" id="alTeams"><button data-atm="all" aria-pressed="true">전체</button>${Object.entries(TEAMS).map(([k,x])=>`<button data-atm="${k}" aria-pressed="false">${esc(x.short)}</button>`).join("")}</div>
@@ -1646,7 +1646,7 @@ async function openActivityLog(){
     const lab=tm==="all"?"":TEAMS[tm].label;const qq=q.trim();
     const f=all.filter(x=>(!lab||x.team===lab)&&(kd==="all"||x.kind===kd)&&(!qq||[x.name,x.text,x.by,x.kind].some(v=>(v||"").includes(qq))));
     ov.querySelector("#alCount").textContent=(lab||kd!=="all"||qq?`${f.length}건 / `:"")+`${all.length}${more?"/"+total:""}건`;
-    list.innerHTML=f.length?f.slice(0,shown).map(x=>`<div class="hist-item"><span class="when">${esc(x.at.slice(0,10))}<br>${esc(x.at.slice(11))}</span><span class="what"><span class="hist-kind ${x.kind==="교사"||x.kind==="담임"?"t":""}">${esc(x.kind)}</span>${x.team?`<span class="muted" style="font-size:12px">${esc(x.team.replace("교육팀",""))} </span>`:""}${x.name?`<b>${esc(x.name)}</b> `:""}${esc(x.text)}${askBack(x)?` <button class="btn" data-reply="${all.indexOf(x)}" style="font-size:12px;padding:2px 10px">답장</button>`:""}<span class="by">${esc(x.by==="번호 없음"?"확인 안 된 사용자":x.by)}</span></span></div>`).join(""):`<p class="muted">${more?"불러온 기록 중에는 없어요.":"기록이 없어요."}</p>`;
+    list.innerHTML=f.length?f.slice(0,shown).map(x=>`<div class="hist-item"><span class="when">${esc(x.at.slice(0,10))}<br>${esc(x.at.slice(11))}</span><span class="what"><span class="hist-kind ${x.kind==="교사"||x.kind==="담임"?"t":""}">${esc(x.kind)}</span>${x.team?`<span class="muted" style="font-size:12px">${esc(x.team.replace("교육팀",""))} </span>`:""}${x.name?`<b>${esc(x.name)}</b> `:""}${esc(x.text)}${askBack(x)&&!S.isCo?` <button class="btn" data-reply="${all.indexOf(x)}" style="font-size:12px;padding:2px 10px">답장</button>`:""}<span class="by">${esc(x.by==="번호 없음"?"확인 안 된 사용자":x.by)}</span></span></div>`).join(""):`<p class="muted">${more?"불러온 기록 중에는 없어요.":"기록이 없어요."}</p>`;
     if(f.length>shown||more)list.insertAdjacentHTML("beforeend",`<p style="text-align:center;margin:10px 0"><button class="btn" id="alMore" ${busy?"disabled":""}>${busy?"더 불러오는 중…":"더 보기"}</button></p>`);
   };
   const setKinds=()=>{const sel=ov.querySelector("#alKind");const kinds=[...new Set(all.map(x=>x.kind))].sort((a,b)=>a.localeCompare(b,"ko"));
@@ -3155,7 +3155,7 @@ function renderHome(){
     const hr=hrT.flatMap(t=>S.scope[t].grades.filter(g=>myG[t+"_"+g]).map(g=>[t,g]));
     if(hrT.length)h+=`<h2 class="sec">내 담임 번호</h2><div class="card admin-list">${hrT.map(t=>{const me=(S.hrMe||{})[t];
       return `<div class="admin-row"><b>${TEAMS[t].label}</b>${me?`<span class="code none">${esc(me.name)} 선생님으로 로그인됨</span><button class="btn primary" data-mytcode="${t}">${me.own?"내 비밀번호 변경":"내 비밀번호 만들기"}</button>`:`<span class="code none">본인 이름을 고르지 않았어요</span><button class="btn" data-pickme="${t}">본인 이름 고르기</button>`}</div>`}).join("")}${hr.map(([t,g])=>`<div class="admin-row"><b>${TEAMS[t].label} ${esc((groupsOf(t).find(x=>x[0]===g)||[g,g])[1])}</b><span class="code none">담임으로 로그인됨</span><button class="btn" data-mygcode="${t}|${esc(g)}">번호 변경</button></div>`).join("")}</div>`}
-  if(S.isAdmin){h+=renderPromoAdmin();if(!S.isCo2)h+=renderStaff();if(!S.isCo)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
+  if(S.isAdmin){h+=renderPromoAdmin();if(!S.isCo2)h+=renderStaff();if(!S.isCo2)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
   h+=lookPanel(); /* 새로고침은 맨 위 제목 줄 오른쪽 ↻ 버튼 */
   h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:isHrOnly()||isTeamMgr()?`<button class="btn" id="hrOut">로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button>`}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${S.isAdmin||isHrOnly()||isTeamMgr()?"":`<div class="muted" style="font-size:13px;margin-top:6px">반담임 로그인은 상단의 부서창을 통해 입장해주세요~</div>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   return h;
@@ -3625,7 +3625,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261020072609';
+  var BUILD = '20261020104105';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
