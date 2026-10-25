@@ -892,24 +892,6 @@ function bumpTalent(id,delta){
   clearTimeout(talentTimers[k+id]);
   talentTimers[k+id]=setTimeout(()=>writeAtt(k,{t:{[id]:talentOf(k,id)}}),500);
 }
-async function markAll(group){
-  if(!S.editable)return;
-  const ids=activePeople(group).map(p=>p.id);const allOn=ids.every(id=>isOn(S.date,id));
-  const p={};ids.forEach(id=>p[id]=allOn?0:1);
-  if(!allOn)return writeAtt(S.date,{p});
-  /* 전체 해제는 한 번에 많이 지워지니 한 번 더 묻는다 */
-  const k=S.date,ov=document.createElement("div");ov.className="overlay";
-  ov.innerHTML=`<div class="sheet" role="dialog" aria-label="전체 해제 확인"><h3>출석 전체 해제</h3>
-    <p style="margin:0;font-size:15px">${esc(k.slice(5).replace("-","/"))} ${esc(group==="all"?"전체":(GL[group]||""))} 출석 <b>${ids.length}명</b>을 모두 해제할까요?</p>
-    <p class="muted" style="margin:6px 0 0;font-size:13px">해제하면 체크한 출석이 모두 지워져요.</p>
-    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button type="button" class="btn danger" data-ok>전체 해제</button></div></div>`;
-  document.body.appendChild(ov);
-  ov.addEventListener("click",e=>{
-    if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
-    if(e.target.closest("[data-ok]")){ov.remove();writeAtt(k,{p})}
-  });
-}
-
 /* ---------- render ---------- */
 /* 명단 탭 칩: 지금 보는 목록([출석]/[제적]/[졸업])의 인원. '전체'는 교사 빼고 */
 const rosterCnt=g=>[...S.people.values()].filter(p=>teamOf(p)===S.team&&rosterModeOf(p)===(S.rosterMode||"active")&&(g==="all"?p.group!=="T"&&!(isHomeroom()&&p.group==="T"):p.group===g)).length;
@@ -1606,7 +1588,7 @@ function openGuide(){
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
 }
 /* ---------- 활동 기록 (총관리자·공동관리자1. 텔레그램 알림 종류·답장은 총관리자만) ---------- */
-const activityCard=()=>`<details class="fold" data-fold="activity"${S.fold.activity?" open":""}><summary><h2 class="sec">활동 기록</h2></summary><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">로그인, 번호 변경, 명단·반 이동, 일정, 자료실, 설정 기록</span><button class="btn" id="actOpen">기록 보기</button></div>${S.isCo?"":`<div class="admin-row"><b>텔레그램 알림</b><span class="code none">휴대폰 텔레그램으로 받을 기록 종류</span><button class="btn" id="tgOpen">알림 종류</button></div>`}</div></details>`;
+const activityCard=()=>`<details class="fold" data-fold="activity"${S.fold.activity?" open":""}><summary><h2 class="sec">활동 기록</h2></summary><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">명단·반 이동, 번호 변경, 일정, 자료실, 설정, 요청 등 모든 기록 (로그인 포함 보기 가능)</span><button class="btn" id="actOpen">기록 보기</button></div>${S.isCo?"":`<div class="admin-row"><b>텔레그램 알림</b><span class="code none">휴대폰 텔레그램으로 받을 기록 종류</span><button class="btn" id="tgOpen">알림 종류</button></div>`}</div></details>`;
 /* 텔레그램으로 받을 알림 종류 고르기 (총관리자 전용) */
 async function openTgKinds(){
   const ov=document.createElement("div");ov.className="overlay";
@@ -1632,51 +1614,46 @@ async function openTgKinds(){
 }
 async function openActivityLog(){
   if(!S.isAdmin||S.isCo2){toast("총관리자·공동관리자1만 볼 수 있어요");return}
-  const ov=document.createElement("div");ov.className="overlay";let all=null,tm="all",kd="all",q="",total=0,more=false,busy=false,shown=200;
+  /* 거르기(부서·종류·검색)는 서버가 시트 전체에서 해요. 기본은 '로그인 빼고': 로그인 기록에 묻히지 않게 */
+  const ov=document.createElement("div");ov.className="overlay";let all=null,tm="all",kd="nologin",q="",total=0,more=false,busy=false,upto=0,before=0,seq=0,qt=0,kinds=[];
   ov.innerHTML=`<div class="sheet" role="dialog" aria-label="활동 기록"><h3>활동 기록 <span class="muted" style="font-family:var(--body);font-size:14px" id="alCount"></span></h3>
     <div class="seg" id="alTeams"><button data-atm="all" aria-pressed="true">전체</button>${Object.entries(TEAMS).map(([k,x])=>`<button data-atm="${k}" aria-pressed="false">${esc(x.short)}</button>`).join("")}</div>
-    <div class="form" style="grid-template-columns:1fr 1fr"><label>종류<select id="alKind"><option value="all">전체</option></select></label><label>검색<input id="alQ" type="search" placeholder="이름·내용·바꾼 사람" autocomplete="off"></label></div>
+    <div class="form" style="grid-template-columns:1fr 1fr"><label>종류<select id="alKind"><option value="nologin">로그인 빼고 모두</option><option value="all">전체 (로그인 포함)</option></select></label><label>검색<input id="alQ" type="search" placeholder="이름·내용·바꾼 사람" autocomplete="off"></label></div>
     <div id="alList" style="margin-top:6px"><p class="muted">불러오는 중…</p></div>
-    <p class="muted" style="font-size:12px;margin:10px 0 0">최근 기록부터 200건씩 보여요. 아래로 내리면 더 불러와요. 시트의 '이력' 탭에도 같은 내용이 있어요. 출석 체크 하나하나는 기록하지 않아요.</p>
+    <p class="muted" style="font-size:12px;margin:10px 0 0">최근 기록부터 200건씩 보여요. 아래로 내리면 더 불러와요. 종류·부서·검색은 지난 기록 전체에서 찾아요. 시트의 '이력' 탭에도 같은 내용이 있어요. 출석 체크 하나하나는 기록하지 않아요.</p>
     <div class="actions"><div class="spacer"></div><button class="btn primary" data-close>닫기</button></div></div>`;
   document.body.appendChild(ov);
   const list=ov.querySelector("#alList");
   const draw=()=>{
-    if(all===null)return;
-    const lab=tm==="all"?"":TEAMS[tm].label;const qq=q.trim();
-    const f=all.filter(x=>(!lab||x.team===lab)&&(kd==="all"||x.kind===kd)&&(!qq||[x.name,x.text,x.by,x.kind].some(v=>(v||"").includes(qq))));
-    ov.querySelector("#alCount").textContent=(lab||kd!=="all"||qq?`${f.length}건 / `:"")+`${all.length}${more?"/"+total:""}건`;
-    list.innerHTML=f.length?f.slice(0,shown).map(x=>`<div class="hist-item"><span class="when">${esc(x.at.slice(0,10))}<br>${esc(x.at.slice(11))}</span><span class="what"><span class="hist-kind ${x.kind==="교사"||x.kind==="담임"?"t":""}">${esc(x.kind)}</span>${x.team?`<span class="muted" style="font-size:12px">${esc(x.team.replace("교육팀",""))} </span>`:""}${x.name?`<b>${esc(x.name)}</b> `:""}${esc(x.text)}${askBack(x)&&!S.isCo?` <button class="btn" data-reply="${all.indexOf(x)}" style="font-size:12px;padding:2px 10px">답장</button>`:""}<span class="by">${esc(x.by==="번호 없음"?"확인 안 된 사용자":x.by)}</span></span></div>`).join(""):`<p class="muted">${more?"불러온 기록 중에는 없어요.":"기록이 없어요."}</p>`;
-    if(f.length>shown||more)list.insertAdjacentHTML("beforeend",`<p style="text-align:center;margin:10px 0"><button class="btn" id="alMore" ${busy?"disabled":""}>${busy?"더 불러오는 중…":"더 보기"}</button></p>`);
+    if(all===null){list.innerHTML=`<p class="muted">불러오는 중…</p>`;ov.querySelector("#alCount").textContent="";return}
+    ov.querySelector("#alCount").textContent=`${all.length}${more?"+":""}건`+(tm==="all"&&kd==="all"&&!q.trim()?"":` (전체 ${total}건 중)`);
+    list.innerHTML=all.length?all.map((x,i)=>`<div class="hist-item"><span class="when">${esc(x.at.slice(0,10))}<br>${esc(x.at.slice(11))}</span><span class="what"><span class="hist-kind ${x.kind==="교사"||x.kind==="담임"?"t":""}">${esc(x.kind)}</span>${x.team?`<span class="muted" style="font-size:12px">${esc(x.team.replace("교육팀",""))} </span>`:""}${x.name?`<b>${esc(x.name)}</b> `:""}${esc(x.text)}${askBack(x)&&!S.isCo?` <button class="btn" data-reply="${i}" style="font-size:12px;padding:2px 10px">답장</button>`:""}<span class="by">${esc(x.by==="번호 없음"?"확인 안 된 사용자":x.by)}</span></span></div>`).join(""):(more?"":`<p class="muted">기록이 없어요.</p>`);
+    if(more)list.insertAdjacentHTML("beforeend",`<p style="text-align:center;margin:10px 0"><button class="btn" id="alMore" ${busy?"disabled":""}>${busy?"더 불러오는 중…":"더 보기"}</button></p>`);
   };
-  const setKinds=()=>{const sel=ov.querySelector("#alKind");const kinds=[...new Set(all.map(x=>x.kind))].sort((a,b)=>a.localeCompare(b,"ko"));
-    sel.innerHTML=`<option value="all">전체</option>`+kinds.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");sel.value=kinds.includes(kd)?kd:"all"};
-  // 서버에서 최근 기록부터 200건씩. 화면에는 다 그리지 않고 200건씩 늘려 그린다
-  const fetchMore=async()=>{
-    if(busy)return;busy=true;draw();
-    try{const r=await call("activity",all?all.length:0,total);
-      if(Array.isArray(r)){all=r;more=false;total=r.length}else{all=(all||[]).concat(r.list);more=r.more;total=r.total}
-      setKinds()}
-    catch(e){if(all===null){ov.remove();alertBox("활동 기록을 불러오지 못했어요",e.message);return}toast("더 불러오지 못했어요")}
-    finally{busy=false}
-    draw();
+  const setKinds=ks=>{const sel=ov.querySelector("#alKind");kinds=[...new Set(kinds.concat(ks||[],(all||[]).map(x=>x.kind)))].filter(Boolean);
+    const cur=sel.value;sel.innerHTML=`<option value="nologin">로그인 빼고 모두</option><option value="all">전체 (로그인 포함)</option>`+kinds.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");sel.value=cur};
+  // 서버에서 최근 기록부터, 고른 조건에 맞는 것만 200건씩. 조건을 바꾸면 처음부터 다시 받는다 (늦게 온 예전 응답은 버림)
+  const fetchMore=async(reset)=>{
+    if(reset){all=null;before=0;more=false;busy=false}
+    if(busy)return;busy=true;const my=++seq;draw();
+    try{const r=await call("activity",before,upto,{kind:kd,team:tm==="all"?"":tm,q:q.trim()});
+      if(my!==seq)return;
+      all=(all||[]).concat(r.list);more=r.more;before=r.before;total=r.total;if(!upto)upto=r.upto;setKinds(r.kinds)}
+    catch(e){if(my!==seq)return;if(all===null&&!before&&!total){ov.remove();alertBox("활동 기록을 불러오지 못했어요",e.message);return}toast("더 불러오지 못했어요");if(all===null)all=[]}
+    finally{if(my===seq)busy=false}
+    if(my===seq)draw();
   };
   const sheet=ov.querySelector(".sheet");
-  const next=()=>{
-    if(all===null||busy)return;
-    const lab=tm==="all"?"":TEAMS[tm].label;const qq=q.trim();
-    const n=all.filter(x=>(!lab||x.team===lab)&&(kd==="all"||x.kind===kd)&&(!qq||[x.name,x.text,x.by,x.kind].some(v=>(v||"").includes(qq)))).length;
-    if(n>shown){shown+=200;draw()}else if(more){shown+=200;fetchMore()}
-  };
+  const next=()=>{if(all!==null&&!busy&&more)fetchMore()};
   sheet.addEventListener("scroll",()=>{if(sheet.scrollTop+sheet.clientHeight>=sheet.scrollHeight-300)next()},{passive:true});
   ov.addEventListener("click",e=>{
     if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
     if(e.target.closest("#alMore"))return next();
-    const rp=e.target.closest("[data-reply]");if(rp){const x=all[+rp.dataset.reply];if(x)openAskReply(x);return}
-    const b=e.target.closest("[data-atm]");if(b){tm=b.dataset.atm;shown=200;ov.querySelectorAll("[data-atm]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));draw()}
+    const rp=e.target.closest("[data-reply]");if(rp){const x=(all||[])[+rp.dataset.reply];if(x)openAskReply(x);return}
+    const b=e.target.closest("[data-atm]");if(b){tm=b.dataset.atm;ov.querySelectorAll("[data-atm]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));fetchMore(true)}
   });
-  ov.querySelector("#alKind").addEventListener("change",e=>{kd=e.target.value;shown=200;draw()});
-  ov.querySelector("#alQ").addEventListener("input",e=>{q=e.target.value;shown=200;draw()});
+  ov.querySelector("#alKind").addEventListener("change",e=>{kd=e.target.value;fetchMore(true)});
+  ov.querySelector("#alQ").addEventListener("input",e=>{q=e.target.value;clearTimeout(qt);qt=setTimeout(()=>fetchMore(true),400)});
   fetchMore();
 }
 /* 요청 기록에 남은 회신 연락처 〔회신 이메일 · 연락처〕. 예전 기록에는 없어요 */
@@ -2026,7 +2003,7 @@ function renderCheck(){
   const talent=ps.reduce((a,p)=>a+talentOf(k,p.id),0);
   let h=`<div class="summary"><div class="ring" style="--p:${pct}"><span class="num">${pct}%</span></div>
     <div><div class="big num">${on}<em> / ${stu.length}명</em></div><div class="sub num">${TEAMS[S.team].short} ${S.group==="all"?"전체":GL[S.group]} 출석${talentOn()?` · <span class="nw">달란트 ${talent}</span>`:""}${tch.length?` · <span class="nw">교사 ${tch.filter(p=>isOn(k,p.id)).length}/${tch.length}</span>`:""}</div></div>
-    <div class="spacer"></div>${S.editable&&ps.length?`<button class="btn" id="markAll">${ps.every(p=>isOn(k,p.id))?"전체 해제":"전체 출석"}</button>`:""}</div>`;
+    </div>`;
   if(!S.editable)h+=`<div class="notice">보기 권한으로 열려 있어 출석을 바꿀 수 없어요. 편집 권한이 필요하면 담당자에게 요청하세요.</div>`;
   const groups=S.group==="all"?GROUPS.map(g=>g[0]):[S.group];
   for(const g of groups){
@@ -3460,7 +3437,6 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const md=e.target.closest("[data-mode]");if(md){S.statMode=md.dataset.mode;render();return}
   const tm=e.target.closest("[data-talmode]");if(tm){S.talMode=tm.dataset.talmode;render();return}
   const su=e.target.closest("[data-sunit]");if(su){S.statUnit=su.dataset.sunit;saveStatView();render();return}
-  if(e.target.closest("#markAll"))return markAll(S.group);
   if(e.target.closest("#addP")){openPerson.edit=true;openPerson(null);openPerson.edit=false}
 });
 /* 명단 이름 검색: 검색칸은 그대로 두고 아래 목록만 바꿔요.
@@ -3625,7 +3601,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261020115719';
+  var BUILD = '20261025120029';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
