@@ -735,8 +735,9 @@ function setPersonCall(p,next){const t=teamOf(p);const cur=(S.settings||{})[t]||
   return tracked(call("setPersonCallFirst",p.id,next))}
 const myScope=()=>(S.scope||{})[S.team]||{level:"dept",grades:[]};
 const isHomeroom=()=>myScope().level==="grade";
+const isSub=()=>myScope().level==="sub";
 const canManageGrades=()=>S.isAdmin||(myScope().level==="dept"&&deptLocked(S.team));
-function roleLabel(){if(S.isAdmin)return S.isCo?(S.isCo2?"공동관리자2":"공동관리자1"):"총관리자";const sc=myScope();if(sc.level==="grade")return "담임 · "+sc.grades.map(g=>GL[g]).join(", ");return deptLocked(S.team)?"팀 관리자":""}
+function roleLabel(){if(S.isAdmin)return S.isCo?(S.isCo2?"공동관리자2":"공동관리자1"):"총관리자";const sc=myScope();if(sc.level==="grade")return "담임 · "+sc.grades.map(g=>GL[g]).join(", ");if(sc.level==="sub")return "보조교사"+(sc.name?" · "+sc.name:"");return deptLocked(S.team)?"팀 관리자":""}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pad=n=>String(n).padStart(2,"0");
@@ -1056,6 +1057,8 @@ function openSplit(g){
 }
 /* ---------- 주소록 (권한별, 웹앱 전용) ---------- */
 /* 담임 선생님 개인 비밀번호 {교사 id: 번호} 와, 반 담임 번호로 들어와 고른 본인 이름 {부서: {pid,name}} */
+/* 보조교사: 부서마다 { c: 보조교사 비밀번호, n: 이름 } */
+function storeSubCode(t,code,name){S._scodes={...(S._scodes||{}),[t]:{c:code,n:name}};if(S.remember===false)return;let c={};try{c=JSON.parse(localStorage.getItem("ya-scodes")||"{}")}catch(_){}c[t]={c:code,n:name};try{localStorage.setItem("ya-scodes",JSON.stringify(c))}catch(_){}}
 function storeTCode(pid,code){S._tcodes={...(S._tcodes||{}),[pid]:code};if(S.remember===false)return;let c={};try{c=JSON.parse(localStorage.getItem("ya-tcodes")||"{}")}catch(_){}c[pid]=code;try{localStorage.setItem("ya-tcodes",JSON.stringify(c))}catch(_){}}
 function storeWho(t,w){const set=o=>{o={...(o||{})};if(w)o[t]=w;else delete o[t];return o};S._who=set(S._who);
   try{const c=set(JSON.parse(localStorage.getItem("ya-who")||"{}"));if(w&&S.remember===false)return;localStorage.setItem("ya-who",JSON.stringify(c))}catch(_){}}
@@ -1190,8 +1193,10 @@ function openHomeroomCodes(){
     const shown=new Set();if(ready)classesOf(S.team).forEach(([g])=>{const ns=classHrNames(S.team,g);if(ns.length>1)ns.forEach(n=>{const p=tOf(n);if(p)shown.add(p.id)})});
     const rest=(tlist||[]).filter(x=>!shown.has(x.pid));
     ov.innerHTML=`<div class="sheet" role="dialog" aria-label="담임 권한 관리"><h3>${TEAMS[S.team].label} 담임 권한</h3>
-    <p class="muted" style="margin:0;font-size:14px">반마다 담임 번호를 만들어 담임 선생님께 알려 주세요. 번호는 <b>영문과 숫자를 모두 넣은 6자리 이상</b>(대소문자 구분 없음)이에요. 담임 번호로 들어오면 <b>자기 반만</b> 출석·달란트·명단(연락처 포함)을 관리할 수 있어요. 다른 반, 교사 명단, 연말 등반은 보이지 않아요. 한 선생님이 두 반을 맡으면(예: 고2·고3) <b>[직접 입력]으로 두 반에 같은 번호</b>를 넣어 주세요. 한 반에 <b>담임이 여러 명</b>이면 반 아래에 <b>선생님마다 한 줄씩</b> 생겨요. 선생님별로 비밀번호를 만들어 주면 각자 자기 비밀번호로 들어와요. 반 담임을 바꾸면 줄도 저절로 늘고 줄어요.</p>
-    <div class="admin-list card" style="margin-top:12px">${ready?classesOf(S.team).map(([g,gl])=>{const code=codes[g]||"";const hr=hrText(classHrNames(S.team,g).join(","));if(editing===g)return `<form class="admin-row" data-gform="${g}"><b style="min-width:56px">${gl}</b>${inp("f-gc-"+g,code)}<button class="btn primary" type="submit">저장</button><button class="btn" type="button" data-gcancel>취소</button></form>`+tRows(g);
+    <p class="muted" style="margin:0;font-size:14px">반마다 담임 번호를 만들어 담임 선생님께 알려 주세요. 번호는 <b>영문과 숫자를 모두 넣은 6자리 이상</b>(대소문자 구분 없음)이에요. 담임 번호로 들어오면 <b>자기 반만</b> 출석·달란트·명단(연락처 포함)을 관리할 수 있어요. 다른 반, 교사 명단, 연말 등반은 보이지 않아요. 한 선생님이 두 반을 맡으면(예: 고2·고3) <b>[직접 입력]으로 두 반에 같은 번호</b>를 넣어 주세요. 한 반에 <b>담임이 여러 명</b>이면 반 아래에 <b>선생님마다 한 줄씩</b> 생겨요. 선생님별로 비밀번호를 만들어 주면 각자 자기 비밀번호로 들어와요. 반 담임을 바꾸면 줄도 저절로 늘고 줄어요. <b>담임 모두</b>가 개인 비밀번호를 가지면 같이 쓰던 반 담임 번호는 저절로 지워져요.</p>
+    ${ready?(()=>{const sc=codes.__sub||"";return `<h4 style="margin:14px 0 4px">보조교사 비밀번호</h4><p class="muted" style="margin:0;font-size:13px">교사 명단에 이름이 있는 선생님(반 담임이 아니어도)이 <b>본인 이름 + 이 비밀번호</b>로 들어오면 <b>일정 탭만</b> 볼 수 있어요.</p>
+    <div class="admin-list card" style="margin-top:6px">${editing==="__sub"?`<form class="admin-row" data-sform><b style="min-width:56px">보조교사</b>${inp("f-sub",sc)}<button class="btn primary" type="submit">저장</button><button class="btn" type="button" data-gcancel>취소</button></form>`:`<div class="admin-row"><b style="min-width:56px">보조교사</b><span class="code num ${sc?"":"none"}">${sc?esc(sc):"번호 없음"}</span>${sc?`<button class="btn" data-copy-c="${esc(sc)}">복사</button>`:""}<button class="btn" data-sgen>${sc?"새 번호":"번호 만들기"}</button><button class="btn" data-sedit>직접 입력</button>${sc?`<button class="btn danger" data-sclear>해제</button>`:""}</div>`}</div><h4 style="margin:14px 0 4px">반 담임</h4>`})():""}
+    <div class="admin-list card" style="margin-top:6px">${ready?classesOf(S.team).map(([g,gl])=>{const code=codes[g]||"";const hr=hrText(classHrNames(S.team,g).join(","));if(editing===g)return `<form class="admin-row" data-gform="${g}"><b style="min-width:56px">${gl}</b>${inp("f-gc-"+g,code)}<button class="btn primary" type="submit">저장</button><button class="btn" type="button" data-gcancel>취소</button></form>`+tRows(g);
       return `<div class="admin-row"><b style="min-width:56px">${gl}</b><span class="code num ${code?"":"none"}">${code?esc(code):"번호 없음"}</span>${hr?`<span class="muted" style="font-size:12px">담임 ${esc(hr)}</span>`:""}
       ${code?`<button class="btn" data-copy-c="${esc(code)}">복사</button>`:""}<button class="btn" data-ggen="${g}">${code?"새 번호":"번호 만들기"}</button><button class="btn" data-gedit="${g}">직접 입력</button>${code?`<button class="btn danger" data-gclear="${g}">해제</button>`:""}</div>`+tRows(g)}).join(""):`<p class="muted">불러오는 중…</p>`}</div>
     ${ready&&rest.length?`<h4 style="margin:14px 0 4px">본인 비밀번호를 쓰는 선생님</h4><p class="muted" style="margin:0;font-size:13px">비밀번호를 잊었다면 [초기화]하세요. 초기화하면 다시 반 담임 번호로 들어와 이름을 고르고, 새로 만들 수 있어요. 지금 담임이 아닌 선생님은 비밀번호가 있어도 아무 반도 열리지 않아요.</p>
@@ -1201,16 +1206,23 @@ function openHomeroomCodes(){
   call("gradeCodes",S.team).then(c=>{codes=c;draw()}).catch(e=>{toast(e.message);ov.remove()});
   call("tcodeList",S.team).then(l=>{tlist=l;if(ov.isConnected)draw()}).catch(()=>{tlist=[];if(ov.isConnected)draw()});
   const used=()=>Object.values(codes||{}).concat((tlist||[]).map(x=>x.code)).filter(Boolean);
+  const saveSub=async v=>{const c=await tracked(call("setSubCode",S.team,v));codes={...codes,__sub:c};editing="";draw();toast(c?"보조교사 비밀번호를 저장했어요":"보조교사 비밀번호를 해제했어요")};
   /* 선생님 비밀번호 만들기: 다른 번호와 겹치면 몇 번 다시 만들어요 */
   const genT=async pid=>{let last,u=used();for(let i=0;i<8;i++){let c;do{c=randomGradeCode()}while(u.includes(c));
     try{return await tracked(call("setTCode",S.team,pid,c))}catch(e){last=e;if(!/겹쳐요/.test(e.message))throw e;u=u.concat(c)}}throw last};
   const nameOf=pid=>{const p=S.people.get(pid);return p?p.name:""};
+  /* 담임 모두 개인 비밀번호를 가지면 서버가 그 반 공용 번호를 지워요. 다시 받아서 보여 줘요 */
+  const reCodes=async()=>{const before=codes;try{codes=await call("gradeCodes",S.team)}catch(_){return}
+    const gone=classesOf(S.team).filter(([g])=>before[g]&&!codes[g]).map(x=>x[1]);if(gone.length)toast(`${gone.join("·")} 담임 모두 개인 비밀번호가 있어 공용 담임 번호를 지웠어요`)};
   const fld=(pre,id)=>[...ov.querySelectorAll("input[id^='"+pre+"']")].find(i=>i.id===pre+id);
   ov.addEventListener("submit",async e=>{
+    if(e.target.closest("[data-sform]")){e.preventDefault();const v=(ov.querySelector("#f-sub").value||"").trim();
+      if(!validGradeCode(S.team,v)){toast("비밀번호는 "+gradeCodeRule(S.team)+"이어야 해요 (대소문자 구분 없음)");return}
+      try{await saveSub(v)}catch(err){alertBox("비밀번호를 저장하지 못했어요",err.message)}return}
     const tf=e.target.closest("[data-tform]");
     if(tf){e.preventDefault();const pid=tf.dataset.tform;const v=((fld("f-tc-",pid)||{}).value||"").trim();
       if(!validGradeCode(S.team,v)){toast("비밀번호는 "+gradeCodeRule(S.team)+"이어야 해요 (대소문자 구분 없음)");return}
-      try{tlist=await tracked(call("setTCode",S.team,pid,v));editing="";draw();toast(`${nameOf(pid)} 선생님 비밀번호를 저장했어요`)}
+      try{tlist=await tracked(call("setTCode",S.team,pid,v));editing="";await reCodes();draw();toast(`${nameOf(pid)} 선생님 비밀번호를 저장했어요`)}
       catch(err){alertBox("비밀번호를 저장하지 못했어요",err.message)}return}
     const f=e.target.closest("[data-gform]");if(!f)return;e.preventDefault();
     const g=f.dataset.gform;const v=(ov.querySelector("#f-gc-"+g).value||"").trim();
@@ -1224,7 +1236,10 @@ function openHomeroomCodes(){
     const ed=e.target.closest("[data-gedit]");if(ed){editing=ed.dataset.gedit;draw();const i=ov.querySelector("#f-gc-"+editing);if(i){i.focus();i.select()}return}
     const te=e.target.closest("[data-tedit]");if(te){editing="t:"+te.dataset.tedit;draw();const i=fld("f-tc-",te.dataset.tedit);if(i){i.focus();i.select()}return}
     if(e.target.closest("[data-gcancel]")){editing="";draw();return}
-    const tg=e.target.closest("[data-tgen]");if(tg){try{tlist=await genT(tg.dataset.tgen);draw();toast(`${nameOf(tg.dataset.tgen)} 선생님 비밀번호를 만들었어요`)}catch(err){alertBox("비밀번호를 저장하지 못했어요",err.message)}return}
+    if(e.target.closest("[data-sedit]")){editing="__sub";draw();const i=ov.querySelector("#f-sub");if(i){i.focus();i.select()}return}
+    if(e.target.closest("[data-sgen]")){let last,u=used();for(let i=0;i<8;i++){let c;do{c=randomGradeCode()}while(u.includes(c));try{await saveSub(c);return}catch(err){last=err;if(!/겹쳐요/.test(err.message))break;u=u.concat(c)}}alertBox("비밀번호를 저장하지 못했어요",last.message);return}
+    const sx=e.target.closest("[data-sclear]");if(sx){if(!sx.dataset.armed){sx.dataset.armed="1";sx.textContent="한 번 더 누르면 해제";return}try{await saveSub("")}catch(err){alertBox("해제하지 못했어요",err.message)}return}
+    const tg=e.target.closest("[data-tgen]");if(tg){try{tlist=await genT(tg.dataset.tgen);await reCodes();draw();toast(`${nameOf(tg.dataset.tgen)} 선생님 비밀번호를 만들었어요`)}catch(err){alertBox("비밀번호를 저장하지 못했어요",err.message)}return}
     const tx=e.target.closest("[data-tclear]");if(tx){if(!tx.dataset.armed){tx.dataset.armed="1";tx.textContent="한 번 더 누르면 해제";return}
       try{tlist=await tracked(call("setTCode",S.team,tx.dataset.tclear,""));draw();toast(`${nameOf(tx.dataset.tclear)} 선생님 비밀번호를 해제했어요`)}catch(err){alertBox("해제하지 못했어요",err.message)}return}
     const tr=e.target.closest("[data-treset]");if(tr){if(!tr.dataset.armed){tr.dataset.armed="1";tr.textContent="한 번 더 누르면 초기화";return}
@@ -1729,7 +1744,7 @@ const canRpt=()=>S.isAdmin||Object.keys(TEAMS).some(t=>deptLocked(t)&&((S.scope|
 /* 팀 관리자 화면: 반 담임 사용 설명서·내 팀 관리자 번호·반 담임 번호는 접힌 채로 시작 */
 const isTeamMgr=()=>!S.isAdmin&&Object.keys(TEAMS).some(t=>deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
 /* 담임 번호·팀 관리자로 들어온 사람: 메인화면 아래 버튼이 [로그아웃] */
-const isHrOnly=()=>!S.isAdmin&&!isTeamMgr()&&Object.keys(TEAMS).some(t=>((S.scope||{})[t]||{}).level==="grade");
+const isHrOnly=()=>!S.isAdmin&&!isTeamMgr()&&Object.keys(TEAMS).some(t=>["grade","sub"].includes(((S.scope||{})[t]||{}).level));
 const foldOpen=k=>S.isAdmin||(isTeamMgr()&&["guide","mycode","hrcodes"].includes(k))?!!S.fold[k]:S.fold[k]!==false;
 /* 당회보고서 제출 현황 (그달 제출한 부서 수). 1분이 지나면 메인 화면을 그릴 때 다시 받아요 */
 function rptStatLoad(){
@@ -2342,8 +2357,8 @@ const deptLocked=t=>!!(S.locked||{})[t];
 const canEnter=t=>!!(S.access||{})[t];
 function storedCodes(){try{return JSON.parse(localStorage.getItem("ya-codes")||"{}")}catch(_){return S._codes||{}}}
 function storeCode(t,code){S._codes={...(S._codes||{}),[t]:code};if(S.remember===false)return;const c=storedCodes();c[t]=code;try{localStorage.setItem("ya-codes",JSON.stringify(c))}catch(_){}}
-function hasStored(){try{return !!(localStorage.getItem("ya-admin")||Object.keys(JSON.parse(localStorage.getItem("ya-codes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-gcodes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-tcodes")||"{}")).length)}catch(_){return false}}
-function forgetDevice(msg){try{["ya-relogin","ya-admin","ya-email","ya-copw","ya-codes","ya-gcodes","ya-tcodes","ya-who","ya-tk","ya-photos",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._email="";S._copw="";S._codes={};S._gcodes={};S._tcodes={};S._who={};S.hrMe={};S._tk={};S.photos=new Map();S.view="home";S.book=null;load();toast(msg||"이 기기에 기억된 번호와 로그인을 지웠어요")}
+function hasStored(){try{return !!(localStorage.getItem("ya-admin")||Object.keys(JSON.parse(localStorage.getItem("ya-codes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-gcodes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-tcodes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-scodes")||"{}")).length)}catch(_){return false}}
+function forgetDevice(msg){try{["ya-relogin","ya-admin","ya-email","ya-copw","ya-codes","ya-gcodes","ya-tcodes","ya-scodes","ya-who","ya-tk","ya-photos",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._email="";S._copw="";S._codes={};S._gcodes={};S._tcodes={};S._scodes={};S._who={};S.hrMe={};S._tk={};S.photos=new Map();S.view="home";S.book=null;load();toast(msg||"이 기기에 기억된 번호와 로그인을 지웠어요")}
 /* 로그아웃: 로그인은 끝내지만, '이 기기에서 기억하기'로 들어왔다면 이메일·번호를 이 기기에만 남겨 다시 로그인할 때 미리 채워요 */
 const reLogin=()=>{try{return JSON.parse(localStorage.getItem("ya-relogin")||"{}")||{}}catch(_){return {}}};
 function logoutKeep(){const old=reLogin(),keep={};
@@ -2388,7 +2403,7 @@ function enterDept(t){if(canEnter(t))return goDept(t);if(myDepts().length){toast
 function openCodeSheet(t){
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="부서 고유번호 입력"><h3>${TEAMS[t].label}</h3>
-    <p class="muted" style="margin:0;font-size:14px"><b>본인 이름</b>과 <b>비밀번호</b>(담임 번호 또는 본인 비밀번호)를 넣고 들어가세요. 담임으로 들어가면 자기 반만 보여요. 팀 관리자는 먼저 메인 화면의 [팀관리자 로그인]에서 등록된 이메일로 로그인해 주세요.</p>
+    <p class="muted" style="margin:0;font-size:14px"><b>본인 이름</b>과 <b>비밀번호</b>(담임 번호, 본인 비밀번호 또는 보조교사 비밀번호)를 넣고 들어가세요. 담임으로 들어가면 자기 반만 보여요. 팀 관리자는 먼저 메인 화면의 [팀관리자 로그인]에서 등록된 이메일로 로그인해 주세요.</p>
     <div class="form"><label class="full">이름<input id="f-name" type="text" autocomplete="name" maxlength="20" placeholder="예: 홍길동" required></label><label class="full">비밀번호<input id="f-code" type="password" autocomplete="off" autocapitalize="off" maxlength="20" required></label><label class="inline full"><input type="checkbox" id="f-remember" checked>이 기기에서 번호 기억하기 <span class="muted" style="font-size:12px">(여러 사람이 쓰는 기기면 끄세요)</span></label></div>
     <p class="err" id="codeErr" hidden>번호가 맞지 않아요. 다시 확인해 주세요.</p>
     <p style="margin:2px 0 0;font-size:13px;text-align:center"><button type="button" class="btn" data-ask="pw" data-team="${t}" style="font-size:13px;padding:4px 10px">번호를 모르겠나요? 관리자에게 요청하기</button></p>
@@ -2402,13 +2417,14 @@ function openCodeSheet(t){
     e.preventDefault();const code=inp.value.trim(),name=nmi.value.trim();const ce=ov.querySelector("#codeErr");
     if(!name){ce.textContent="본인 이름을 적어 주세요.";ce.hidden=false;nmi.focus();return}
     S.remember=!!(ov.querySelector("#f-remember")||{checked:true}).checked;let ok=false,r=null,w=null;try{ok=await call("verifyCode",t,code,AUTH().email);if(!ok)r=await call("findEntry",t,code,name)}catch(err){ce.textContent=err.message;ce.hidden=false;return}
-    if(r&&(r.kind==="badname"||r.kind==="own")){ce.textContent=r.kind==="own"?`${r.name} 선생님은 본인 비밀번호가 있어요. 반 담임 번호 대신 본인 비밀번호를 넣어 주세요.`:"이 반 담임 명단에 없는 이름이에요. 이름을 다시 확인해 주세요.";ce.hidden=false;(r.kind==="own"?inp:nmi).select();return}
+    if(r&&(r.kind==="badname"||r.kind==="own")){ce.textContent=r.kind==="own"?`${r.name} 선생님은 본인 비밀번호가 있어요. 반 담임 번호 대신 본인 비밀번호를 넣어 주세요.`:r.sub?"교사 명단에 없는 이름이에요. 교사 명단에 적힌 이름 그대로 넣어 주세요.":"이 반 담임 명단에 없는 이름이에요. 이름을 다시 확인해 주세요.";ce.hidden=false;(r.kind==="own"?inp:nmi).select();return}
     if(ok||r){if(S.remember!==false)try{localStorage.setItem("ya-myname",name)}catch(_){}}
     if(ok){storeCode(t,code)}
     else if(r&&r.kind==="teacher"){storeTCode(r.pid,code);storeWho(t,null)}
+    else if(r&&r.kind==="sub"){storeSubCode(t,code,r.name)}
     else if(r&&r.kind==="class"){storeGradeCode(t+"_"+r.g,code);if(r.me)w=r.me;else{loginBar(false);w=await pickHomeroomName(t,r);loginBar(true)}storeWho(t,w)}
     if(ok||r){ov.remove();await load();goDept(t);if(ok&&canManageGrades())setTimeout(openHomeroomCodes,250);
-      toast(ok?"팀 관리자로 들어왔어요":r.kind==="teacher"?`${r.name} 선생님으로 들어왔어요`+(r.grades&&r.grades.length?"":" (담임으로 배치된 반이 없어요)"):`${TEAMS[t].short} ${Object.fromEntries(classesOf(t))[r.g]||""} 담임${w?" "+w.name+" 선생님":""}으로 들어왔어요`)}else{const ce=ov.querySelector("#codeErr");ce.textContent="이름이나 비밀번호가 맞지 않아요. 다시 확인해 주세요.";ce.hidden=false;inp.select()}
+      toast(ok?"팀 관리자로 들어왔어요":r.kind==="sub"?`${r.name} 선생님(보조교사)으로 들어왔어요. 일정만 볼 수 있어요`:r.kind==="teacher"?`${r.name} 선생님으로 들어왔어요`+(r.grades&&r.grades.length?"":" (담임으로 배치된 반이 없어요)"):`${TEAMS[t].short} ${Object.fromEntries(classesOf(t))[r.g]||""} 담임${w?" "+w.name+" 선생님":""}으로 들어왔어요`)}else{const ce=ov.querySelector("#codeErr");ce.textContent="이름이나 비밀번호가 맞지 않아요. 다시 확인해 주세요.";ce.hidden=false;inp.select()}
   }));
 }
 /* 담임 번호: 네 자리, 첫 자리는 부서마다 고정(영아 1 · 유아 2 · 유소년 3 · 중고등 4), 뒤 세 자리는 자유 */
@@ -3132,13 +3148,15 @@ function renderHome(){
     +`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>반담임은 부서를 선택해 들어가세요.</p></div>`;
   /* 팀 관리자·담임은 번호로 들어간 부서만 보여요 (다른 부서는 이 기기 번호를 지우면 다시 보여요). 하나뿐이면 크게 */
   const homeDepts=Object.entries(TEAMS).filter(([t])=>!myDepts().length||myDepts().includes(t));
+  /* 아직 로그인하지 않았을 때: 어디로 들어가는지 안내 */
+  if(!S.isAdmin&&!isHrOnly()&&!isTeamMgr())h+=`<p class="muted" style="margin:0 0 8px;font-size:14px;text-align:center">반담임은 부서를 선택해 들어가세요. <span class="nw">(임원선생님은 하단 로그인창을 이용)</span></p>`;
   h+=`<div class="dept-grid${homeDepts.length===1?" solo":""}">`;
   for(const [t,x] of homeDepts){
     const ps=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group!=="T");
     const on=ps.filter(p=>isOn(k,p.id)).length;const open=canEnter(t);
     h+=`<button class="dept${deptColor()?" tinted":""}" data-enter="${t}"${deptColor()?` style="--dept-bg:${deptColor()}"`:""}><span class="top"><span class="name">${x.label}</span>${!canEnter(t)?`<span class="lock">${LOCK_SVG}번호</span>`:""}</span>
       <span class="range">${(isFlex(t)?x.groups:classesOf(t))[0][1]} ~ ${(isFlex(t)?x.groups:classesOf(t))[x.groups.length-1][1]}</span>
-      <span class="stat num">${!S.ready?"불러오는 중…":open?`${((S.scope||{})[t]||{}).level==="grade"?"내 반":"재적"} ${ps.length}명 · 출석 ${on}명`:`재적 ${(S.counts||{})[t]||0}명 · 번호 입력 후 확인`}</span></button>`;
+      <span class="stat num">${!S.ready?"불러오는 중…":open?(((S.scope||{})[t]||{}).level==="sub"?"보조교사 · 일정 보기":`${((S.scope||{})[t]||{}).level==="grade"?"내 반":"재적"} ${ps.length}명 · 출석 ${on}명`):`재적 ${(S.counts||{})[t]||0}명 · 번호 입력 후 확인`}</span></button>`;
   }
   h+=`</div>`;
   /* 팀 관리자: 부서 카드 바로 아래에 반별 출석 현황 */
@@ -3214,6 +3232,8 @@ function render(){
   renderTeams();
   {const tt=document.querySelector('[data-tab="talent"]');if(tt)tt.hidden=!talentOn();if(S.tab==="talent"&&!talentOn())S.tab="check";}
   {const pt=document.querySelector('[data-tab="prenew"]');if(pt)pt.hidden=!preNewOn();if(S.tab==="prenew"&&!preNewOn())S.tab="check";}
+  /* 보조교사: 일정 탭만 */
+  {const sub=isSub();document.querySelectorAll("nav.tabs button").forEach(b=>{const k=b.dataset.tab;if(k==="schedule")return;if(sub)b.hidden=true;else if(k!=="talent"&&k!=="prenew")b.hidden=false});if(sub)S.tab="schedule"}
   if(S.view==="home"){$("#view").innerHTML=renderHome();return}
   setTeam(S.team);renderDate();renderChips();
   const v=$("#view");const ae=document.activeElement;const focusQ=ae&&ae.id==="q";const pos=focusQ?ae.selectionStart:0;
@@ -3511,7 +3531,7 @@ $("#next").onclick=()=>{const d=parseKey(S.date);d.setDate(d.getDate()+7);S.date
 $("#datePick").onchange=e=>{if(e.target.value){S.date=keyOf(toSunday(parseKey(e.target.value)));needYear();render()}};
 
 /* ---------- data (Google Apps Script) ---------- */
-function AUTH(){let tcodes={...(S._tcodes||{})},who={...(S._who||{})},tk={...(S._tk||{})},admin=S._admin||"",codes={...(S._codes||{})},gcodes={...(S._gcodes||{})},email=S._email||"",copw=S._copw||"";try{admin=localStorage.getItem("ya-admin")||admin;email=localStorage.getItem("ya-email")||email;copw=localStorage.getItem("ya-copw")||copw;tk={...tk,...(JSON.parse(localStorage.getItem("ya-tk")||"null")||{})};codes={...codes,...(JSON.parse(localStorage.getItem("ya-codes")||"null")||{})};gcodes={...gcodes,...(JSON.parse(localStorage.getItem("ya-gcodes")||"null")||{})};tcodes={...tcodes,...(JSON.parse(localStorage.getItem("ya-tcodes")||"null")||{})};who={...(JSON.parse(localStorage.getItem("ya-who")||"null")||{}),...who}}catch(_){}return{admin,codes,gcodes,tcodes,who,email,copw,tk,dv:devLabel()}}
+function AUTH(){let scodes={...(S._scodes||{})},tcodes={...(S._tcodes||{})},who={...(S._who||{})},tk={...(S._tk||{})},admin=S._admin||"",codes={...(S._codes||{})},gcodes={...(S._gcodes||{})},email=S._email||"",copw=S._copw||"";try{admin=localStorage.getItem("ya-admin")||admin;email=localStorage.getItem("ya-email")||email;copw=localStorage.getItem("ya-copw")||copw;tk={...tk,...(JSON.parse(localStorage.getItem("ya-tk")||"null")||{})};codes={...codes,...(JSON.parse(localStorage.getItem("ya-codes")||"null")||{})};gcodes={...gcodes,...(JSON.parse(localStorage.getItem("ya-gcodes")||"null")||{})};tcodes={...tcodes,...(JSON.parse(localStorage.getItem("ya-tcodes")||"null")||{})};who={...(JSON.parse(localStorage.getItem("ya-who")||"null")||{}),...who};scodes={...scodes,...(JSON.parse(localStorage.getItem("ya-scodes")||"null")||{})}}catch(_){}return{admin,codes,gcodes,tcodes,scodes,who,email,copw,tk,dv:devLabel()}}
 function storeEmail(v){v=String(v||"").trim().toLowerCase();if(!v)return;S._email=v;if(S.remember===false)return;try{localStorage.setItem("ya-email",v)}catch(_){}}
 let pending=0;
 // GitHub 페이지에서 열면 google.script.run 이 없으므로 웹앱 주소(doPost)로 직접 보낸다.
@@ -3636,7 +3656,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261025121627';
+  var BUILD = '20261025122632';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
