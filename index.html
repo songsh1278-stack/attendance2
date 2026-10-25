@@ -2424,6 +2424,7 @@ function openCodeSheet(t){
     else if(r&&r.kind==="sub"){storeSubCode(t,code,r.name)}
     else if(r&&r.kind==="class"){storeGradeCode(t+"_"+r.g,code);if(r.me)w=r.me;else{loginBar(false);w=await pickHomeroomName(t,r);loginBar(true)}storeWho(t,w)}
     if(ok||r){ov.remove();await load();goDept(t);if(ok&&canManageGrades())setTimeout(openHomeroomCodes,250);
+      if(r&&((r.kind==="teacher"&&r.temp)||(r.kind==="class"&&w&&w.pid)))setTimeout(()=>askOwnPw(t,code,r.kind==="teacher"),400);
       toast(ok?"팀 관리자로 들어왔어요":r.kind==="sub"?`${r.name} 선생님(보조교사)으로 들어왔어요. 일정만 볼 수 있어요`:r.kind==="teacher"?`${r.name} 선생님으로 들어왔어요`+(r.grades&&r.grades.length?"":" (담임으로 배치된 반이 없어요)"):`${TEAMS[t].short} ${Object.fromEntries(classesOf(t))[r.g]||""} 담임${w?" "+w.name+" 선생님":""}으로 들어왔어요`)}else{const ce=ov.querySelector("#codeErr");ce.textContent="이름이나 비밀번호가 맞지 않아요. 다시 확인해 주세요.";ce.hidden=false;inp.select()}
   }));
 }
@@ -2889,7 +2890,17 @@ function openMyCode(t){
   });
 }
 /* 담임 선생님 본인 비밀번호 만들기·바꾸기. 처음에는 반 담임 번호로 확인하고, 그 뒤로는 지금 비밀번호로 확인해요 */
-function openMyTCode(t){
+/* 처음 로그인 안내: 반 담임 번호나 팀 관리자가 만들어 준 비밀번호로 들어왔으면, 먼저 본인 비밀번호로 바꾸라고 알려요 */
+function askOwnPw(t,code,temp){
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-label="비밀번호 변경 안내"><h3>먼저 비밀번호를 바꿔 주세요</h3>
+    <p style="margin:0;font-size:15px">${temp?"팀 관리자가 만들어 준 비밀번호로 처음 로그인하셨어요.":"같은 반 선생님들이 함께 쓰는 <b>반 담임 번호</b>로 로그인하셨어요."} 다른 사람이 알 수 있는 번호이니 <b>나만 아는 비밀번호</b>로 바꿔 주세요.</p>
+    <p class="muted" style="margin:6px 0 0;font-size:13px">바꾼 뒤에는 메인 화면에서 이름과 새 비밀번호로 들어와요. 나중에 [메인 화면 → 내 담임 번호]에서도 바꿀 수 있어요.</p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>나중에</button><button type="button" class="btn primary" data-ok>지금 바꾸기</button></div></div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();if(e.target.closest("[data-ok]")){ov.remove();openMyTCode(t,code)}});
+}
+function openMyTCode(t,old){
   const me=(S.hrMe||{})[t];if(!me){toast("본인 이름으로 로그인한 뒤에 만들 수 있어요");return}
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="내 비밀번호"><h3>${esc(me.name)} 선생님 ${me.own?"비밀번호 변경":"비밀번호 만들기"}</h3>
@@ -2899,7 +2910,7 @@ function openMyTCode(t){
     <label class="full">새 비밀번호 한 번 더<input id="f-mt2" type="password" autocomplete="off" autocapitalize="off" maxlength="20" required></label></div>
     <p class="err" id="mtErr" hidden></p>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">${me.own?"변경":"만들기"}</button></div></form>`;
-  document.body.appendChild(ov);const o=ov.querySelector("#f-mt0"),a=ov.querySelector("#f-mt1"),b=ov.querySelector("#f-mt2");o.focus();
+  document.body.appendChild(ov);const o=ov.querySelector("#f-mt0"),a=ov.querySelector("#f-mt1"),b=ov.querySelector("#f-mt2");if(old){o.value=old;a.focus()}else o.focus();
   const err=m=>{const el=ov.querySelector("#mtErr");el.textContent=m;el.hidden=false};
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
   ov.querySelector("form").addEventListener("submit",async e=>{
@@ -3656,7 +3667,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261025122632';
+  var BUILD = '20261025122922';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
