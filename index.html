@@ -1667,7 +1667,7 @@ async function openActivityLog(){
     <div class="seg" id="alTeams"><button data-atm="all" aria-pressed="true">전체</button>${Object.entries(TEAMS).map(([k,x])=>`<button data-atm="${k}" aria-pressed="false">${esc(x.short)}</button>`).join("")}</div>
     <div class="form" style="grid-template-columns:1fr 1fr"><label>종류<select id="alKind"><option value="nologin">로그인 빼고 모두</option><option value="all">전체 (로그인 포함)</option></select></label><label>검색<input id="alQ" type="search" placeholder="이름·내용·바꾼 사람" autocomplete="off"></label></div>
     <div id="alList" style="margin-top:6px"><p class="muted">불러오는 중…</p></div>
-    <p class="muted" style="font-size:12px;margin:10px 0 0">최근 기록부터 200건씩 보여요. 아래로 내리면 더 불러와요. 종류·부서·검색은 지난 기록 전체에서 찾아요. 시트의 '이력' 탭에도 같은 내용이 있어요. 출석 체크는 그날 것을 모아 <b>오후 6시에 한 번</b>, 반마다 한 줄로 남고 텔레그램으로도 와요 (6시 뒤에 체크한 것은 다음 날 6시에).</p>
+    <p class="muted" style="font-size:12px;margin:10px 0 0">최근 기록부터 200건씩 보여요. 아래로 내리면 더 불러와요. 종류·부서·검색은 지난 기록 전체에서 찾아요. 시트의 '이력' 탭에도 같은 내용이 있어요. 출석 체크·해제(달란트 해제 포함)는 그날 것을 모아 <b>오후 6시에 한 번</b>, 반마다 한 줄로 남고 텔레그램으로도 와요 (6시 뒤에 한 것은 다음 날 6시에).</p>
     <div class="actions"><div class="spacer"></div><button class="btn primary" data-close>닫기</button></div></div>`;
   document.body.appendChild(ov);
   const list=ov.querySelector("#alList");
@@ -3677,7 +3677,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261025130054';
+  var BUILD = '20261025130201';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
