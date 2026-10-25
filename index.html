@@ -3167,11 +3167,9 @@ function hardRefresh(){
 function renderHome(){
   const k=S.date;
   let h=(onOfficialUrl()?"":`<div class="notice" style="margin:0 0 12px"><b>예전 주소로 열려 있어요.</b> 바뀐 내용이 보이지 않으면 새 주소로 여세요.<div style="margin-top:8px"><a class="btn primary" href="${OFFICIAL_URL}" target="_top" rel="noopener">↻ 새 주소로 새로고침</a></div></div>`)
-    +`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>반담임은 부서를 선택해 들어가세요.</p></div>`;
+    +`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>반담임은 부서를 선택해 들어가세요! <span class="nw">(임원선생님은 하단 로그인창으로 로그인 해주세요!)</span></p></div>`;
   /* 팀 관리자·담임은 번호로 들어간 부서만 보여요 (다른 부서는 이 기기 번호를 지우면 다시 보여요). 하나뿐이면 크게 */
   const homeDepts=Object.entries(TEAMS).filter(([t])=>!myDepts().length||myDepts().includes(t));
-  /* 아직 로그인하지 않았을 때: 어디로 들어가는지 안내 */
-  if(!S.isAdmin&&!isHrOnly()&&!isTeamMgr())h+=`<p class="muted" style="margin:0 0 8px;font-size:14px;text-align:center">반담임은 부서를 선택해 들어가세요. <span class="nw">(임원선생님은 하단 로그인창을 이용)</span></p>`;
   h+=`<div class="dept-grid${homeDepts.length===1?" solo":""}">`;
   for(const [t,x] of homeDepts){
     const ps=[...S.people.values()].filter(p=>teamOf(p)===t&&p.active!==false&&p.group!=="T");
@@ -3678,7 +3676,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261025123921';
+  var BUILD = '20261025125002';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
