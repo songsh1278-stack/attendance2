@@ -1183,7 +1183,7 @@ function openHomeroomCodes(){
   const ov=document.createElement("div");ov.className="overlay";let codes=null,editing="",tlist=null;
   const tOf=name=>{const L=[...S.people.values()].filter(p=>teamOf(p)===S.team&&p.group==="T"&&p.active!==false);return L.find(p=>p.name===name)||L.find(p=>sameName(p.name,name))};
   const tc=pid=>(tlist||[]).find(x=>x.pid===pid);
-  const inp=(id,v)=>`<input id="${id}" maxlength="20" autocapitalize="off" placeholder="${gradeCodeRule(S.team)}" value="${esc(v)}" autocomplete="off" style="flex:1;min-width:110px;height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:16px;letter-spacing:.1em;background:var(--ground);color:var(--ink)">`;
+  const inp=(id,v)=>`<input id="${id}" type="password" maxlength="20" autocapitalize="off" placeholder="${gradeCodeRule(S.team)}" value="${esc(v)}" autocomplete="off" style="flex:1;min-width:110px;height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:16px;letter-spacing:.1em;background:var(--ground);color:var(--ink)">`;
   /* 담임이 2명 이상인 반: 선생님마다 한 줄 (본인 비밀번호) */
   const tRows=g=>{const ns=classHrNames(S.team,g);if(ns.length<2)return "";
     return ns.map(n=>{const p=tOf(n);const lab=`<b style="min-width:56px;font-weight:500;padding-left:14px">└ ${esc(n)}</b>`;
@@ -2461,7 +2461,7 @@ async function saveDeptCode(t,code){
 function openCodeEdit(t){
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="고유번호 직접 입력"><h3>${TEAMS[t].label} 고유번호</h3>
-    <div class="form"><label class="full">숫자 4~8자리<input id="f-newcode" inputmode="numeric" autocomplete="off" pattern="[0-9]{4,8}" maxlength="8" value="${esc(S.codes[t]||"")}" required></label></div>
+    <div class="form"><label class="full">숫자 4~8자리<input id="f-newcode" type="password" inputmode="numeric" autocomplete="off" pattern="[0-9]{4,8}" maxlength="8" value="${esc(S.codes[t]||"")}" required></label></div>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
   document.body.appendChild(ov);ov.querySelector("#f-newcode").focus();
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
@@ -3171,7 +3171,7 @@ function hardRefresh(){
 function renderHome(){
   const k=S.date;
   let h=(onOfficialUrl()?"":`<div class="notice" style="margin:0 0 12px"><b>예전 주소로 열려 있어요.</b> 바뀐 내용이 보이지 않으면 새 주소로 여세요.<div style="margin-top:8px"><a class="btn primary" href="${OFFICIAL_URL}" target="_top" rel="noopener">↻ 새 주소로 새로고침</a></div></div>`)
-    +`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>반담임 선생님은 부서를 선택해서 들어가세요! <span class="nw">(임원선생님은 하단 로그인창을 이용해주세요~)</span></p></div>`;
+    +`<div class="home-intro"><p class="yr num">${k.slice(0,4)}년</p><p>반담임선생님은 부서를 선택해서 로그인 해주세요~ <span class="nw">(임원선생님은 하단 로그인창을 이용해주세요~)</span></p></div>`;
   /* 팀 관리자·담임은 번호로 들어간 부서만 보여요 (다른 부서는 이 기기 번호를 지우면 다시 보여요). 하나뿐이면 크게 */
   const homeDepts=Object.entries(TEAMS).filter(([t])=>!myDepts().length||myDepts().includes(t));
   h+=`<div class="dept-grid${homeDepts.length===1?" solo":""}">`;
@@ -3222,7 +3222,7 @@ function renderStaff(){
     <form id="staffForm" class="form" style="grid-template-columns:1fr"><label>이름<input id="f-sname" maxlength="20" required autocomplete="off"></label><label>이메일<input id="f-semail" type="email" inputmode="email" autocomplete="off" required></label>
     <label>구분<select id="f-srole"><option value="team">팀 관리자</option><option value="co">공동관리자1</option><option value="co2">공동관리자2</option><option value="admin" ${S.isCo?"disabled":""}>총관리자</option></select></label>
     <label id="f-steaml">담당 부서 (이 부서로만 로그인할 수 있어요)<select id="f-steam"><option value="">부서 선택</option>${Object.entries(TEAMS).map(([t,x])=>`<option value="${t}">${x.label}</option>`).join("")}</select></label>
-    <label id="f-spwl" hidden>공동관리자 비밀번호 (영문+숫자 8자 이상)<input id="f-spw" maxlength="30" autocomplete="off"></label>
+    <label id="f-spwl" hidden>공동관리자 비밀번호 (영문+숫자 8자 이상)<input id="f-spw" type="password" maxlength="30" autocomplete="off"></label>
     <div class="actions" style="margin-top:0"><div class="spacer"></div><button class="btn primary" type="submit">등록</button></div></form></div></details>`;
 }
 document.addEventListener("change",e=>{if(e.target.id==="f-srole"){const l=document.querySelector("#f-spwl");if(l)l.hidden=e.target.value!=="co"&&e.target.value!=="co2";const tl=document.querySelector("#f-steaml");if(tl)tl.hidden=e.target.value!=="team"}});
@@ -3239,7 +3239,7 @@ function openStaffEdit(email){
     <div class="form" style="grid-template-columns:1fr"><label>이름<input id="f-esn" maxlength="20" value="${esc(x.name)}" required autocomplete="off"></label><label>이메일<input id="f-ese" type="email" inputmode="email" value="${esc(x.email)}" required autocomplete="off"></label>
     <label>구분<select id="f-esr"><option value="team" ${x.role==="team"?"selected":""}>팀 관리자</option><option value="co" ${x.role==="co"?"selected":""}>공동관리자1</option><option value="co2" ${x.role==="co2"?"selected":""}>공동관리자2</option><option value="admin" ${x.role==="admin"?"selected":""} ${S.isCo?"disabled":""}>총관리자</option></select></label>
     <label id="f-esteaml" ${x.role==="team"?"":"hidden"}>담당 부서 (이 부서로만 로그인할 수 있어요)<select id="f-este"><option value="">부서 선택</option>${Object.entries(TEAMS).map(([t,y])=>`<option value="${t}" ${x.team===t?"selected":""}>${y.label}</option>`).join("")}</select></label>
-    <label id="f-espwl" ${x.role==="co"||x.role==="co2"?"":"hidden"}>공동관리자 비밀번호 (영문+숫자 8자 이상, 비워 두면 그대로)<input id="f-espw" maxlength="30" autocomplete="off"></label></div>
+    <label id="f-espwl" ${x.role==="co"||x.role==="co2"?"":"hidden"}>공동관리자 비밀번호 (영문+숫자 8자 이상, 비워 두면 그대로)<input id="f-espw" type="password" maxlength="30" autocomplete="off"></label></div>
     <p class="err" id="esErr" hidden></p>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
   document.body.appendChild(ov);
@@ -3680,7 +3680,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261026174330';
+  var BUILD = '20261027075011';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
