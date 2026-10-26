@@ -963,6 +963,9 @@ const banOf=p=>{const l=classLabel(p);return ageLabel(p)&&l&&!/반$/.test(l)?l+"
 const ageClassLabel=p=>[ageLabel(p),banOf(p)].filter(Boolean).join(" · ");
 const homeroomOf=(g,sec)=>{const c=classOf(g);return (sec?(c.teachers||{})[sec]:c.teacher)||""};
 /* 담임은 여러 명일 수 있어요. 저장은 "김은혜, 박요한"처럼 쉼표로 이어서 한 칸에 */
+/* 같은 사람 이름인지 (띄어쓰기 무시). '정나리(정미유)'는 '정나리'·'정미유'와도 같아요 */
+const nameMatch=(a,b)=>{const s=String(a||"").replace(/\s+/g,""),t=String(b||"").replace(/\s+/g,"");if(!t)return false;if(s===t)return true;const m=s.match(/^(.+?)[(（](.+?)[)）]$/);return !!m&&(m[1]===t||m[2]===t)};
+const sameName=(a,b)=>nameMatch(a,b)||nameMatch(b,a);
 const hrNames=v=>[...new Set(String(v||"").split(/\s*[,，]\s*/).map(x=>x.trim()).filter(Boolean))];
 const hrJoin=list=>hrNames(list.join(",")).join(", ");
 const hrText=v=>hrNames(v).join("·");
@@ -971,7 +974,7 @@ function homeroomBar(g,sec=""){
   return `<div class="homeroom"><span class="lbl">${sec?sec+"반 담임":"담임"}</span>${t.length?`<b>${t.map(esc).join("·")} 선생님</b>`:`<span class="none">아직 지정 안 됨</span>`}<span class="spacer"></span>${S.editable?`<button data-homeroom="${g}" data-sec="${sec}">${t.length?"추가·삭제":"지정"}</button>`:""}</div>`;
 }
 /* 담임 선생님 출결: 각 반 담임 칸 바로 아래에서 체크 (교사 명단에 같은 이름이 있을 때) */
-const hrPeople=(g,sec)=>{const ns=hrNames(homeroomOf(g,sec));return ns.length?[...S.people.values()].filter(p=>teamOf(p)===S.team&&p.group==="T"&&p.active!==false&&ns.includes(p.name)):[]};
+const hrPeople=(g,sec)=>{const ns=hrNames(homeroomOf(g,sec));return ns.length?[...S.people.values()].filter(p=>teamOf(p)===S.team&&p.group==="T"&&p.active!==false&&ns.some(n=>sameName(n,p.name))):[]};
 const hrRows=(g,sec="")=>{const ts=hrPeople(g,sec);return ts.length?`<div class="list" style="margin-bottom:8px">${ts.map(personRow).join("")}</div>`:""};
 function saveClass(g,patch){
   const key=classKey(g);const body={...classOf(g),team:S.team,group:g,...patch};
@@ -1178,7 +1181,7 @@ function openHomeroomCodes(){
   if(S.isCo2){toast("공동관리자2는 담임 번호를 볼 수 없어요");return}
   if(!canManageGrades())return;
   const ov=document.createElement("div");ov.className="overlay";let codes=null,editing="",tlist=null;
-  const tOf=name=>[...S.people.values()].find(p=>teamOf(p)===S.team&&p.group==="T"&&p.active!==false&&p.name===name);
+  const tOf=name=>{const L=[...S.people.values()].filter(p=>teamOf(p)===S.team&&p.group==="T"&&p.active!==false);return L.find(p=>p.name===name)||L.find(p=>sameName(p.name,name))};
   const tc=pid=>(tlist||[]).find(x=>x.pid===pid);
   const inp=(id,v)=>`<input id="${id}" maxlength="20" autocapitalize="off" placeholder="${gradeCodeRule(S.team)}" value="${esc(v)}" autocomplete="off" style="flex:1;min-width:110px;height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:16px;letter-spacing:.1em;background:var(--ground);color:var(--ink)">`;
   /* 담임이 2명 이상인 반: 선생님마다 한 줄 (본인 비밀번호) */
@@ -2093,7 +2096,7 @@ function renderRoster(){
   const flat=rosterSort==="name",bday=rosterSort==="bday";const tFirst=GROUPS.findIndex(g=>g[0]==="T")===0;const byAge=rosterSort==="age"&&isFlex(S.team);
   const ageIx=p=>{const i=TEAMS[S.team].groups.findIndex(([a])=>a===String(p.age||""));return i<0?99:i};
   const gk=p=>p.group==="T"?(flat||byAge||bday?"T":p.group):flat?"__all":bday?"bd:"+(bdaySortKey(p)<9999?Math.floor(bdaySortKey(p)/100):"?"):byAge?"age:"+(ageIx(p)<99?p.age:"?"):p.group;const bucket=p=>(p.group==="T")===tFirst?0:1;
-  const ps=all.filter(p=>rosterModeOf(p)===(S.rosterMode||"active")).filter(p=>!q||[p.name,p.note].some(v=>(v||"").includes(q)))
+  const ps=all.filter(p=>rosterModeOf(p)===(S.rosterMode||"active")).filter(p=>!q||[p.name,p.note].some(v=>(v||"").replace(/\s+/g,"").includes(q.replace(/\s+/g,""))))
     .sort((a,b)=>(a.active===false)-(b.active===false)||(flat?bucket(a)-bucket(b):bday?bucket(a)-bucket(b)||bdaySortKey(a)-bdaySortKey(b):byAge?bucket(a)-bucket(b)||ageIx(a)-ageIx(b):GROUPS.findIndex(g=>g[0]===a.group)-GROUPS.findIndex(g=>g[0]===b.group)||String(a.group).localeCompare(String(b.group)))||a.name.localeCompare(b.name,"ko"));
   let h=`<input class="search" id="q" type="search" placeholder="이름 검색" value="${esc(S.q)}"><div class="seg" style="margin-top:10px">${[["active","출석"],["removed","제적"],["grad","졸업"]].map(([m,l])=>`<button data-rmode="${m}" aria-pressed="${(S.rosterMode||"active")===m}">${l} ${(()=>{const L=all.filter(p=>rosterModeOf(p)===m),tc=L.filter(p=>p.group==="T").length;return S.group==="T"?tc+"명":(L.length-tc)+"명"+(tc?` <span style="font-weight:400;opacity:.75">+교사 ${tc}</span>`:"")})()}</button>`).join("")}</div>
     <div class="seg" style="margin-top:8px" aria-label="정렬">${[["name","ㄱㄴㄷ순"],["age","학년별"],["bday","생일순"]].map(([m,l])=>`<button data-rsort="${m}" aria-pressed="${rosterSort===m}">${l}</button>`).join("")}</div>
@@ -3677,7 +3680,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261026173643';
+  var BUILD = '20261026174330';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
