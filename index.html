@@ -971,7 +971,7 @@ const hrJoin=list=>hrNames(list.join(",")).join(", ");
 const hrText=v=>hrNames(v).join("·");
 function homeroomBar(g,sec=""){
   const t=hrNames(homeroomOf(g,sec));
-  return `<div class="homeroom"><span class="lbl">${sec?sec+"반 담임":"담임"}</span>${t.length?`<b>${t.map(esc).join("·")} 선생님</b>`:`<span class="none">아직 지정 안 됨</span>`}<span class="spacer"></span>${S.editable?`<button data-homeroom="${g}" data-sec="${sec}">${t.length?"추가·삭제":"지정"}</button>`:""}</div>`;
+  return `<div class="homeroom"><span class="lbl">${sec?sec+"반 담임":"담임"}</span>${t.length?`<b>${t.map(esc).join("·")} 선생님</b>`:`<span class="none">아직 지정 안 됨</span>`}<span class="spacer"></span>${S.editable&&myScope().level==="dept"?`<button data-homeroom="${g}" data-sec="${sec}">${t.length?"추가·삭제":"지정"}</button>`:""}</div>`;
 }
 /* 담임 선생님 출결: 각 반 담임 칸 바로 아래에서 체크 (교사 명단에 같은 이름이 있을 때) */
 const hrPeople=(g,sec)=>{const ns=hrNames(homeroomOf(g,sec));return ns.length?[...S.people.values()].filter(p=>teamOf(p)===S.team&&p.group==="T"&&p.active!==false&&ns.some(n=>sameName(n,p.name))):[]};
@@ -982,6 +982,7 @@ function saveClass(g,patch){
   if(S.db)enqueue("classes/"+key,()=>S.db.doc("classes/"+key).set(body));
 }
 function openHomeroom(g,sec=""){
+  if(myScope().level!=="dept"){toast("담임 지정은 팀 관리자 이상만 할 수 있어요");return}
   let list=hrNames(homeroomOf(g,sec));const orig=hrJoin(list);
   const names=[...S.people.values()].filter(p=>teamOf(p)===S.team&&p.group==="T"&&p.active!==false).map(p=>p.name).sort((a,b)=>a.localeCompare(b,"ko"));
   const ov=document.createElement("div");ov.className="overlay";
@@ -3680,7 +3681,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261027075011';
+  var BUILD = '20261027075348';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
