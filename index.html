@@ -1019,6 +1019,7 @@ function openHomeroom(g,sec=""){
 }
 function openSplit(g){
   if(!S.editable)return;
+  if(myScope().level!=="dept"){toast("분반은 팀 관리자 이상만 할 수 있어요");return}
   const studs=activePeople(g);
   const cur=sectionsOf(g);let n=Math.max(1,cur.length);
   const assign=new Map(studs.map(p=>[p.id,secOf(p)]));
@@ -2061,7 +2062,7 @@ function renderCheck(){
     const gp=ps.filter(p=>p.group===g);
     if(!isClassKey(g)&&!gp.length&&S.group==="all")continue;
     const ss=isClassKey(g)?sectionsOf(g):[];
-    h+=`<div class="group-h">${GL[g]}${ss.length?`<span class="c">${ss.join("·")}반</span>`:""}<span class="c num">${gp.filter(p=>isOn(k,p.id)).length}/${gp.length}</span>${isClassKey(g)&&S.editable?`<button class="mini" data-split="${g}">${ss.length?"분반 수정":"분반 나누기"}</button>`:""}</div>`;
+    h+=`<div class="group-h">${GL[g]}${ss.length?`<span class="c">${ss.join("·")}반</span>`:""}<span class="c num">${gp.filter(p=>isOn(k,p.id)).length}/${gp.length}</span>${isClassKey(g)&&S.editable&&myScope().level==="dept"?`<button class="mini" data-split="${g}">${ss.length?"분반 수정":"분반 나누기"}</button>`:""}</div>`;
     if(!gp.length&&!ss.length){if(isClassKey(g))h+=homeroomBar(g)+hrRows(g);h+=`<div class="group-empty">${S.ready?"등록된 사람이 없어요. 명단 탭에서 추가하세요.":"불러오는 중…"}</div>`;continue}
     if(!ss.length){if(isClassKey(g))h+=homeroomBar(g)+hrRows(g);h+=`<div class="list">${gp.map(personRow).join("")}</div>`;continue}
     for(const sec of ss){
@@ -3681,7 +3682,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261027075348';
+  var BUILD = '20261027075604';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
