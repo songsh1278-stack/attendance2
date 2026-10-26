@@ -3197,9 +3197,9 @@ function renderHome(){
     h+=renderAdminSummary();
     h+=rptCard();
     // 시스템 전체 설정은 총관리자만 화면에 표시합니다. 공동관리자는 등록 메뉴만 사용합니다.
-    if(!S.isCo2) h+=`<details class="fold" data-fold="codes"${S.fold.codes?" open":""}><summary><h2 class="sec">팀별 관리자 번호</h2><span class="fold-sum">${Object.keys(TEAMS).length}개 부서 중 ${Object.keys(TEAMS).filter(deptLocked).length}곳 설정</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">팀 관리자(중간관리자)에게 이 번호를 주면 그 부서 전체를 관리하고, 반별 담임에게 담임 번호를 줄 수 있어요. 번호가 없는 부서는 총관리자만 들어갈 수 있어요(담임은 담임 번호로 자기 반만). 번호는 총관리자·공동관리자가 바꿀 수 있어요.</p>
+    if(!S.isCo2) h+=`<details class="fold" data-fold="codes"${S.fold.codes?" open":""}><summary><h2 class="sec">팀별 관리자 번호</h2><span class="fold-sum">${Object.keys(TEAMS).length}개 부서 중 ${Object.keys(TEAMS).filter(deptLocked).length}곳 설정</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">팀 관리자(중간관리자)에게 이 번호를 주면 그 부서 전체를 관리하고, 반별 담임에게 담임 번호를 줄 수 있어요. 번호가 없는 부서는 총관리자만 들어갈 수 있어요(담임은 담임 번호로 자기 반만). 번호는 총관리자·공동관리자가 바꿀 수 있어요. 팀 관리자가 직접 바꾼 번호는 보이지 않아요. 잊었다면 [새 번호]를 만들어 알려 주세요.</p>
       <div class="card admin-list">${Object.entries(TEAMS).map(([t,x])=>{const code=S.codes[t]||"";const set=deptLocked(t);
-        return `<div class="admin-row"><b>${x.label}</b><span class="code num ${code?"":"none"}">${code?esc(code):set?"설정됨":"번호 없음 (총관리자만 입장)"}</span>
+        return `<div class="admin-row"><b>${x.label}</b><span class="code num ${code?"":"none"}">${code?esc(code):set&&(S.codesOwn||[]).includes(t)?"직접 바꾼 비밀번호":set?"설정됨":"번호 없음 (총관리자만 입장)"}</span>
           ${code?`<button class="btn" data-copy-code="${esc(code)}">복사</button>`:""}<button class="btn" data-code-gen="${t}">${set?"새 번호":"번호 만들기"}</button><button class="btn" data-code-edit="${t}">직접 입력</button>${set?`<button class="btn danger" data-code-clear="${t}">해제</button>`:""}</div>`}).join("")}</div></details>`+hrCodesCard(Object.keys(TEAMS));
   }
   {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
@@ -3639,7 +3639,7 @@ async function loadPhotos(){
 }
 function applyBoot(d){
   if(d.tk){S._tk=d.tk;if(S.remember!==false)try{localStorage.setItem("ya-tk",JSON.stringify(d.tk))}catch(_){}}
-  S.hrMe=d.hrMe||{};S.codeTemp=d.codeTemp||{};S.gcChanged=d.gcChanged||{};S.rptOk=!!d.rptOk;S.isAdmin=!!d.isAdmin;if(d.adminBad){try{localStorage.removeItem("ya-admin")}catch(_){}S._admin="";toast("이 기기에 기억된 총관리자 비밀번호가 맞지 않아 지웠어요. 다시 로그인해 주세요")}S.isCo=!!d.isCo;S.isCo2=!!d.isCo2;S.me=d.me||"";S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
+  S.hrMe=d.hrMe||{};S.codesOwn=d.codesOwn||[];S.codeTemp=d.codeTemp||{};S.gcChanged=d.gcChanged||{};S.rptOk=!!d.rptOk;S.isAdmin=!!d.isAdmin;if(d.adminBad){try{localStorage.removeItem("ya-admin")}catch(_){}S._admin="";toast("이 기기에 기억된 총관리자 비밀번호가 맞지 않아 지웠어요. 다시 로그인해 주세요")}S.isCo=!!d.isCo;S.isCo2=!!d.isCo2;S.me=d.me||"";S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
   S.staff=d.staff||[];S.preNew=d.preNew||null;S.scope=d.scope||{};S.settings=d.settings||{};S.people=new Map((d.people||[]).map(p=>[p.id,p]));setTeam(S.team);
   S.att=new Map(Object.entries(d.att||{}));
   [attFly,attBuf].forEach(B=>Object.keys(B).forEach(k=>S.att.set(k,mergeAtt(S.att.get(k)||{date:k,p:{},t:{}},B[k])))); // 보내는 중이거나 아직 안 보낸 체크는 유지
@@ -3682,7 +3682,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261027080400';
+  var BUILD = '20261027081639';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
