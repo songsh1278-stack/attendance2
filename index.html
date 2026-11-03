@@ -1060,18 +1060,13 @@ function openSplit(g){
     render();toast(L.length?`${GL[g]}을(를) ${L.join("·")}반으로 나눴어요`:`${GL[g]} 분반을 합쳤어요`);
   });
 }
-/* ---------- 주소록 (권한별, 웹앱 전용) ---------- */
-/* 담임 선생님 개인 비밀번호 {교사 id: 번호} 와, 반 담임 번호로 들어와 고른 본인 이름 {부서: {pid,name}} */
-/* 보조교사: 부서마다 { c: 보조교사 비밀번호, n: 이름 } */
-function storeSubCode(t,code,name){S._scodes={...(S._scodes||{}),[t]:{c:code,n:name}};if(S.remember===false)return;let c={};try{c=JSON.parse(localStorage.getItem("ya-scodes")||"{}")}catch(_){}c[t]={c:code,n:name};try{localStorage.setItem("ya-scodes",JSON.stringify(c))}catch(_){}}
 function storeTCode(pid,code){S._tcodes={...(S._tcodes||{}),[pid]:code};if(S.remember===false)return;let c={};try{c=JSON.parse(localStorage.getItem("ya-tcodes")||"{}")}catch(_){}c[pid]=code;try{localStorage.setItem("ya-tcodes",JSON.stringify(c))}catch(_){}}
 function storeWho(t,w){const set=o=>{o={...(o||{})};if(w)o[t]=w;else delete o[t];return o};S._who=set(S._who);
   try{const c=set(JSON.parse(localStorage.getItem("ya-who")||"{}"));if(w&&S.remember===false)return;localStorage.setItem("ya-who",JSON.stringify(c))}catch(_){}}
-function storeGradeCode(k,code){S._gcodes={...(S._gcodes||{}),[k]:code};if(S.remember===false)return;let c={};try{c=JSON.parse(localStorage.getItem("ya-gcodes")||"{}")}catch(_){}c[k]=code;try{localStorage.setItem("ya-gcodes",JSON.stringify(c))}catch(_){}}
 function loadContacts(){
   if(S.bookLoading)return S.bookP;S.bookLoading=true;const team=S.team;
   return S.bookP=(async()=>{
-    try{const d=await call("contacts",team);S.book={team,...d}}catch(e){S.book={team,error:e.message,grades:[],contacts:{},gradeLocked:{},gradeCodes:{}}}
+    try{const d=await call("contacts",team);S.book={team,...d}}catch(e){S.book={team,error:e.message,grades:[],contacts:{}}}
     S.bookLoading=false;if(S.tab==="roster"||S.tab==="check")render();
   })();
 }
@@ -1098,57 +1093,18 @@ function normBirthday(v){
 function contactScopeBar(){
   const B=S.book;if(!B||B.team!==S.team)return S.bookLoading?`<div class="homeroom" style="margin-top:4px"><span class="lbl">연락처</span><span class="none" style="font-size:13px">불러오는 중…</span></div>`:"";
   if(B.error)return `<div class="homeroom" style="margin-top:4px"><span class="lbl">연락처</span><span class="none" style="font-size:13px">${esc(B.error)}</span></div>`;
-  const locked=B.dept?[]:classesOf(S.team).map(([g])=>g).filter(g=>!B.grades.includes(g)&&B.gradeLocked[g]&&(S.group==="all"||S.group===g));
-  const txt=B.dept?"이름을 누르면 연락처·주소가 보여요":B.grades.length?`${B.grades.filter(g=>g!=="T").map(g=>GL[g]).join(", ")} 연락처를 볼 수 있어요`:"담임 번호를 입력하면 그 학년 연락처가 보여요";
-  return `<div class="homeroom" style="margin-top:4px;flex-wrap:wrap"><span class="lbl">연락처</span><span class="none" style="font-size:13px">${esc(txt)}</span><span class="spacer"></span>${locked.map(g=>`<button data-gcode="${g}">${GL[g]} 번호 입력</button>`).join("")}</div>`;
+  const txt=B.dept?"이름을 누르면 연락처·주소가 보여요":B.grades.length?`${B.grades.filter(g=>g!=="T").map(g=>GL[g]).join(", ")} 연락처를 볼 수 있어요`:"담임 반 학생의 연락처만 볼 수 있어요";
+  return `<div class="homeroom" style="margin-top:4px;flex-wrap:wrap"><span class="lbl">연락처</span><span class="none" style="font-size:13px">${esc(txt)}</span></div>`;
 }
 /* 사람 정보 창의 연락처·주소 (권한이 있을 때만) */
 function contactLines(p){
   if(!bookReady())return S.bookLoading?`<p class="muted" style="font-size:13px;margin:10px 0 0">연락처를 불러오는 중…</p>`:"";
-  if(!canContact(p.group))return `<p class="muted" style="font-size:13px;margin:10px 0 0">연락처·주소는 이 반의 담임 번호가 있어야 보여요.</p>`;
+  if(!canContact(p.group))return `<p class="muted" style="font-size:13px;margin:10px 0 0">연락처·주소는 담임 반 학생만 보여요.</p>`;
   const c=S.book.contacts[p.id]||{};
   return `<div class="bcard" style="margin-top:12px">${p.group==="T"?bookLine("연락처",c.phone,true):bookLine("보호자",c.guardian,false)+(()=>{const r=callFirstOf(p.group,teamOf(p),p.id);return fixedNums(c).map(([k,v,w])=>bookLine(k,v,true,w===r?"rep":(personCallOn(teamOf(p))&&S.editable?p.id:""))).join("")})()}${bookLine("주소",c.address,false)}
     <p class="muted" style="font-size:11px;margin:6px 0 0">연락처와 주소는 캡처하거나 다른 곳에 옮기지 말아 주세요.</p></div>`;
 }
-function openGradeCodeEntry(g){
-  const ov=document.createElement("div");ov.className="overlay";
-  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="담임 번호 입력"><h3>${TEAMS[S.team].short} ${GL[g]} 연락처</h3>
-    <p class="muted" style="margin:0;font-size:14px">부서 관리자에게 받은 담임 번호를 입력하세요.</p>
-    <div class="form"><label class="full">담임 번호<input id="f-gcode" type="password" maxlength="20" autocapitalize="off" autocomplete="off" required></label></div>
-    <p class="err" id="gcErr" hidden>번호가 맞지 않아요.</p>
-    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">확인</button></div></form>`;
-  document.body.appendChild(ov);const inp=ov.querySelector("#f-gcode");inp.focus();
-  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
-  ov.querySelector("form").addEventListener("submit",loginBusy(ov,async e=>{
-    e.preventDefault();const code=inp.value.trim();let ok=false;try{ok=await call("verifyGradeCode",S.team,g,code)}catch(err){toast(err.message);return}
-    if(ok){storeGradeCode(S.team+"_"+g,code);ov.remove();S.book=null;render()}else{ov.querySelector("#gcErr").hidden=false;inp.select()}
-  }));
-}
-function openGradeManage(){
-  const B=S.book;if(!B||!B.dept)return;
-  const ov=document.createElement("div");ov.className="overlay";
-  const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="담임 번호 관리"><h3>${TEAMS[S.team].label} 담임 번호</h3>
-    <p class="muted" style="margin:0;font-size:14px">담임 번호를 받은 사람(예: 담임)은 그 학년 연락처·주소만 볼 수 있어요. 부서 고유번호를 가진 사람과 관리자는 모든 학년을 봐요.</p>
-    <div class="admin-list card" style="margin-top:12px">${classesOf(S.team).map(([g,gl])=>{const code=(B.gradeCodes||{})[g]||"";return `<div class="admin-row"><b style="min-width:56px">${gl}</b><span class="code num ${code?"":"none"}">${code?esc(code):"번호 없음"}</span>
-      ${code?`<button class="btn" data-copy-c="${esc(code)}">복사</button>`:""}<button class="btn" data-ggen="${g}">${code?"새 번호":"번호 만들기"}</button>${code?`<button class="btn danger" data-gclear="${g}">해제</button>`:""}</div>`}).join("")}</div>
-    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>닫기</button></div></div>`};
-  draw();document.body.appendChild(ov);
-  ov.addEventListener("click",async e=>{
-    if(e.target===ov||e.target.closest("[data-close]")){ov.remove();S.book=null;render();return}
-    const cp=e.target.closest("[data-copy-c]");if(cp){navigator.clipboard.writeText(cp.dataset.copyC).then(()=>toast("복사했어요"),()=>toast("길게 눌러 복사하세요"));return}
-    const gen=e.target.closest("[data-ggen]"),clr=e.target.closest("[data-gclear]");
-    if(!gen&&!clr)return;
-    if(clr&&!clr.dataset.armed){clr.dataset.armed="1";clr.textContent="한 번 더 누르면 해제";return}
-    const g=(gen||clr).dataset[gen?"ggen":"gclear"];let code="";
-    try{code=await saveGradeCode(S.team,g,gen,Object.values(B.gradeCodes||{}));B.gradeCodes={...(B.gradeCodes||{}),[g]:code};B.gradeLocked={...(B.gradeLocked||{}),[g]:!!code};draw();toast(code?`${GL[g]} 담임 번호를 만들었어요`:`${GL[g]} 담임 번호를 해제했어요`)}
-    catch(err){alertBox("번호를 저장하지 못했어요",err.message)}
-  });
-}
-/* 메인화면: 부서별 반 담임 번호 관리 (팀별 관리자 번호 아래) */
-/* 담임이 직접 바꾼 담임 번호 (최근 14일). 접혀 있어도 보이게 카드 위에 띄워요 */
-/* 처음 본 뒤 3분이 지나면 이 기기에서 안 보여요 (바꾼 시각이 다르면 새 변경으로 다시 보여요) */
-const GC_SEEN_MS=3*60*1000;
-/* 반의 담임 선생님 이름 (분반 담임 포함). 담임이 바뀌면 [담임 권한]의 선생님별 줄도 저절로 늘고 줄어요 */
+/* 반의 담임 선생님 이름 (분반 담임 포함) */
 const classHrNames=(t,g)=>{const c=S.classes.get(t+"_"+g)||{};return hrNames([c.teacher||""].concat(Object.values(c.teachers||{})).join(","))};
 /* ---------- v2 도구 ---------- */
 const MEMO_SVG='<svg viewBox="0 0 24 24"><path d="M5 4.5h11l3 3v12H5z"/><path d="M8 10h8M8 13.5h8M8 17h5"/></svg>';
@@ -1234,7 +1190,7 @@ async function downloadTemplate(){
     ["· 보호자·부모 연락처: 학생만. 연락처(학생·교사): 학생 본인 번호, 선생님은 선생님 번호."],
     ["· 이미 있는 사람(이름·생일·연락처가 같은 사람, 없으면 이름과 반이 같은 사람)은 기존 정보 위에 덮어쓰고, 없는 사람은 새로 추가돼요."],
     ["· 빈 칸은 원래 값을 그대로 둬요. 파일에서 줄을 지워도 앱에서는 지워지지 않아요 (삭제는 앱 명단에서)."],
-    ["· 담임 번호로 올리면 우리 반 학생만 들어가요. 교사 줄은 팀 관리자만 올릴 수 있어요."],
+    ["· 담임이 올리면 우리 반 학생만 들어가요. 교사 줄은 팀 관리자만 올릴 수 있어요."],
     ["· 다 적은 뒤 앱 [명단 → 엑셀 → 올리기]로 이 파일을 올리세요."]];
   const wb=XLSX.utils.book_new();
   const ws=XLSX.utils.aoa_to_sheet([cols,...rows]);ws["!cols"]=(FX?[12,10,8,6,6,10,6,10,8,24,10,15,17,34]:[12,10,8,6,10,6,10,8,24,10,15,17,34]).map(w=>({wch:w}));
@@ -1512,21 +1468,20 @@ function openEvent(id,date){
 function openGuide(){
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<div class="sheet guide" role="dialog" aria-label="반 담임 사용 설명서"><h3>반 담임 사용 설명서</h3>
-    <p class="muted" style="margin:0;font-size:14px"><b>본인 이름</b>과 팀 관리자에게 받은 <b>비밀번호</b>로 들어가면 우리 반만 보여요. 처음 들어가면 <b>나만 아는 비밀번호</b>로 바꿔 주세요.</p>
-    <h4>1. 앱 설치 (처음 한 번)</h4><ol><li>주소 <b class="guide-url">팀 관리자가 알려 준 앱 주소</b> 를 열어요. 팀 관리자가 보낸 링크를 눌러도 돼요.</li><li><b>안드로이드</b>: 크롬 오른쪽 위 <b>︙</b> → <b>홈 화면에 추가</b> (또는 앱 설치)</li><li><b>아이폰</b>: 사파리 아래 <b>공유 버튼</b> → <b>홈 화면에 추가</b></li><li>카카오톡에서 열었다면 먼저 <b>다른 브라우저로 열기</b>를 눌러요.</li></ol>
+    <p class="muted" style="margin:0;font-size:14px">처음에는 팀 관리자에게 받은 <b>QR</b>로 들어오고, 바로 <b>내 비밀번호</b>를 만들어요. 그 뒤로는 앱을 열기만 하면 들어와요. 들어가면 <b>우리 반</b>만 보여요.</p>
+    <h4>1. 앱 설치 (처음 한 번)</h4><ol><li>주소 <b class="guide-url">팀 관리자가 알려 준 앱 주소</b> 를 열어요. 팀 관리자가 보낸 링크를 눌러도 돼요.</li><li><b>안드로이드</b>: 크롬 오른쪽 위 <b>︙</b> → <b>홈 화면에 추가</b> (또는 앱 설치)</li><li><b>아이폰</b>: 사파리 아래 <b>공유 버튼</b> → <b>홈 화면에 추가</b></li><li>카카오톡에서 QR 링크를 누르면 <b>크롬(사파리)이 저절로 열려요</b>. 안 열리면 <b>⋮ → 다른 브라우저로 열기</b>를 눌러요.</li><li><b>아이폰 홈 화면 앱</b>은 사파리와 로그인이 따로예요. 홈 화면 앱에서는 [로그인]에서 이름과 내 비밀번호로 들어오거나, [QR 링크로 로그인]에 받은 링크를 붙여 넣어요.</li></ol>
     <h4>2. 들어가기</h4><ol><li><b>처음</b>에는 팀 관리자에게 받은 <b>QR</b>을 휴대폰 <b>기본 카메라</b>로 찍어요(카카오톡으로 받은 링크를 눌러도 돼요). 바로 로그인되고 <b>내 비밀번호</b>를 만들라는 창이 떠요. 영문과 숫자를 섞어 6자리 이상으로 만들어 두세요.</li><li>그 뒤로는 앱을 <b>열기만 하면 바로</b> 들어와요. 한 사람당 <b>휴대폰 1대 + PC 1대</b>까지 쓸 수 있어요. 새 휴대폰에서 로그인하면 전에 쓰던 휴대폰은 저절로 로그아웃돼요.</li><li>휴대폰을 바꿨거나 브라우저 기록을 지웠다면 메인 화면의 <b>[로그인]</b>을 눌러 <b>이름</b>과 <b>내 비밀번호</b>를 넣어요. 비밀번호를 잊었으면 팀 관리자에게 초기화와 새 QR을 부탁하세요.</li><li><b>처음 로그인할 때는 10초쯤 걸릴 수 있어요.</b> 화면 위에 "확인 중… 잠시만 기다려 주세요"가 떠 있는 동안은 버튼을 다시 누르지 말고 기다려요.</li><li>제목 옆에 "담임 · 2학년"처럼 보이면 성공! 활동 기록에도 내 이름이 남아요.</li><li>교사 명단의 <b>내 이름은 직접 고칠 수 없어요</b>(로그인과 담임 반이 이름으로 정해져요). 이름이 틀렸으면 팀 관리자에게 고쳐 달라고 말씀해 주세요.</li></ol>
-    <h4>2-1. 내 비밀번호로 바꾸기 (처음 한 번)</h4><ol><li>반 담임 번호나 팀 관리자가 만들어 준 비밀번호로 처음 들어오면 <b>"먼저 비밀번호를 바꿔 주세요"</b> 창이 떠요. <b>[지금 바꾸기]</b>를 눌러요.</li><li>지금 번호는 미리 채워져 있어요. <b>새 비밀번호</b>(영문+숫자 6자리 이상, 대소문자 구분 없음)를 두 번 적고 저장해요.</li><li>다음부터는 메인에서 <b>이름 + 내 비밀번호</b>로 들어와요. 같은 반 다른 선생님 번호에는 영향이 없어요.</li><li>[나중에]를 눌렀다면 메인 화면 아래 <b>내 비밀번호</b> 칸의 <b>[내 비밀번호 만들기]</b>에서 언제든 만들 수 있어요. 바꿀 때는 같은 곳의 <b>[내 비밀번호 변경]</b>.</li><li>내 비밀번호를 만든 뒤에는 반 담임 번호로는 내 이름으로 들어올 수 없어요(다른 사람이 내 이름으로 들어오지 못하게).</li><li>한 반의 담임 <b>모두</b>가 내 비밀번호를 만들면, 같이 쓰던 반 담임 번호는 저절로 없어져요.</li><li>잊어버렸으면 팀 관리자에게 <b>초기화</b>를 부탁하세요.</li></ol>
-    <h4>2-2. 보조교사 (반 담임이 아닌 선생님)</h4><ol><li>교사 명단에 이름이 있으면 반 담임이 아니어도 들어올 수 있어요. 부서창에서 <b>본인 이름 + 보조교사 비밀번호</b>(팀 관리자에게 받아요)를 넣어요.</li><li>보조교사는 <b>일정 탭만</b> 보여요. 일정과 자료실 파일은 볼 수만 있어요.</li><li>처음 들어오면 내 비밀번호로 바꾸라는 창이 떠요. 바꾼 뒤에는 <b>이름 + 내 비밀번호</b>로 들어와요.</li><li>내 이름은 직접 고칠 수 없어요. 이름이 틀렸으면 팀 관리자에게 부탁하세요.</li></ol>
+    <h4>2-1. 내 비밀번호</h4><ol><li>QR로 처음 들어오면 <b>"내 비밀번호를 만들어 주세요"</b> 창이 떠요. 새 비밀번호(영문+숫자 6자리 이상, 대소문자 구분 없음)를 두 번 적고 <b>[만들기]</b>를 눌러요.</li><li>[나중에]를 눌렀다면 앱을 열 때마다 다시 물어요. 메인 화면 <b>내 비밀번호</b> 칸의 <b>[내 비밀번호 만들기]</b>에서도 만들 수 있어요.</li><li>바꿀 때는 같은 곳의 <b>[내 비밀번호 변경]</b>. QR로 등록된 기기에서는 지금 비밀번호를 몰라도 새로 정할 수 있어요.</li><li>잊어버렸고 등록된 기기도 없으면 팀 관리자에게 <b>비밀번호 초기화</b>와 <b>새 QR</b>을 부탁하세요.</li></ol><h4>2-2. 보조교사 (반 담임이 아닌 선생님)</h4><ol><li>교사 명단에 이름이 있으면 반 담임이 아니어도 들어올 수 있어요. 들어오는 방법은 담임과 똑같아요: <b>QR</b>로 처음 들어오고 <b>내 비밀번호</b>를 만들어요.</li><li>보조교사는 <b>일정 탭만</b> 보여요. 일정과 자료실 파일은 볼 수만 있어요.</li><li>나중에 반 담임으로 배치되면 따로 할 일 없이 그 반이 저절로 열려요.</li><li>내 이름은 직접 고칠 수 없어요. 이름이 틀렸으면 팀 관리자에게 부탁하세요.</li></ol>
     <h4>3. 출결메모 (주일 출석)</h4><ol><li>위쪽 날짜가 오늘 주일인지 확인해요. ‹ › 로 다른 주일로 가요.</li><li><b>체크 칸</b>: 누르면 출석, 다시 누르면 취소</li><li><b>메모</b>: 결석 이유 적기 ("감기·아픔" 같은 버튼도 있어요)</li><li><b>전화</b>: 누르면 그 학생의 <b>대표전화</b>로 바로 걸려요. 대표전화는 학생마다 명단 [수정]에서 <b>[대표]</b>에 체크한 번호예요. 체크하지 않았으면 영아·유아부는 부모님, 유소년·중고등부는 학생 번호예요 (없으면 다른 번호). 컴퓨터에서는 번호 창이 떠요.</li><li>숫자 칸(달란트 등): ▲▼ 를 누르거나 숫자를 눌러 적어요. 달란트는 여기서만 줘요.</li><li><b>담임 선생님 출석</b>: 우리 반 담임 줄 바로 아래에 선생님 이름이 <b>연보라색 줄</b>로 나와요. 거기서 선생님 출석·메모도 체크해요. (교사 명단의 이름과 담임 이름이 같아야 나와요)</li><li><b>저장</b>: 따로 저장 버튼을 누르지 않아도 체크하면 자동으로 저장돼요. 화면 아래 <b>저장 막대</b>에서 "저장 대기 → 저장 중… → ✓ 모두 저장됨"을 확인하세요. 다 저장되면 막대는 잠깐 뒤 저절로 사라져요. 바로 보내려면 <b>[지금 저장]</b>, 인터넷이 끊겨 못 했으면 <b>[다시 저장]</b>을 눌러요.</li></ol>
-    <h4>4. 명단 (연락처 포함)</h4><ol><li><b>[+ 사람 추가]</b>로 새 학생을 넣어요. 연락처·주소도 같이 적을 수 있어요.</li><li>이름을 누르면 보호자·부모 연락처와 주소가 보여요. <b>[전화]</b>, <b>[복사]</b>도 여기서.</li><li><b>[수정]</b>: 사진·반·생일·메모·연락처·주소를 한 창에서 위에서 아래로 차례대로 고쳐요. 컴퓨터에서는 사진 파일을 창 위로 <b>끌어다 놓아도</b> 돼요.</li><li><b>[삭제]</b>: 이름을 누른 창에서 눌러요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li>사람 정보는 <b>명단 탭에서만</b> 고칠 수 있어요. 다른 탭에서는 보기만 해요.</li><li><b>대표전화</b>: [수정]에서 부모 연락처·학생 연락처 옆 <b>[대표]</b> 중 하나에 체크하고 저장해요. 출결메모의 <b>[전화]</b>를 누르면 그 번호로 바로 걸려요. 이름을 누른 창에서 전화기 아이콘을 눌러 바꿀 수도 있어요.</li><li>명단에서 <b>연보라색</b> 줄은 선생님이에요.</li><li>연락처가 잠겨 있으면 명단 위쪽 <b>연락처</b> 줄의 <b>[번호 입력]</b>에 담임 번호를 넣어요.</li></ol>
+    <h4>4. 명단 (연락처 포함)</h4><ol><li><b>[+ 사람 추가]</b>로 새 학생을 넣어요. 연락처·주소도 같이 적을 수 있어요.</li><li>이름을 누르면 보호자·부모 연락처와 주소가 보여요. <b>[전화]</b>, <b>[복사]</b>도 여기서.</li><li><b>[수정]</b>: 사진·반·생일·메모·연락처·주소를 한 창에서 위에서 아래로 차례대로 고쳐요. 컴퓨터에서는 사진 파일을 창 위로 <b>끌어다 놓아도</b> 돼요.</li><li><b>[삭제]</b>: 이름을 누른 창에서 눌러요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li>사람 정보는 <b>명단 탭에서만</b> 고칠 수 있어요. 다른 탭에서는 보기만 해요.</li><li><b>대표전화</b>: [수정]에서 부모 연락처·학생 연락처 옆 <b>[대표]</b> 중 하나에 체크하고 저장해요. 출결메모의 <b>[전화]</b>를 누르면 그 번호로 바로 걸려요. 이름을 누른 창에서 전화기 아이콘을 눌러 바꿀 수도 있어요.</li><li>명단에서 <b>연보라색</b> 줄은 선생님이에요.</li><li>담임은 <b>우리 반</b> 학생의 연락처·주소만 볼 수 있어요.</li></ol>
     <h4>4-1. 통계 (출석 한눈에 보기)</h4><ol><li><b>기간별 학생 출석</b>: <b>[이번 주] [최근 한 달] [연도별]</b> 중 하나를 골라요. 이번 주는 펼치면 반별 출석·결석 명단이 바로 보이고, 최근 한 달·연도별은 기간 → 주일 → 반별 명단 순서로 펼쳐져요. 처음에는 최근 기간과 이번 주일만 펼쳐져 있어요.</li><li><b>개인별 누적</b>: 이름 옆에 <b>출석 34/42 (달란트 120개)</b>처럼 올해 출석/전체 주일 수와 달란트가 나와요. 이름을 펼치면 주일마다 출석(●)·결석(○)이 보여요(위에서 이번 주를 골라도 여기는 최근 한 달).</li><li><b>지난 출석 고치기</b>: 개인별 누적의 <b>●/○를 누르면</b> 그 주일 출석이 바뀌어요. 잘못 눌렀으면 한 번 더 누르면 돼요.</li><li><b>[ㄱㄴ순] [출석순] [학년별]</b>로 순서를 바꾸고, <b>[창 접기]</b>는 사람 칸만, <b>[모두 접기]</b>는 개인별 누적 전체를 접어요.</li><li><b>[엑셀로 받기]</b>: 개인·학년·전체와 <b>개인 일자별</b>(주일마다 O/-) 시트가 한 파일에 담겨요.</li><li>펼치고 접은 상태와 고른 탭·순서는 이 기기에 기억돼요.</li></ol>
     <h4>5. 생일 · 달란트</h4><ol><li><b>생일</b>: 이번 주·이번 달·다음 달 생일. 생일이 없는 사람은 맨 아래에 모여요. 음력 생일은 [수정]에서 "음력 생일"에 체크하면 그 해 양력 날짜로 바꿔 보여 줘요. 연도 없이 3/15처럼 날짜만 적어도 되고, 학생은 학년에 맞는 출생연도가 자동으로 붙어요(교사는 연도 없이 날짜만).</li><li><b>달란트</b>: <b>[사람별]</b>은 누적 순위예요. 이름을 펼치면 주일마다 받은 달란트 칸이 나오고, <b>숫자를 고치면 지난 주일 달란트도 바로 바뀌어요</b>(비우면 0). <b>[학년별]</b>은 반마다 합계·1인 평균·학생 순위예요.</li><li>이번 주 달란트는 지금처럼 출결메모에서 줘요.</li><li>달란트·생일·일정 엑셀은 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b> 파일에 들어 있어요.</li></ol>
     <h4>6. 출석 · 제적 · 졸업</h4><ol><li>명단 위쪽 <b>[출석] [제적] [졸업]</b> 을 눌러 나눠 봐요.</li><li>더 이상 안 나오는 학생: 이름 → [수정] → 상태를 <b>제적</b>으로. 졸업한 학생은 <b>졸업</b>으로.</li><li>제적·졸업 학생은 출석 명단에서 빠지지만 기록은 그대로 남아요.</li><li>다시 나오면 [제적] 목록에서 <b>[출석으로]</b>를 눌러요.</li></ol>
     <h4>7. 엑셀로 한 번에 (명단 · 연락처)</h4><ol><li>명단 탭 <b>엑셀</b> 줄의 <b>[양식 받기]</b>로 파일을 받아요. 지금 명단이 채워져 있어요.</li><li>'명단' 시트에 이름·반·생일·연락처·주소를 적어요. 생일은 15/03/15 처럼(연도 생략 가능). 빈 칸은 원래 값을 그대로 둬요.</li><li><b>[올리기]</b>로 파일을 고르고 확인. 이름·생일·연락처가 같은 사람은 같은 사람으로 보고 기존 정보 위에 덮어써요(없으면 이름과 반이 같은 사람). 없는 사람은 새로 들어가요.</li><li>담임은 <b>우리 반</b> 학생만 올라가요. 파일에서 줄을 지워도 앱에서는 지워지지 않아요.</li><li>출석부 전체를 저장해 두려면 <b>통계</b> 탭의 <b>[엑셀로 내보내기]</b>를 눌러요.</li></ol>
     <h4>8. 일정 · 자료실</h4><ol><li><b>일정</b> 탭 <b>[달력]</b>: 날짜를 누르면 그날 일정과 내용이 보여요. 일정 등록과 수정은 팀 관리자가 해요(날짜를 두 번 누르면 바로 등록·수정 창이 열려요).</li><li><b>[자료실]</b>: 공과 교재·양식·연락망처럼 부서에서 함께 쓰는 파일이에요. 일정과는 따로예요.</li><li><b>[+ 파일 올리기]</b>: 담임도 올릴 수 있어요 (10MB까지). 컴퓨터에서는 파일을 자료실 위로 <b>끌어다 놓아도</b> 되고, 여러 개를 한 번에 놓을 수 있어요. 담임이 올린 파일은 부서의 담임 모두가 볼 수 있어요.</li><li><b>[삭제]</b>: 담임도 지울 수 있어요. 한 번 더 눌러야 지워지고, 되돌릴 수 없어요.</li><li><b>[미리보기]</b>: 받지 않고 바로 봐요 (PDF·엑셀·워드·사진·텍스트). 한글·파워포인트는 <b>[내려받기]</b>로 열어요.</li><li><b>[보내기]</b>: 자료실 파일을 메일로 전해요. 받는 주소는 쉼표로 5명까지 적을 수 있고, 전할 말도 함께 보낼 수 있어요.</li><li><b>[관리자만 보기]</b> 표시가 붙은 파일은 팀 관리자와 총관리자만 볼 수 있어서 담임 화면에는 나오지 않아요.</li><li><b>[온라인 작성]</b>과 <b>[열기/수정]</b>(팀 관리자): 엑셀·워드·파워포인트·텍스트·CSV 파일을 내려받지 않고 구글 시트·문서·슬라이드로 열어 고쳐요. 고친 내용은 미리보기·내려받기·메일에 바로 반영돼요. 이 버튼과 공개 범위 바꾸기는 팀 관리자만 쓸 수 있어요.</li><li>작성본 링크는 밖으로 알리지 마세요.</li></ol>
-    <h4>9. 반 이름 · 반 편성 (팀 관리자)</h4><ol><li>화면 위쪽 반(학년) 칩을 <b>더블클릭</b>(휴대폰은 <b>두 번 톡톡</b>)하면 그 반 이름을 바꿀 수 있어요. 예: 1학년 → 1학년 사랑반</li><li>명단 탭 <b>[반 관리]</b>·<b>[이름 바꾸기]</b>와 같은 이름이라, 한쪽에서 바꾸면 다른 쪽에도 그대로 보여요.</li><li>이름만 바뀌고 출석·담임·담임 번호는 그대로 이어져요. 담임 번호로 들어오면 바꿀 수 없어요.</li><li><b>담임 권한</b>: 한 선생님이 두 반을 맡으면 [직접 입력]으로 두 반에 같은 담임 번호를 넣어요. 담임이 여러 명인 반은 반 아래에 <b>선생님마다 한 줄</b>씩 생겨서 각자 비밀번호를 만들어 줄 수 있어요(반 담임을 바꾸면 줄도 저절로 늘고 줄어요). 맨 위 <b>보조교사 비밀번호</b>는 반 담임이 아닌 선생님용이에요. 선생님이 내 비밀번호를 잊으면 같은 창에서 <b>[해제]</b>나 <b>[초기화]</b>해요.</li><li><b>팀 관리자 번호</b>: 총관리자가 정해 준 번호로 처음 들어오면 번호를 바꾸라는 창이 떠요. 바꾼 번호는 같은 부서 다른 팀 관리자에게 꼭 알려 주세요.</li><li>명단에서 선생님 이름을 고치면 반 담임 칸의 이름도 같이 바뀌어요.</li><li><b>통계 아래 표</b>: 팀 관리자는 우리 부서 <b>학년별 통계</b>, 공동관리자·총관리자는 <b>부서별 통계</b>(부서마다 [학년별 열기])를 볼 수 있어요. 이번 주·한 달·올해 출석률을 비교해요.</li><li><b>영아교육팀</b>은 나이와 관계없이 반을 만들어요. 명단 탭 <b>[반 관리]</b>에서 반 추가·삭제·순서, <b>[반 배정]</b>에서 아이마다 반을 골라요. 나이는 사람 [수정] 창에서 따로 적어요.</li></ol>
-    <h4>10. 번호를 모르거나 안 들어가질 때</h4><ol><li>번호 입력 창 아래 <b>[번호를 모르겠나요? 관리자에게 요청하기]</b>를 눌러요.</li><li>부서·직책·이름·요청사항을 적어요. 답을 받을 <b>이메일이나 연락처</b>도 적어 주세요.</li><li><b>[메일로 보내기]</b>: 총관리자에게 메일과 휴대폰 알림으로 바로 전달되고, 적어 준 이메일이나 문자로 답이 와요.</li></ol>
-    <h4>11. 지켜 주세요</h4><ol><li>담임 번호·보조교사 비밀번호·내 비밀번호와 연락처, 자료실 파일은 다른 사람에게 알려 주지 마세요.</li><li>같이 쓰는 기기면 끝난 뒤 메인의 <b>이 기기 번호 지우기</b>를 눌러요.</li><li>휴대폰을 가로로 돌리면 위쪽 날짜·반 선택이 내용과 같이 올라가서 명단을 넓게 볼 수 있어요.</li><li>잘 안 되면 새로 고치거나 크롬·사파리에서 열어 보세요.</li></ol>
+    <h4>9. 반 이름 · 반 편성 (팀 관리자)</h4><ol><li>화면 위쪽 반(학년) 칩을 <b>더블클릭</b>(휴대폰은 <b>두 번 톡톡</b>)하면 그 반 이름을 바꿀 수 있어요. 예: 1학년 → 1학년 사랑반</li><li>명단 탭 <b>[반 관리]</b>·<b>[이름 바꾸기]</b>와 같은 이름이라, 한쪽에서 바꾸면 다른 쪽에도 그대로 보여요.</li><li>이름만 바뀌고 출석·담임은 그대로 이어져요. 반 이름은 팀 관리자만 바꿀 수 있어요.</li><li><b>로그인 관리</b>: 메인 화면 <b>[로그인 관리] → [선생님 관리]</b>에서 선생님마다 <b>[QR]</b>을 만들어 줘요. 비밀번호가 있는지, 기기가 몇 대인지 보이고, 잊은 비밀번호는 <b>[비밀번호 초기화]</b> 뒤 새 QR을 주면 돼요. 새 QR을 만들면 전에 만든 QR은 쓸 수 없어요.</li><li>두 반을 맡은 선생님은 반 설정에서 두 반의 담임으로 넣으면 같은 로그인으로 두 반이 함께 열려요.</li><li><b>팀 관리자 본인</b>도 QR로 처음 들어와 <b>내 비밀번호</b>(영문+숫자 8자리 이상)를 만들어요. 다른 기기에서는 [로그인]에 <b>이메일</b>과 그 비밀번호를 넣어요. 연말 학년 등반 때도 이 비밀번호로 확인해요.</li><li>명단에서 선생님 이름을 고치면 반 담임 칸의 이름도 같이 바뀌어요.</li><li><b>통계 아래 표</b>: 팀 관리자는 우리 부서 <b>학년별 통계</b>, 공동관리자·총관리자는 <b>부서별 통계</b>(부서마다 [학년별 열기])를 볼 수 있어요. 이번 주·한 달·올해 출석률을 비교해요.</li><li><b>영아교육팀</b>은 나이와 관계없이 반을 만들어요. 명단 탭 <b>[반 관리]</b>에서 반 추가·삭제·순서, <b>[반 배정]</b>에서 아이마다 반을 골라요. 나이는 사람 [수정] 창에서 따로 적어요.</li></ol>
+    <h4>10. 로그인이 안 될 때</h4><ol><li>비밀번호를 잊었으면 팀 관리자에게 <b>비밀번호 초기화</b>와 <b>새 QR</b>을 부탁하는 게 가장 빨라요.</li><li>QR이 "이미 사용했거나 무효가 된 QR"이라고 나오면 팀 관리자에게 <b>가장 최근 QR</b>을 다시 받아요.</li><li>그 밖에는 [로그인] 창 아래 <b>[로그인이 안 되나요? 관리자에게 요청하기]</b>를 눌러요.</li><li>부서·직책·이름·요청사항을 적어요. 답을 받을 <b>이메일이나 연락처</b>도 적어 주세요.</li><li><b>[메일로 보내기]</b>: 총관리자에게 메일과 휴대폰 알림으로 바로 전달되고, 적어 준 이메일이나 문자로 답이 와요.</li></ol>
+    <h4>11. 지켜 주세요</h4><ol><li><b>내 비밀번호</b>와 받은 <b>QR(링크)</b>, 연락처, 자료실 파일은 다른 사람에게 알려 주지 마세요. QR은 단톡방에 올리지 말고 본인만 써요.</li><li>한 사람당 <b>휴대폰 1대 + PC 1대</b>까지예요. 새 휴대폰에서 로그인하면 전에 쓰던 휴대폰은 저절로 로그아웃돼요.</li><li>같이 쓰는 기기면 로그인할 때 <b>"이 기기에서 로그인 유지"</b>를 끄거나, 끝난 뒤 메인의 <b>로그아웃</b>을 눌러요.</li><li>휴대폰을 가로로 돌리면 위쪽 날짜·반 선택이 내용과 같이 올라가서 명단을 넓게 볼 수 있어요.</li><li>잘 안 되면 새로 고치거나 크롬·사파리에서 열어 보세요.</li></ol>
     <div class="actions"><div class="spacer"></div><button class="btn primary" data-close>닫기</button></div></div>`;
   document.body.appendChild(ov);
   getAppUrl().then(u=>{const b=ov.querySelector(".guide-url");if(b&&u)b.textContent=u.split(":"+"/"+"/").pop().replace(/[/]$/,"")});
@@ -1640,9 +1595,9 @@ const RPT_TEAMS=["infant","toddler","youth","teen","support"];
 const rptName=t=>t==="support"?"교육지원":TEAMS[t].label;
 const canRpt=()=>S.isAdmin||Object.keys(TEAMS).some(t=>((S.scope||{})[t]||{}).level==="dept");
 /* 접기 칸: 총관리자·공동관리자는 접힘, 팀 관리자 이하는 펼침이 기본 */
-/* 팀 관리자 화면: 반 담임 사용 설명서·내 팀 관리자 번호·반 담임 번호는 접힌 채로 시작 */
+/* 팀 관리자 화면: 반 담임 사용 설명서는 접힌 채로 시작 */
 const isTeamMgr=()=>!S.isAdmin&&Object.keys(TEAMS).some(t=>((S.scope||{})[t]||{}).level==="dept");
-/* 담임 번호·팀 관리자로 들어온 사람: 메인화면 아래 버튼이 [로그아웃] */
+/* 담임·팀 관리자로 들어온 사람: 메인화면 아래 버튼이 [로그아웃] */
 const isHrOnly=()=>!S.isAdmin&&!isTeamMgr()&&Object.keys(TEAMS).some(t=>["grade","sub"].includes(((S.scope||{})[t]||{}).level));
 const foldOpen=k=>S.isAdmin||(isTeamMgr()&&["guide","mycode","hrcodes"].includes(k))?!!S.fold[k]:S.fold[k]!==false;
 /* 당회보고서 제출 현황 (그달 제출한 부서 수). 1분이 지나면 메인 화면을 그릴 때 다시 받아요 */
@@ -1926,7 +1881,7 @@ async function openCall(id){
   const c=(B.contacts||{})[p.id]||{};
   const nums=(p.group==="T"?[["연락처",c.phone,"t"]]:fixedNums(c)).filter(x=>String(x[1]||"").replace(/[^0-9]/g,"").length>=9);
   const repW=p.group==="T"?"t":(nums.find(x=>x[2]===callFirstOf(p.group,S.team,p.id))||nums[0]||[])[2];
-  if(!allowed){alertBox("연락처를 볼 수 없어요","이 학생의 연락처를 볼 권한이 없어요. 팀 관리자 번호나 이 반의 담임 번호로 들어와 주세요.");return}
+  if(!allowed){alertBox("연락처를 볼 수 없어요","이 학생의 연락처를 볼 권한이 없어요. 팀 관리자나 이 반 담임만 볼 수 있어요.");return}
   if(!nums.length){alertBox("전화번호가 없어요",`${p.name}${p.group==="T"?"":"(보호자)"}의 전화번호가 없어요. 명단에서 ${p.name}을(를) 누르고 [수정]에서 번호를 넣어 주세요.`);return}
   // 휴대폰에서는 대표전화로 바로 걸어요 (컴퓨터에서는 번호 창을 보여 줘요)
   if(matchMedia("(pointer:coarse)").matches){const [k,v]=nums.find(x=>x[2]===repW)||nums[0];
@@ -2255,7 +2210,6 @@ const LOCK_SVG='<svg class="lock-ic" viewBox="0 0 24 24" stroke-linecap="round" 
 const deptLocked=t=>!!(S.locked||{})[t];
 const canEnter=t=>!!(S.access||{})[t];
 function storedCodes(){try{return JSON.parse(localStorage.getItem("ya-codes")||"{}")}catch(_){return S._codes||{}}}
-function storeCode(t,code){S._codes={...(S._codes||{}),[t]:code};if(S.remember===false)return;const c=storedCodes();c[t]=code;try{localStorage.setItem("ya-codes",JSON.stringify(c))}catch(_){}}
 function hasStored(){try{return !!(devToks().length||localStorage.getItem("ya-admin")||Object.keys(JSON.parse(localStorage.getItem("ya-codes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-gcodes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-tcodes")||"{}")).length||Object.keys(JSON.parse(localStorage.getItem("ya-scodes")||"{}")).length)}catch(_){return false}}
 /* ---------- QR 로그인: 이 기기에 기억한 기기 표 (비밀번호와 따로. '기억하기'를 꺼도 QR로 들어오면 기억해요) ---------- */
 function devToks(){try{const a=JSON.parse(localStorage.getItem("ya-dev")||"null");if(Array.isArray(a))return a.filter(x=>typeof x==="string")}catch(_){}return S._dev||[]}
@@ -2504,41 +2458,8 @@ function goDept(t){S.book=null;if(S.view!=="dept"||S.team!==t)navPush();
 /** 총관리자·공동관리자가 아니면서 번호로 들어간 부서들. 비어 있으면 아직 아무 부서에도 로그인하지 않은 상태 */
 const myDepts=()=>S.isAdmin?[]:Object.keys(TEAMS).filter(canEnter);
 function enterDept(t){if(canEnter(t))return goDept(t);if(myDepts().length){toast("로그인한 부서만 들어갈 수 있어요");return}openLogin()}
-/* 담임 번호: 네 자리, 첫 자리는 부서마다 고정(영아 1 · 유아 2 · 유소년 3 · 중고등 4), 뒤 세 자리는 자유 */
-const GRADE_PREFIX={infant:"1",toddler:"2",youth:"3",teen:"4"};
 const gradeCodeRule=t=>"영문과 숫자를 모두 넣은 6자리 이상";
 const validGradeCode=(t,v)=>/^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{6,20}$/.test(v);
-function randomGradeCode(){
-  const L="ABCDEFGHJKLMNPQRSTUVWXYZ",N="23456789",A=L+N+"abcdefghjkmnpqrstuvwxyz";
-  const r=n=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]%n};
-  const s=[L[r(L.length)],N[r(N.length)]];for(let i=0;i<6;i++)s.push(A[r(A.length)]);
-  for(let i=s.length-1;i>0;i--){const j=r(i+1);[s[i],s[j]]=[s[j],s[i]]}
-  return s.join("");
-}
-async function saveGradeCode(t,g,make,used){
-  if(!make){await tracked(call("setGradeCode",t,g,""));return ""}
-  let last;
-  for(let i=0;i<8;i++){
-    let c;do{c=randomGradeCode()}while((used||[]).includes(c));
-    try{await tracked(call("setGradeCode",t,g,c));return c}catch(e){last=e;if(!/겹쳐요/.test(e.message))throw e;used=(used||[]).concat(c)}
-  }
-  throw last;
-}
-function randomCode(){const a=new Uint32Array(1);crypto.getRandomValues(a);return String(100000+a[0]%900000)}
-async function saveDeptCode(t,code){
-  if(!S.isAdmin)return;
-  try{await call("setCode",t,code);if(code)storeCode(t,code);await load();toast(code?`${TEAMS[t].label} 고유번호를 저장했어요`:`${TEAMS[t].label} 고유번호를 해제했어요`)}
-  catch(e){alertBox("번호를 저장하지 못했어요",e.message)}
-}
-function openCodeEdit(t){
-  const ov=document.createElement("div");ov.className="overlay";
-  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="고유번호 직접 입력"><h3>${TEAMS[t].label} 고유번호</h3>
-    <div class="form"><label class="full">숫자 4~8자리<input id="f-newcode" type="password" inputmode="numeric" autocomplete="off" pattern="[0-9]{4,8}" maxlength="8" value="${esc(S.codes[t]||"")}" required></label></div>
-    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
-  document.body.appendChild(ov);ov.querySelector("#f-newcode").focus();
-  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
-  ov.querySelector("form").addEventListener("submit",e=>{e.preventDefault();const v=ov.querySelector("#f-newcode").value.trim();if(!/^[0-9]{4,8}$/.test(v))return;ov.remove();saveDeptCode(t,v)});
-}
 /* ---------- 연말 학년 등반 (부서별) ---------- */
 const SEQ=["infant","toddler","youth","teen"].flatMap(t=>TEAMS[t].groups.map(([g])=>[t,g]));
 const stepLabel=(t,g)=>`${TEAMS[t].short} ${Object.fromEntries(isFlex(t)?TEAMS[t].groups:classesOf(t))[g]||g}`;
@@ -2721,7 +2642,7 @@ function openPromotion(t){
   const order=promoGroups(t,plan);
   const last=TEAMS[t].groups[TEAMS[t].groups.length-1].slice();last[1]=stepLabel(t,last[0]).slice(TEAMS[t].short.length+1);const nx=nextStep(t,last[0]);
   const dest=nx==="grad"?"졸업 처리되어 명단에서 숨겨져요":`<b>${esc(TEAMS[nx[0]].label)} ${esc(stepLabel(nx[0],nx[1]).slice(TEAMS[nx[0]].short.length+1))}</b>(으)로 올라가요`;
-  const intro=`${esc(TEAMS[t].label)} 재적 <b id="pCount">${plan.length}</b>명이 ${isFlex(t)?"한 살씩":"한 학년씩"} 올라가요. ${esc(last[1])}은(는) ${dest}. 교사 명단은 그대로이고, ${liveRuns(promoRec(t)).length?"이미 한 번 등반해서 반 담임 지정은 그대로 둬요.":"<b>반 담임 지정은 모두 비워지고, 반 담임 번호는 반마다 새 번호로 바뀌어요</b>(새 학년도 담임을 다시 지정하고 [담임 번호]에서 새 번호를 알려 주세요). 선생님 개인 비밀번호는 그대로이고, 새로 지정된 반으로 들어가요."}`
+  const intro=`${esc(TEAMS[t].label)} 재적 <b id="pCount">${plan.length}</b>명이 ${isFlex(t)?"한 살씩":"한 학년씩"} 올라가요. ${esc(last[1])}은(는) ${dest}. 교사 명단은 그대로이고, ${liveRuns(promoRec(t)).length?"이미 한 번 등반해서 반 담임 지정은 그대로 둬요.":"<b>반 담임 지정은 모두 비워져요</b>(새 학년도 담임을 다시 지정해 주세요. 담임으로 지정하면 그 선생님 로그인으로 새 반이 저절로 열려요). 선생님 개인 비밀번호는 그대로이고, 새로 지정된 반으로 들어가요."}`
     +(isFlex(t)?`<br>반은 그대로예요. 새 반이 필요하면 등반 뒤 [명단 → 반 배정]에서 옮겨 주세요.`:"");
   const na=noAgeKids(t);
   const warn=(na.length?`<p class="err">나이가 적혀 있지 않은 ${na.length}명은 등반에서 빠져요: ${na.slice(0,6).map(p=>esc(p.name)).join(", ")}${na.length>6?" …":""}. 명단에서 나이를 먼저 적어 주세요.</p>`:"")+(promoDone(t)?`<p class="err">이미 ${y}년 연말 ${esc(TEAMS[t].short)} 등반을 했어요. 지금 남은 대상은 그 뒤에 들어온 학생들이에요.</p>`:"");
@@ -2745,12 +2666,12 @@ function openPromotion(t){
     const failed=await applyMoves(list,(d,n)=>prog(d,n,"올리는 중…"));
     const done=moves.filter(m=>!failed.includes(m.id));
     const hr=first&&done.length?clearHomerooms(t):{};
-    let newCodes=0;if(first&&done.length)try{newCodes=await tracked(call("clearGradeCodes",t));if(S.book&&S.book.team===t)S.book=null}catch(e){console.error(e);toast("담임 번호를 새로 만들지 못했어요. [담임 번호]에서 직접 바꿔 주세요")}
+    
     const runs=runsOfRec(promoRec(t)).concat(done.length?[{id:"r"+Date.now(),at:new Date().toISOString(),count:done.length,moves:done,undone:false,...(Object.keys(hr).length?{hr}:{})}]:[]);
     const rec=recOf(t,y,runs);
     S.promos.set(promoKey(t),rec);
     try{await S.db.doc("promotions/"+promoKey(t)).set(rec)}catch(e){console.error(e);toast("등반 기록을 저장하지 못해 되돌리기를 쓸 수 없어요")}
-    toast(failed.length?`${plan.length-failed.length}명 등반, ${failed.length}명은 저장하지 못했어요. 다시 누르면 남은 학생만 올라가요`:`${TEAMS[t].short} ${plan.length}명 등반을 마쳤어요${newCodes?`. 담임 번호 ${newCodes}개를 새로 만들었어요`:""}`);
+    toast(failed.length?`${plan.length-failed.length}명 등반, ${failed.length}명은 저장하지 못했어요. 다시 누르면 남은 학생만 올라가요`:`${TEAMS[t].short} ${plan.length}명 등반을 마쳤어요`);
   });
 }
 function openUndoPromotion(t){
@@ -2769,7 +2690,7 @@ function openUndoPromotion(t){
   };
   const body=hist.length?`<div class="move-list">${hist.map(runRow).join("")}</div>`:`<p class="muted" style="margin-top:12px">되돌릴 등반 기록이 없어요.</p>`;
   const ov=document.createElement("div");ov.className="overlay";ov.dataset.team=t;
-  ov.innerHTML=sheetShell(`${TEAMS[t].label} 등반 되돌리기`,`최근 등반 내역에서 되돌릴 것을 골라 주세요. 그때 올린 학생들만 등반 전 반으로 돌아가요(다른 부서로 올라간 학생, 졸업 처리한 학생도 돌아와요). 등반 뒤 고친 반 정보는 등반 전 값으로 바뀌어요. 등반 때 비운 담임도 다시 들어가요(그 사이 새로 지정한 반은 그대로). 반 담임 번호는 등반 때 새로 만든 번호 그대로예요.`,body,hist.some(x=>!x.undone)?"되돌리기":"","danger",t);
+  ov.innerHTML=sheetShell(`${TEAMS[t].label} 등반 되돌리기`,`최근 등반 내역에서 되돌릴 것을 골라 주세요. 그때 올린 학생들만 등반 전 반으로 돌아가요(다른 부서로 올라간 학생, 졸업 처리한 학생도 돌아와요). 등반 뒤 고친 반 정보는 등반 전 값으로 바뀌어요. 등반 때 비운 담임도 다시 들어가요(그 사이 새로 지정한 반은 그대로).`,body,hist.some(x=>!x.undone)?"되돌리기":"","danger",t);
   document.body.appendChild(ov);
   const go=ov.querySelector("#pGo");if(go)go.disabled=true;
   let pick=null;
@@ -2811,7 +2732,7 @@ function openClassEdit(t){
   const cnt=g=>[...S.people.values()].filter(p=>teamOf(p)===t&&p.group===g&&p.active!==false).length;
   const ov=document.createElement("div");ov.className="overlay";
   const draw=()=>{ov.innerHTML=`<form class="sheet" role="dialog" aria-label="${FX?"반 관리":"반 이름 바꾸기"}"><h3>${esc(TEAMS[t].label)} ${FX?"반 관리":"반 이름 바꾸기"}</h3>
-    <p class="muted" style="margin:0;font-size:14px">${FX?"나이와 관계없이 반을 만들어요. 반 이름을 바꾸거나 순서를 바꿀 수 있고, 아이가 있는 반은 먼저 [반 배정]에서 아이들을 다른 반으로 옮긴 뒤 없앨 수 있어요(그 반 담임·담임 번호도 지워져요).":"화면과 시트에 보이는 반 이름만 바뀌어요(예: 1학년 → 1학년 사랑반). 순서와 연말 등반은 그대로이고, 출석·담임·담임 번호도 그대로 이어져요."}</p>
+    <p class="muted" style="margin:0;font-size:14px">${FX?"나이와 관계없이 반을 만들어요. 반 이름을 바꾸거나 순서를 바꿀 수 있고, 아이가 있는 반은 먼저 [반 배정]에서 아이들을 다른 반으로 옮긴 뒤 없앨 수 있어요(그 반 담임 지정도 지워져요).":"화면과 시트에 보이는 반 이름만 바뀌어요(예: 1학년 → 1학년 사랑반). 순서와 연말 등반은 그대로이고, 출석·담임도 그대로 이어져요."}</p>
     <div class="admin-list card" style="margin-top:12px">${list.map(([k,l],i)=>`<div class="admin-row">${FX?"":`<span class="muted" style="font-size:12px;min-width:40px">${esc(orig[k]||"")}</span>`}<input data-ci="${i}" value="${esc(l)}" maxlength="12" aria-label="${i+1}번째 반 이름" style="flex:1;min-width:0;height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:var(--surface);color:var(--ink);font:inherit"><span class="muted num" style="font-size:12px;min-width:34px;text-align:right">${k?cnt(k)+"명":"새 반"}</span>${FX?`<button type="button" class="btn" data-cup="${i}" aria-label="위로" ${i?"":"disabled"}>↑</button><button type="button" class="btn" data-cdel="${i}" aria-label="${esc(l)} 없애기" style="color:var(--danger)">×</button>`:""}</div>`).join("")}</div>
     ${FX?`<div style="margin-top:8px"><button type="button" class="btn" data-cadd>+ 반 추가</button></div>`:""}
     <p class="err" id="cErr" hidden></p>
@@ -2846,7 +2767,7 @@ function openClassRename(t,g){
   const orig=isFlex(t)?"":(Object.fromEntries(TEAMS[t].groups)[g]||"");
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="반 이름 바꾸기" data-rename-sheet><h3>${esc(TEAMS[t].short)} ${esc(cur[1])} 이름 바꾸기</h3>
-    <p class="muted" style="margin:0;font-size:14px">${orig&&orig!==cur[1]?`원래 이름: ${esc(orig)} · `:""}이름만 바뀌고 출석·담임·담임 번호는 그대로 이어져요. [반 관리]에 있는 이름과 같은 거예요.</p>
+    <p class="muted" style="margin:0;font-size:14px">${orig&&orig!==cur[1]?`원래 이름: ${esc(orig)} · `:""}이름만 바뀌고 출석·담임은 그대로 이어져요. [반 관리]에 있는 이름과 같은 거예요.</p>
     <div class="form"><label class="full">반 이름<input id="f-cname" value="${esc(cur[1])}" maxlength="12" required autocomplete="off"></label></div>
     <p class="err" id="cnErr" hidden></p>
     <div class="actions">${orig&&orig!==cur[1]?`<button type="button" class="btn" data-reset>원래 이름으로</button>`:""}<div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div></form>`;
@@ -2909,8 +2830,8 @@ function openMyTCode(t,old,force){
   const dev=!!me.dev,has=dev?!!me.hasPw:me.own; /* QR로 등록된 기기: 지금 비밀번호 없이 정할 수 있어요 */
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="내 비밀번호"><h3>${force?"내 비밀번호를 만들어 주세요":esc(me.name)+" 선생님 "+(has?"비밀번호 변경":"비밀번호 만들기")}</h3>
-    <p class="muted" style="margin:0;font-size:14px">${dev?(force?"<b>"+esc(me.name)+" 선생님</b>, QR로 로그인하셨어요. ":"")+"휴대폰을 바꾸거나 브라우저 기록을 지웠을 때는 메인 화면에서 <b>이름과 이 비밀번호</b>로 들어와요. 이 기기는 QR로 등록되어 있어서 지금 비밀번호 없이 "+(has?"새로 정할":"만들")+" 수 있어요. 한 사람당 휴대폰 1대 + PC 1대까지 쓸 수 있어요.":me.own?"본인 비밀번호를 바꿔요.":"나만 쓰는 비밀번호를 만들어요. 만든 뒤에는 메인 화면에서 이 비밀번호만 넣으면 바로 "+esc(me.name)+" 선생님으로 들어오고, 반 담임 번호로는 이 이름을 고를 수 없어요."} 같은 반 다른 선생님 번호에는 영향이 없어요. 잊으면 팀 관리자에게 초기화를 부탁하세요.</p>
-    <div class="form"><label class="full"${dev?" hidden":""}>${me.own?"지금 쓰는 비밀번호":me.sub?"지금 쓰는 번호 (보조교사 비밀번호)":"지금 쓰는 번호 (반 담임 번호)"}<input id="f-mt0" type="password" autocomplete="off" autocapitalize="off" maxlength="20"${dev?"":" required"}></label>
+    <p class="muted" style="margin:0;font-size:14px">${dev?(force?"<b>"+esc(me.name)+" 선생님</b>, QR로 로그인하셨어요. ":"")+"휴대폰을 바꾸거나 브라우저 기록을 지웠을 때는 메인 화면에서 <b>이름과 이 비밀번호</b>로 들어와요. 이 기기는 QR로 등록되어 있어서 지금 비밀번호 없이 "+(has?"새로 정할":"만들")+" 수 있어요. 한 사람당 휴대폰 1대 + PC 1대까지 쓸 수 있어요.":me.own?"본인 비밀번호를 바꿔요.":"나만 쓰는 비밀번호를 만들어요. 만든 뒤에는 메인 화면에서 이 비밀번호만 넣으면 바로 "+esc(me.name)+" 선생님으로 들어오고."} 같은 반 다른 선생님 번호에는 영향이 없어요. 잊으면 팀 관리자에게 초기화를 부탁하세요.</p>
+    <div class="form"><label class="full"${dev?" hidden":""}>지금 쓰는 비밀번호<input id="f-mt0" type="password" autocomplete="off" autocapitalize="off" maxlength="20"${dev?"":" required"}></label>
     <label class="full">새 비밀번호 (${gradeCodeRule(t)}, 대소문자 구분 없음)<input id="f-mt1" type="password" autocomplete="off" autocapitalize="off" maxlength="20" required></label>
     <label class="full">새 비밀번호 한 번 더<input id="f-mt2" type="password" autocomplete="off" autocapitalize="off" maxlength="20" required></label></div>
     <p class="err" id="mtErr" hidden></p>
@@ -3159,7 +3080,6 @@ function renderHome(){
   }
   {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&((S.scope||{})[t]||{}).level==="dept");
     if(mine.length)h+=rptCard();
-    /* 담임 번호로 들어온 사람: 자기 반 담임 번호를 직접 바꿀 수 있어요 */
     const hrT=S.isAdmin?[]:Object.keys(TEAMS).filter(t=>["grade","sub"].includes(((S.scope||{})[t]||{}).level));
     if(hrT.length)h+=`<h2 class="sec">내 비밀번호</h2><div class="card admin-list">${hrT.map(t=>{const me=(S.hrMe||{})[t];
       return `<div class="admin-row"><b>${TEAMS[t].label}</b>${me&&me.dev?`<span class="code none">${esc(me.name)} 선생님 (QR로 로그인됨)</span><button class="btn primary" data-mytcode="${t}">${me.hasPw?"내 비밀번호 변경":"내 비밀번호 만들기"}</button>`:me?`<span class="code none">${esc(me.name)} 선생님으로 로그인됨</span><button class="btn primary" data-mytcode="${t}">${me.own?"내 비밀번호 변경":"내 비밀번호 만들기"}</button>`:""}</div>`}).join("")}</div>`}
@@ -3368,7 +3288,6 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const tl=e.target.closest("[data-t]");if(tl)return bumpTalent(tl.dataset.t,Number(tl.dataset.d));
   const ep=e.target.closest("[data-edit-person]");if(ep){openPerson.edit=true;openPerson(ep.dataset.editPerson);openPerson.edit=false;return}
   const o=e.target.closest("[data-open]");if(o){openPerson.edit=false;return openPerson(o.dataset.open)}
-  const gc=e.target.closest("[data-gcode]");if(gc)return openGradeCodeEntry(gc.dataset.gcode);
   if(e.target.closest("#lookOpen"))return openLook();
   if(e.target.closest("#hardRefresh")||e.target.closest("#hdrRefresh"))return hardRefresh();
   const dcb=e.target.closest("[data-dc]");if(dcb)return setDeptColor(dcb.dataset.dc)
@@ -3449,10 +3368,6 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const po=e.target.closest("[data-promo]");if(po){e.preventDefault();return openPromotion(po.dataset.promo)}
   const en=e.target.closest("[data-enter]");if(en)return enterDept(en.dataset.enter);
   if(e.target.closest("#homeBtn")){navHome();S.view="home";render();window.scrollTo(0,0);return}
-  const cg=e.target.closest("[data-code-gen]");if(cg)return saveDeptCode(cg.dataset.codeGen,randomCode());
-  const ce=e.target.closest("[data-code-edit]");if(ce)return openCodeEdit(ce.dataset.codeEdit);
-  const cc=e.target.closest("[data-code-clear]");if(cc){if(!cc.dataset.armed){cc.dataset.armed="1";cc.textContent="한 번 더 누르면 해제";return}return saveDeptCode(cc.dataset.codeClear,"")}
-  const cp=e.target.closest("[data-copy-code]");if(cp){navigator.clipboard.writeText(cp.dataset.copyCode).then(()=>toast("번호를 복사했어요"),()=>toast("번호를 길게 눌러 복사하세요"));return}
   const g=e.target.closest("[data-g]");if(g&&g.closest("#chips")&&chipDouble(g.dataset.g)&&canRenameClass(g.dataset.g)){openClassRename(S.team,g.dataset.g);return}if(g){S.group=g.dataset.g;try{localStorage.setItem("ya-group",S.group)}catch(_){}render();return}
   const tab=e.target.closest("[data-tab]");if(tab){if(tab.dataset.tab!==S.tab)navPush();S.tab=tab.dataset.tab;render();window.scrollTo(0,0);return}
   if(e.target.closest("[data-attsave]")){attErr="";flushAtt();return}
@@ -3548,7 +3463,7 @@ S.db={
 };
 let autoDate=true,loading=null;
 /* ---- 속도: 바뀐 것이 있을 때만 새로 받아요 ---- */
-const WRITE_OPS=new Set(["write","batch","setCode","changeTeamCode","saveContact","setTeamSetting","setClassCallFirst","setPersonCallFirst","setClasses","importRoster","saveEvent","deleteEvent","libUpload","libDelete","libDoc","libVis","setGradeCode","clearGradeCodes","changeMyCode","resetTCode","setTCode","rptSave","rptMeta","rptMail","rptFromDel","rptToDel","promoExclude","rptDelete"]);
+const WRITE_OPS=new Set(["write","batch","saveContact","setTeamSetting","setClassCallFirst","setPersonCallFirst","setClasses","importRoster","saveEvent","deleteEvent","libUpload","libDelete","libDoc","libVis","changeMyCode","tchReset","staffPw","rptSave","rptMeta","rptMail","rptFromDel","rptToDel","promoExclude","rptDelete"]);
 /* 내가 쓰기 전까지 최신이었다면, 내 쓰기로 바뀐 버전은 이미 아는 것으로 쳐요 (내 저장 때문에 다시 받지 않게) */
 /* 버전은 부서·반별로 따로예요. 화면은 자기가 보는 부서·반의 버전만 물어봐요 (다른 반 출석 체크로 전체를 다시 받지 않게) */
 function noteVer(op,x){
@@ -3634,7 +3549,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261103135518';
+  var BUILD = '20261103140158';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
