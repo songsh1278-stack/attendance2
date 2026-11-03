@@ -2554,7 +2554,7 @@ const qrCard=()=>{const ts=qrTeams();if(!ts.length)return "";
     <div class="card admin-list">${ts.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">교사 명단의 선생님</span><button class="btn primary" data-qr-team="${t}">선생님 QR 만들기</button></div>`).join("")}
     ${S.isAdmin?`<div class="admin-row"><b>관리자</b><span class="code none">${S.isCo?"팀 관리자":"팀 관리자·공동관리자"}</span><button class="btn primary" id="qrStaffOpen">관리자 QR 만들기</button></div>`:""}
     <div class="admin-row"><b>로그인 기기</b><span class="code none">QR로 등록된 기기 보기·해제</span><button class="btn" id="qrDevOpen">기기 관리</button></div>
-    ${S.isAdmin&&!S.isCo?`<div class="admin-row"><b>예전 번호 로그인</b><span class="code none">${S.legacy===false?"꺼짐 · QR과 개인 비밀번호만":"허용 중 · 팀 관리자 번호·반 담임 번호·보조교사 비밀번호"}</span><button class="btn ${S.legacy===false?"":"danger"}" id="legacyTgl">${S.legacy===false?"다시 켜기":"끄기"}</button></div>`:""}</div>
+    ${S.isAdmin&&!S.isCo?`<div class="admin-row"><b>예전 번호 로그인</b><span class="code none">${S.legacy===false?"꺼짐 · QR과 개인 비밀번호만":"허용 중 · 반 담임 번호·보조교사 비밀번호"}</span><button class="btn ${S.legacy===false?"":"danger"}" id="legacyTgl">${S.legacy===false?"다시 켜기":"끄기"}</button></div>`:""}</div>
     ${S.isAdmin&&!S.isCo&&S.legacy!==false?`<p class="muted" style="font-size:12px;margin:6px 0 0">선생님·팀 관리자 모두 QR이나 개인 비밀번호로 들어온 뒤에 [끄기]를 누르세요. 끄면 공용 번호로 들어와 있던 기기는 로그인이 풀려요. 이미 만든 개인 비밀번호는 그대로예요.</p>`:""}</details>`};
 function forgetDevice(msg){revokeMyDevs();try{["ya-relogin","ya-admin","ya-email","ya-copw","ya-codes","ya-gcodes","ya-tcodes","ya-scodes","ya-who","ya-tk","ya-photos",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._email="";S._copw="";S._codes={};S._gcodes={};S._tcodes={};S._scodes={};S._who={};S.hrMe={};S._tk={};S.photos=new Map();S.view="home";S.book=null;load();toast(msg||"이 기기에 기억된 번호와 로그인을 지웠어요")}
 /* 로그아웃: 로그인은 끝내지만, '이 기기에서 기억하기'로 들어왔다면 이메일·번호를 이 기기에만 남겨 다시 로그인할 때 미리 채워요 */
@@ -2601,7 +2601,7 @@ function enterDept(t){if(canEnter(t))return goDept(t);if(myDepts().length){toast
 function openCodeSheet(t){
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="부서 고유번호 입력"><h3>${TEAMS[t].label}</h3>
-    <p class="muted" style="margin:0;font-size:14px">${S.legacy===false?"<b>본인 이름</b>과 <b>내 비밀번호</b>를 넣고 들어가세요. 처음이거나 비밀번호가 없으면 팀 관리자에게 <b>QR</b>을 받아 주세요.":"<b>본인 이름</b>과 <b>비밀번호</b>(내 비밀번호, 담임 번호 또는 보조교사 비밀번호)를 넣고 들어가세요. 처음이면 팀 관리자에게 <b>QR</b>을 받는 게 가장 쉬워요."} 팀 관리자는 메인 화면의 [팀관리자 로그인]을 써 주세요.</p>
+    <p class="muted" style="margin:0;font-size:14px">${S.legacy===false?"<b>본인 이름</b>과 <b>내 비밀번호</b>를 넣고 들어가세요. 처음이거나 비밀번호가 없으면 팀 관리자에게 <b>QR</b>을 받아 주세요.":"<b>본인 이름</b>과 <b>비밀번호</b>(내 비밀번호, 담임 번호 또는 보조교사 비밀번호)를 넣고 들어가세요. 처음이면 팀 관리자에게 <b>QR</b>을 받는 게 가장 쉬워요."} 팀 관리자는 [팀관리자 로그인]에서 이메일과 개인 비밀번호로 들어와요.</p>
     <div class="form"><label class="full">이름<input id="f-name" type="text" autocomplete="name" maxlength="20" placeholder="예: 홍길동" required></label><label class="full">비밀번호<input id="f-code" type="password" autocomplete="off" autocapitalize="off" maxlength="20" required></label><label class="inline full"><input type="checkbox" id="f-remember" checked>이 기기에서 번호 기억하기 <span class="muted" style="font-size:12px">(여러 사람이 쓰는 기기면 끄세요)</span></label></div>
     <p class="err" id="codeErr" hidden>번호가 맞지 않아요. 다시 확인해 주세요.</p>
     <p style="margin:2px 0 0;font-size:13px;text-align:center"><button type="button" class="btn" data-ask="pw" data-team="${t}" style="font-size:13px;padding:4px 10px">번호를 모르겠나요? 관리자에게 요청하기</button></p>
@@ -3046,7 +3046,6 @@ function openTeamAdminLogin(){
     ?`<form class="sheet" role="dialog" aria-label="관리자 로그인"><h3>${who2==="co2"?"공동관리자2":who2==="co"?"공동관리자1":"팀 관리자"} 로그인</h3>
       <p class="muted" style="margin:0;font-size:14px"><b>${esc(who)}</b>님, 2단계: 개인 비밀번호를 입력하세요.</p>
       <div class="form"><label class="full">개인 비밀번호<input id="f-copw" type="password" autocomplete="current-password" required></label></div>
-      ${who2==="team"&&S.legacy!==false?`<p style="margin:0;font-size:13px;text-align:center"><button type="button" class="btn" data-ta-old style="font-size:13px;padding:4px 10px">팀 관리자 번호로 들어가기 (예전 방식)</button></p>`:""}
       <p class="err" id="taErr" hidden></p>
       <p style="margin:2px 0 0;font-size:13px;text-align:center"><button type="button" class="btn" data-ask="pw" style="font-size:13px;padding:4px 10px">비밀번호·번호를 모르겠나요? 관리자에게 요청하기</button></p>
       <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">로그인</button></div></form>`
@@ -3414,14 +3413,11 @@ function renderHome(){
     h+=renderAdminSummary();
     h+=rptCard();
     // 시스템 전체 설정은 총관리자만 화면에 표시합니다. 공동관리자는 등록 메뉴만 사용합니다.
-    if(!S.isCo2) h+=(S.legacy===false?"":`<details class="fold" data-fold="codes"${S.fold.codes?" open":""}><summary><h2 class="sec">팀별 관리자 번호</h2><span class="fold-sum">${Object.keys(TEAMS).length}개 부서 중 ${Object.keys(TEAMS).filter(deptLocked).length}곳 설정</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">팀 관리자(중간관리자)에게 이 번호를 주면 그 부서 전체를 관리하고, 반별 담임에게 담임 번호를 줄 수 있어요. 번호가 없는 부서는 총관리자만 들어갈 수 있어요(담임은 담임 번호로 자기 반만). 번호는 총관리자·공동관리자가 바꿀 수 있어요. 팀 관리자가 직접 바꾼 번호는 보이지 않아요. 잊었다면 [새 번호]를 만들어 알려 주세요.</p>
-      <div class="card admin-list">${Object.entries(TEAMS).map(([t,x])=>{const code=S.codes[t]||"";const set=deptLocked(t);
-        return `<div class="admin-row"><b>${x.label}</b><span class="code num ${code?"":"none"}">${code?esc(code):set&&(S.codesOwn||[]).includes(t)?"직접 바꾼 비밀번호":set?"설정됨":"번호 없음 (총관리자만 입장)"}</span>
-          ${code?`<button class="btn" data-copy-code="${esc(code)}">복사</button>`:""}<button class="btn" data-code-gen="${t}">${set?"새 번호":"번호 만들기"}</button><button class="btn" data-code-edit="${t}">직접 입력</button>${set?`<button class="btn danger" data-code-clear="${t}">해제</button>`:""}</div>`}).join("")}</div></details>`)+hrCodesCard(Object.keys(TEAMS));
+    if(!S.isCo2) h+=hrCodesCard(Object.keys(TEAMS));
   }
   {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&((S.scope||{})[t]||{}).level==="dept");
     if(mine.length)h+=rptCard();
-    if(mine.length)h+=(S.staffMe?"":`<details class="fold" data-fold="mycode"${foldOpen("mycode")?" open":""}><summary><h2 class="sec">내 팀 관리자 번호</h2></summary><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div></details>`)+hrCodesCard(mine);
+    if(mine.length)h+=hrCodesCard(mine);
     /* 담임 번호로 들어온 사람: 자기 반 담임 번호를 직접 바꿀 수 있어요 */
     const hrT=S.isAdmin?[]:Object.keys(TEAMS).filter(t=>["grade","sub"].includes(((S.scope||{})[t]||{}).level)),myG=AUTH().gcodes;
     /* 반 담임 번호 변경은 그 번호로 들어온 반만 */
@@ -3909,7 +3905,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261103133604';
+  var BUILD = '20261103134124';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
