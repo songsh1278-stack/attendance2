@@ -2353,10 +2353,10 @@ function openQrTeamOld(t){
 /* 관리자 고르기 → QR (공동관리자2는 등록 명단이 화면에 없어서 서버에서 받아요) */
 function openQrStaff(){
   const ov=document.createElement("div");ov.className="overlay";let list=null;
-  const rl=x=>x.role==="admin"?"총관리자":x.role==="co"?"공동관리자1":x.role==="co2"?"공동관리자2":"팀 관리자"+(x.duty?"("+x.duty+")":"")+(TEAMS[x.team]&&!nmTail(x)?" · "+TEAMS[x.team].label:"");
+  const rl=x=>x.role==="admin"?"총관리자":x.role==="co"?"공동관리자1":x.role==="co2"?"공동관리자2":"팀 관리자"+(x.duty?"("+x.duty+")":"")+(TEAMS[x.team]?" · "+TEAMS[x.team].label:"");
   const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="관리자 QR 만들기"><h3>관리자 QR</h3>
     <p class="muted" style="margin:0;font-size:14px">QR을 만들 관리자를 고르세요. 팀 관리자는 담당 부서로 들어와요. 비밀번호가 있는 관리자는 QR 없이 [로그인]에 이메일과 비밀번호로 들어올 수 있어서 [QR 만들기]가 흐리게 보여요. 비밀번호를 잊었으면 새 QR을 주세요(QR로 들어오면 비밀번호를 새로 정할 수 있어요).</p>
-    <div class="admin-list card" style="margin-top:8px">${list===null?`<p class="muted" style="margin:0">불러오는 중…</p>`:list.length?list.map(x=>`<div class="admin-row"><b style="flex:1;min-width:0">${esc(x.name)}<br><span class="muted" style="font-size:12px;font-weight:400">${esc(rl(x))}${x.pos&&x.pos!==x.duty?" · "+esc(x.pos):""} · ${x.hasPw?"비밀번호 있음":"<span style=\"color:var(--danger,#C0392B)\">비밀번호 없음</span>"} · 기기 ${x.devs||0}대</span></b><button class="btn${x.hasPw?"":" primary"}" data-qr-staff="${esc(x.email)}"${x.hasPw?` style="opacity:.45" title="비밀번호가 있어서 QR 없이 [로그인]으로 들어올 수 있어요"`:""}>QR 만들기</button></div>`).join(""):`<p class="muted" style="margin:0">QR을 만들 수 있는 관리자가 없어요.</p>`}</div>
+    <div class="admin-list card" style="margin-top:8px">${list===null?`<p class="muted" style="margin:0">불러오는 중…</p>`:list.length?list.map(x=>`<div class="admin-row"><b style="flex:1;min-width:0">${esc(staffNm(x))}<br><span class="muted" style="font-size:12px;font-weight:400">${esc(rl(x))}${x.pos&&x.pos!==x.duty?" · "+esc(x.pos):""} · ${x.hasPw?"비밀번호 있음":"<span style=\"color:var(--danger,#C0392B)\">비밀번호 없음</span>"} · 기기 ${x.devs||0}대</span></b><button class="btn${x.hasPw?"":" primary"}" data-qr-staff="${esc(x.email)}"${x.hasPw?` style="opacity:.45" title="비밀번호가 있어서 QR 없이 [로그인]으로 들어올 수 있어요"`:""}>QR 만들기</button></div>`).join(""):`<p class="muted" style="margin:0">QR을 만들 수 있는 관리자가 없어요.</p>`}</div>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>닫기</button></div></div>`};
   draw();document.body.appendChild(ov);
   call("qrStaff").then(l=>{list=l||[];if(ov.isConnected)draw()}).catch(e=>{toast(e.message);ov.remove()});
@@ -2402,7 +2402,7 @@ async function afterBoot(){
 }
 /* 공동관리자·팀 관리자 본인 비밀번호 (QR로 등록된 기기에서는 지금 비밀번호 없이 정할 수 있어요) */
 const staffPwCard=()=>{const m=S.staffMe;if(!m)return "";
-  return `<details class="fold" data-fold="mycode"${foldOpen("mycode")?" open":""}><summary><h2 class="sec">내 비밀번호</h2><span class="fold-sum">비밀번호 만들기 · 변경</span></summary><div class="card admin-list"><div class="admin-row"><b>${esc(m.name)}</b><span class="code none">${m.role==="co2"?"공동관리자2":m.role==="co"?"공동관리자1":"팀 관리자"+(TEAMS[m.team]&&!nmTail(m)?" · "+TEAMS[m.team].label:"")}${m.pos?" · "+esc(m.pos):""}${m.dev?" (QR로 로그인됨)":""}</span><button class="btn primary" id="staffPwOpen">${m.hasPw?"내 비밀번호 변경":"내 비밀번호 만들기"}</button></div></div></details>`};
+  return `<details class="fold" data-fold="mycode"${foldOpen("mycode")?" open":""}><summary><h2 class="sec">내 비밀번호</h2><span class="fold-sum">비밀번호 만들기 · 변경</span></summary><div class="card admin-list"><div class="admin-row"><b>${esc(staffNm(m))}</b><span class="code none">${m.role==="co2"?"공동관리자2":m.role==="co"?"공동관리자1":"팀 관리자"+(TEAMS[m.team]?" · "+TEAMS[m.team].label:"")}${m.pos?" · "+esc(m.pos):""}${m.dev?" (QR로 로그인됨)":""}</span><button class="btn primary" id="staffPwOpen">${m.hasPw?"내 비밀번호 변경":"내 비밀번호 만들기"}</button></div></div></details>`};
 function openStaffPw(force){
   const m=S.staffMe;if(!m){toast("QR이나 개인 비밀번호로 로그인한 뒤에 만들 수 있어요");return}
   const dev=!!m.dev,needOld=!dev&&m.hasPw;
@@ -3118,8 +3118,7 @@ const POS_LIST=["목사","전도사","팀장"],POS_EXTRA=["서기","회계"];
 const DUTY_LIST=["목사","전도사","팀장","서기","총무","회계"];
 const teamOpts=cur=>`<option value="team"${cur==="-"?" selected":""}>팀 관리자</option>`+DUTY_LIST.map(d=>`<option value="team:${d}"${cur===d?" selected":""}>팀 관리자(${d})</option>`).join("");
 const roleOf=v=>{const m=String(v||"").split(":");return {role:m[0],duty:m[0]==="team"?m[1]||"":""}};
-/* 부서가 두 번 나오지 않게: 이름 끝에 괄호로 부서가 적혀 있으면 부서 이름 칸을 숨겨요 */
-const nmTail=x=>!!x.team&&/[(（][^)）]*[)）]\s*$/.test(String(x.name||""));  /* 이름에 "(영아목사)"처럼 부서가 붙어 있으면 부서 칸은 빼요 */
+const staffNm=x=>x.role==="co"||x.role==="co2"?x.name:String(x.name||"").replace(/\s*[(（][^)）]*[)）]/g,"").trim()||x.name;  /* 이름 괄호 안 내용은 빼고 보여 줘요 (공동관리자는 그대로) */
 const staffFull=()=>S.staffMgr==="full";
 const mgrTeams=()=>S.staffMgr==="full"||S.staffMgr==="all"?Object.keys(TEAMS):Array.isArray(S.staffMgr)?S.staffMgr:[];
 const canMngStaff=x=>staffFull()?!(S.isCo&&x.role==="admin"):!!S.staffMgr&&x.role==="team"&&(!x.pos||(S.staffMgr==="all"&&x.pos==="팀장"))&&mgrTeams().includes(x.team);
@@ -3130,7 +3129,7 @@ function renderStaff(){
   const full=staffFull(),TO=["infant","toddler","youth","teen"],oi=t=>TO.indexOf(t)<0?9:TO.indexOf(t),ord=x=>x.role==="admin"?0:x.role==="co"?1:x.role==="co2"?2:3;const L=[...(S.staff||[])].sort((a,b)=>ord(a)-ord(b)||(ord(a)===3?oi(a.team)-oi(b.team):0)||String(a.name).localeCompare(String(b.name),"ko"));
   const rl=x=>x.role==="admin"?"총관리자":x.role==="co"?"공동관리자1":x.role==="co2"?"공동관리자2":"팀 관리자"+(x.duty?"("+x.duty+")":"");
   const teams=mgrTeams();
-  const row=x=>`<div class="admin-row"><b>${esc(x.name)}</b><span class="tag ${x.role==="admin"?"admin":x.role==="co"||x.role==="co2"?"new":"role"}">${rl(x)}</span>${x.pos&&x.pos!==x.duty?`<span class="tag admin">${esc(x.pos)}</span>`:""}${x.role==="team"&&!nmTail(x)?`<span class="tag ${x.team?"role":"new"}">${x.team&&TEAMS[x.team]?esc(TEAMS[x.team].label):"부서 미지정"}</span>`:""}<span class="code none" style="letter-spacing:0;word-break:break-all">${esc(x.email)}${x.role==="admin"?"":`<br><span style="font-size:12px">${x.hasPw?"비밀번호 있음":`<span style="color:var(--danger,#C0392B)">비밀번호 없음</span>`} · 기기 ${x.devs||0}대</span>`}</span>${x.role!=="admin"&&(full?(!S.isCo||x.role==="team"):canMngStaff(x))?`<button class="btn${x.hasPw?"":" primary"}" data-qr-staff="${esc(x.email)}"${x.hasPw?` style="opacity:.45" title="비밀번호가 있어서 QR 없이 [로그인]으로 들어올 수 있어요"`:""}>QR</button>`:""}${canMngStaff(x)?`<button class="btn" data-staff-edit="${esc(x.email)}">수정</button><button class="btn danger" data-staff-del="${esc(x.email)}">삭제</button>`:""}</div>`;
+  const row=x=>`<div class="admin-row"><b>${esc(staffNm(x))}</b><span class="tag ${x.role==="admin"?"admin":x.role==="co"||x.role==="co2"?"new":"role"}">${rl(x)}</span>${x.pos&&x.pos!==x.duty?`<span class="tag admin">${esc(x.pos)}</span>`:""}${x.role==="team"?`<span class="tag ${x.team?"role":"new"}">${x.team&&TEAMS[x.team]?esc(TEAMS[x.team].label):"부서 미지정"}</span>`:""}<span class="code none" style="letter-spacing:0;word-break:break-all">${esc(x.email)}${x.role==="admin"?"":`<br><span style="font-size:12px">${x.hasPw?"비밀번호 있음":`<span style="color:var(--danger,#C0392B)">비밀번호 없음</span>`} · 기기 ${x.devs||0}대</span>`}</span>${x.role!=="admin"&&(full?(!S.isCo||x.role==="team"):canMngStaff(x))?`<button class="btn${x.hasPw?"":" primary"}" data-qr-staff="${esc(x.email)}"${x.hasPw?` style="opacity:.45" title="비밀번호가 있어서 QR 없이 [로그인]으로 들어올 수 있어요"`:""}>QR</button>`:""}${canMngStaff(x)?`<button class="btn" data-staff-edit="${esc(x.email)}">수정</button><button class="btn danger" data-staff-del="${esc(x.email)}">삭제</button>`:""}</div>`;
   return `<details class="fold" data-fold="staff"${S.fold.staff?" open":""}><summary><h2 class="sec">로그인 관리 · ${full?"관리자 등록":"팀 관리자 등록"}</h2><span class="fold-sum">QR · 비밀번호 · 기기 · 관리자 ${L.length}명</span></summary>${qrTeams().length?qrBody(qrTeams()):""}<h3 style="margin:14px 0 8px;font-size:15px">${full?"팀 관리자·공동관리자 등록":"팀 관리자 등록"}</h3><div class="card">
     ${full?"":`<p class="muted" style="font-size:13px;margin:0 0 10px">${S.staffMgr==="all"?"모든 부서":esc(teams.map(t=>TEAMS[t].label).join("·"))}의 팀 관리자를 등록하고 QR을 만들어요.</p>`}
     ${L.length?[["mgr","총관리자·공동관리자",L.filter(x=>x.role!=="team")],...[...new Set(L.filter(x=>x.role==="team").map(x=>TEAMS[x.team]?x.team:""))].sort((a,b)=>oi(a)-oi(b)).map(t=>["team-"+(t||"none"),(t?TEAMS[t].label:"부서 미지정")+" 팀 관리자",L.filter(x=>x.role==="team"&&(TEAMS[x.team]?x.team:"")===t)])].filter(g=>g[2].length).map(([k,lab,g])=>`<details class="fold staff-grp" data-fold="staff-${k}"${S.fold["staff-"+k]!==false?" open":""}><summary><b>${lab}</b><span class="fold-sum">${g.length}명</span></summary><div class="admin-list">${g.map(row).join("")}</div></details>`).join(""):`<p class="muted" style="margin:0 0 10px">등록된 사람이 없어요.</p>`}
@@ -3591,7 +3590,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261103225747';
+  var BUILD = '20261103230040';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
