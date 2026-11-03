@@ -2452,7 +2452,25 @@ async function makeQr(spec){
     if(e.target.closest("[data-qr-share]")){try{await navigator.share({title:"교육부 출석부 로그인",text:r.label+" 출석부 로그인 링크예요 ("+r.exp+"까지 한 번만 사용)",url:r.url})}catch(_){}}});
 }
 /* 부서 선생님 고르기 → QR. 반 담임이면 그 반, 담임이 아니면 일정 탭만 열려요 */
-function openQrTeam(t){
+function openQrTeam(t){return openTchMgr(t)}
+function openTchMgr(t){
+  const ov=document.createElement("div");ov.className="overlay";let list=null,q="";
+  const row=x=>`<div class="admin-row" data-qn="${esc(x.name)}"><b style="flex:1;min-width:0">${esc(x.name)}<br><span class="muted" style="font-size:12px;font-weight:400">${x.hasPw?"비밀번호 있음":"<span style=\"color:var(--danger,#C0392B)\">비밀번호 없음</span>"} · 기기 ${x.devs}대</span></b><button class="btn primary" data-qr-pid="${esc(x.pid)}">QR</button>${x.hasPw?`<button class="btn danger" data-tr-pid="${esc(x.pid)}">비밀번호 초기화</button>`:""}</div>`;
+  const draw=()=>{const nopw=(list||[]).filter(x=>!x.hasPw).length;
+    ov.innerHTML=`<div class="sheet" role="dialog" aria-label="선생님 관리"><h3>${TEAMS[t].label} 선생님 관리</h3>
+    <p class="muted" style="margin:0;font-size:14px"><b>[QR]</b>을 만들어 선생님께 주세요. 반 담임이면 <b>그 반</b>이, 담임이 아니면 <b>일정 탭</b>만 열려요. 비밀번호를 잊었으면 <b>[비밀번호 초기화]</b> 뒤 새 QR을 주세요.${list&&nopw?` 아직 비밀번호가 없는 선생님 <b>${nopw}명</b>.`:""}</p>
+    ${list&&list.length>8?`<input id="qrQ" type="search" placeholder="이름 검색" autocomplete="off" value="${esc(q)}" style="width:100%;box-sizing:border-box;height:40px;margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:16px;background:var(--ground);color:var(--ink)">`:""}
+    <div class="admin-list card" style="margin-top:8px">${list===null?`<p class="muted" style="margin:0">불러오는 중…</p>`:list.length?list.map(row).join(""):`<p class="muted" style="margin:0">교사 명단에 선생님이 없어요.</p>`}</div>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>닫기</button></div></div>`;
+    const qi=ov.querySelector("#qrQ");if(qi){const f=()=>{q=qi.value;const v=q.replace(/\s+/g,"");ov.querySelectorAll("[data-qn]").forEach(r=>{r.hidden=!!v&&r.dataset.qn.replace(/\s+/g,"").indexOf(v)<0})};qi.oninput=f;f()}};
+  draw();document.body.appendChild(ov);
+  call("tchStatus",t).then(l=>{list=l||[];if(ov.isConnected)draw()}).catch(e=>{toast(e.message);ov.remove()});
+  ov.addEventListener("click",async e=>{if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();
+    const b=e.target.closest("[data-qr-pid]");if(b)return makeQr({k:"hr",t,pid:b.dataset.qrPid});
+    const r=e.target.closest("[data-tr-pid]");if(!r)return;if(!r.dataset.armed){r.dataset.armed="1";r.textContent="한 번 더 누르면 초기화";return}
+    try{list=await tracked(call("tchReset",t,r.dataset.trPid));draw();toast("비밀번호를 초기화했어요. 새 QR을 만들어 주세요")}catch(x){alertBox("초기화하지 못했어요",x.message)}});
+}
+function openQrTeamOld(t){
   const L=[...S.people.values()].filter(p=>teamOf(p)===t&&p.group==="T"&&p.active!==false).sort((a,b)=>String(a.name).localeCompare(String(b.name),"ko"));
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<div class="sheet" role="dialog" aria-label="선생님 QR 만들기"><h3>${TEAMS[t].label} 선생님 QR</h3>
@@ -2549,9 +2567,9 @@ document.addEventListener("click",async e=>{
 /* 메인 화면 카드: 선생님 QR 만들기 (총관리자·공동관리자1·2 = 모든 부서, 팀 관리자 = 자기 부서) */
 const qrTeams=()=>S.isAdmin?Object.keys(TEAMS):Object.keys(TEAMS).filter(t=>((S.scope||{})[t]||{}).level==="dept");
 const qrCard=()=>{const ts=qrTeams();if(!ts.length)return "";
-  return `<details class="fold" data-fold="qr"${foldOpen("qr")?" open":""}><summary><h2 class="sec">QR 로그인</h2><span class="fold-sum">비밀번호 없이 들어오는 링크</span></summary>
-    <p class="muted" style="font-size:13px;margin:0 0 10px">선생님마다 QR(링크)을 만들어 주면, 한 번 찍은 기기에서는 다음부터 비밀번호 없이 바로 들어와요. QR은 <b>24시간 동안 한 번만</b> 쓸 수 있어요. 한 사람당 <b>휴대폰 1대 + PC 1대</b>까지 쓸 수 있어서, 새 휴대폰에 등록하면 이전 휴대폰은 저절로 해제돼요.</p>
-    <div class="card admin-list">${ts.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">교사 명단의 선생님</span><button class="btn primary" data-qr-team="${t}">선생님 QR 만들기</button></div>`).join("")}
+  return `<details class="fold" data-fold="qr"${foldOpen("qr")?" open":""}><summary><h2 class="sec">로그인 관리</h2><span class="fold-sum">QR · 개인 비밀번호 · 기기</span></summary>
+    <p class="muted" style="font-size:13px;margin:0 0 10px">[선생님 관리]에서 선생님마다 QR을 만들고, 비밀번호가 있는지·기기가 몇 대인지 보고, 잊은 비밀번호를 초기화해요. 한 번 QR을 찍은 기기는 다음부터 바로 들어와요. QR은 <b>24시간 동안 한 번만</b> 쓸 수 있어요. 한 사람당 <b>휴대폰 1대 + PC 1대</b>까지 쓸 수 있어서, 새 휴대폰에 등록하면 이전 휴대폰은 저절로 해제돼요.</p>
+    <div class="card admin-list">${ts.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">QR · 비밀번호 초기화</span><button class="btn primary" data-qr-team="${t}">선생님 관리</button></div>`).join("")}
     ${S.isAdmin?`<div class="admin-row"><b>관리자</b><span class="code none">${S.isCo?"팀 관리자":"팀 관리자·공동관리자"}</span><button class="btn primary" id="qrStaffOpen">관리자 QR 만들기</button></div>`:""}
     <div class="admin-row"><b>로그인 기기</b><span class="code none">QR로 등록된 기기 보기·해제</span><button class="btn" id="qrDevOpen">기기 관리</button></div>
     ${S.isAdmin&&!S.isCo?`<div class="admin-row"><b>예전 번호 로그인</b><span class="code none">${S.legacy===false?"꺼짐 · QR과 개인 비밀번호만":"허용 중 · 반 담임 번호·보조교사 비밀번호"}</span><button class="btn ${S.legacy===false?"":"danger"}" id="legacyTgl">${S.legacy===false?"다시 켜기":"끄기"}</button></div>`:""}</div>
@@ -3413,11 +3431,11 @@ function renderHome(){
     h+=renderAdminSummary();
     h+=rptCard();
     // 시스템 전체 설정은 총관리자만 화면에 표시합니다. 공동관리자는 등록 메뉴만 사용합니다.
-    if(!S.isCo2) h+=hrCodesCard(Object.keys(TEAMS));
+    if(!S.isCo2&&S.legacy!==false) h+=hrCodesCard(Object.keys(TEAMS));
   }
   {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&((S.scope||{})[t]||{}).level==="dept");
     if(mine.length)h+=rptCard();
-    if(mine.length)h+=hrCodesCard(mine);
+    if(mine.length&&S.legacy!==false)h+=hrCodesCard(mine);
     /* 담임 번호로 들어온 사람: 자기 반 담임 번호를 직접 바꿀 수 있어요 */
     const hrT=S.isAdmin?[]:Object.keys(TEAMS).filter(t=>["grade","sub"].includes(((S.scope||{})[t]||{}).level)),myG=AUTH().gcodes;
     /* 반 담임 번호 변경은 그 번호로 들어온 반만 */
@@ -3905,7 +3923,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261103134124';
+  var BUILD = '20261103134416';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
