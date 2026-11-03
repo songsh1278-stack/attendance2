@@ -2334,8 +2334,8 @@ function openQrStaff(){
   const ov=document.createElement("div");ov.className="overlay";let list=null;
   const rl=x=>x.role==="admin"?"총관리자":x.role==="co"?"공동관리자1":x.role==="co2"?"공동관리자2":"팀 관리자"+(TEAMS[x.team]?" · "+TEAMS[x.team].label:"");
   const draw=()=>{ov.innerHTML=`<div class="sheet" role="dialog" aria-label="관리자 QR 만들기"><h3>관리자 QR</h3>
-    <p class="muted" style="margin:0;font-size:14px">QR을 만들 관리자를 고르세요. 팀 관리자는 담당 부서로 들어와요.</p>
-    <div class="admin-list card" style="margin-top:8px">${list===null?`<p class="muted" style="margin:0">불러오는 중…</p>`:list.length?list.map(x=>`<div class="admin-row"><b style="flex:1;min-width:0">${esc(x.name)}<br><span class="muted" style="font-size:12px;font-weight:400">${esc(rl(x))}</span></b><button class="btn primary" data-qr-staff="${esc(x.email)}">QR 만들기</button></div>`).join(""):`<p class="muted" style="margin:0">QR을 만들 수 있는 관리자가 없어요.</p>`}</div>
+    <p class="muted" style="margin:0;font-size:14px">QR을 만들 관리자를 고르세요. 팀 관리자는 담당 부서로 들어와요. 비밀번호가 있는 관리자는 QR 없이 [로그인]에 이메일과 비밀번호로 들어올 수 있어서 [QR 만들기]가 흐리게 보여요. 비밀번호를 잊었으면 새 QR을 주세요(QR로 들어오면 비밀번호를 새로 정할 수 있어요).</p>
+    <div class="admin-list card" style="margin-top:8px">${list===null?`<p class="muted" style="margin:0">불러오는 중…</p>`:list.length?list.map(x=>`<div class="admin-row"><b style="flex:1;min-width:0">${esc(x.name)}<br><span class="muted" style="font-size:12px;font-weight:400">${esc(rl(x))}${x.pos?" · "+esc(x.pos):""} · ${x.hasPw?"비밀번호 있음":"<span style=\"color:var(--danger,#C0392B)\">비밀번호 없음</span>"} · 기기 ${x.devs||0}대</span></b><button class="btn${x.hasPw?"":" primary"}" data-qr-staff="${esc(x.email)}"${x.hasPw?` style="opacity:.45" title="비밀번호가 있어서 QR 없이 [로그인]으로 들어올 수 있어요"`:""}>QR 만들기</button></div>`).join(""):`<p class="muted" style="margin:0">QR을 만들 수 있는 관리자가 없어요.</p>`}</div>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>닫기</button></div></div>`};
   draw();document.body.appendChild(ov);
   call("qrStaff").then(l=>{list=l||[];if(ov.isConnected)draw()}).catch(e=>{toast(e.message);ov.remove()});
@@ -3560,7 +3560,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261103144301';
+  var BUILD = '20261103144835';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
