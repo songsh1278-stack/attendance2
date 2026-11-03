@@ -2433,7 +2433,7 @@ document.addEventListener("click",async e=>{
 /* 메인 화면 카드: 선생님 QR 만들기 (총관리자·공동관리자1·2 = 모든 부서, 팀 관리자 = 자기 부서) */
 const qrTeams=()=>S.isAdmin?Object.keys(TEAMS):Object.keys(TEAMS).filter(t=>((S.scope||{})[t]||{}).level==="dept");
 /* 로그인 관리 내용 (선생님 관리 · 로그인 기기). 관리자 등록 권한이 있으면 [로그인 관리 · 관리자 등록] 한 칸에 같이 넣어요 */
-const qrBody=ts=>`<p class="muted" style="font-size:13px;margin:0 0 10px">[선생님 관리]에서 선생님마다 QR을 만들고, 비밀번호가 있는지·기기가 몇 대인지 보고, 잊은 비밀번호를 초기화해요. 한 번 QR을 찍은 기기는 다음부터 바로 들어와요. QR은 <b>24시간 동안 한 번만</b> 쓸 수 있어요. 선생님은 휴대폰·PC 상관없이 <b>기기 1대</b>, 관리자는 <b>휴대폰 1대 + PC 1대</b>까지 쓸 수 있어서, 새 기기를 등록하면 이전 기기는 저절로 해제돼요.</p>
+const qrBody=ts=>`<p class="muted" style="font-size:13px;margin:0 0 10px">[선생님 관리]에서 선생님마다 QR을 만들고, 비밀번호가 있는지·기기가 몇 대인지 보고, 잊은 비밀번호를 초기화해요. 한 번 QR을 찍은 기기는 다음부터 바로 들어와요. QR은 <b>24시간 동안 한 번만</b> 쓸 수 있어요. 선생님은 휴대폰·PC 상관없이 <b>기기 1대</b>, 관리자(관리자를 겸하는 선생님 포함)는 <b>휴대폰 1대 + PC 1대</b>까지 쓸 수 있어서, 새 기기를 등록하면 이전 기기는 저절로 해제돼요.</p>
     <div class="card admin-list">${ts.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">QR · 비밀번호 초기화</span><button class="btn primary" data-qr-team="${t}">선생님 관리</button></div>`).join("")}
     ${S.isAdmin&&!S.staffMgr?`<div class="admin-row"><b>관리자</b><span class="code none">${S.isAdmin&&!S.isCo?"팀 관리자·공동관리자":"팀 관리자"}</span><button class="btn primary" id="qrStaffOpen">관리자 QR 만들기</button></div>`:""}
     <div class="admin-row"><b>로그인 기기</b><span class="code none">QR로 등록된 기기 보기·해제</span><button class="btn" id="qrDevOpen">기기 관리</button></div></div>`;
@@ -3593,7 +3593,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261103231152';
+  var BUILD = '20261103231423';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
