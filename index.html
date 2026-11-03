@@ -3090,12 +3090,12 @@ function renderHome(){
   h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:isHrOnly()||isTeamMgr()?`<button class="btn" id="hrOut">로그아웃</button>`:""}${S.isAdmin||isHrOnly()||isTeamMgr()?` <button class="btn" id="qrSelf">내 다른 기기 추가</button>`:""}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   return h;
 }
-/* 관리자 등록: 총관리자·공동관리자1은 모두, 직분이 목사·전도사면 모든 부서 팀 관리자, 팀장이면 자기 부서 팀 관리자 */
+/* 관리자 등록: 총관리자·공동관리자1은 모두, 직분이 목사·전도사·팀장이면 자기 부서 팀 관리자 */
 const POS_LIST=["목사","전도사","팀장"];
 const staffFull=()=>S.staffMgr==="full";
 const mgrTeams=()=>S.staffMgr==="full"||S.staffMgr==="all"?Object.keys(TEAMS):Array.isArray(S.staffMgr)?S.staffMgr:[];
 const canMngStaff=x=>staffFull()?!(S.isCo&&x.role==="admin"):!!S.staffMgr&&x.role==="team"&&(!x.pos||(S.staffMgr==="all"&&x.pos==="팀장"))&&mgrTeams().includes(x.team);
-const posSelect=(id,cur)=>staffFull()?`<label>직분 (목사·전도사는 모든 부서, 팀장은 자기 부서의 팀 관리자를 관리해요)<select id="${id}"><option value="">없음</option>${POS_LIST.map(p=>`<option ${cur===p?"selected":""}>${p}</option>`).join("")}</select></label>`:S.staffMgr==="all"?`<label>직분<select id="${id}"><option value="">없음</option><option ${cur==="팀장"?"selected":""}>팀장</option></select></label>`:"";
+const posSelect=(id,cur)=>staffFull()?`<label>직분 (목사·전도사·팀장은 담당 부서의 팀 관리자를 관리해요. 구분은 팀 관리자로 하고 담당 부서를 정해 주세요)<select id="${id}"><option value="">없음</option>${POS_LIST.map(p=>`<option ${cur===p?"selected":""}>${p}</option>`).join("")}</select></label>`:S.staffMgr==="all"?`<label>직분<select id="${id}"><option value="">없음</option><option ${cur==="팀장"?"selected":""}>팀장</option></select></label>`:"";
 function renderStaff(){
   const full=staffFull(),TO=["infant","toddler","youth","teen"],oi=t=>TO.indexOf(t)<0?9:TO.indexOf(t),ord=x=>x.role==="admin"?0:x.role==="co"?1:x.role==="co2"?2:3;const L=[...(S.staff||[])].sort((a,b)=>ord(a)-ord(b)||(ord(a)===3?oi(a.team)-oi(b.team):0)||String(a.name).localeCompare(String(b.name),"ko"));
   const rl=x=>x.role==="admin"?"총관리자":x.role==="co"?"공동관리자1":x.role==="co2"?"공동관리자2":"팀 관리자";
@@ -3560,7 +3560,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261103144100';
+  var BUILD = '20261103144301';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
