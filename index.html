@@ -737,7 +737,7 @@ const myScope=()=>(S.scope||{})[S.team]||{level:"dept",grades:[]};
 const isHomeroom=()=>myScope().level==="grade";
 const isSub=()=>myScope().level==="sub";
 const canManageGrades=()=>S.isAdmin||myScope().level==="dept";
-function roleLabel(){if(S.isAdmin)return S.isCo?(S.isCo2?"공동관리자2":"공동관리자1"):"총관리자";const sc=myScope();if(sc.level==="grade")return "담임 · "+sc.grades.map(g=>GL[g]).join(", ");if(sc.level==="sub")return "보조교사"+(sc.name?" · "+sc.name:"");return deptLocked(S.team)?"팀 관리자":""}
+function roleLabel(){if(S.isAdmin)return S.isCo?(S.isCo2?"공동관리자2":"공동관리자1"):"총관리자";const sc=myScope();if(sc.level==="grade")return "담임 · "+sc.grades.map(g=>GL[g]).join(", ");if(sc.level==="sub")return "보조교사"+(sc.name?" · "+sc.name:"");return sc.level==="dept"?"팀 관리자":""}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pad=n=>String(n).padStart(2,"0");
@@ -1745,7 +1745,7 @@ function openAskReply(x){
 /* ---------- 당회보고 (팀 관리자 이상) ---------- */
 const RPT_TEAMS=["infant","toddler","youth","teen","support"];
 const rptName=t=>t==="support"?"교육지원":TEAMS[t].label;
-const canRpt=()=>S.isAdmin||Object.keys(TEAMS).some(t=>deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
+const canRpt=()=>S.isAdmin||Object.keys(TEAMS).some(t=>((S.scope||{})[t]||{}).level==="dept");
 /* 접기 칸: 총관리자·공동관리자는 접힘, 팀 관리자 이하는 펼침이 기본 */
 /* 팀 관리자 화면: 반 담임 사용 설명서·내 팀 관리자 번호·반 담임 번호는 접힌 채로 시작 */
 const isTeamMgr=()=>!S.isAdmin&&Object.keys(TEAMS).some(t=>((S.scope||{})[t]||{}).level==="dept");
@@ -2765,18 +2765,22 @@ async function applyMoves(list,onProgress){
   try{await S.db.batch(list.map(([id,body])=>["people/"+id,body]));onProgress(list.length,Math.max(1,list.length));return []}
   catch(e){console.error(e);toast(e.message);await load();return list.map(x=>x[0])}
 }
-const needsCode=t=>deptLocked(t)&&!S.isAdmin;
+/* 큰 작업(연말 등반) 전 확인: 팀 관리자는 본인 개인 비밀번호. (예전 팀 관리자 번호로 들어온 경우만 그 번호) */
+const needsCode=t=>!S.isAdmin&&(!!S.staffMe||deptLocked(t));
 async function codeOk(t,ov){
   if(!needsCode(t))return true;
-  const inp=ov.querySelector("#f-pcode");const code=inp.value.trim();
-  let ok=false;try{ok=await call("verifyCode",t,code,AUTH().email)}catch(_){}
-  if(ok)storeCode(t,code);
-  ov.querySelector("#pcodeErr").hidden=ok;if(!ok)inp.select();return ok;
+  const inp=ov.querySelector("#f-pcode"),er=ov.querySelector("#pcodeErr");const code=inp.value.trim();
+  if(!code){er.textContent=S.staffMe?"내 비밀번호를 넣어 주세요.":"고유번호를 넣어 주세요.";er.hidden=false;inp.focus();return false}
+  let ok=false;
+  if(S.staffMe){try{ok=await call("checkMyPw",code)}catch(x){er.textContent=x.message;er.hidden=false;inp.select();return false}
+    er.textContent="비밀번호가 맞지 않아요.";}
+  else{try{ok=await call("verifyCode",t,code,AUTH().email)}catch(_){}if(ok)storeCode(t,code);er.textContent="고유번호가 맞지 않아요."}
+  er.hidden=ok;if(!ok)inp.select();return ok;
 }
 function sheetShell(title,intro,body,goLabel,goCls,t){
   return `<div class="sheet" role="dialog" aria-label="${esc(title)}"><h3>${esc(title)}</h3>
     <p class="muted" style="margin:0;font-size:14px">${intro}</p>${body}
-    ${needsCode(t)?`<div class="form"><label class="full">${esc(TEAMS[t].label)} 고유번호 확인<input id="f-pcode" type="password" inputmode="numeric" autocomplete="off" maxlength="8"></label></div><p class="err" id="pcodeErr" hidden>고유번호가 맞지 않아요.</p>`:""}
+    ${needsCode(t)?(S.staffMe?`<div class="form"><label class="full">확인을 위해 내 비밀번호<input id="f-pcode" type="password" autocomplete="current-password" maxlength="30"></label></div><p class="err" id="pcodeErr" hidden>비밀번호가 맞지 않아요.</p>`:`<div class="form"><label class="full">${esc(TEAMS[t].label)} 고유번호 확인<input id="f-pcode" type="password" inputmode="numeric" autocomplete="off" maxlength="8"></label></div><p class="err" id="pcodeErr" hidden>고유번호가 맞지 않아요.</p>`):""}
     <div class="progress" hidden><div></div></div><p class="muted num" id="pMsg" style="font-size:13px;margin:8px 0 0"></p>
     <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button>${goLabel?`<button type="button" class="btn ${goCls}" id="pGo">${goLabel}</button>`:""}</div></div>`;
 }
@@ -2808,7 +2812,7 @@ function restoreHomerooms(hr){
     const [t,...g]=k.split("_");const body={...c,team:t,group:g.join("_"),teacher:hr[k].teacher||"",teachers:hr[k].teachers||{}};
     S.classes.set(k,body);if(S.db)enqueue("classes/"+k,()=>S.db.doc("classes/"+k).set(body))});
 }
-const canPromote=t=>S.isAdmin||(((S.scope||{})[t]||{}).level==="dept"&&deptLocked(t));
+const canPromote=t=>S.isAdmin||((S.scope||{})[t]||{}).level==="dept";
 function openPromotion(t){
   if(!S.db||!S.editable)return;if(!canPromote(t)){toast("연말 등반은 팀 관리자 이상만 할 수 있어요");return}
   let plan=planPromotion(t);const y=promoYear();
@@ -3384,10 +3388,10 @@ function renderHome(){
     h+=renderAdminSummary();
     h+=rptCard();
     // 시스템 전체 설정은 총관리자만 화면에 표시합니다. 공동관리자는 등록 메뉴만 사용합니다.
-    if(!S.isCo2) h+=`<details class="fold" data-fold="codes"${S.fold.codes?" open":""}><summary><h2 class="sec">팀별 관리자 번호</h2><span class="fold-sum">${Object.keys(TEAMS).length}개 부서 중 ${Object.keys(TEAMS).filter(deptLocked).length}곳 설정</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">팀 관리자(중간관리자)에게 이 번호를 주면 그 부서 전체를 관리하고, 반별 담임에게 담임 번호를 줄 수 있어요. 번호가 없는 부서는 총관리자만 들어갈 수 있어요(담임은 담임 번호로 자기 반만). 번호는 총관리자·공동관리자가 바꿀 수 있어요. 팀 관리자가 직접 바꾼 번호는 보이지 않아요. 잊었다면 [새 번호]를 만들어 알려 주세요.</p>
+    if(!S.isCo2) h+=(S.legacy===false?"":`<details class="fold" data-fold="codes"${S.fold.codes?" open":""}><summary><h2 class="sec">팀별 관리자 번호</h2><span class="fold-sum">${Object.keys(TEAMS).length}개 부서 중 ${Object.keys(TEAMS).filter(deptLocked).length}곳 설정</span></summary><p class="muted" style="font-size:13px;margin:0 0 10px">팀 관리자(중간관리자)에게 이 번호를 주면 그 부서 전체를 관리하고, 반별 담임에게 담임 번호를 줄 수 있어요. 번호가 없는 부서는 총관리자만 들어갈 수 있어요(담임은 담임 번호로 자기 반만). 번호는 총관리자·공동관리자가 바꿀 수 있어요. 팀 관리자가 직접 바꾼 번호는 보이지 않아요. 잊었다면 [새 번호]를 만들어 알려 주세요.</p>
       <div class="card admin-list">${Object.entries(TEAMS).map(([t,x])=>{const code=S.codes[t]||"";const set=deptLocked(t);
         return `<div class="admin-row"><b>${x.label}</b><span class="code num ${code?"":"none"}">${code?esc(code):set&&(S.codesOwn||[]).includes(t)?"직접 바꾼 비밀번호":set?"설정됨":"번호 없음 (총관리자만 입장)"}</span>
-          ${code?`<button class="btn" data-copy-code="${esc(code)}">복사</button>`:""}<button class="btn" data-code-gen="${t}">${set?"새 번호":"번호 만들기"}</button><button class="btn" data-code-edit="${t}">직접 입력</button>${set?`<button class="btn danger" data-code-clear="${t}">해제</button>`:""}</div>`}).join("")}</div></details>`+hrCodesCard(Object.keys(TEAMS));
+          ${code?`<button class="btn" data-copy-code="${esc(code)}">복사</button>`:""}<button class="btn" data-code-gen="${t}">${set?"새 번호":"번호 만들기"}</button><button class="btn" data-code-edit="${t}">직접 입력</button>${set?`<button class="btn danger" data-code-clear="${t}">해제</button>`:""}</div>`}).join("")}</div></details>`)+hrCodesCard(Object.keys(TEAMS));
   }
   {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&((S.scope||{})[t]||{}).level==="dept");
     if(mine.length)h+=rptCard();
@@ -3878,7 +3882,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261103130735';
+  var BUILD = '20261103132116';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
