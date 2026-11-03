@@ -3113,7 +3113,7 @@ function renderHome(){
   return h;
 }
 /* 관리자 등록: 총관리자·공동관리자1은 모두, 직분이 목사·전도사·팀장이면 자기 부서 팀 관리자 */
-const POS_LIST=["목사","전도사","팀장"];
+const POS_LIST=["목사","전도사","팀장"],POS_EXTRA=["서기","회계"];
 /* 구분: 팀 관리자 / 팀 관리자(팀장·서기·총무·회계). 부서 직책은 표시만 하고 권한과는 상관없어요 */
 const DUTY_LIST=["목사","전도사","팀장","서기","총무","회계"];
 const teamOpts=cur=>`<option value="team"${cur==="-"?" selected":""}>팀 관리자</option>`+DUTY_LIST.map(d=>`<option value="team:${d}"${cur===d?" selected":""}>팀 관리자(${d})</option>`).join("");
@@ -3123,7 +3123,9 @@ const nmTail=x=>!!x.team&&/[(（][^)）]*[)）]\s*$/.test(String(x.name||""));  
 const staffFull=()=>S.staffMgr==="full";
 const mgrTeams=()=>S.staffMgr==="full"||S.staffMgr==="all"?Object.keys(TEAMS):Array.isArray(S.staffMgr)?S.staffMgr:[];
 const canMngStaff=x=>staffFull()?!(S.isCo&&x.role==="admin"):!!S.staffMgr&&x.role==="team"&&(!x.pos||(S.staffMgr==="all"&&x.pos==="팀장"))&&mgrTeams().includes(x.team);
-const posSelect=(id,cur)=>staffFull()?`<label>직분 (목사·전도사·팀장은 담당 부서의 팀 관리자를 관리해요. 구분은 팀 관리자로 하고 담당 부서를 정해 주세요)<select id="${id}"><option value="">없음</option>${POS_LIST.map(p=>`<option ${cur===p?"selected":""}>${p}</option>`).join("")}</select></label>`:S.staffMgr==="all"?`<label>직분<select id="${id}"><option value="">없음</option><option ${cur==="팀장"?"selected":""}>팀장</option></select></label>`:"";
+const posSelect=(id,cur)=>staffFull()?`<label>직분 (목사·전도사·팀장은 담당 부서의 팀 관리자를 관리해요. 서기·회계는 표시만 해요. 구분은 팀 관리자로 하고 담당 부서를 정해 주세요)<select id="${id}"><option value="">없음</option>${POS_LIST.concat(POS_EXTRA).map(p=>`<option ${cur===p?"selected":""}>${p}</option>`).join("")}</select></label>`:S.staffMgr==="all"?`<label>직분<select id="${id}"><option value="">없음</option><option ${cur==="팀장"?"selected":""}>팀장</option>${POS_EXTRA.map(p=>`<option ${cur===p?"selected":""}>${p}</option>`).join("")}</select></label>`:"";
+/* 직분의 서기·회계는 권한 없이 부서 직책(표시)으로 저장해요 */
+const posFix=f=>{if(POS_EXTRA.includes(f.pos)){f.duty=f.role==="team"?f.pos:"";f.pos=""}return f};
 function renderStaff(){
   const full=staffFull(),TO=["infant","toddler","youth","teen"],oi=t=>TO.indexOf(t)<0?9:TO.indexOf(t),ord=x=>x.role==="admin"?0:x.role==="co"?1:x.role==="co2"?2:3;const L=[...(S.staff||[])].sort((a,b)=>ord(a)-ord(b)||(ord(a)===3?oi(a.team)-oi(b.team):0)||String(a.name).localeCompare(String(b.name),"ko"));
   const rl=x=>x.role==="admin"?"총관리자":x.role==="co"?"공동관리자1":x.role==="co2"?"공동관리자2":"팀 관리자"+(x.duty?"("+x.duty+")":"");
@@ -3143,7 +3145,7 @@ document.addEventListener("change",e=>{if(e.target.id==="f-srole"){const l=docum
 document.addEventListener("submit",async e=>{
   if(e.target.id!=="staffForm")return;e.preventDefault();
   const f={name:$("#f-sname").value.trim(),email:$("#f-semail").value.trim(),...roleOf($("#f-srole").value),pw:($("#f-spw").value||"").trim(),team:($("#f-steam")||{}).value||"",pos:($("#f-spos")||{}).value||""};
-  try{const list=await tracked(call("staffAdd",f));S.staff=list;if(!AUTH().email)storeEmail(f.email);render();toast(f.role==="co"||f.role==="co2"?`${f.role==="co2"?"공동관리자2를":"공동관리자1을"} 등록했어요. 비밀번호를 본인에게 알려 주세요`:f.role==="admin"?"총관리자 계정을 등록했어요. 관리자 비밀번호로 로그인합니다.":"팀 관리자 이메일을 등록했어요")}
+  try{const list=await tracked(call("staffAdd",posFix(f)));S.staff=list;if(!AUTH().email)storeEmail(f.email);render();toast(f.role==="co"||f.role==="co2"?`${f.role==="co2"?"공동관리자2를":"공동관리자1을"} 등록했어요. 비밀번호를 본인에게 알려 주세요`:f.role==="admin"?"총관리자 계정을 등록했어요. 관리자 비밀번호로 로그인합니다.":"팀 관리자 이메일을 등록했어요")}
   catch(err){alertBox("등록하지 못했어요",err.message)}
 });
 function openStaffEdit(email){
@@ -3152,7 +3154,7 @@ function openStaffEdit(email){
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="등록 정보 수정"><h3>등록 정보 수정</h3>
     <div class="form" style="grid-template-columns:1fr"><label>이름<input id="f-esn" maxlength="20" value="${esc(x.name)}" required autocomplete="off"></label><label>이메일<input id="f-ese" type="email" inputmode="email" value="${esc(x.email)}" required autocomplete="off"></label>
     <label>구분<select id="f-esr">${teamOpts(x.role==="team"?x.duty||"-":"")}${full?`<option value="co" ${x.role==="co"?"selected":""}>공동관리자1</option><option value="co2" ${x.role==="co2"?"selected":""}>공동관리자2</option><option value="admin" ${x.role==="admin"?"selected":""} ${S.isCo?"disabled":""}>총관리자</option>`:""}</select></label>
-    ${posSelect("f-espos",x.pos||"")}
+    ${posSelect("f-espos",x.pos||(POS_EXTRA.includes(x.duty)?x.duty:""))}
     <label id="f-esteaml" ${x.role==="team"?"":"hidden"}>담당 부서 (이 부서로만 로그인할 수 있어요)<select id="f-este">${teams.length>1?`<option value="">부서 선택</option>`:""}${teams.map(t=>`<option value="${t}" ${x.team===t?"selected":""}>${TEAMS[t].label}</option>`).join("")}</select></label>
     <label id="f-espwl" ${x.role==="co"||x.role==="co2"?"":"hidden"}>공동관리자 비밀번호 (영문+숫자 8자 이상, 비워 두면 그대로)<input id="f-espw" type="password" maxlength="30" autocomplete="off"></label></div>
     <p class="err" id="esErr" hidden></p>
@@ -3162,7 +3164,7 @@ function openStaffEdit(email){
   ov.addEventListener("change",e=>{if(e.target.id==="f-esr"){ov.querySelector("#f-espwl").hidden=e.target.value!=="co"&&e.target.value!=="co2";ov.querySelector("#f-esteaml").hidden=roleOf(e.target.value).role!=="team"}});
   ov.querySelector("form").addEventListener("submit",async e=>{
     e.preventDefault();const f={name:ov.querySelector("#f-esn").value.trim(),email:ov.querySelector("#f-ese").value.trim(),...roleOf(ov.querySelector("#f-esr").value),pw:(ov.querySelector("#f-espw").value||"").trim(),team:ov.querySelector("#f-este").value||"",pos:(ov.querySelector("#f-espos")||{}).value||x.pos||""};
-    try{const list=await tracked(call("staffEdit",email,f));if(String(AUTH().email||"").toLowerCase()===email.toLowerCase())storeEmail(f.email);S.staff=list;ov.remove();render();toast("수정했어요")}
+    try{const list=await tracked(call("staffEdit",email,posFix(f)));if(String(AUTH().email||"").toLowerCase()===email.toLowerCase())storeEmail(f.email);S.staff=list;ov.remove();render();toast("수정했어요")}
     catch(err){const el=ov.querySelector("#esErr");el.textContent=err.message;el.hidden=false}
   });
 }
@@ -3589,7 +3591,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261103225546';
+  var BUILD = '20261103225747';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
