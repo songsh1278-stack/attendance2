@@ -376,6 +376,7 @@ details.staff-grp{border:1px solid var(--line);border-radius:12px;padding:8px 12
 details.staff-grp>summary{align-items:center}
 details.staff-grp>summary b{font-size:15px}
 details.staff-grp .admin-list{margin-top:6px}
+details.staff-grp .admin-row b{min-width:0}
 .seg{display:flex;background:var(--sunk);border-radius:10px;padding:3px;gap:3px;margin-top:14px}
 .seg button{word-break:keep-all;flex:1;border:0;background:none;border-radius:8px;padding:7px;font-size:13px;font-weight:600;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow),inset 0 0 0 1px var(--line)}
@@ -3590,7 +3591,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261103230040';
+  var BUILD = '20261103230349';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
