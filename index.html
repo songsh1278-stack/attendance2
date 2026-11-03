@@ -2443,7 +2443,7 @@ async function makeQr(spec){
   ov.innerHTML=`<div class="sheet" role="dialog" aria-label="QR 로그인"><h3>${self?"내 다른 기기 추가":"QR 로그인"}</h3>
     <p style="margin:0;font-size:15px;text-align:center"><b>${esc(r.label)}</b></p>
     ${svg?`<div style="background:#fff;border-radius:14px;padding:8px;width:min(260px,72vw);margin:10px auto 4px;line-height:0">${svg}</div>`:`<p class="muted" style="text-align:center">QR 그림을 불러오지 못했어요. 아래 링크를 보내 주세요.</p>`}
-    <p class="muted" style="margin:0;font-size:13px;text-align:center;line-height:1.6"><b>${esc(r.exp)}까지 한 번만</b> 쓸 수 있어요. 한 사람당 휴대폰 1대 + PC 1대까지예요.<br>${self?"다른 기기(휴대폰·PC)의 카메라로 찍거나 링크를 그 기기로 보내세요.":"휴대폰 <b>기본 카메라</b>로 찍거나, 링크를 <b>본인에게 1:1로</b> 보내 주세요. 단톡방에는 올리지 마세요."}</p>
+    <p class="muted" style="margin:0;font-size:13px;text-align:center;line-height:1.6"><b>${esc(r.exp)}까지 한 번만</b> 쓸 수 있어요. 새로 만들면 전에 만든 QR은 쓸 수 없어요.${r.old?` <b>(전에 만든 QR ${r.old}개는 무효가 됐어요)</b>`:""} 한 사람당 휴대폰 1대 + PC 1대까지예요.<br>${self?"다른 기기(휴대폰·PC)의 카메라로 찍거나 링크를 그 기기로 보내세요.":"휴대폰 <b>기본 카메라</b>로 찍거나, 링크를 <b>본인에게 1:1로</b> 보내 주세요. 단톡방에는 올리지 마세요."}</p>
     <div style="margin-top:10px;word-break:break-all;font-size:12px;background:var(--ground);border:1px solid var(--line);border-radius:10px;padding:8px 10px;user-select:all;-webkit-user-select:all">${esc(r.url)}</div>
     <div class="actions"><button class="btn" data-qr-copy>링크 복사</button>${navigator.share?`<button class="btn" data-qr-share>보내기</button>`:""}<div class="spacer"></div><button type="button" class="btn primary" data-close>닫기</button></div></div>`;
   document.body.appendChild(ov);
@@ -3923,7 +3923,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261103134416';
+  var BUILD = '20261103134755';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
