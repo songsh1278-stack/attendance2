@@ -3102,7 +3102,7 @@ function renderStaff(){
   const teams=mgrTeams();
   return `<details class="fold" data-fold="staff"${S.fold.staff?" open":""}><summary><h2 class="sec">${full?"팀 관리자·공동관리자 등록":"팀 관리자 등록"}</h2><span class="fold-sum">${L.length}명 등록</span></summary><div class="card">
     ${full?"":`<p class="muted" style="font-size:13px;margin:0 0 10px">${S.staffMgr==="all"?"모든 부서":esc(teams.map(t=>TEAMS[t].label).join("·"))}의 팀 관리자를 등록하고 QR을 만들 수 있어요.</p>`}
-    ${L.length?`<div class="admin-list">${L.map(x=>`<div class="admin-row"><b>${esc(x.name)}</b><span class="tag ${x.role==="admin"?"admin":x.role==="co"||x.role==="co2"?"new":"role"}">${rl(x)}</span>${x.pos?`<span class="tag admin">${esc(x.pos)}</span>`:""}${x.role==="team"?`<span class="tag ${x.team?"role":"new"}">${x.team&&TEAMS[x.team]?esc(TEAMS[x.team].label):"부서 미지정"}</span>`:""}<span class="code none" style="letter-spacing:0;word-break:break-all">${esc(x.email)}</span>${x.role!=="admin"&&(full?(!S.isCo||x.role==="team"):canMngStaff(x))?`<button class="btn" data-qr-staff="${esc(x.email)}">QR</button>`:""}${canMngStaff(x)?`<button class="btn" data-staff-edit="${esc(x.email)}">수정</button><button class="btn danger" data-staff-del="${esc(x.email)}">삭제</button>`:""}</div>`).join("")}</div>`:`<p class="muted" style="margin:0 0 10px">등록된 사람이 없어요.</p>`}
+    ${L.length?`<div class="admin-list">${L.map(x=>`<div class="admin-row"><b>${esc(x.name)}</b><span class="tag ${x.role==="admin"?"admin":x.role==="co"||x.role==="co2"?"new":"role"}">${rl(x)}</span>${x.pos?`<span class="tag admin">${esc(x.pos)}</span>`:""}${x.role==="team"?`<span class="tag ${x.team?"role":"new"}">${x.team&&TEAMS[x.team]?esc(TEAMS[x.team].label):"부서 미지정"}</span>`:""}<span class="code none" style="letter-spacing:0;word-break:break-all">${esc(x.email)}${x.role==="admin"?"":`<br><span style="font-size:12px">${x.hasPw?"비밀번호 있음":`<span style="color:var(--danger,#C0392B)">비밀번호 없음</span>`} · 기기 ${x.devs||0}대</span>`}</span>${x.role!=="admin"&&(full?(!S.isCo||x.role==="team"):canMngStaff(x))?`<button class="btn" data-qr-staff="${esc(x.email)}"${x.hasPw?` style="opacity:.45" title="비밀번호가 있어서 QR 없이 [로그인]으로 들어올 수 있어요"`:""}>QR</button>`:""}${canMngStaff(x)?`<button class="btn" data-staff-edit="${esc(x.email)}">수정</button><button class="btn danger" data-staff-del="${esc(x.email)}">삭제</button>`:""}</div>`).join("")}</div>`:`<p class="muted" style="margin:0 0 10px">등록된 사람이 없어요.</p>`}
     <form id="staffForm" class="form" style="grid-template-columns:1fr"><label>이름<input id="f-sname" maxlength="20" required autocomplete="off"></label><label>이메일<input id="f-semail" type="email" inputmode="email" autocomplete="off" required></label>
     <label>구분<select id="f-srole"><option value="team">팀 관리자</option>${full?`<option value="co">공동관리자1</option><option value="co2">공동관리자2</option><option value="admin" ${S.isCo?"disabled":""}>총관리자</option>`:""}</select></label>
     ${posSelect("f-spos","")}
@@ -3560,7 +3560,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261103144835';
+  var BUILD = '20261103145015';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
