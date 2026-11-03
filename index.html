@@ -736,7 +736,7 @@ function setPersonCall(p,next){const t=teamOf(p);const cur=(S.settings||{})[t]||
 const myScope=()=>(S.scope||{})[S.team]||{level:"dept",grades:[]};
 const isHomeroom=()=>myScope().level==="grade";
 const isSub=()=>myScope().level==="sub";
-const canManageGrades=()=>S.isAdmin||(myScope().level==="dept"&&deptLocked(S.team));
+const canManageGrades=()=>S.isAdmin||myScope().level==="dept";
 function roleLabel(){if(S.isAdmin)return S.isCo?(S.isCo2?"공동관리자2":"공동관리자1"):"총관리자";const sc=myScope();if(sc.level==="grade")return "담임 · "+sc.grades.map(g=>GL[g]).join(", ");if(sc.level==="sub")return "보조교사"+(sc.name?" · "+sc.name:"");return deptLocked(S.team)?"팀 관리자":""}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1748,7 +1748,7 @@ const rptName=t=>t==="support"?"교육지원":TEAMS[t].label;
 const canRpt=()=>S.isAdmin||Object.keys(TEAMS).some(t=>deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
 /* 접기 칸: 총관리자·공동관리자는 접힘, 팀 관리자 이하는 펼침이 기본 */
 /* 팀 관리자 화면: 반 담임 사용 설명서·내 팀 관리자 번호·반 담임 번호는 접힌 채로 시작 */
-const isTeamMgr=()=>!S.isAdmin&&Object.keys(TEAMS).some(t=>deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
+const isTeamMgr=()=>!S.isAdmin&&Object.keys(TEAMS).some(t=>((S.scope||{})[t]||{}).level==="dept");
 /* 담임 번호·팀 관리자로 들어온 사람: 메인화면 아래 버튼이 [로그아웃] */
 const isHrOnly=()=>!S.isAdmin&&!isTeamMgr()&&Object.keys(TEAMS).some(t=>["grade","sub"].includes(((S.scope||{})[t]||{}).level));
 const foldOpen=k=>S.isAdmin||(isTeamMgr()&&["guide","mycode","hrcodes"].includes(k))?!!S.fold[k]:S.fold[k]!==false;
@@ -2476,20 +2476,60 @@ async function afterBoot(){
   /* 이미 기기로 들어온 선생님의 비밀번호는 기기에 둘 필요가 없어요 */
   const dup=Object.keys(tc).filter(pid=>me.some(m=>m.dev&&m.pid===pid));if(dup.length)dropTCodes(dup);
   const need=Object.keys(tc).filter(pid=>me.some(m=>!m.dev&&m.own&&m.pid===pid));
-  if(need.length&&!bindBusy&&S.remember!==false){bindBusy=true;
-    try{const r=await call("devBind");if(r&&r.tok){addDevTok(r.tok);dropTCodes(need);if(r.gone)toast("한 사람당 휴대폰 1대 + PC 1대까지라서 전에 쓰던 "+r.gone+"은(는) 로그인이 풀렸어요");bindBusy=false;return load(true)}}catch(_){}
+  let cp="";try{cp=localStorage.getItem("ya-copw")||S._copw||""}catch(_){cp=S._copw||""}
+  const dropCo=()=>{S._copw="";try{localStorage.removeItem("ya-copw")}catch(_){}};
+  if(cp&&S.staffMe&&S.staffMe.dev)dropCo();   /* QR 기기로 들어왔으면 비밀번호는 기기에 둘 필요가 없어요 */
+  const needCo=!!(cp&&S.staffMe&&!S.staffMe.dev);
+  if((need.length||needCo)&&!bindBusy&&S.remember!==false){bindBusy=true;
+    try{const r=await call("devBind");if(r&&r.tok){addDevTok(r.tok);dropTCodes(need);if(needCo)dropCo();if(r.gone)toast("한 사람당 휴대폰 1대 + PC 1대까지라서 전에 쓰던 "+r.gone+"은(는) 로그인이 풀렸어요");bindBusy=false;return load(true)}}catch(_){}
     bindBusy=false}
-  if(pwAsked)return;const t=Object.keys(S.hrMe||{}).find(k=>S.hrMe[k].dev&&!S.hrMe[k].hasPw);if(!t)return;
+  if(pwAsked)return;
+  if(S.staffMe&&S.staffMe.dev&&!S.staffMe.hasPw){pwAsked=true;const go=()=>{if(document.querySelector(".overlay"))return setTimeout(go,800);if(S.staffMe&&S.staffMe.dev&&!S.staffMe.hasPw)openStaffPw(true)};setTimeout(go,600);return}
+  const t=Object.keys(S.hrMe||{}).find(k=>S.hrMe[k].dev&&!S.hrMe[k].hasPw);if(!t)return;
   pwAsked=true;const go=()=>{if(document.querySelector(".overlay"))return setTimeout(go,800);const m=(S.hrMe||{})[t];if(m&&m.dev&&!m.hasPw)openMyTCode(t,"",true)};setTimeout(go,600);
 }
+/* 공동관리자·팀 관리자 본인 비밀번호 (QR로 등록된 기기에서는 지금 비밀번호 없이 정할 수 있어요) */
+const staffPwCard=()=>{const m=S.staffMe;if(!m)return "";
+  return `<h2 class="sec">내 비밀번호</h2><div class="card admin-list"><div class="admin-row"><b>${esc(m.name)}</b><span class="code none">${m.role==="co2"?"공동관리자2":m.role==="co"?"공동관리자1":"팀 관리자"+(TEAMS[m.team]?" · "+TEAMS[m.team].label:"")}${m.dev?" (QR로 로그인됨)":""}</span><button class="btn primary" id="staffPwOpen">${m.hasPw?"내 비밀번호 변경":"내 비밀번호 만들기"}</button></div></div>`};
+function openStaffPw(force){
+  const m=S.staffMe;if(!m){toast("QR이나 개인 비밀번호로 로그인한 뒤에 만들 수 있어요");return}
+  const dev=!!m.dev,needOld=!dev&&m.hasPw;
+  const ov=document.createElement("div");ov.className="overlay";
+  ov.innerHTML=`<form class="sheet" role="dialog" aria-label="내 비밀번호"><h3>${force?"내 비밀번호를 만들어 주세요":m.hasPw?"내 비밀번호 변경":"내 비밀번호 만들기"}</h3>
+    <p class="muted" style="margin:0;font-size:14px">${force?"<b>"+esc(m.name)+"</b>님, QR로 로그인하셨어요. ":""}휴대폰을 바꾸거나 브라우저 기록을 지웠을 때는 [팀관리자 로그인]에서 <b>이메일과 이 비밀번호</b>로 들어와요.${dev?" 이 기기는 QR로 등록되어 있어서 지금 비밀번호 없이 정할 수 있어요.":""} 한 사람당 휴대폰 1대 + PC 1대까지 쓸 수 있어요.</p>
+    <div class="form">${needOld?`<label class="full">지금 쓰는 비밀번호<input id="f-sp0" type="password" autocomplete="current-password" maxlength="30" required></label>`:""}
+    <label class="full">새 비밀번호 (영문과 숫자를 모두 넣은 8자리 이상)<input id="f-sp1" type="password" autocomplete="new-password" autocapitalize="off" maxlength="30" required></label>
+    <label class="full">새 비밀번호 한 번 더<input id="f-sp2" type="password" autocomplete="new-password" autocapitalize="off" maxlength="30" required></label></div>
+    <p class="err" id="spErr" hidden></p>
+    <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>${force?"나중에":"취소"}</button><button class="btn primary" type="submit">${m.hasPw?"변경":"만들기"}</button></div></form>`;
+  document.body.appendChild(ov);(ov.querySelector("#f-sp0")||ov.querySelector("#f-sp1")).focus();
+  const err=t=>{const el=ov.querySelector("#spErr");el.textContent=t;el.hidden=false};
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+  ov.querySelector("form").addEventListener("submit",async e=>{e.preventDefault();
+    const o=(ov.querySelector("#f-sp0")||{}).value||"",v=ov.querySelector("#f-sp1").value.trim(),v2=ov.querySelector("#f-sp2").value.trim();
+    if(!/^(?=.*[A-Za-z])(?=.*[0-9])\S{8,30}$/.test(v)){err("새 비밀번호는 영문과 숫자를 모두 넣은 8자리 이상이에요 (공백 없이)");return}
+    if(v!==v2){err("두 비밀번호가 달라요. 다시 확인해 주세요");return}
+    const btn=ov.querySelector('[type="submit"]');btn.disabled=true;
+    try{await tracked(call("staffPw",v,o))}catch(x){btn.disabled=false;err(x.message);return}
+    if(!dev){S._copw=v;try{if(localStorage.getItem("ya-copw"))localStorage.setItem("ya-copw",v)}catch(_){}}
+    ov.remove();await load();toast(m.hasPw?"비밀번호를 바꿨어요":"비밀번호를 만들었어요. 다른 기기에서는 이메일과 이 비밀번호로 들어오세요")});
+}
+document.addEventListener("click",async e=>{
+  if(e.target.closest("#staffPwOpen"))return openStaffPw();
+  const lg=e.target.closest("#legacyTgl");if(!lg)return;
+  const on=S.legacy===false;if(!on&&!lg.dataset.armed){lg.dataset.armed="1";lg.textContent="한 번 더 누르면 꺼요";return}
+  try{await tracked(call("setLegacy",on));await load();toast(on?"예전 번호 로그인을 다시 켰어요":"예전 번호 로그인을 껐어요. 이제 QR과 개인 비밀번호로만 들어와요")}catch(x){alertBox("바꾸지 못했어요",x.message)}
+});
 /* 메인 화면 카드: 선생님 QR 만들기 (총관리자·공동관리자1·2 = 모든 부서, 팀 관리자 = 자기 부서) */
-const qrTeams=()=>S.isAdmin?Object.keys(TEAMS):Object.keys(TEAMS).filter(t=>deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
+const qrTeams=()=>S.isAdmin?Object.keys(TEAMS):Object.keys(TEAMS).filter(t=>((S.scope||{})[t]||{}).level==="dept");
 const qrCard=()=>{const ts=qrTeams();if(!ts.length)return "";
   return `<details class="fold" data-fold="qr"${foldOpen("qr")?" open":""}><summary><h2 class="sec">QR 로그인</h2><span class="fold-sum">비밀번호 없이 들어오는 링크</span></summary>
     <p class="muted" style="font-size:13px;margin:0 0 10px">선생님마다 QR(링크)을 만들어 주면, 한 번 찍은 기기에서는 다음부터 비밀번호 없이 바로 들어와요. QR은 <b>24시간 동안 한 번만</b> 쓸 수 있어요. 한 사람당 <b>휴대폰 1대 + PC 1대</b>까지 쓸 수 있어서, 새 휴대폰에 등록하면 이전 휴대폰은 저절로 해제돼요.</p>
     <div class="card admin-list">${ts.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">교사 명단의 선생님</span><button class="btn primary" data-qr-team="${t}">선생님 QR 만들기</button></div>`).join("")}
     ${S.isAdmin?`<div class="admin-row"><b>관리자</b><span class="code none">${S.isCo?"팀 관리자":"팀 관리자·공동관리자"}</span><button class="btn primary" id="qrStaffOpen">관리자 QR 만들기</button></div>`:""}
-    <div class="admin-row"><b>로그인 기기</b><span class="code none">QR로 등록된 기기 보기·해제</span><button class="btn" id="qrDevOpen">기기 관리</button></div></div></details>`};
+    <div class="admin-row"><b>로그인 기기</b><span class="code none">QR로 등록된 기기 보기·해제</span><button class="btn" id="qrDevOpen">기기 관리</button></div>
+    ${S.isAdmin&&!S.isCo?`<div class="admin-row"><b>예전 번호 로그인</b><span class="code none">${S.legacy===false?"꺼짐 · QR과 개인 비밀번호만":"허용 중 · 팀 관리자 번호·반 담임 번호·보조교사 비밀번호"}</span><button class="btn ${S.legacy===false?"":"danger"}" id="legacyTgl">${S.legacy===false?"다시 켜기":"끄기"}</button></div>`:""}</div>
+    ${S.isAdmin&&!S.isCo&&S.legacy!==false?`<p class="muted" style="font-size:12px;margin:6px 0 0">선생님·팀 관리자 모두 QR이나 개인 비밀번호로 들어온 뒤에 [끄기]를 누르세요. 끄면 공용 번호로 들어와 있던 기기는 로그인이 풀려요. 이미 만든 개인 비밀번호는 그대로예요.</p>`:""}</details>`};
 function forgetDevice(msg){revokeMyDevs();try{["ya-relogin","ya-admin","ya-email","ya-copw","ya-codes","ya-gcodes","ya-tcodes","ya-scodes","ya-who","ya-tk","ya-photos",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._email="";S._copw="";S._codes={};S._gcodes={};S._tcodes={};S._scodes={};S._who={};S.hrMe={};S._tk={};S.photos=new Map();S.view="home";S.book=null;load();toast(msg||"이 기기에 기억된 번호와 로그인을 지웠어요")}
 /* 로그아웃: 로그인은 끝내지만, '이 기기에서 기억하기'로 들어왔다면 이메일·번호를 이 기기에만 남겨 다시 로그인할 때 미리 채워요 */
 const reLogin=()=>{try{return JSON.parse(localStorage.getItem("ya-relogin")||"{}")||{}}catch(_){return {}}};
@@ -2535,7 +2575,7 @@ function enterDept(t){if(canEnter(t))return goDept(t);if(myDepts().length){toast
 function openCodeSheet(t){
   const ov=document.createElement("div");ov.className="overlay";
   ov.innerHTML=`<form class="sheet" role="dialog" aria-label="부서 고유번호 입력"><h3>${TEAMS[t].label}</h3>
-    <p class="muted" style="margin:0;font-size:14px"><b>본인 이름</b>과 <b>비밀번호</b>(담임 번호, 본인 비밀번호 또는 보조교사 비밀번호)를 넣고 들어가세요. 담임으로 들어가면 자기 반만 보여요. 팀 관리자는 먼저 메인 화면의 [팀관리자 로그인]에서 등록된 이메일로 로그인해 주세요.</p>
+    <p class="muted" style="margin:0;font-size:14px">${S.legacy===false?"<b>본인 이름</b>과 <b>내 비밀번호</b>를 넣고 들어가세요. 처음이거나 비밀번호가 없으면 팀 관리자에게 <b>QR</b>을 받아 주세요.":"<b>본인 이름</b>과 <b>비밀번호</b>(내 비밀번호, 담임 번호 또는 보조교사 비밀번호)를 넣고 들어가세요. 처음이면 팀 관리자에게 <b>QR</b>을 받는 게 가장 쉬워요."} 팀 관리자는 메인 화면의 [팀관리자 로그인]을 써 주세요.</p>
     <div class="form"><label class="full">이름<input id="f-name" type="text" autocomplete="name" maxlength="20" placeholder="예: 홍길동" required></label><label class="full">비밀번호<input id="f-code" type="password" autocomplete="off" autocapitalize="off" maxlength="20" required></label><label class="inline full"><input type="checkbox" id="f-remember" checked>이 기기에서 번호 기억하기 <span class="muted" style="font-size:12px">(여러 사람이 쓰는 기기면 끄세요)</span></label></div>
     <p class="err" id="codeErr" hidden>번호가 맞지 않아요. 다시 확인해 주세요.</p>
     <p style="margin:2px 0 0;font-size:13px;text-align:center"><button type="button" class="btn" data-ask="pw" data-team="${t}" style="font-size:13px;padding:4px 10px">번호를 모르겠나요? 관리자에게 요청하기</button></p>
@@ -2548,7 +2588,8 @@ function openCodeSheet(t){
   ov.querySelector("form").addEventListener("submit",loginBusy(ov,async e=>{
     e.preventDefault();const code=inp.value.trim(),name=nmi.value.trim();const ce=ov.querySelector("#codeErr");
     if(!name){ce.textContent="본인 이름을 적어 주세요.";ce.hidden=false;nmi.focus();return}
-    S.remember=!!(ov.querySelector("#f-remember")||{checked:true}).checked;let ok=false,r=null,w=null;try{ok=await call("verifyCode",t,code,AUTH().email);if(!ok)r=await call("findEntry",t,code,name)}catch(err){ce.textContent=err.message;ce.hidden=false;return}
+    S.remember=!!(ov.querySelector("#f-remember")||{checked:true}).checked;let ok=false,r=null,w=null;try{ok=S.legacy===false?false:await call("verifyCode",t,code,AUTH().email);if(!ok)r=await call("findEntry",t,code,name)}catch(err){ce.textContent=err.message;ce.hidden=false;return}
+    if(S.legacy===false&&r&&(r.kind==="class"||r.kind==="sub")){ce.textContent="반 담임 번호·보조교사 비밀번호로는 더 이상 들어올 수 없어요. 팀 관리자에게 QR을 받아 주세요.";ce.hidden=false;inp.select();return}
     if(r&&(r.kind==="badname"||r.kind==="own")){ce.textContent=r.kind==="own"?`${r.name} 선생님은 본인 비밀번호가 있어요. 반 담임 번호 대신 본인 비밀번호를 넣어 주세요.`:r.sub?"교사 명단에 없는 이름이에요. 교사 명단에 적힌 이름 그대로 넣어 주세요.":"이 반 담임 명단에 없는 이름이에요. 이름을 다시 확인해 주세요.";ce.hidden=false;(r.kind==="own"?inp:nmi).select();return}
     if(ok||r){if(S.remember!==false)try{localStorage.setItem("ya-myname",name)}catch(_){}}
     if(ok){storeCode(t,code)}
@@ -2965,16 +3006,17 @@ function openTeamAdminLogin(){
   const draw=()=>{
     ov.innerHTML=step===1
     ?`<form class="sheet" role="dialog" aria-label="팀관리자 로그인"><h3>팀관리자 로그인</h3>
-      <p class="muted" style="margin:0;font-size:14px">1단계: 총관리자가 등록해 둔 이메일로 로그인하세요. 팀 관리자는 그다음 팀 관리자 번호를, 공동관리자는 개인 비밀번호를 입력해요.</p>
+      <p class="muted" style="margin:0;font-size:14px">1단계: 총관리자가 등록해 둔 이메일을 넣으세요. 그다음 <b>개인 비밀번호</b>를 입력해요. 처음이거나 비밀번호가 없으면 관리자에게 <b>QR</b>을 받아 주세요.</p>
       <div class="form"><label class="full">이메일<input id="f-taem" type="email" inputmode="email" autocomplete="off" value="${esc(AUTH().email||reLogin().email||"")}" required></label>
       <label class="inline full"><input type="checkbox" id="f-tar" checked>이 기기에서 기억하기 <span class="muted" style="font-size:12px">(여러 사람이 쓰는 기기면 끄세요)</span></label></div>
       <p class="err" id="taErr" hidden></p>
       <p style="margin:2px 0 0;font-size:13px;text-align:center"><button type="button" class="btn" data-ask="email" style="font-size:13px;padding:4px 10px">로그인이 안 되시나요? 관리자에게 요청하기</button></p>
       <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">다음</button></div></form>`
     :step===3
-    ?`<form class="sheet" role="dialog" aria-label="공동관리자 로그인"><h3>${who2==="co2"?"공동관리자2":"공동관리자1"} 로그인</h3>
+    ?`<form class="sheet" role="dialog" aria-label="관리자 로그인"><h3>${who2==="co2"?"공동관리자2":who2==="co"?"공동관리자1":"팀 관리자"} 로그인</h3>
       <p class="muted" style="margin:0;font-size:14px"><b>${esc(who)}</b>님, 2단계: 개인 비밀번호를 입력하세요.</p>
-      <div class="form"><label class="full">공동관리자 비밀번호<input id="f-copw" type="password" autocomplete="current-password" required></label></div>
+      <div class="form"><label class="full">개인 비밀번호<input id="f-copw" type="password" autocomplete="current-password" required></label></div>
+      ${who2==="team"&&S.legacy!==false?`<p style="margin:0;font-size:13px;text-align:center"><button type="button" class="btn" data-ta-old style="font-size:13px;padding:4px 10px">팀 관리자 번호로 들어가기 (예전 방식)</button></p>`:""}
       <p class="err" id="taErr" hidden></p>
       <p style="margin:2px 0 0;font-size:13px;text-align:center"><button type="button" class="btn" data-ask="pw" style="font-size:13px;padding:4px 10px">비밀번호·번호를 모르겠나요? 관리자에게 요청하기</button></p>
       <div class="actions"><div class="spacer"></div><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">로그인</button></div></form>`
@@ -2989,19 +3031,19 @@ function openTeamAdminLogin(){
     const sel=ov.querySelector("#f-tat"),tac=ov.querySelector("#f-tac");if(sel&&tac){const fill=()=>{tac.value=(reLogin().codes||{})[sel.value]||""};fill();sel.addEventListener("change",fill)}
   };
   draw();document.body.appendChild(ov);
-  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
+  ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))return ov.remove();if(e.target.closest("[data-ta-old]")){step=2;draw()}});
   ov.addEventListener("submit",loginBusy(ov,async e=>{
     e.preventDefault();
     if(step===1){
       const email=ov.querySelector("#f-taem").value.trim();S.remember=!!ov.querySelector("#f-tar").checked;
-      try{const r=await call("verifyEmail",email);if(r.role==="admin"){err("총관리자 계정입니다. 홈 화면의 관리자 로그인 메뉴에서 관리자 비밀번호로 로그인하세요.");return}storeEmail(email);who=r.name||email;myTeam=r.team||"";who2=r.role;step=r.role==="co"||r.role==="co2"?3:2;draw()}catch(x){err(x.message)}
+      try{const r=await call("verifyEmail",email);if(r.role==="admin"){err("총관리자 계정입니다. 홈 화면의 관리자 로그인 메뉴에서 관리자 비밀번호로 로그인하세요.");return}storeEmail(email);who=r.name||email;myTeam=r.team||"";who2=r.role;step=3;draw()}catch(x){err(x.message)}
       return;
     }
     if(step===3){
       const pw=ov.querySelector("#f-copw").value;
       try{await call("coLogin",AUTH().email,pw)}catch(x){err(x.message);return}
       S._copw=pw;if(S.remember!==false){try{localStorage.setItem("ya-copw",pw)}catch(_){}}
-      ov.remove();await load();toast(who2==="co2"?"공동관리자2로 로그인했어요":"공동관리자1로 로그인했어요");return;
+      ov.remove();await load();toast(who2==="co2"?"공동관리자2로 로그인했어요":who2==="co"?"공동관리자1로 로그인했어요":"팀 관리자로 로그인했어요");return;
     }
     const t=ov.querySelector("#f-tat").value,inp=ov.querySelector("#f-tac"),code=inp.value.trim();
     if(!deptLocked(t)){err("이 부서는 아직 팀 관리자 번호가 없어요. 총관리자에게 번호를 만들어 달라고 해 주세요.");return}
@@ -3331,7 +3373,7 @@ function renderHome(){
   }
   h+=`</div>`;
   /* 팀 관리자: 부서 카드 바로 아래에 반별 출석 현황 */
-  if(!S.isAdmin&&S.ready)for(const t of Object.keys(TEAMS).filter(t=>deptLocked(t)&&canEnter(t)&&((S.scope||{})[t]||{}).level==="dept"))h+=renderClassSummary(t);
+  if(!S.isAdmin&&S.ready)for(const t of Object.keys(TEAMS).filter(t=>canEnter(t)&&((S.scope||{})[t]||{}).level==="dept"))h+=renderClassSummary(t);
   /* 반 담임 사용 설명서: 접기 기능, 기본은 접힘 */
   h+=`<details class="fold" data-fold="guide"${foldOpen("guide")?" open":""} style="margin-top:12px"><summary><h2 class="sec">반 담임 사용 설명서</h2></summary><div class="a2hs"><svg viewBox="0 0 24 24"><path d="M5 4.5h9a3 3 0 013 3v12H8a3 3 0 01-3-3z"/><path d="M5 16.5a3 3 0 013-3h9"/><path d="M9 8h5M9 11h3"/></svg>
     <div class="tx"><b>반 담임 사용 설명서</b><span>이름과 비밀번호로 들어가 출석·메모·전화·자료실 쓰는 방법</span></div><button class="btn" id="guideOpen">보기</button></div></details>`;
@@ -3347,16 +3389,16 @@ function renderHome(){
         return `<div class="admin-row"><b>${x.label}</b><span class="code num ${code?"":"none"}">${code?esc(code):set&&(S.codesOwn||[]).includes(t)?"직접 바꾼 비밀번호":set?"설정됨":"번호 없음 (총관리자만 입장)"}</span>
           ${code?`<button class="btn" data-copy-code="${esc(code)}">복사</button>`:""}<button class="btn" data-code-gen="${t}">${set?"새 번호":"번호 만들기"}</button><button class="btn" data-code-edit="${t}">직접 입력</button>${set?`<button class="btn danger" data-code-clear="${t}">해제</button>`:""}</div>`}).join("")}</div></details>`+hrCodesCard(Object.keys(TEAMS));
   }
-  {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&deptLocked(t)&&((S.scope||{})[t]||{}).level==="dept");
+  {const mine=Object.keys(TEAMS).filter(t=>!S.isAdmin&&((S.scope||{})[t]||{}).level==="dept");
     if(mine.length)h+=rptCard();
-    if(mine.length)h+=`<details class="fold" data-fold="mycode"${foldOpen("mycode")?" open":""}><summary><h2 class="sec">내 팀 관리자 번호</h2></summary><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div></details>`+hrCodesCard(mine);
+    if(mine.length)h+=(S.staffMe?"":`<details class="fold" data-fold="mycode"${foldOpen("mycode")?" open":""}><summary><h2 class="sec">내 팀 관리자 번호</h2></summary><div class="card admin-list">${mine.map(t=>`<div class="admin-row"><b>${TEAMS[t].label}</b><span class="code none">팀 관리자로 로그인됨</span><button class="btn" data-mycode="${t}">번호 변경</button></div>`).join("")}</div></details>`)+hrCodesCard(mine);
     /* 담임 번호로 들어온 사람: 자기 반 담임 번호를 직접 바꿀 수 있어요 */
     const hrT=S.isAdmin?[]:Object.keys(TEAMS).filter(t=>["grade","sub"].includes(((S.scope||{})[t]||{}).level)),myG=AUTH().gcodes;
     /* 반 담임 번호 변경은 그 번호로 들어온 반만 */
     const hr=hrT.flatMap(t=>S.scope[t].grades.filter(g=>myG[t+"_"+g]).map(g=>[t,g]));
     if(hrT.length)h+=`<h2 class="sec">내 비밀번호</h2><div class="card admin-list">${hrT.map(t=>{const me=(S.hrMe||{})[t];
       return `<div class="admin-row"><b>${TEAMS[t].label}</b>${me&&me.dev?`<span class="code none">${esc(me.name)} 선생님 (QR로 로그인됨)</span><button class="btn primary" data-mytcode="${t}">${me.hasPw?"내 비밀번호 변경":"내 비밀번호 만들기"}</button>`:me?`<span class="code none">${esc(me.name)} 선생님으로 로그인됨</span><button class="btn primary" data-mytcode="${t}">${me.own?"내 비밀번호 변경":"내 비밀번호 만들기"}</button>`:`<span class="code none">본인 이름을 고르지 않았어요</span><button class="btn" data-pickme="${t}">본인 이름 고르기</button>`}</div>`}).join("")}${hr.map(([t,g])=>`<div class="admin-row"><b>${TEAMS[t].label} ${esc((groupsOf(t).find(x=>x[0]===g)||[g,g])[1])}</b><span class="code none">담임으로 로그인됨</span><button class="btn" data-mygcode="${t}|${esc(g)}">번호 변경</button></div>`).join("")}</div>`}
-  h+=qrCard();
+  h+=staffPwCard()+qrCard();
   if(S.isAdmin){h+=renderPromoAdmin();if(!S.isCo2)h+=renderStaff();if(!S.isCo2)h+=activityCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
   h+=lookPanel(); /* 새로고침은 맨 위 제목 줄 오른쪽 ↻ 버튼 */
   h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:isHrOnly()||isTeamMgr()?`<button class="btn" id="hrOut">로그아웃</button>`:`<button class="btn" id="teamAdminIn">팀관리자 로그인</button> <button class="btn" id="qrPaste">QR 링크로 로그인</button>`}${S.isAdmin||isHrOnly()||isTeamMgr()?` <button class="btn" id="qrSelf">내 다른 기기 추가</button>`:""}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${S.isAdmin||isHrOnly()||isTeamMgr()?"":`<div class="muted" style="font-size:13px;margin-top:6px">반담임 로그인은 상단의 부서창을 통해 입장해주세요~</div>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
@@ -3366,11 +3408,11 @@ function renderStaff(){
   const TO=["infant","toddler","youth","teen"],oi=t=>TO.indexOf(t)<0?9:TO.indexOf(t),ord=x=>x.role==="admin"?0:x.role==="co"?1:x.role==="co2"?2:3;const L=[...(S.staff||[])].sort((a,b)=>ord(a)-ord(b)||(ord(a)===3?oi(a.team)-oi(b.team):0)||String(a.name).localeCompare(String(b.name),"ko"));
   const rl=x=>x.role==="admin"?"총관리자":x.role==="co"?"공동관리자1":x.role==="co2"?"공동관리자2":"팀 관리자";
   return `<details class="fold" data-fold="staff"${S.fold.staff?" open":""}><summary><h2 class="sec">팀 관리자·공동관리자 등록</h2><span class="fold-sum">${L.length}명 등록</span></summary><div class="card">
-    ${L.length?`<div class="admin-list">${L.map(x=>`<div class="admin-row"><b>${esc(x.name)}</b><span class="tag ${x.role==="admin"?"admin":x.role==="co"||x.role==="co2"?"new":"role"}">${rl(x)}</span>${x.role==="team"?`<span class="tag ${x.team?"role":"new"}">${x.team&&TEAMS[x.team]?esc(TEAMS[x.team].label):"부서 미지정"}</span>`:""}<span class="code none" style="letter-spacing:0;word-break:break-all">${esc(x.email)}</span>${!S.isCo||x.role==="team"?`<button class="btn" data-qr-staff="${esc(x.email)}">QR</button>`:""}${S.isCo&&x.role==="admin"?"":`<button class="btn" data-staff-edit="${esc(x.email)}">수정</button><button class="btn danger" data-staff-del="${esc(x.email)}">삭제</button>`}</div>`).join("")}</div>`:`<p class="muted" style="margin:0 0 10px">등록된 사람이 없어요.</p>`}
+    ${L.length?`<div class="admin-list">${L.map(x=>`<div class="admin-row"><b>${esc(x.name)}</b><span class="tag ${x.role==="admin"?"admin":x.role==="co"||x.role==="co2"?"new":"role"}">${rl(x)}</span>${x.role==="team"?`<span class="tag ${x.team?"role":"new"}">${x.team&&TEAMS[x.team]?esc(TEAMS[x.team].label):"부서 미지정"}</span>`:""}<span class="code none" style="letter-spacing:0;word-break:break-all">${esc(x.email)}</span>${x.role!=="admin"&&(!S.isCo||x.role==="team")?`<button class="btn" data-qr-staff="${esc(x.email)}">QR</button>`:""}${S.isCo&&x.role==="admin"?"":`<button class="btn" data-staff-edit="${esc(x.email)}">수정</button><button class="btn danger" data-staff-del="${esc(x.email)}">삭제</button>`}</div>`).join("")}</div>`:`<p class="muted" style="margin:0 0 10px">등록된 사람이 없어요.</p>`}
     <form id="staffForm" class="form" style="grid-template-columns:1fr"><label>이름<input id="f-sname" maxlength="20" required autocomplete="off"></label><label>이메일<input id="f-semail" type="email" inputmode="email" autocomplete="off" required></label>
     <label>구분<select id="f-srole"><option value="team">팀 관리자</option><option value="co">공동관리자1</option><option value="co2">공동관리자2</option><option value="admin" ${S.isCo?"disabled":""}>총관리자</option></select></label>
     <label id="f-steaml">담당 부서 (이 부서로만 로그인할 수 있어요)<select id="f-steam"><option value="">부서 선택</option>${Object.entries(TEAMS).map(([t,x])=>`<option value="${t}">${x.label}</option>`).join("")}</select></label>
-    <label id="f-spwl" hidden>공동관리자 비밀번호 (영문+숫자 8자 이상)<input id="f-spw" type="password" maxlength="30" autocomplete="off"></label>
+    <label id="f-spwl" hidden>공동관리자 비밀번호 (선택 · 비워 두면 본인이 QR로 들어와 만들어요)<input id="f-spw" type="password" maxlength="30" autocomplete="off"></label>
     <div class="actions" style="margin-top:0"><div class="spacer"></div><button class="btn primary" type="submit">등록</button></div></form></div></details>`;
 }
 document.addEventListener("change",e=>{if(e.target.id==="f-srole"){const l=document.querySelector("#f-spwl");if(l)l.hidden=e.target.value!=="co"&&e.target.value!=="co2";const tl=document.querySelector("#f-steaml");if(tl)tl.hidden=e.target.value!=="team"}});
@@ -3792,6 +3834,7 @@ async function loadPhotos(){
 function applyBoot(d){
   if(d.tk){S._tk=d.tk;if(S.remember!==false)try{localStorage.setItem("ya-tk",JSON.stringify(d.tk))}catch(_){}}
   if(Array.isArray(d.devBad)&&d.devBad.length){const a=devToks(),b=a.filter(x=>!d.devBad.includes(x));if(b.length<a.length){setDevToks(b);setTimeout(()=>toast("이 기기의 QR 로그인이 해제되었어요"),300)}}S.devOn=d.devOn||0;
+  S.staffMe=d.staffMe||null;S.legacy=d.legacy!==false;
   S.hrMe=d.hrMe||{};S.codesOwn=d.codesOwn||[];S.codeTemp=d.codeTemp||{};S.gcChanged=d.gcChanged||{};S.rptOk=!!d.rptOk;S.isAdmin=!!d.isAdmin;if(d.adminBad){try{localStorage.removeItem("ya-admin")}catch(_){}S._admin="";toast("이 기기에 기억된 총관리자 비밀번호가 맞지 않아 지웠어요. 다시 로그인해 주세요")}S.isCo=!!d.isCo;S.isCo2=!!d.isCo2;S.me=d.me||"";S.adminSet=!!d.adminSet;S.locked=d.locked||{};S.access=d.access||{};S.counts=d.counts||{};S.codes=d.codes||{};
   S.staff=d.staff||[];S.preNew=d.preNew||null;S.scope=d.scope||{};S.settings=d.settings||{};S.people=new Map((d.people||[]).map(p=>[p.id,p]));setTeam(S.team);
   S.att=new Map(Object.entries(d.att||{}));
@@ -3835,7 +3878,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261103124037';
+  var BUILD = '20261103130735';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
