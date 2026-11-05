@@ -752,9 +752,6 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
 .bm-rp{position:absolute;top:-44px;transform:translateX(-50%);width:30%;background:#fff;color:#17302B;border-radius:10px;padding:5px 4px;font-size:13.5px;font-weight:700;line-height:1.25;text-align:center;box-shadow:0 2px 5px rgba(0,0,0,.35);word-break:keep-all;will-change:top}
 .bm-car{position:absolute;bottom:78px;left:50%;width:56px;height:75px;margin-left:-28px;transition:left .13s ease-out}
 .bm-car svg{width:100%;height:100%;display:block}
-.bm-rl{position:absolute;bottom:16px;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:22px;display:grid;place-items:center;pointer-events:none}
-.bm-rl.l{left:10px}
-.bm-rl.r{right:10px}
 .bm-car.good{filter:drop-shadow(0 0 9px #8BF0B0)}
 .bm-car.bad{animation:bmShake .36s}
 @keyframes bmShake{25%{transform:translateX(-7px) rotate(-7deg)}75%{transform:translateX(7px) rotate(7deg)}}
@@ -3827,7 +3824,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261105162336';
+  var BUILD = '20261105162534';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;

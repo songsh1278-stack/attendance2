@@ -780,12 +780,12 @@ const LV={
 };
 const G={
   quiz:{n:"성경퀴즈+넌센스",i:"📖",r:"네 가지 보기에서 정답을 골라요. 성경퀴즈에 넌센스 문제가 섞여 나와요. 빨리 맞히면 점수가 더 올라요."},
-  race:{n:"말씀레이싱",i:"🏁",r:"자동차를 고르고, 왼쪽이나 오른쪽을 눌러 한 칸씩 옮겨요. 위 말씀의 순서대로 조각을 받고 다른 말이나 비슷한 말은 피하세요."},
+  race:{n:"말씀레이싱",i:"🏁",r:"자동차를 고르고, 가고 싶은 쪽을 누르면 자동차가 그 줄로 저절로 가요. 누른 채로 끌어도 따라와요. 위 말씀의 순서대로 조각을 받고 다른 말이나 비슷한 말은 피하세요."},
   type:{n:"말씀타자",i:"⌨️",r:"떨어지는 성경 낱말을 입력하고 엔터나 띄어쓰기를 누르면 사라져요. 바닥에 세 번 닿으면 끝나요. 45초 동안 버텨 보세요."},
   map:{n:"성경지도 찾기",i:"🗺️",r:"문제를 읽고 지도에서 알맞은 곳을 눌러요. 빨리 맞히면 점수가 더 올라요."},
   cross:{n:"가로세로낱말퀴즈",i:"✏️",r:"뜻풀이를 누르고 낱말을 입력하세요. 틀리면 시간이 5초 줄어요."},
   twenty:{n:"스무고개",i:"❓",r:"질문을 눌러 예·아니요를 듣고 정답을 맞혀요. 고개가 많이 남을수록 점수가 높아요."},
-  shoot:{n:"말씀 슈팅",i:"🚀",r:"화면을 좌우로 끌어 빛의 배를 움직여요. 빛은 저절로 나가요. 40초 동안 유혹을 물리치세요."}
+  shoot:{n:"말씀 슈팅",i:"🚀",r:"화면을 누르면 빛의 배가 그쪽으로 저절로 움직여요. 빛은 저절로 나가요. 40초 동안 유혹을 물리치세요."}
 };
 const CORNER={0:{t:"start",p:"출발",i:"🚩"},6:{t:"rest",p:"광야",i:"🏜️"},12:{t:"grace",p:"은혜의 샘",i:"💧"},18:{t:"lot",p:"제비뽑기",i:"🎲"}};
 const PLACES=["에덴","우르","하란","애굽","홍해","시내산","여리고","실로","베들레헴","예루살렘","바벨론","니느웨","나사렛","갈릴리","가버나움","베다니","안디옥","에베소","고린도","로마"];
@@ -1284,7 +1284,7 @@ function raceRun(el,car){
   for(let i=0;i<K;i++)chunks.push(words.slice(Math.floor(i*words.length/K),Math.floor((i+1)*words.length/K)).join(" "));
   const others=VERSE[A.lv].filter(x=>x!==v).flatMap(x=>x[1].split(" ")).filter(w=>w.length>=2&&!chunks.includes(w));
   el.style.padding="0";el.style.overflow="hidden";
-  el.innerHTML=`<div class="bm-rc"><div class="bm-rv"><small class="muted">${esc(v[0])}</small><p id="bmRv"></p></div><div class="bm-road" id="bmRoad"><i></i><i></i><div class="bm-car" id="bmCar">${carSvg(car)}</div><b class="bm-rl l">◀</b><b class="bm-rl r">▶</b></div></div>`;
+  el.innerHTML=`<div class="bm-rc"><div class="bm-rv"><small class="muted">${esc(v[0])}</small><p id="bmRv"></p></div><div class="bm-road" id="bmRoad"><i></i><i></i><div class="bm-car" id="bmCar">${carSvg(car)}</div></div></div>`;
   const road=el.querySelector("#bmRoad"),carEl=el.querySelector("#bmCar"),rv=el.querySelector("#bmRv");
   let at=0,lane=1,lives=3,rows=[],last=performance.now(),t=0,gapY=0,over=false,info="",lock=0;
   const H=()=>road.clientHeight,speed=()=>L.rs*Math.max(.8,H()/520),T=K*(H()*.5/speed())*3.2+6;
@@ -1299,8 +1299,8 @@ function raceRun(el,car){
     return out.filter((x,i)=>x!==chunks[at]&&out.indexOf(x)===i)};
   const pill=(txt,ln)=>{const n=document.createElement("span");n.className="bm-rp";n.textContent=txt;n.style.left=(ln+.5)/3*100+"%";road.appendChild(n);return{txt,ln,n}};
   const spawn=()=>{const ls=shuf([0,1,2]),items=[pill(chunks[at],ls[0])];decoys().forEach((d,i)=>{if(ls[i+1]!==undefined)items.push(pill(d,ls[i+1]))});rows.push({y:-44,items,done:false})};
-  const pressLane=e=>{const b=road.getBoundingClientRect();setLane(lane+(e.clientX-b.left<b.width/2?-1:1));e.preventDefault()};
-  road.addEventListener("pointerdown",pressLane);
+  const pressLane=e=>{if(e.type==="pointermove"&&!e.buttons)return;const b=road.getBoundingClientRect();setLane(Math.floor((e.clientX-b.left)/b.width*3));e.preventDefault()};
+  road.addEventListener("pointerdown",pressLane);road.addEventListener("pointermove",pressLane);
   const key=e=>{if(e.key==="ArrowLeft")setLane(lane-1);if(e.key==="ArrowRight")setLane(lane+1)};
   addEventListener("keydown",key);V.off.push(()=>removeEventListener("keydown",key));
   verse();setLane(1);
@@ -1467,18 +1467,19 @@ function miniTwenty(el){
 
 /* ---------- 말씀 슈팅 : 빛의 배로 유혹의 낱말을 물리쳐요 ---------- */
 const FOES=["욕심","미움","거짓","교만","시기","불평","게으름","두려움","다툼","원망"];
+const SHIP_V=520;
 function miniShoot(el){
   el.innerHTML=`<canvas id="bmCv" class="bm-cv" aria-label="말씀 슈팅 게임 화면"></canvas>`;
   const cv=el.querySelector("#bmCv"),x=cv.getContext("2d"),P=LV[A.lv].sh,dpr=Math.min(2,window.devicePixelRatio||1);
   let w=0,h=0;const size=()=>{w=el.clientWidth;h=el.clientHeight;cv.width=w*dpr;cv.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0)};size();
   addEventListener("resize",size);V.off.push(()=>removeEventListener("resize",size));
   const stars=Array.from({length:40},()=>[Math.random(),Math.random(),.3+Math.random()*.7]);
-  const ship={x:w/2},SY=()=>h-46;let bul=[],foes=[],shots=[],items=[],kills=0,lives=3,time=40,inv=0,fireT=0,pow=0,dropT=1.5,diveT=P.dive,t=0,last=performance.now(),over=false,keyV=0,info="";
+  const ship={x:w/2,to:null},SY=()=>h-46;let bul=[],foes=[],shots=[],items=[],kills=0,lives=3,time=40,inv=0,fireT=0,pow=0,dropT=1.5,diveT=P.dive,t=0,last=performance.now(),over=false,keyV=0,info="";
   const wave=()=>{const cols=w<420?4:6,gap=(w-16)/cols;for(let r=0;r<3;r++)for(let c=0;c<cols;c++)foes.push({hx:8+gap*(c+.5),hy:34+r*38,x:8+gap*(c+.5),y:-40-r*40,l:FOES[rnd(FOES.length)],hp:r===0?P.hp:1,dv:0})};
   wave();
-  const move=e=>{const b=cv.getBoundingClientRect();ship.x=Math.max(20,Math.min(w-20,e.clientX-b.left));e.preventDefault()};
+  const move=e=>{const b=cv.getBoundingClientRect();ship.to=Math.max(20,Math.min(w-20,e.clientX-b.left));e.preventDefault()};
   cv.addEventListener("pointerdown",move);cv.addEventListener("pointermove",move);
-  const key=e=>{if(e.key==="ArrowLeft")keyV=e.type==="keydown"?-1:0;if(e.key==="ArrowRight")keyV=e.type==="keydown"?1:0};
+  const key=e=>{if(e.key==="ArrowLeft")keyV=e.type==="keydown"?-1:0;if(e.key==="ArrowRight")keyV=e.type==="keydown"?1:0;if(keyV)ship.to=null};
   addEventListener("keydown",key);addEventListener("keyup",key);V.off.push(()=>{removeEventListener("keydown",key);removeEventListener("keyup",key)});
   const end=()=>{if(over)return;over=true;finish(Math.min(45,kills*2+(lives>0?5:0)),`유혹 ${kills}개를 물리쳤어요${lives>0?" 끝까지 버텨서 +5점!":""}`)};
   const hit=()=>{if(inv>0)return;lives--;inv=1.5;if(lives<=0)end()};
@@ -1486,6 +1487,7 @@ function miniShoot(el){
   const frame=now=>{
     if(!live()||over)return;
     const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;time-=dt;inv=Math.max(0,inv-dt);pow=Math.max(0,pow-dt);fireT-=dt;dropT-=dt;diveT-=dt;
+    if(ship.to!==null){const d=ship.to-ship.x,st=SHIP_V*dt;ship.x=Math.abs(d)<=st?ship.to:ship.x+Math.sign(d)*st}
     ship.x=Math.max(20,Math.min(w-20,ship.x+keyV*320*dt));
     if(fireT<=0){fireT=.24;const y=SY()-16;if(pow>0)bul.push({x:ship.x-9,y},{x:ship.x+9,y});else bul.push({x:ship.x,y})}
     if(!foes.length)wave();
