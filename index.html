@@ -4635,7 +4635,7 @@ function boardSetup(){
   const s=B||loadSave();
   return `<div class="bm-home">
     <button type="button" class="btn bm-back" data-bmsub="">‹ 성경게임</button>
-    <div class="card bm-hero"><h2>🎲 ${BOARD_NAME}</h2><p>두 개의 주사위를 굴려 성경 땅을 돌아요. 주사위는 1부터 3까지만 나와요. 멈춘 칸의 게임을 이겨 8라운드 동안 점수를 모으세요.</p></div>
+    <div class="card bm-hero"><h2>🎲 ${BOARD_NAME}</h2><p>두 개의 주사위를 굴려 성경 땅을 돌아요. 주사위는 0부터 3까지 나와요. 멈춘 칸의 게임을 이겨 8라운드 동안 점수를 모으세요.</p></div>
     ${s?`<button type="button" class="btn primary bm-big" data-bmgo="resume">이어하기 · ${LV[s.lv].n} ${Math.min(s.round,s.turns)}/${s.turns}라운드</button>`:""}
     <h2 class="sec">단계</h2>${lvPick()}
     <button type="button" class="btn ${s?"":"primary "}bm-big" data-bmgo="new" style="margin-top:18px">${s?"새 게임 시작":"게임 시작"}</button>
@@ -4882,10 +4882,10 @@ function onAct(e){
 }
 function cellRC(i){if(i<=6)return[6-i,0];if(i<=12)return[0,i-6];if(i<=18)return[i-12,6];return[6,24-i]}
 const tokStyle=(pi,pos)=>{const [r,c]=cellRC(pos),dx=.74,dy=.28;return `left:${(c+dx)/7*100}%;top:${(r+dy)/7*100}%`};
-const pips=n=>({1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]})[n].map(p=>`<i style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></i>`).join("");
+const pips=n=>({0:[],1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]})[n].map(p=>`<i style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></i>`).join("");
 function midHtml(){
   const p=curP();
-  const dice=`<div class="bm-dice"><div id="bmD1">${pips(B.dice[0])}</div><div id="bmD2">${pips(B.dice[1]||1)}</div></div>`;
+  const dice=`<div class="bm-dice"><div id="bmD1">${pips(B.dice[0])}</div><div id="bmD2">${pips(B.dice[1]??1)}</div></div>`;
   if(B.phase==="next")return `<p class="bm-msg">${esc(B.msg)}</p>${dice}<button type="button" class="btn primary" data-bm="next">다음으로</button>`;
   return `<p class="bm-msg" id="bmMsg"><b>${Math.min(B.round,B.turns)}라운드</b>${B.msg?`<br><small>${esc(B.msg)}</small>`:""}</p>${dice}<button type="button" class="btn primary" data-bm="roll" id="bmRoll">주사위 굴리기</button>`;
 }
@@ -4900,12 +4900,13 @@ function drawBoard(){
 }
 function roll(){
   if(B.phase!=="roll")return;
-  const d1=1+rnd(3),d2=1+rnd(3),sum=d1+d2,p=curP(),from=p.pos,to=(from+sum)%24,passed=from+sum>=24;
+  let d1=0,d2=0;while(!d1&&!d2){d1=rnd(4);d2=rnd(4)} /* 0,0은 나오지 않아요 */
+  const sum=d1+d2,p=curP(),from=p.pos,to=(from+sum)%24,passed=from+sum>=24;
   p.pos=to;if(passed)p.score+=10;
   B.dice=[d1,d2];B.phase="move";B.passed=passed;B.msg="";save();
   const btn=q("#bmRoll");if(btn)btn.disabled=true;
   const a=q("#bmD1"),b=q("#bmD2");a.parentNode.classList.add("spin");let n=0;
-  const id=every(80,()=>{a.innerHTML=pips(1+rnd(3));b.innerHTML=pips(1+rnd(3));if(++n<9)return;
+  const id=every(80,()=>{a.innerHTML=pips(rnd(4));b.innerHTML=pips(rnd(4));if(++n<9)return;
     clearInterval(id);V.t.delete(id);a.innerHTML=pips(d1);b.innerHTML=pips(d2);a.parentNode.classList.remove("spin");
     const msg=q("#bmMsg");if(msg)msg.innerHTML=`<b>${sum}칸</b> 이동`;
     let step=0;const tok=q("#bmTok"+B.cur);
@@ -5213,7 +5214,7 @@ function miniShoot(el){
 
 <script>
 (function () {
-  var BUILD = '20261105123401';
+  var BUILD = '20261105124920';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
