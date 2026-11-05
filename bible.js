@@ -774,9 +774,9 @@ const MAP_PHOTO={"ur": ["thumb/6/6b/Ziggarat_of_Ur_001.jpg/960px-Ziggarat_of_Ur_
 const TERM=[["규빗","길이를 재는 단위예요. 팔꿈치에서 가운뎃손가락 끝까지의 길이로, 약 45cm로 봐요. 노아의 방주는 길이가 삼백 규빗이었어요.","창 6:15"],["세겔","무게와 돈의 단위예요. 약 11.4g으로 보지만 자료마다 조금 달라요. 아브라함은 막벨라 밭값으로 은 사백 세겔을 달아 주었어요.","창 23:16"],["달란트","가장 큰 무게와 돈의 단위예요. 약 34kg으로 보지만 자료마다 달라요. 예수님의 달란트 비유에 나와요.","마 25:15"],["데나리온","로마의 은화로, 일꾼의 하루 품삯이었어요.","마 20:2"],["에바","곡식의 양을 재는 단위예요. 약 22리터로 보지만 자료마다 달라요.","출 16:36"],["오멜","에바의 십분의 일이에요. 만나를 거둘 때 쓴 단위예요.","출 16:36"],["호멜","에바의 열 배인 곡식 단위예요.","겔 45:11"],["안식일","일곱째 날로, 일을 쉬고 거룩하게 지키는 날이에요.","출 20:10"],["회당","유대인이 모여 말씀을 읽고 예배하던 곳이에요.","눅 4:16"],["성막","광야에서 하나님께 예배하던, 옮겨 다니는 장막이에요.","출 40:2"],["성전","솔로몬이 예루살렘에 지은 하나님의 집이에요.","왕상 6:14"],["제사장","제사를 맡아 하나님을 섬긴 사람이에요. 아론의 자손이 맡았어요.","출 28:1"],["레위인","레위 지파 사람으로, 성막의 일을 맡았어요.","민 1:51"],["사두개인","부활이 없다고 한 유대인 무리예요.","마 22:23"],["서기관","율법을 가르치던 사람들이에요.","마 7:29"],["세리","세금을 걷던 사람이에요.","눅 18:10"],["나실인","자신을 구별해 여호와께 드리기로 서원한 사람이에요.","민 6:2"],["할례","하나님과 아브라함 사이의 언약의 표징이에요.","창 17:11"],["언약","하나님이 사람과 맺으신 약속이에요.","창 9:9"],["번제","제물을 불살라 하나님께 드리는 제사예요.","레 1:9"],["화목제","하나님과의 화목을 위해 드리는 제사예요.","레 3:1"],["속죄","죄를 씻어 깨끗하게 하는 일이에요.","레 16:30"],["은혜","값없이 베풀어 주시는 하나님의 사랑이에요.","엡 2:8"],["구원","죄와 죽음에서 건져 주시는 일이에요.","행 4:12"],["회개","죄에서 돌이켜 하나님께 돌아오는 것이에요.","마 3:2"],["메시야","기름 부음 받은 자라는 뜻으로, 번역하면 그리스도예요.","요 1:41"],["그리스도","메시야를 번역한 말로, 예수님을 가리켜요.","요 1:41"],["임마누엘","하나님이 우리와 함께 계시다는 뜻이에요.","마 1:23"],["장로","교회를 돌보도록 세운 지도자예요.","딛 1:5"],["집사","교회를 섬기는 직분이에요.","딤전 3:8"],["여호와","하나님이 자기를 나타내신 이름이에요.","출 6:3"],["천국","심령이 가난한 자의 것이라고 하신 하나님의 나라예요.","마 5:3"],["보혜사","아버지께서 예수님의 이름으로 보내시는 성령이에요.","요 14:26"],["십일조","소득의 십분의 일을 하나님께 드리는 것이에요.","말 3:10"],["수전절","성전을 봉헌한 것을 기념하는 겨울 명절이에요.","요 10:22"],["부림","유다 사람들이 구원받은 일을 기념하는 절기예요.","에 9:26"],["바알","가나안 사람들이 섬긴 이방 신이에요. 엘리야가 갈멜 산에서 그 선지자들과 대결했어요.","왕상 18:21"],["우상","하나님 대신 섬기려고 만든 것이에요.","출 20:4"],["사탄","하나님을 대적하고 사람을 유혹하는 존재예요.","욥 1:6"],["마귀","예수님을 시험한 존재예요.","마 4:1"],["나병","성경에 나오는 피부병이에요. 나아만이 앓았어요.","왕하 5:1"],["휘장","성전의 지성소를 가린 막이에요. 예수님이 돌아가실 때 찢어졌어요.","마 27:51"],["지성소","성막과 성전에서 가장 거룩한 곳이에요.","출 26:33"],["므나","돈의 단위예요. 달란트보다 작고, 환산은 자료마다 달라요. 예수님의 열 므나 비유에 나와요.","눅 19:13"],["드라크마","헬라의 은화예요. 잃은 드라크마 비유에 나와요.","눅 15:8"],["렙돈","가장 작은 동전이에요. 가난한 과부가 두 렙돈을 드렸어요.","막 12:42"],["고드란트","로마의 작은 동전이에요.","막 12:42"],["앗사리온","로마의 작은 동전이에요. 참새 두 마리가 한 앗사리온에 팔렸어요.","마 10:29"],["스다디온","거리를 재는 단위예요.","계 14:20"],["게라","세겔보다 작은 무게 단위예요.","출 30:13"],["스아","곡식의 양을 재는 단위예요.","창 18:6"],["평안","예수님이 제자들에게 주신 마음의 쉼이에요.","요 14:27"],["평강","모든 지각에 뛰어난 하나님의 다스림과 쉼이에요.","빌 4:7"],["기쁨","하나님 안에서 누리는 즐거움이에요.","시 16:11"],["희락","성령의 열매 가운데 하나로 기쁨을 뜻해요.","갈 5:22"],["결혼","남자와 여자가 하나 되는 일이에요.","고전 7:9"],["치유","병이나 상처가 낫는 것이에요.","렘 33:6"],["용서","다른 사람의 잘못을 풀어 주는 것이에요.","마 6:14"],["지혜","여호와를 경외하는 것이 그 근본이에요.","잠 9:10"],["심판","하나님이 옳고 그름을 판단하시는 일이에요.","히 9:27"],["강림","주께서 다시 오시는 일을 말해요.","살전 4:15"],["적그리스도","그리스도를 대적하는 자예요.","요일 2:18"],["아마겟돈","요한계시록에 나오는 마지막 전쟁의 장소 이름이에요.","계 16:16"],["미가엘","천사장이에요.","유 1:9"],["스랍","이사야가 환상 중에 본 여섯 날개의 천상 존재예요.","사 6:2"],["그룹","에덴 동산을 지키게 하신 천상의 존재예요.","창 3:24"],["말씀","태초에 계셨고 하나님이신 분을 가리키기도 해요.","요 1:1"],["호산나","예수님이 예루살렘에 들어가실 때 무리가 외친 말이에요.","마 21:9"],["아빠","예수님이 하나님을 부르신 말이에요.","막 14:36"],["랍비","선생님이라는 뜻이에요.","요 1:38"],["달리다굼","소녀야 일어나라는 뜻이에요.","막 5:41"],["에바다","열리라는 뜻이에요.","막 7:34"],["희년","오십 년째 해로, 자유를 공포하는 해예요.","레 25:10"],["무교절","누룩 없는 떡을 먹는 절기예요.","출 12:17"],["칠칠절","곡식을 처음 거둔 것을 감사하는 절기예요.","출 34:22"],["속죄일","일곱째 달 십일의 거룩한 날이에요.","레 23:27"],["성소","하나님이 그들 중에 거하시려고 짓게 하신 곳이에요.","출 25:8"],["향유","예수님의 머리에 부은 귀한 기름이에요.","마 26:7"],["나드","마리아가 예수님의 발에 부은 향유예요.","요 12:3"],["유향","박사들이 드린 예물이에요.","마 2:11"],["어린양","세상 죄를 지고 가는 분으로 예수님을 가리켜요.","요 1:29"],["포도나무","예수님이 자신을 비유하신 나무예요.","요 15:1"],["반석","베드로에게 하신 말씀에 나오는 단단한 바위예요.","마 16:18"],["소금","제자들을 세상의 무엇이라 하신 말씀에 나와요.","마 5:13"],["이방인","유대인이 아닌 사람들을 말해요.","갈 2:2"],["공회","유대인의 최고 의결 기관이에요.","마 26:59"],["대제사장","제사장의 우두머리예요.","마 26:57"],["선지자","하나님의 말씀을 맡아 전하는 사람이에요.","신 18:15"],["계보","조상을 차례로 적은 기록이에요.","마 1:1"],["계시","하나님이 알려 주시는 일이에요.","계 1:1"],["마술","시몬이 사마리아에서 행하던 일이에요.","행 8:9"],["술객","바벨론 왕궁에서 꿈을 풀던 사람들이에요.","단 2:2"],["구약","모세의 글을 포함한 옛 언약의 책을 말해요.","고후 3:14"],["신약","예수님의 피로 세우신 새 언약이에요.","눅 22:20"],["죄인","예수님이 부르러 오신 사람들이에요.","마 9:13"],["의인","믿음으로 살 사람이에요.","롬 1:17"],["영생","믿는 자가 얻는 영원한 생명이에요.","요 3:16"],["금식","음식을 끊고 하나님께 기도하는 일이에요.","마 6:16"],["찬송","노래로 하나님을 높이는 일이에요.","시 100:4"],["헌금","하나님께 드리는 돈이에요.","막 12:41"],["교회","그리스도의 몸으로 부름받은 사람들의 모임이에요.","마 16:18"],["제자","예수님을 따르며 배우는 사람","마 10:1"],["기도","하나님과 나누는 말","빌 4:6"],["찬양","노래로 하나님을 높이는 것","시 150:6"],["사랑","믿음과 소망 가운데 제일인 것","고전 13:13"],["믿음","바라는 것들의 실상","히 11:1"],["소망","믿음과 사랑과 함께 항상 있을 것","고전 13:13"],["구주","죄에서 건져 주시는 분이에요.","눅 2:11"],["주님","믿는 사람들이 예수님을 부르는 말이에요.","빌 2:11"],["데오빌로","누가가 복음서와 사도행전을 써 보낸 사람이에요.","눅 1:3"],["유대인","유다 지파에서 나온 이름으로 이스라엘 사람을 말해요.","요 4:9"],["헬라인","그리스 사람을 가리켜요.","롬 1:16"],["사두개","부활이 없다고 한 무리예요.","행 23:8"],["율법","하나님이 주신 계명과 규례예요.","신 31:9"],["계명","하나님이 지키라고 명하신 말씀이에요.","요 13:34"],["규례","따라야 할 규칙이에요.","신 4:1"],["표적","하나님의 능력을 보여 주는 기적이에요.","요 2:11"],["기사","놀라운 일을 뜻해요.","행 2:43"],["비유","일상 이야기로 하늘나라를 가르치신 말씀이에요.","마 13:3"],["환상","하나님이 보여 주신 장면이에요.","행 10:3"],["예언","하나님의 말씀을 받아 전하는 일이에요.","고전 14:3"],["제단","하나님께 제물을 드리는 단이에요.","창 8:20"],["제물","하나님께 드리는 것이에요.","레 1:2"],["감람유","성소의 등불에 쓴 기름이에요.","출 27:20"],["누룩","떡을 부풀리는 것으로, 비유에도 쓰여요.","마 13:33"],["겨자씨","아주 작은 씨로 천국을 비유하셨어요.","마 13:31"],["무화과","성경에 자주 나오는 나무 열매예요.","막 11:13"],["감람나무","기름을 내는 나무예요.","시 52:8"],["종려나무","승리와 기쁨을 뜻하는 나무예요.","요 12:13"],["백향목","레바논의 크고 곧은 나무예요.","왕상 5:6"],["우슬초","유월절 피를 바를 때 쓴 풀이에요.","출 12:22"],["베옷","슬픔과 회개를 나타내는 거친 옷이에요.","욘 3:5"],["면류관","승리한 사람이 받는 관이에요.","딤후 4:8"],["옥합","향유를 담는 그릇이에요.","막 14:3"],["전신갑주","믿는 사람이 입어야 할 하나님의 갑옷이에요.","엡 6:11"],["베뢰아","바울이 말씀을 전한 도시예요.","행 17:10"],["마게도냐","바울이 환상을 본 뒤 건너간 지방이에요.","행 16:9"],["아가야","고린도가 있던 지방이에요.","행 18:12"],["아시아","일곱 교회가 있던 지방이에요.","계 1:4"],["구브로","바나바의 고향인 섬이에요.","행 4:36"],["그레데","디도가 남아 일한 섬이에요.","딛 1:5"],["베니게","지중해 해안 지방이에요.","행 21:2"],["레바논","백향목으로 유명한 곳이에요.","왕상 5:6"],["모압","룻의 고향이에요.","룻 1:4"],["암몬","이스라엘 동쪽에 있던 나라예요.","삼하 10:1"],["블레셋","이스라엘과 자주 싸운 해안의 민족이에요.","삼상 17:1"],["앗수르","북이스라엘을 멸망시킨 나라예요.","왕하 17:6"],["바사","포로 귀환을 허락한 나라예요.","스 1:1"],["헬라","그리스를 가리켜요.","행 20:2"],["미디안","기드온이 물리친 민족이에요.","삿 7:7"],["아말렉","모세 때 이스라엘을 공격한 민족이에요.","출 17:8"],["시편","찬양과 기도의 노래 모음이에요.","시 23:1"],["잠언","지혜의 말씀 모음이에요.","잠 1:1"],["이스르엘","나봇의 포도원이 있던 곳이에요.","왕상 21:1"],["길르앗","요단 동쪽의 지방이에요.","렘 8:22"],["호렙","모세가 하나님을 만난 산의 다른 이름이에요.","출 3:1"],["금송아지","모세가 산에 있는 동안 백성이 만든 우상이에요.","출 32:4"],["불기둥","밤에 이스라엘을 인도한 불이에요.","출 13:21"],["구름기둥","낮에 이스라엘을 인도한 구름이에요.","출 13:21"],["양식","먹을 것을 말해요.","마 6:11"],["안수","머리에 손을 얹어 기도하는 일이에요.","행 13:3"],["성찬","주의 만찬이라고도 불러요.","고전 11:20"],["아세라","가나안 사람들이 섬긴 여신이에요. 바알과 함께 나와요.","왕상 18:19"],["아스다롯","시돈 사람의 여신이에요. 솔로몬이 따랐어요.","왕상 11:5"],["다곤","블레셋 사람들의 신이에요. 삼손이 무너뜨린 신전의 신이에요.","삿 16:23"],["몰렉","암몬 사람의 신이에요. 자녀를 바치지 말라고 금하셨어요.","레 18:21"],["그모스","모압 사람의 신이에요.","왕상 11:7"],["밀곰","암몬 사람의 신이에요.","왕상 11:5"],["바알세붑","에그론의 신이에요.","왕하 1:2"],["바알브올","브올에서 섬긴 바알이에요.","민 25:3"],["벨","바벨론의 신이에요.","사 46:1"],["므로닥","바벨론의 신이에요.","렘 50:2"],["담무스","예루살렘 여인들이 울며 섬긴 신이에요.","겔 8:14"],["림몬","아람 사람들이 섬긴 신이에요.","왕하 5:18"],["니스록","앗수르 왕 산헤립이 섬긴 신이에요.","왕하 19:37"],["아데미","에베소 사람들이 섬긴 여신이에요.","행 19:24"],["제우스","헬라 사람의 신이에요. 루스드라 사람들이 바나바를 이렇게 불렀어요.","행 14:12"],["헤르메스","헬라 사람의 신이에요. 루스드라 사람들이 바울을 이렇게 불렀어요.","행 14:12"],["디오스구로","바울이 탄 배의 머리에 새겨진 쌍둥이 신이에요.","행 28:11"],["네르갈","사마리아로 옮겨 온 사람들이 만든 신이에요.","왕하 17:30"],["아시마","사마리아로 옮겨 온 사람들이 만든 신이에요.","왕하 17:30"],["숙곳브놋","사마리아로 옮겨 온 바벨론 사람들이 만든 신이에요.","왕하 17:30"],["아드람멜렉","스발와임 사람들이 자녀를 불살라 섬긴 신이에요.","왕하 17:31"],["아남멜렉","스발와임 사람들이 자녀를 불살라 섬긴 신이에요.","왕하 17:31"],["닙하스","아와 사람들이 만든 신이에요.","왕하 17:31"],["바알세불","바리새인들이 귀신의 왕이라고 부른 이름이에요.","마 12:24"],["다르닥","아와 사람들이 만든 신이에요.","왕하 17:31"],["하늘의여왕","유다 사람들이 과자를 만들어 섬긴 여신이에요.","렘 7:18"],["몰록","스데반이 말한 이방 신이에요.","행 7:43"],["레판","스데반이 말한 이방 신의 별이에요.","행 7:43"]];
 const PERSON={"아브라함":[["ur","가족과 함께 떠났어요","창 11:31"],["haran","일흔다섯 살에 다시 길을 떠났어요","창 12:4"],["shechem","여호와께 제단을 쌓았어요","창 12:7"],["bethel","벧엘 동쪽에 장막을 쳤어요","창 12:8"],["egypt","기근을 피해 내려갔어요","창 12:10"],["hebron","마므레 상수리 수풀에 살았어요","창 13:18"],["beersheba","에셀 나무를 심고 여호와를 불렀어요","창 21:33"]],"이삭":[["beersheba","여호와께서 나타나 복을 약속하셨어요","창 26:23"],["hebron","야곱이 돌아온 곳에 살고 있었어요","창 35:27"]],"야곱":[["beersheba","이곳을 떠나 하란으로 향했어요","창 28:10"],["bethel","사닥다리 꿈을 꾸었어요","창 28:19"],["haran","외삼촌 라반에게로 갔어요","창 28:10"],["shechem","돌아와 성읍 앞에 장막을 쳤어요","창 33:18"],["hebron","아버지 이삭에게 돌아왔어요","창 35:27"],["egypt","온 가족이 내려갔어요","창 46:6"]],"요셉":[["hebron","아버지가 형들에게 보냈어요","창 37:14"],["shechem","형들을 찾아갔어요","창 37:14"],["egypt","팔려 가서 총리가 되었어요","창 41:41"]],"모세":[["egypt","바로에게 가서 백성을 내보내라고 전했어요","출 5:1"],["redsea","백성을 이끌고 바다를 건넜어요","출 15:22"],["sinai","십계명을 받았어요","출 19:20"],["kadesh","땅을 정탐하라고 보냈어요","민 32:8"],["nebo","약속의 땅을 바라보았어요","신 34:1"]],"여호수아":[["jericho","성을 정복했어요","수 6:2"],["gibeon","해가 머물도록 기도했어요","수 10:12"],["shiloh","회막을 세웠어요","수 18:1"],["shechem","백성을 모아 언약을 세웠어요","수 24:1"]],"룻":[["bethlehem","나오미와 함께 왔어요","룻 1:22"]],"삼손":[["gaza","붙잡혀 맷돌을 돌렸어요","삿 16:21"]],"사무엘":[["shiloh","여호와께서 나타나셨어요","삼상 3:21"],["bethel","해마다 돌며 다스렸어요","삼상 7:16"],["bethlehem","다윗에게 기름을 부으러 갔어요","삼상 16:4"]],"사울":[["gilboa","아들들과 함께 전사했어요","삼상 31:8"]],"다윗":[["bethlehem","이새의 아들로 자랐어요","삼상 16:18"],["gath","사울을 피해 가드 왕에게 갔어요","삼상 27:2"],["hebron","유다의 왕이 되었어요","삼하 2:11"],["jerusalem","온 이스라엘을 다스렸어요","삼하 5:5"]],"솔로몬":[["gibeon","꿈에 지혜를 구했어요","왕상 3:5"],["jerusalem","성전을 짓고 다스렸어요","왕상 11:42"]],"엘리야":[["samaria","아합을 만나러 갔어요","왕상 18:2"],["carmel","바알 선지자들과 대결했어요","왕상 18:19"],["jordan","강을 가르고 건넜어요","왕하 2:8"]],"엘리사":[["jericho","엘리야의 뒤를 이었어요","왕하 2:15"],["jordan","나아만을 씻게 했어요","왕하 5:10"],["samaria","선지자로 머물렀어요","왕하 5:3"]],"요나":[["nineveh","회개를 외쳤어요","욘 3:3"]],"다니엘":[["babylon","포로로 끌려갔어요","단 1:1"],["susa","환상 중에 있었어요","단 8:2"]],"에스겔":[["babylon","그발 강가에서 환상을 보았어요","겔 1:3"]],"에스더":[["susa","왕궁으로 이끌려 갔어요","에 2:8"]],"느헤미야":[["susa","왕궁에서 소식을 들었어요","느 1:1"],["jerusalem","성벽을 다시 쌓았어요","느 2:11"]],"예수":[["bethlehem","태어나셨어요","마 2:1"],["egypt","헤롯을 피해 가셨어요","마 2:14"],["nazareth","자라셨어요","마 2:23"],["jordan","세례를 받으셨어요","마 3:13"],["capernaum","사시며 말씀을 전하셨어요","마 4:13"],["cana","물을 포도주로 바꾸셨어요","요 2:1"],["sychar","우물가에서 여자를 만나셨어요","요 4:5"],["nain","과부의 아들을 살리셨어요","눅 7:11"],["cphilippi","베드로의 고백을 들으셨어요","마 16:13"],["jericho","삭개오를 만나셨어요","눅 19:1"],["bethany","나사로를 살리셨어요","요 12:1"],["jerusalem","십자가에 달리셨어요","눅 19:28"]],"세례요한":[["jordan","세례를 베풀었어요","마 3:6"]],"마리아":[["nazareth","천사의 소식을 들었어요","눅 1:26"],["bethlehem","아기 예수님을 낳았어요","눅 2:4"]],"베드로":[["bethsaida","고향이에요","요 1:44"],["capernaum","집이 있었어요","마 8:14"],["jerusalem","오순절에 설교했어요","행 2:14"],["samaria","요한과 함께 내려갔어요","행 8:14"],["lydda","중풍병자를 고쳤어요","행 9:32"],["joppa","다비다를 살렸어요","행 9:38"],["caesarea","고넬료를 찾아갔어요","행 10:24"]],"바울":[["tarsus","고향이에요","행 21:39"],["jerusalem","가말리엘에게 배웠어요","행 22:3"],["damascus","예수님의 음성을 들었어요","행 9:3"],["antioch","전도 여행을 떠났어요","행 13:1"],["philippi","감옥에서 찬송했어요","행 16:12"],["thessalonica","회당에서 강론했어요","행 17:1"],["athens","아레오바고에서 말씀을 전했어요","행 17:16"],["corinth","아굴라를 만났어요","행 18:1"],["ephesus","두란노 서원에서 가르쳤어요","행 19:1"],["malta","배가 부서진 뒤 도착했어요","행 28:1"],["rome","셋집에서 복음을 전했어요","행 28:16"]],"바나바":[["antioch","사울과 함께 가르쳤어요","행 11:26"],["salamis","사울과 말씀을 전했어요","행 13:5"],["lystra","제우스라 불렸어요","행 14:12"]],"디모데":[["lystra","바울을 만난 곳이에요","행 16:1"],["ephesus","바울이 머물라고 부탁했어요","딤전 1:3"]],"사도요한":[["jerusalem","베드로와 성전에 올라갔어요","행 3:1"],["patmos","계시를 받았어요","계 1:9"]],"안드레":[["bethsaida","고향이에요","요 1:44"],["galilee","그물을 던지다 부르심을 받았어요","마 4:18"]],"빌립":[["bethsaida","고향이에요","요 1:44"]],"야고보":[["galilee","그물을 깁다가 부르심을 받았어요","마 4:21"]],"나다나엘":[["cana","갈릴리 가나 사람이에요","요 21:2"]],"나사로":[["bethany","다시 살아난 곳이에요","요 11:1"]],"마르다":[["bethany","동생과 함께 살았어요","요 11:1"]],"막달라마리아":[["jerusalem","빈 무덤에 가서 소식을 전했어요","요 20:1"]],"삭개오":[["jericho","예수님을 집에 모셨어요","눅 19:1"]],"바디매오":[["jericho","눈을 뜨게 되었어요","막 10:46"]],"가룟유다":[["jerusalem","은을 성소에 던져 넣었어요","마 27:5"]],"빌라도":[["jerusalem","예수님을 재판했어요","마 27:2"]],"헤롯":[["jerusalem","박사들의 말을 듣고 소동했어요","마 2:3"],["bethlehem","사내아이를 죽이게 했어요","마 2:16"]],"시므온":[["jerusalem","성전에서 아기 예수님을 안았어요","눅 2:25"]],"안나":[["jerusalem","성전을 떠나지 않고 섬겼어요","눅 2:38"]],"스데반":[["jerusalem","일곱 사람으로 뽑혀 섬겼어요","행 6:7"]],"아나니아":[["damascus","사울에게 안수했어요","행 9:10"]],"고넬료":[["caesarea","베드로를 초청했어요","행 10:1"]],"다비다":[["joppa","베드로의 기도로 살아났어요","행 9:36"]],"마가":[["jerusalem","어머니의 집에 사람들이 모여 기도했어요","행 12:12"],["perga","일행을 떠나 돌아갔어요","행 13:13"]],"루디아":[["thyatira","고향이에요","행 16:14"],["philippi","말씀을 듣고 세례를 받았어요","행 16:12"]],"실라":[["philippi","바울과 감옥에서 찬송했어요","행 16:25"],["berea","바울과 함께 말씀을 전했어요","행 17:10"],["corinth","마게도냐에서 내려왔어요","행 18:5"]],"브리스길라":[["rome","남편과 살다 떠났어요","행 18:2"],["corinth","바울과 천막을 만들었어요","행 18:1"],["ephesus","바울과 함께 갔어요","행 18:19"]],"아굴라":[["rome","아내와 살다 떠났어요","행 18:2"],["corinth","바울과 천막을 만들었어요","행 18:1"],["ephesus","바울과 함께 갔어요","행 18:19"]],"아볼로":[["ephesus","회당에서 담대히 말했어요","행 18:24"],["corinth","바울이 다닐 때 머물렀어요","행 19:1"]],"유두고":[["troas","창에서 떨어졌다 살아났어요","행 20:6"]],"드보라":[["bethel","벧엘 산지에 살며 재판했어요","삿 4:5"]],"한나":[["shiloh","기도한 곳이에요","삼상 1:9"],["ramah","집으로 돌아갔어요","삼상 1:19"]],"나오미":[["bethlehem","돌아온 곳이에요","룻 1:19"]],"보아스":[["bethlehem","밭이 있던 곳이에요","룻 2:4"]],"요나단":[["gibeah","아버지와 함께 있었어요","삼상 13:2"],["gilboa","전사했어요","삼상 31:2"]],"압살롬":[["hebron","왕이라 일컬은 곳이에요","삼하 15:10"],["jerusalem","왕궁에 들어갔어요","삼하 16:15"]],"예레미야":[["anathoth","고향이에요","렘 1:1"],["jerusalem","말씀을 전했어요","렘 2:2"],["egypt","끌려갔어요","렘 43:7"]],"이사야":[["jerusalem","유다와 예루살렘에 대한 묵시를 보았어요","사 1:1"]],"아모스":[["tekoa","고향이에요","암 1:1"],["bethel","예언했어요","암 7:13"]],"히스기야":[["jerusalem","왕으로 다스렸어요","왕하 18:2"],["lachish","앗수르 왕에게 사람을 보냈어요","왕하 18:14"]],"요시야":[["jerusalem","왕으로 다스렸어요","왕하 22:1"],["megiddo","전사했어요","왕하 23:29"]],"아합":[["samaria","왕으로 다스렸어요","왕상 16:29"],["ramoth","전쟁에서 죽었어요","왕상 22:29"]],"에스라":[["babylon","올라온 곳이에요","스 7:6"],["jerusalem","율법을 가르쳤어요","스 7:7"]],"갈렙":[["kadesh","땅을 정탐하러 갔어요","수 14:7"],["hebron","기업으로 받았어요","수 14:14"]],"미리암":[["redsea","소고를 잡고 노래했어요","출 15:20"],["kadesh","가데스에서 죽었어요","민 20:1"]],"아론":[["egypt","모세와 바로에게 갔어요","출 5:1"],["sinai","산 아래에 있었어요","출 32:1"]],"라합":[["jericho","정탐꾼을 숨겼어요","수 2:1"]],"나단":[["jerusalem","다윗을 꾸짖었어요","삼하 12:1"]],"고레스":[["babylon","바사의 왕으로 다스렸어요","스 5:13"]],"느부갓네살":[["babylon","왕으로 다스렸어요","단 1:1"],["jerusalem","예루살렘을 쳤어요","왕하 25:1"]],"니고데모":[["jerusalem","유대인의 지도자로 예수님을 장사했어요","요 19:39"]],"디도":[["corinth","바울이 보낸 곳이에요","고후 7:6"]],"뵈뵈":[["cenchreae","교회의 일꾼이었어요","롬 16:1"]],"에바브라":[["colossae","복음을 전했어요","골 1:7"],["hierapolis","형제들을 위해 수고했어요","골 4:13"]],"가말리엘":[["jerusalem","공회에서 말했어요","행 5:34"]],"사라":[["egypt","기근 때 아브라함과 내려갔어요","창 12:14"],["hebron","세상을 떠난 곳이에요","창 23:2"]],"라헬":[["haran","야곱을 만난 곳이에요","창 29:4"],["bethlehem","베들레헴 길에 장사되었어요","창 35:19"]],"하갈":[["beersheba","광야에서 방황했어요","창 21:14"]],"나아만":[["samaria","선지자를 찾아갔어요","왕하 5:3"],["jordan","몸을 씻어 나았어요","왕하 5:14"]],"모르드개":[["susa","도성에 살았어요","에 2:5"]],"하만":[["susa","왕과 함께 있었어요","에 3:15"]],"아간":[["jericho","전리품을 감췄어요","수 7:1"]],"므비보셋":[["jerusalem","왕의 상에서 먹었어요","삼하 9:13"]],"요압":[["rabbah","군대를 이끌고 에워쌌어요","삼하 11:1"]],"우리아":[["rabbah","싸움터에서 전사했어요","삼하 11:17"],["jerusalem","다윗이 불렀어요","삼하 11:12"]],"밧세바":[["jerusalem","왕궁 근처에 살았어요","삼하 11:3"]],"벨사살":[["babylon","왕으로 잔치했어요","단 5:7"]],"맛디아":[["jerusalem","사도로 뽑혔어요","행 1:12"]],"오네시모":[["colossae","골로새 사람이에요","골 4:9"]],"도마":[["jerusalem","부활하신 예수님을 뵈었어요","요 20:26"]],"게하시":[["samaria","엘리사를 따라 다녔어요","왕하 5:3"]],"이세벨":[["samaria","아합의 왕비로 있었어요","왕상 16:31"]]};
 const LV={
-  1:{n:"초급",d:"유명한 성경 이야기",qt:20,rs:105,ty:{sp:36,gap:2.4},ck:5,cw:5,cwT:150,sh:{sp:60,drop:1.6,dive:4,hp:1}},
-  2:{n:"중급",d:"인물과 사건 더 깊이",qt:15,rs:135,ty:{sp:50,gap:1.9},ck:7,cw:6,cwT:130,sh:{sp:85,drop:1.1,dive:2.8,hp:1}},
-  3:{n:"고급",d:"성경 박사에게 도전",qt:12,rs:165,ty:{sp:66,gap:1.5},ck:9,cw:7,cwT:110,sh:{sp:110,drop:.8,dive:1.9,hp:2}}
+  1:{n:"초급",d:"유명한 성경 이야기",qt:20,rs:105,ty:{sp:36,gap:2.4},ck:5,cw:5,cwT:150,twT:90,sh:{sp:60,drop:1.6,dive:4,hp:1}},
+  2:{n:"중급",d:"인물과 사건 더 깊이",qt:15,rs:135,ty:{sp:50,gap:1.9},ck:7,cw:6,cwT:130,twT:75,sh:{sp:85,drop:1.1,dive:2.8,hp:1}},
+  3:{n:"고급",d:"성경 박사에게 도전",qt:12,rs:165,ty:{sp:66,gap:1.5},ck:9,cw:7,cwT:110,twT:60,sh:{sp:110,drop:.8,dive:1.9,hp:2}}
 };
 const G={
   quiz:{n:"성경퀴즈+넌센스",i:"📖",r:"네 가지 보기에서 정답을 골라요. 성경퀴즈에 넌센스 문제가 섞여 나와요. 빨리 맞히면 점수가 더 올라요."},
@@ -784,7 +784,7 @@ const G={
   type:{n:"말씀타자",i:"⌨️",r:"떨어지는 성경 낱말을 입력하고 엔터나 띄어쓰기를 누르면 사라져요. 바닥에 세 번 닿으면 끝나요. 45초 동안 버텨 보세요."},
   map:{n:"성경지도 찾기",i:"🗺️",r:"문제를 읽고 지도에서 알맞은 곳을 눌러요. 빨리 맞히면 점수가 더 올라요."},
   cross:{n:"가로세로낱말퀴즈",i:"✏️",r:"뜻풀이를 누르고 낱말을 입력하세요. 틀리면 시간이 5초 줄어요."},
-  twenty:{n:"스무고개",i:"❓",r:"질문을 눌러 예·아니요를 듣고 정답을 맞혀요. 고개가 많이 남을수록 점수가 높아요."},
+  twenty:{n:"스무고개",i:"❓",r:"질문을 눌러 예·아니요를 듣고 시간 안에 정답을 맞혀요. 고개가 많이 남을수록 점수가 높아요."},
   shoot:{n:"말씀 슈팅",i:"🚀",r:"비행기를 고르고, 화면을 누르면 그쪽으로 저절로 움직여요. 빛은 저절로 나가요. 40초 동안 유혹을 물리치세요."}
 };
 const CORNER={0:{t:"start",p:"출발",i:"🚩"},6:{t:"rest",p:"광야",i:"🏜️"},12:{t:"grace",p:"은혜의 샘",i:"💧"},18:{t:"lot",p:"제비뽑기",i:"🎲"}};
@@ -792,6 +792,10 @@ const PLACES=["에덴","우르","하란","애굽","홍해","시내산","여리�
 const COLORS=["#D9483B","#2F7FD6"];
 const CFG={lv:1,sub:"",mv:"abraham",mp:""};
 const TURNS=8;
+/* 혼자 하는 게임: 판을 통과하면 다음 단계로 올라가고 점수와 목숨이 이어져요 */
+const newRun=()=>({pts:0,lives:3,asked:0,right:0,done:0});
+const LIFE_GAME=k=>["quiz","map","race","type","shoot"].includes(k);
+const soloTip=k=>(k==="quiz"||k==="map"?"목숨 3개로 시작해요. 틀리거나 시간이 지나면 목숨이 줄어요. 5문제를 풀 때마다 다음 단계에 도전해요.":LIFE_GAME(k)?"목숨이 남은 채로 판을 끝내면 다음 단계에 도전해요. 남은 목숨도 이어져요.":"다 맞히면 다음 단계에 도전해요.")+" 점수는 계속 이어지고, 단계가 오르면 고급까지 어려워져요.";
 const SOLO={1:{},2:{},3:{}};
 const BOARD_NAME="성경 땅밟기";
 const V={ov:null,t:new Set(),raf:0,off:[]};
@@ -1116,7 +1120,7 @@ function openOv(){
 function openBoard(){if(live())return;A=B;openOv();resume()}
 function openSolo(k){
   if(live())return;
-  A={solo:true,lv:CFG.lv,used:SOLO[CFG.lv],phase:"intro",pending:{k,m:1,p:""},cur:0,players:[{color:COLORS[0],score:0}]};
+  A={solo:true,lv:CFG.lv,lv0:CFG.lv,run:newRun(),used:SOLO[CFG.lv],phase:"intro",pending:{k,m:1,p:""},cur:0,players:[{color:COLORS[0],score:0}]};
   openOv();intro();
 }
 function resume(){
@@ -1134,7 +1138,8 @@ function onAct(e){
   else if(a==="next")nextTurn();
   else if(a==="solo"&&B&&B.room){B.phase="roll";goSolo(true)}
   else if(a==="start")startMini();
-  else if(a==="again"){stopAll();A.phase="intro";startMini()}
+  else if(a==="again"){stopAll();A.phase="intro";A.lv=A.lv0;A.used=SOLO[A.lv];A.run=newRun();startMini()}
+  else if(a==="stoprun")finish(0,"여기서 마치고 점수를 저장했어요");
   else if(a==="board"){stopAll();drawBoard()}
   else if(a==="done"){B=null;A=null;save();V.ov.remove()}
 }
@@ -1203,7 +1208,7 @@ function stageOpen(title){
 function intro(){
   const d=A.pending,g=G[d.k];
   const el=stageOpen(g.i+" "+g.n);
-  el.innerHTML=`<div class="bm-card"><div class="bm-emoji">${g.i}</div><p class="muted">${A.solo?LV[A.lv].n:`${esc(d.pre||"")}${esc(d.p)} 칸${d.m>1?" · 점수 2배":""}`}</p><h3>${g.n}</h3><p>${g.r}</p><button type="button" class="btn primary bm-big" data-bm="start">시작하기</button></div>`;
+  el.innerHTML=`<div class="bm-card"><div class="bm-emoji">${g.i}</div><p class="muted">${A.solo?LV[A.lv].n:`${esc(d.pre||"")}${esc(d.p)} 칸${d.m>1?" · 점수 2배":""}`}</p><h3>${g.n}</h3><p>${g.r}</p>${A.solo?`<p class="muted">${soloTip(d.k)}</p>`:""}<button type="button" class="btn primary bm-big" data-bm="start">시작하기</button></div>`;
 }
 function startMini(){
   if(A.phase!=="intro"||!A.pending)return;
@@ -1213,12 +1218,21 @@ function startMini(){
 }
 function finish(pts,note,more=""){
   stopAll();if(A.phase!=="intro")return;
-  const d=A.pending,got=pts*d.m,g=G[d.k],face=got>=20?"🎉":got>0?"👏":"🙏";
+  const d=A.pending,got=(pts+(A.solo?A.run.pts:0))*d.m,g=G[d.k],face=got>=20?"🎉":got>0?"👏":"🙏";
   if(A.solo){A.phase="done";
-    stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">${got}점</h3><p>${esc(note)}</p>${more}<div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="again">다시 하기</button><button type="button" class="btn bm-big" data-bm="exit">목록으로</button></div>`;
-    showRank(d.k,A.lv,got);return}
+    stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">${got}점</h3>${A.run.done?`<p class="muted num">${A.run.done}단계까지 통과</p>`:""}<p>${esc(note)}</p>${more}<div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="again">다시 하기</button><button type="button" class="btn bm-big" data-bm="exit">목록으로</button></div>`;
+    showRank(d.k,A.lv0,got);return}
   const p=curP();p.score+=got;B.pending=null;B.phase="next";B.msg=`${who()}${g.n} +${got}점`;save();
   stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">+${got}점</h3><p>${esc(note)}${d.m>1?" (점수 2배)":""}</p>${more}<button type="button" class="btn primary bm-big" data-bm="board">판으로 돌아가기</button></div>`;
+}
+/* 판을 통과했을 때: 혼자 하면 다음 단계로, 땅밟기 칸에서는 그대로 끝나요. lives를 안 주면 목숨은 그대로예요 */
+function clear(pts,lives,note,more=""){
+  if(!A.solo)return finish(pts,note,more);
+  stopAll();if(A.phase!=="intro")return;
+  const r=A.run,k=A.pending.k,g=G[k];
+  r.pts+=pts;r.done++;if(lives!==undefined)r.lives=lives;
+  if(A.lv<3){A.lv++;A.used=SOLO[A.lv]}
+  stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">🎉</div><p class="muted num">${r.done}단계 통과</p><h3 class="num">${r.pts}점</h3><p>${esc(note)}</p>${LIFE_GAME(k)?`<p>${"❤️".repeat(r.lives)}</p>`:""}${more}<p class="muted">다음 단계 난이도: ${LV[A.lv].n}</p><button type="button" class="btn primary bm-big num" data-bm="start">${r.done+1}단계 도전</button><button type="button" class="btn bm-big" data-bm="stoprun">여기서 마치고 점수 저장</button></div>`;
 }
 function drawEnd(){
   const el=stageOpen("🏆 게임 끝"),me=B.players[B.room?B.room.me:0],two=B.players.length>1,rank=B.players.slice().sort((a,b)=>b.score-a.score);
@@ -1245,20 +1259,28 @@ function pick(key,pool,n){
   const got=shuf(left).slice(0,n);A.used[key]=used.concat(got);save();return got.map(i=>pool[i]);
 }
 
+const lifeInfo=(lives,pts)=>{if(A.solo)q("#bmInfo").textContent=`${"❤️".repeat(lives)} ${A.run.pts+pts}점`};
+function setEnd(n,right,pts,lives){
+  if(!A.solo)return finish(pts,`${n}문제 가운데 ${right}문제를 맞혔어요`);
+  const r=A.run;r.asked+=n;r.right+=right;const note=`${r.asked}문제 가운데 ${r.right}문제를 맞혔어요`;
+  if(lives>0)clear(pts,lives,note);else finish(pts,note);
+}
 /* ---------- 성경퀴즈 · 넌센스 성경퀴즈 ---------- */
 function miniQuiz(el){
-  const L=LV[A.lv],[nq,nf]=A.solo?[3,2]:[2,1],items=shuf(pick("quiz",QUIZ[A.lv],nq).concat(pick("fun",FUN[A.lv],nf)));let i=0,pts=0,right=0;
+  const L=LV[A.lv],[nq,nf]=A.solo?[3,2]:[2,1],items=shuf(pick("quiz",QUIZ[A.lv],nq).concat(pick("fun",FUN[A.lv],nf)));let i=0,pts=0,right=0,lives=A.solo?A.run.lives:0;
   const ask=()=>{
-    if(i>=items.length)return finish(pts,`${items.length}문제 가운데 ${right}문제를 맞혔어요`);
+    if(i>=items.length||A.solo&&lives<=0)return setEnd(i,right,pts,lives);
+    lifeInfo(lives,pts);
     const it=items[i],opts=shuf(it.slice(1,5)),t0=performance.now(),T=L.qt*1000;let over=false;
     el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><p class="muted num">${i+1} / ${items.length}${FUN[A.lv].includes(it)?" · 😜 넌센스":""}</p><h3>${esc(it[0])}</h3>
       <div class="bm-opts">${opts.map((o,n)=>`<button type="button" data-o="${n}">${esc(o)}</button>`).join("")}</div><div id="bmAfter"></div></div>`;
     const bar=el.querySelector("#bmBar");
     const pickIt=o=>{if(over)return;over=true;clearInterval(id);V.t.delete(id);
       const rem=Math.max(0,1-(performance.now()-t0)/T),ok=o===it[1];
-      if(ok){right++;pts+=10+(rem>.5?5:0)}
+      if(ok){right++;pts+=10+(rem>.5?5:0)}else if(A.solo)lives--;
+      lifeInfo(lives,pts);
       el.querySelectorAll("[data-o]").forEach(b=>{const v=opts[+b.dataset.o];b.disabled=true;if(v===it[1])b.classList.add("ok");else if(v===o)b.classList.add("no")});
-      el.querySelector("#bmAfter").innerHTML=`<p class="bm-note">${ok?"정답이에요!":o===null?"시간이 다 됐어요.":"아쉬워요."} ${esc(it[5])}</p><button type="button" class="btn primary bm-big" id="bmNext">${i+1<items.length?"다음 문제":"결과 보기"}</button>`;
+      el.querySelector("#bmAfter").innerHTML=`<p class="bm-note">${ok?"정답이에요!":o===null?"시간이 다 됐어요.":"아쉬워요."} ${esc(it[5])}</p><button type="button" class="btn primary bm-big" id="bmNext">${i+1<items.length&&(!A.solo||lives>0)?"다음 문제":"결과 보기"}</button>`;
       el.querySelector("#bmNext").onclick=()=>{i++;ask()}};
     el.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>pickIt(opts[+b.dataset.o]));
     const id=every(100,()=>{const r=1-(performance.now()-t0)/T;bar.style.width=Math.max(0,r*100)+"%";if(r<=0)pickIt(null)});
@@ -1275,9 +1297,10 @@ function carSvg(i){
 const SIM={은:"는",는:"은",이:"가",가:"이",을:"를",를:"을",에:"의",의:"에",와:"과",과:"와",니:"며",며:"니",라:"다",다:"라",고:"며",로:"를",요:"라",서:"도",도:"서",게:"께",께:"게",하:"한",한:"하"};
 const similar=c=>{const l=c[c.length-1];return c.slice(0,-1)+(SIM[l]||"요")};
 function miniRace(el){
+  if(A.solo&&A.run.car!==undefined)return raceRun(el,A.run.car);
   let last=0;try{last=+localStorage.getItem("bm-car")||0}catch(_){}
   el.innerHTML=`<div class="bm-card"><h3>자동차를 고르세요</h3><div class="bm-cars">${CARS.map((c,i)=>`<button type="button" data-car="${i}" aria-pressed="${i===last}">${carSvg(i)}<b>${c[0]}</b></button>`).join("")}</div></div>`;
-  el.querySelectorAll("[data-car]").forEach(b=>b.onclick=()=>{const i=+b.dataset.car;try{localStorage.setItem("bm-car",i)}catch(_){}raceRun(el,i)});
+  el.querySelectorAll("[data-car]").forEach(b=>b.onclick=()=>{const i=+b.dataset.car;try{localStorage.setItem("bm-car",i)}catch(_){}if(A.solo)A.run.car=i;raceRun(el,i)});
 }
 function raceRun(el,car){
   const L=LV[A.lv],[v]=pick("race",VERSE[A.lv],1),words=v[1].split(" "),K=Math.min(A.lv===1?5:A.lv===2?7:9,words.length),chunks=[];
@@ -1286,12 +1309,12 @@ function raceRun(el,car){
   el.style.padding="0";el.style.overflow="hidden";
   el.innerHTML=`<div class="bm-rc"><div class="bm-rv"><small class="muted">${esc(v[0])}</small><p id="bmRv"></p></div><div class="bm-road" id="bmRoad"><i></i><i></i><div class="bm-car" id="bmCar">${carSvg(car)}</div></div></div>`;
   const road=el.querySelector("#bmRoad"),carEl=el.querySelector("#bmCar"),rv=el.querySelector("#bmRv");
-  let at=0,lane=1,lives=3,rows=[],last=performance.now(),t=0,gapY=0,over=false,info="",lock=0;
+  let at=0,lane=1,lives=A.solo?A.run.lives:3,rows=[],last=performance.now(),t=0,gapY=0,over=false,info="",lock=0;
   const H=()=>road.clientHeight,speed=()=>L.rs*Math.max(.8,H()/520),T=K*(H()*.5/speed())*3.2+6;
   const verse=()=>{rv.innerHTML=chunks.map((c,i)=>`<span class="${i<at?"ok":i===at&&A.lv===1?"cur":""}">${esc(c)}</span>`).join(" ")};
   const setLane=n=>{lane=Math.max(0,Math.min(2,n));carEl.style.left=(lane+.5)/3*100+"%"};
   const end=win=>{if(over)return;over=true;const left=Math.max(0,1-t/T);
-    if(win)finish(20+Math.round(left*5)+lives*2,`말씀을 끝까지 받았어요! ${v[0]}`);else finish(Math.round(15*at/K),`${K}조각 가운데 ${at}조각을 받았어요. ${v[0]}`)};
+    if(win)clear(20+Math.round(left*5)+lives*2,lives,`말씀을 끝까지 받았어요! ${v[0]}`);else finish(Math.round(15*at/K),`${K}조각 가운데 ${at}조각을 받았어요. ${v[0]}`)};
   const decoys=()=>{const later=chunks.slice(at+1),o=()=>others[rnd(others.length)]||similar(chunks[at]),near=similar(chunks[at]),out=[];
     if(A.lv===1)out.push(o());
     else if(A.lv===2)out.push(Math.random()<.35?near:o(),later.length?later[rnd(later.length)]:o());
@@ -1332,12 +1355,12 @@ function miniType(el){
   /* 휴대폰 자판이 올라오면 보이는 높이에 맞춰 판을 줄여요 */
   const fit=()=>{const h=vv?vv.height:innerHeight;stage.classList.toggle("bm-tight",h<520);if(vv){stage.style.bottom="auto";stage.style.height=h+"px";stage.style.top=vv.offsetTop+"px"}};
   fit();if(vv){vv.addEventListener("resize",fit);vv.addEventListener("scroll",fit);V.off.push(()=>{vv.removeEventListener("resize",fit);vv.removeEventListener("scroll",fit)})}
-  let slot=0,bag=[],live_=[],lives=3,time=45,spawn=.2,cleared=0,keys=0,tries=0,last=performance.now(),over=false,info="";
+  let slot=0,bag=[],live_=[],lives=A.solo?A.run.lives:3,time=45,spawn=.2,cleared=0,keys=0,tries=0,last=performance.now(),over=false,info="";
   const nextWord=()=>{for(let i=0;i<40;i++){if(!bag.length)bag=shuf(WORD[A.lv].map(x=>x[0]));const w=bag.pop();if(!live_.some(o=>o.w===w))return w}return bag.pop()};
   const add=()=>{const w=nextWord(),n=document.createElement("span");n.className="bm-fall";n.textContent=w;area.appendChild(n);
     const W=area.clientWidth-12,col=W/3,room=Math.max(0,col-n.offsetWidth);slot=(slot+1+rnd(2))%3;n.style.left=Math.min(W-n.offsetWidth,slot*col)+6+Math.random()*room+"px";live_.push({w,n,y:-36})};
   const end=()=>{if(over)return;over=true;const acc=tries?Math.round(cleared/tries*100):0,tasu=Math.round(keys/Math.max(1,45-Math.max(0,time))*60);
-    finish(Math.min(45,cleared*2+(lives>0?5:0)),`낱말 ${cleared}개 · ${tasu}타 · 정확도 ${acc}%${lives>0?" · 끝까지 버텨서 +5점!":""}`)};
+    const sc=Math.min(45,cleared*2+(lives>0?5:0)),nt=`낱말 ${cleared}개 · ${tasu}타 · 정확도 ${acc}%${lives>0?" · 끝까지 버텨서 +5점!":""}`;if(lives>0)clear(sc,lives,nt);else finish(sc,nt)};
   const mark=()=>{const v=inp.value.trim();live_.forEach(o=>o.n.classList.toggle("on",!!v&&o.w.startsWith(v)))};
   const shoot=()=>{const v=inp.value.trim();inp.value="";if(!v)return mark();tries++;
     const hit=live_.filter(o=>o.w===v).sort((a,b)=>b.y-a.y)[0];
@@ -1366,19 +1389,21 @@ function miniType(el){
 const MAP_LV={1:{v:["abraham","exodus","nativity","jesus"],pins:3},2:{v:["kingdom","exile","jesus","church"],pins:4},3:{v:["kingdom","church","paul1","paul2","paul3","rome","rev"],pins:6}};
 function miniMap(el){
   const L=LV[A.lv],C=MAP_LV[A.lv],pool=C.v.flatMap(k=>{const v=MAPV.find(x=>x.k===k);return [...new Set(v.r.concat(v.m))].map(id=>[k,id])});
-  const items=pick("map",pool,A.solo?5:3);let i=0,pts=0,right=0;
+  const items=pick("map",pool,A.solo?5:3);let i=0,pts=0,right=0,lives=A.solo?A.run.lives:0;
   const pins=(v,id)=>{const {P}=mapGeo(v),at=k=>P(MAPP[k][2],MAPP[k][1]),far=(a,b)=>Math.hypot(at(a)[0]-at(b)[0],at(a)[1]-at(b)[1])>=34,got=[id];
     for(const k of shuf([...new Set(v.r.concat(v.m))]))if(got.length<C.pins&&got.every(g=>far(g,k)))got.push(k);return shuf(got)};
   const ask=()=>{
-    if(i>=items.length)return finish(pts,`${items.length}문제 가운데 ${right}문제를 맞혔어요`);
+    if(i>=items.length||A.solo&&lives<=0)return setEnd(i,right,pts,lives);
+    lifeInfo(lives,pts);
     const [vk,id]=items[i],v=MAPV.find(x=>x.k===vk),m=MAPP[id],ids=pins(v,id),t0=performance.now(),T=L.qt*1000;let over=false;
     const hard=A.lv===3&&!m[3].includes(m[0]);
     el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><p class="muted num">${i+1} / ${items.length} · ${esc(v.n)}</p><h3>${hard?esc(m[3]):`${esc(m[0])}${(m[0].charCodeAt(m[0].length-1)-0xAC00)%28?"은":"는"} 어디일까요?`}</h3><div id="bmMapQ">${mapSvg(v,{ids,hide:true})}</div><div id="bmAfter"></div></div>`;
     const bar=el.querySelector("#bmBar"),box=el.querySelector("#bmMapQ");
     const choose=k=>{if(over)return;over=true;clearInterval(tid);V.t.delete(tid);
-      const rem=Math.max(0,1-(performance.now()-t0)/T),ok=k===id;if(ok){right++;pts+=10+(rem>.5?5:0)}
+      const rem=Math.max(0,1-(performance.now()-t0)/T),ok=k===id;if(ok){right++;pts+=10+(rem>.5?5:0)}else if(A.solo)lives--;
+      lifeInfo(lives,pts);
       box.innerHTML=mapSvg(v,{ids,on:id,bad:ok?"":k});
-      el.querySelector("#bmAfter").innerHTML=`<p class="bm-note">${ok?"정답이에요!":k===null?"시간이 다 됐어요.":"아쉬워요."} <b>${esc(m[0])}</b> · ${esc(m[3])} (${esc(m[4])})</p><button type="button" class="btn primary bm-big" id="bmNext">${i+1<items.length?"다음 문제":"결과 보기"}</button>`;
+      el.querySelector("#bmAfter").innerHTML=`<p class="bm-note">${ok?"정답이에요!":k===null?"시간이 다 됐어요.":"아쉬워요."} <b>${esc(m[0])}</b> · ${esc(m[3])} (${esc(m[4])})</p><button type="button" class="btn primary bm-big" id="bmNext">${i+1<items.length&&(!A.solo||lives>0)?"다음 문제":"결과 보기"}</button>`;
       el.querySelector("#bmNext").onclick=()=>{i++;ask()}};
     box.querySelectorAll("[data-mq]").forEach(g=>g.onclick=()=>choose(g.dataset.mq));
     const tid=every(100,()=>{const r=1-(performance.now()-t0)/T;bar.style.width=Math.max(0,r*100)+"%";if(r<=0)choose(null)});
@@ -1434,7 +1459,7 @@ function miniCross(el){
     el.querySelectorAll("[data-w]").forEach(b=>{const p=pl[+b.dataset.w];b.classList.toggle("on",p===sel);b.classList.toggle("ok",!!p.ok)});
     inp.placeholder=sel?`${sel.no}번 ${sel.d?"세로":"가로"} ${sel.w.length}글자`:"";inp.value=""};
   const end=()=>{if(over)return;over=true;const ok=pl.filter(p=>p.ok).length,all=ok===pl.length,left=Math.max(0,T-(performance.now()-t0))/1000;
-    finish(Math.min(45,ok*5+(all?10+Math.floor(left/15):0)),`${pl.length}낱말 가운데 ${ok}개를 찾았어요`+(all?" 완성 보너스!":""),cwReview(pl))};
+    const sc=Math.min(45,ok*5+(all?10+Math.floor(left/15):0)),nt=`${pl.length}낱말 가운데 ${ok}개를 찾았어요`+(all?" 완성 보너스!":"");if(all)clear(sc,undefined,nt,cwReview(pl));else finish(sc,nt,cwReview(pl))};
   el.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{const p=pl[+b.dataset.w];if(p.ok)return;sel=p;paint();inp.focus()});
   el.querySelectorAll(".bm-cc").forEach(x=>x.onclick=()=>{const hit=pl.filter(p=>!p.ok&&at(p).includes(x.dataset.k));if(!hit.length)return;sel=hit[(hit.indexOf(sel)+1)%hit.length];paint();inp.focus()});
   el.querySelector("#bmCwEnd").onclick=end;
@@ -1450,19 +1475,21 @@ function miniCross(el){
 /* ---------- 스무고개 ---------- */
 function miniTwenty(el){
   const [a]=pick("twenty",TWENTY[A.lv],1),kind=a[1][0],all=[1,2,3].flatMap(l=>TWENTY[l]).filter(x=>x[1][0]===kind&&x[0]!==a[0]);
-  const opts=shuf([a[0],...shuf(all).slice(0,5).map(x=>x[0])]);let left=20,hint=0,over=false;const asked=[],hints=[];
-  const end=win=>{if(over)return;over=true;if(win)finish(10+left,`${a[0]}! 고개 ${left}개를 남기고 맞혔어요`);else finish(0,`정답: ${a[0]}`)};
+  const opts=shuf([a[0],...shuf(all).slice(0,5).map(x=>x[0])]);let left=20,hint=0,over=false;const asked=[],hints=[],T=LV[A.lv].twT*1000,t0=performance.now();
+  const end=(win,late)=>{if(over)return;over=true;if(win)clear(10+left,undefined,`${a[0]}! 고개 ${left}개를 남기고 맞혔어요`);else finish(0,`${late?"시간이 다 됐어요. ":""}정답: ${a[0]}`)};
+  const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`고개 ${left} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
   const spend=n=>{left=Math.max(0,left-n);if(left<=0){end(false);return false}return true};
-  const draw=()=>{q("#bmInfo").textContent=`남은 고개 ${left}`;
-    el.innerHTML=`<div class="bm-q"><div class="bm-qs">${TW_Q.map(([t,g],i)=>{const d=asked.includes(i);return `<button type="button" data-q="${i}" ${d?"disabled":""}>${t}${d?` <b class="${a[1].includes(g)?"yes":"nope"}">${a[1].includes(g)?"예":"아니요"}</b>`:""}</button>`}).join("")}</div>
+  const draw=()=>{
+    el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><div class="bm-qs">${TW_Q.map(([t,g],i)=>{const d=asked.includes(i);return `<button type="button" data-q="${i}" ${d?"disabled":""}>${t}${d?` <b class="${a[1].includes(g)?"yes":"nope"}">${a[1].includes(g)?"예":"아니요"}</b>`:""}</button>`}).join("")}</div>
       ${hints.length?`<div class="bm-note">${hints.map(esc).join("<br>")}</div>`:""}
       <button type="button" class="btn" id="bmHint" ${hint>=2?"disabled":""}>결정적 힌트 (고개 4개 쓰기)</button>
       <h4>정답 맞히기 <small class="muted">틀리면 고개 3개가 줄어요</small></h4><div class="bm-opts two">${opts.map((o,i)=>`<button type="button" data-a="${i}">${esc(o)}</button>`).join("")}</div></div>`;
     el.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{asked.push(+b.dataset.q);if(spend(1))draw()});
     el.querySelector("#bmHint").onclick=()=>{hints.push(a[2+hint]);hint++;if(spend(4))draw()};
     el.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{const v=opts[+b.dataset.a];if(v===a[0])return end(true);opts.splice(+b.dataset.a,1);if(spend(3))draw()});
+    tick();
   };
-  draw();
+  draw();every(200,tick);
 }
 
 /* ---------- 말씀 슈팅 : 귀여운 비행기로 유혹의 낱말을 물리쳐요 ---------- */
@@ -1481,9 +1508,10 @@ function planeSvg(i){
   return `<svg xmlns="${"http:"+"/"+"/www.w3.org/2000/svg"}" viewBox="0 0 60 64" width="120" height="128" aria-hidden="true">${b}<circle cx="23" cy="${y+4}" r="3" fill="#FF9AA8" opacity=".75"/><circle cx="37" cy="${y+4}" r="3" fill="#FF9AA8" opacity=".75"/><circle cx="25" cy="${y}" r="2.4" fill="#2B2B3A"/><circle cx="35" cy="${y}" r="2.4" fill="#2B2B3A"/><circle cx="25.8" cy="${y-.8}" r=".8" fill="#fff"/><circle cx="35.8" cy="${y-.8}" r=".8" fill="#fff"/><path d="M27.5 ${y+3}Q30 ${y+6} 32.5 ${y+3}" fill="none" stroke="#2B2B3A" stroke-width="1.4" stroke-linecap="round"/></svg>`;
 }
 function miniShoot(el){
+  if(A.solo&&A.run.plane!==undefined)return shootRun(el,A.run.plane);
   let last=0;try{last=+localStorage.getItem("bm-plane")||0}catch(_){}
   el.innerHTML=`<div class="bm-card"><h3>비행기를 고르세요</h3><div class="bm-cars">${PLANES.map((c,i)=>`<button type="button" data-plane="${i}" aria-pressed="${i===last}">${planeSvg(i)}<b>${c[0]}</b></button>`).join("")}</div></div>`;
-  el.querySelectorAll("[data-plane]").forEach(b=>b.onclick=()=>{const i=+b.dataset.plane;try{localStorage.setItem("bm-plane",i)}catch(_){}shootRun(el,i)});
+  el.querySelectorAll("[data-plane]").forEach(b=>b.onclick=()=>{const i=+b.dataset.plane;try{localStorage.setItem("bm-plane",i)}catch(_){}if(A.solo)A.run.plane=i;shootRun(el,i)});
 }
 function shootRun(el,plane){
   const img=new Image();img.src="data:image/svg+xml,"+encodeURIComponent(planeSvg(plane));
@@ -1492,14 +1520,14 @@ function shootRun(el,plane){
   let w=0,h=0;const size=()=>{w=el.clientWidth;h=el.clientHeight;cv.width=w*dpr;cv.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0)};size();
   addEventListener("resize",size);V.off.push(()=>removeEventListener("resize",size));
   const stars=Array.from({length:40},()=>[Math.random(),Math.random(),.3+Math.random()*.7]);
-  const ship={x:w/2,to:null},SY=()=>h-46;let bul=[],foes=[],shots=[],items=[],kills=0,lives=3,time=40,inv=0,fireT=0,pow=0,dropT=1.5,diveT=P.dive,t=0,last=performance.now(),over=false,keyV=0,info="";
+  const ship={x:w/2,to:null},SY=()=>h-46;let bul=[],foes=[],shots=[],items=[],kills=0,lives=A.solo?A.run.lives:3,time=40,inv=0,fireT=0,pow=0,dropT=1.5,diveT=P.dive,t=0,last=performance.now(),over=false,keyV=0,info="";
   const wave=()=>{const cols=w<420?4:6,gap=(w-16)/cols;for(let r=0;r<3;r++)for(let c=0;c<cols;c++)foes.push({hx:8+gap*(c+.5),hy:34+r*38,x:8+gap*(c+.5),y:-40-r*40,l:FOES[rnd(FOES.length)],hp:r===0?P.hp:1,dv:0})};
   wave();
   const move=e=>{const b=cv.getBoundingClientRect();ship.to=Math.max(20,Math.min(w-20,e.clientX-b.left));e.preventDefault()};
   cv.addEventListener("pointerdown",move);cv.addEventListener("pointermove",move);
   const key=e=>{if(e.key==="ArrowLeft")keyV=e.type==="keydown"?-1:0;if(e.key==="ArrowRight")keyV=e.type==="keydown"?1:0;if(keyV)ship.to=null};
   addEventListener("keydown",key);addEventListener("keyup",key);V.off.push(()=>{removeEventListener("keydown",key);removeEventListener("keyup",key)});
-  const end=()=>{if(over)return;over=true;finish(Math.min(45,kills*2+(lives>0?5:0)),`유혹 ${kills}개를 물리쳤어요${lives>0?" 끝까지 버텨서 +5점!":""}`)};
+  const end=()=>{if(over)return;over=true;const sc=Math.min(45,kills*2+(lives>0?5:0)),nt=`유혹 ${kills}개를 물리쳤어요${lives>0?" 끝까지 버텨서 +5점!":""}`;if(lives>0)clear(sc,lives,nt);else finish(sc,nt)};
   const hit=()=>{if(inv>0)return;lives--;inv=1.5;if(lives<=0)end()};
   const pill=(f)=>{x.font="700 13px sans-serif";const tw=x.measureText(f.l).width+16;f.w=tw;return tw};
   const frame=now=>{
