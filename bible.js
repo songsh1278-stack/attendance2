@@ -609,7 +609,7 @@ const TWENTY={1:[
 ["갈대 상자","oO","역청과 나무 진을 칠했어요","아기를 담아 나일 강가에 두었어요","출 2:3","출 2:3"],
 ["몰약","oN","박사들의 예물이에요","니고데모가 침향과 함께 가져왔어요","마 2:11","요 19:39"]
 ]};
-const TW_Q=[["사람인가요?","p"],["장소인가요?","l"],["물건이나 음식인가요?","o"],["주로 구약 이야기에 나오나요?","O"],["주로 신약 이야기에 나오나요?","N"],["남자인가요?","m"],["여자인가요?","f"],["왕이었나요?","k"],["선지자로 유명한가요?","r"],["예수님의 열두 제자였나요?","d"],["창세기 이야기에서 유명한가요?","g"],["전쟁 이야기로 유명한가요?","b"],["도시인가요?","c"],["산인가요?","h"],["먹을 수 있나요?","e"]];
+const TW_Q={p:[["주로 구약 이야기에 나오나요?","O"],["남자인가요?","m"],["창세기 이야기에서 유명한가요?","g"],["왕이었나요?","k"],["선지자로 유명한가요?","r"],["전쟁 이야기로 유명한가요?","b"],["예수님의 열두 제자였나요?","d"]],l:[["주로 구약 이야기에 나오나요?","O"],["도시인가요?","c"],["산인가요?","h"],["창세기 이야기에서 유명한가요?","g"],["전쟁 이야기로 유명한가요?","b"]],o:[["주로 구약 이야기에 나오나요?","O"],["먹을 수 있나요?","e"],["창세기 이야기에서 유명한가요?","g"],["전쟁 이야기로 유명한가요?","b"]]};
 /* 성경지도. MAPP: 키 → [지명, 위도, 경도, 설명, 위치, 근거문구]. 위치는 대략적인 현대 추정 위치 */
 const MAPP={
 ur:["우르",30.96,46.10,"아브라함의 가족이 가나안으로 가려고 떠난 갈대아인의 땅이에요.","창 11:31","갈대아인의 우르"],
@@ -1477,15 +1477,20 @@ function miniCross(el){
 function miniTwenty(el){
   const [a]=pick("twenty",TWENTY[A.lv],1),kind=a[1][0],all=[1,2,3].flatMap(l=>TWENTY[l]).filter(x=>x[1][0]===kind&&x[0]!==a[0]);
   const opts=shuf([a[0],...shuf(all).slice(0,5).map(x=>x[0])]);let left=20,hint=0,over=false;const asked=[],hints=[],T=LV[A.lv].twT*1000,t0=performance.now();
+  /* 보기가 모두 같은 종류라 종류는 먼저 알려 주고, 큰 질문을 한 뒤 남은 보기를 가르는 질문만 보여 줘요 */
+  const Q=TW_Q[kind],root=kind==="p"?2:1,tag=n=>n===a[0]?a[1]:all.find(x=>x[0]===n)[1],yes=(n,g)=>tag(n).includes(g);
+  const alive=()=>opts.filter(n=>asked.every(i=>yes(n,Q[i][1])===yes(a[0],Q[i][1])));
+  const splits=(i,c)=>{const y=c.filter(n=>yes(n,Q[i][1])).length;return y>0&&y<c.length};
+  const shown=c=>{const open=Q.slice(0,root).every((_,i)=>asked.includes(i)||!splits(i,c));return Q.map((_,i)=>i).filter(i=>asked.includes(i)||splits(i,c)&&(i<root||open))};
   const miss=A.solo?A.run.miss:"";if(A.solo)A.run.miss="";let oops=false;
   const end=(win,late)=>{if(over)return;over=true;if(!win&&!late&&A.solo&&--A.run.lives>0){stopAll();A.run.miss=a[0];return miniTwenty(el)}if(win)clear(10+left,undefined,`${a[0]}! 고개 ${left}개를 남기고 맞혔어요`);else finish(0,`${late?"시간이 다 됐어요. ":""}정답: ${a[0]}`)};
   const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`${A.solo?"❤️".repeat(A.run.lives)+" ":""}고개 ${left} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
   const spend=n=>{left=Math.max(0,left-n);if(left<=0){end(false);return false}return true};
-  const draw=()=>{
-    el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div>${miss?`<div class="bm-note">고개를 다 썼어요. (정답: ${esc(miss)}) 새 문제예요!</div>`:""}<div class="bm-qs">${TW_Q.map(([t,g],i)=>{const d=asked.includes(i);return `<button type="button" data-q="${i}" ${d?"disabled":""}>${t}${d?` <b class="${a[1].includes(g)?"yes":"nope"}">${a[1].includes(g)?"예":"아니요"}</b>`:""}</button>`}).join("")}</div>
+  const draw=()=>{const live=alive(),qs=shown(live);
+    el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div>${miss?`<div class="bm-note">고개를 다 썼어요. (정답: ${esc(miss)}) 새 문제예요!</div>`:""}<p class="muted">정답은 ${{p:"사람이에요",l:"장소예요",o:"물건이나 음식이에요"}[kind]}. 질문으로 보기를 좁혀 보세요.</p><div class="bm-qs">${qs.map(i=>{const [t,g]=Q[i],d=asked.includes(i),y=yes(a[0],g);return `<button type="button" data-q="${i}" ${d?"disabled":""}>${t}${d?` <b class="${y?"yes":"nope"}">${y?"예":"아니요"}</b>`:""}</button>`}).join("")}</div>${qs.every(i=>asked.includes(i))?`<p class="muted">더 물어볼 질문이 없어요. 힌트를 쓰거나 정답을 골라 보세요.</p>`:""}
       ${oops?`<div class="bm-note">아쉬워요. 목숨이 하나 줄었어요.</div>`:""}${hints.length?`<div class="bm-note">${hints.map(esc).join("<br>")}</div>`:""}
       <button type="button" class="btn" id="bmHint" ${hint>=2?"disabled":""}>결정적 힌트 (고개 4개 쓰기)</button>
-      <h4>정답 맞히기 <small class="muted">틀리면 ${A.solo?"목숨이 하나":"고개 3개가"} 줄어요</small></h4><div class="bm-opts two">${opts.map((o,i)=>`<button type="button" data-a="${i}">${esc(o)}</button>`).join("")}</div></div>`;
+      <h4>정답 맞히기 <small class="muted">틀리면 ${A.solo?"목숨이 하나":"고개 3개가"} 줄어요</small></h4><div class="bm-opts two">${opts.map((o,i)=>`<button type="button" data-a="${i}" ${live.includes(o)?"":'class="out" disabled'}>${esc(o)}</button>`).join("")}</div></div>`;
     el.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{asked.push(+b.dataset.q);if(spend(1))draw()});
     el.querySelector("#bmHint").onclick=()=>{hints.push(a[2+hint]);hint++;if(spend(4))draw()};
     el.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{const v=opts[+b.dataset.a];if(v===a[0])return end(true);opts.splice(+b.dataset.a,1);if(!A.solo){if(spend(3))draw();return}if(A.run.lives<=1)return end(false);A.run.lives--;oops=true;draw()});
