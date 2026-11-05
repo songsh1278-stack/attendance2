@@ -759,6 +759,7 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
 .bm-car.bad{animation:bmShake .36s}
 @keyframes bmShake{25%{transform:translateX(-7px) rotate(-7deg)}75%{transform:translateX(7px) rotate(7deg)}}
 .bm-dice .z{grid-area:1/1/4/4;font-size:clamp(24px,8vw,34px);line-height:1;font-weight:800}
+.bm-rcode{font-size:34px;letter-spacing:.12em}
 .bm-photo{margin:10px 0 0}
 .bm-photo img{display:block;width:100%;max-height:260px;object-fit:cover;border-radius:10px;background:var(--sunk)}
 .bm-photo figcaption{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.45}
@@ -1700,7 +1701,7 @@ function openGuide(){
 }
 /* ---------- 활동 기록 (총관리자·공동관리자1. 텔레그램 알림 종류·답장은 총관리자만) ---------- */
 const activityCard=()=>`<details class="fold" data-fold="activity"${S.fold.activity?" open":""}><summary><h2 class="sec">활동 기록</h2></summary><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">출석 체크(반별), 명단·반 이동, 번호 변경, 일정, 자료실, 설정, 요청 등 모든 기록 (로그인 포함 보기 가능)</span><button class="btn" id="actOpen">기록 보기</button></div>${S.isCo?"":`<div class="admin-row"><b>텔레그램 알림</b><span class="code none">휴대폰 텔레그램으로 받을 기록 종류</span><button class="btn" id="tgOpen">알림 종류</button></div>`}</div></details>`;
-const bibleCard=()=>[["bibleMap","성경지도","시대별 지도, 성경사전, 사진","map","지도 보기"],["bibleGame","성경게임","퀴즈, 말씀 게임, 주사위판과 교사 랭킹","game","게임하기"]].map(([f,t,d,k,b])=>`<details class="fold" data-fold="${f}"${S.fold[f]!==false?" open":""}><summary><h2 class="sec">${t}</h2></summary><div class="card admin-list"><div class="admin-row"><span class="code none">${d}</span><button class="btn" data-bmhome="${k}">${b}</button></div></div></details>`).join("");
+const bibleCard=()=>[["bibleMap","부록-성경지도보기","시대별 지도, 성경사전, 사진","map","지도 보기"],["bibleGame","부록-성경게임","퀴즈, 말씀 게임, 주사위판과 교사 랭킹","game","게임하기"]].map(([f,t,d,k,b])=>`<details class="fold" data-fold="${f}"${S.fold[f]!==false?" open":""}><summary><h2 class="sec">${t}</h2></summary><div class="card admin-list"><div class="admin-row"><span class="code none">${d}</span><button class="btn" data-bmhome="${k}">${b}</button></div></div></details>`).join("");
 /* 텔레그램으로 받을 알림 종류 고르기 (총관리자 전용) */
 async function openTgKinds(){
   const ov=document.createElement("div");ov.className="overlay";
@@ -3315,7 +3316,7 @@ function renderHome(){
       return `<div class="admin-row"><b>${TEAMS[t].label}</b>${me&&me.dev?`<span class="code none">${esc(me.name)} 선생님 (QR로 로그인됨)</span><button class="btn primary" data-mytcode="${t}">${me.hasPw?"내 비밀번호 변경":"내 비밀번호 만들기"}</button>`:me?`<span class="code none">${esc(me.name)} 선생님으로 로그인됨</span><button class="btn primary" data-mytcode="${t}">${me.own?"내 비밀번호 변경":"내 비밀번호 만들기"}</button>`:""}</div>`}).join("")}</div></details>`}
   h+=staffPwCard()+qrCard();
   if(!S.isAdmin&&S.staffMgr)h+=renderStaff();
-  if(S.isAdmin){h+=renderPromoAdmin();if(S.staffMgr)h+=renderStaff();if(!S.isCo2)h+=activityCard();if(!S.isCo)h+=bibleCard()} /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
+  if(S.isAdmin){h+=renderPromoAdmin();if(S.staffMgr)h+=renderStaff();if(!S.isCo2)h+=activityCard()}if(S.isAdmin||isHrOnly()||isTeamMgr())h+=bibleCard(); /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
   h+=lookPanel(); /* 새로고침은 맨 위 제목 줄 오른쪽 ↻ 버튼 */
   h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:isHrOnly()||isTeamMgr()?`<button class="btn" id="hrOut">로그아웃</button>`:""}${S.isAdmin||isHrOnly()||isTeamMgr()?` <button class="btn" id="qrSelf">내 다른 기기 추가</button>`:""}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   return h;
@@ -3378,7 +3379,7 @@ function openStaffEdit(email){
 }
 function render(){
   if(S.view==="dept"&&!canEnter(S.team))S.view="home";
-  if(S.view==="bible"&&!(S.isAdmin&&!S.isCo))S.view="home";
+  if(S.view==="bible"&&S.ready&&!(S.isAdmin||isHrOnly()||isTeamMgr()))S.view="home";
   renderTeams();
   {const tt=document.querySelector('[data-tab="talent"]');if(tt)tt.hidden=!talentOn();if(S.tab==="talent"&&!talentOn())S.tab="check";}
   {const pt=document.querySelector('[data-tab="prenew"]');if(pt)pt.hidden=!preNewOn();if(S.tab==="prenew"&&!preNewOn())S.tab="check";}
@@ -4601,7 +4602,7 @@ const G={
 };
 const CORNER={0:{t:"start",p:"출발",i:"🚩"},6:{t:"rest",p:"광야",i:"🏜️"},12:{t:"grace",p:"은혜의 샘",i:"💧"},18:{t:"lot",p:"제비뽑기",i:"🎲"}};
 const PLACES=["에덴","우르","하란","애굽","홍해","시내산","여리고","실로","베들레헴","예루살렘","바벨론","니느웨","나사렛","갈릴리","가버나움","베다니","안디옥","에베소","고린도","로마"];
-const COLORS=["#D9483B"];
+const COLORS=["#D9483B","#2F7FD6"];
 const CFG={lv:1,sub:"",mv:"abraham",mp:""};
 const TURNS=8;
 const SOLO={1:{},2:{},3:{}};
@@ -4612,12 +4613,32 @@ const rnd=n=>Math.floor(Math.random()*n);
 const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 const q=s=>V.ov.querySelector(s);
 const live=()=>!!(V.ov&&V.ov.isConnected);
-const allowed=()=>S.isAdmin&&!S.isCo;
 const curP=()=>B.players[B.cur];
+/* 2인용: 내 차례인지, 메시지에 붙일 이름 */
+const myTurn=()=>!B.room||B.cur===B.room.me;
+const who=()=>B.room?curP().name+" ":"";
 function after(ms,f){const id=setTimeout(()=>{V.t.delete(id);if(live())f()},ms);V.t.add(id);return id}
 function every(ms,f){const id=setInterval(()=>{if(live())f()},ms);V.t.add(id);return id}
 function stopAll(){V.t.forEach(i=>clearTimeout(i));V.t.clear();cancelAnimationFrame(V.raf);V.off.forEach(f=>f());V.off=[]}
-const save=()=>{try{if(B)localStorage.setItem("bm-save",JSON.stringify(B));else localStorage.removeItem("bm-save")}catch(_){}};
+const store=()=>{try{if(B)localStorage.setItem("bm-save",JSON.stringify(B));else localStorage.removeItem("bm-save")}catch(_){}};
+const save=()=>{store();if(B&&B.room)roomPush()};
+/* 내가 움직인 판을 서버에 올려요. 겹치지 않게 하나씩 */
+let pushBusy=false,pushAgain=false;
+function roomPush(){
+  if(pushBusy){pushAgain=true;return}pushBusy=true;
+  const r=B.room,{room,...state}=B;
+  call("roomSave",{code:r.code,tok:r.tok,ver:r.ver,state}).then(x=>{if(B&&B.room===r){r.ver=x.ver;store()}}).catch(e=>toast(e.message)).finally(()=>{pushBusy=false;if(pushAgain&&B&&B.room){pushAgain=false;roomPush()}});
+}
+function roomApply(st,ver){
+  const room=B.room;B={...st,room};B.room.ver=ver;A=B;store();
+  if(!live())return;
+  stopAll();drawBoard();
+  if(B.phase==="end")drawEnd();else if(myTurn()){if(B.phase==="intro")intro();else if(B.phase==="move")land()}
+}
+function roomPoll(){
+  if(!B||!B.room||pushBusy||(myTurn()&&B.phase!=="wait"))return;
+  call("roomGet",B.room.code,B.room.ver).then(x=>{if(!B||!B.room)return;if(x.gone){toast("방이 끝났어요");return}if(x.state)roomApply(x.state,x.ver)}).catch(()=>{});
+}
 const loadSave=()=>{try{const s=JSON.parse(localStorage.getItem("bm-save"));return s&&s.v===2?s:null}catch(_){return null}};
 
 /* ---------- 탭 첫 화면 ---------- */
@@ -4629,7 +4650,10 @@ function boardSetup(){
     <div class="card bm-hero"><h2>🎲 ${BOARD_NAME}</h2><p>두 개의 주사위를 굴려 성경 땅을 돌아요. 주사위 하나는 0·2·3·4, 다른 하나는 -1·1·2·3이에요. 합이 -1이면 한 칸 뒤로 가요. 멈춘 칸의 게임을 이겨 8라운드 동안 점수를 모으세요.</p></div>
     ${s?`<button type="button" class="btn primary bm-big" data-bmgo="resume">이어하기 · ${LV[s.lv].n} ${Math.min(s.round,s.turns)}/${s.turns}라운드</button>`:""}
     <h2 class="sec">단계</h2>${lvPick()}
-    <button type="button" class="btn ${s?"":"primary "}bm-big" data-bmgo="new" style="margin-top:18px">${s?"새 게임 시작":"게임 시작"}</button>
+    <h2 class="sec">1인용</h2><button type="button" class="btn ${s?"":"primary "}bm-big" data-bmgo="new" style="margin-top:0">${s?"새 게임 시작":"혼자 시작"}</button>
+    <h2 class="sec">2인용</h2><p class="muted bm-maph">각자 폰으로 같은 판을 해요. 로그인이 필요해요.</p>
+    <button type="button" class="btn primary bm-big" data-bmgo="room" style="margin-top:0">방 만들기</button>
+    <form class="bm-in bm-msearch" id="bmRoomF" style="margin-top:8px"><input id="bmRoomC" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="방 번호" placeholder="받은 방 번호 4자리"><button type="submit" class="btn">들어가기</button></form>
     <h2 class="sec">칸 안내</h2>
     <div class="card bm-legend">${Object.keys(G).map(k=>`<div><span class="bm-k-${k}">${G[k].i}</span>${G[k].n}</div>`).join("")}
       <div><span>🚩</span>출발 · 지나면 +10점</div><div><span>🏜️</span>광야 · 한 번 쉬기</div><div><span>💧</span>은혜의 샘 · +20점</div><div><span>🎲</span>제비뽑기 · 무작위 게임 점수 2배</div></div>
@@ -4650,19 +4674,26 @@ document.addEventListener("click",e=>{
   const st=e.target.closest("[data-bmset]");
   if(st){const [k,v]=st.dataset.bmset.split(":");CFG[k]=Number(v);render();return}
   const hm=e.target.closest("[data-bmhome]");
-  if(hm){if(!allowed())return;navPush();S.view="bible";S.bpage=hm.dataset.bmhome;CFG.sub="";render();window.scrollTo(0,0);return}
+  if(hm){navPush();S.view="bible";S.bpage=hm.dataset.bmhome;CFG.sub="";render();window.scrollTo(0,0);return}
   const sb=e.target.closest("[data-bmsub]");
   if(sb){CFG.sub=sb.dataset.bmsub;render();window.scrollTo(0,0);return}
   const mv=e.target.closest("[data-mapv]");
   if(mv){CFG.mv=mv.dataset.mapv;CFG.mp="";render();return}
   const mp=e.target.closest("[data-mapp]");
   if(mp){CFG.mp=mp.dataset.mapp;render();return}
-  if(!allowed())return;
   const so=e.target.closest("[data-bmsolo]");
   if(so){openSolo(so.dataset.bmsolo);return}
   const go=e.target.closest("[data-bmgo]");
-  if(go){if(go.dataset.bmgo==="new")newGame();else B=B||loadSave();if(B)openBoard()}
+  if(go){if(go.dataset.bmgo==="room")return roomCreate();if(go.dataset.bmgo==="new")newGame();else B=B||loadSave();if(B)openBoard()}
 });
+document.addEventListener("submit",e=>{if(e.target.id!=="bmRoomF")return;e.preventDefault();const c=document.querySelector("#bmRoomC").value.trim();if(c)roomEnter(c)});
+function roomCreate(){
+  newGame(2);const {room,...st}=B;B=null;
+  call("roomNew",st).then(x=>{B={...x.state,room:{code:x.code,tok:x.tok,ver:x.ver,me:0}};store();openBoard()}).catch(e=>toast(e.message));
+}
+function roomEnter(c){
+  call("roomJoin",c).then(x=>{B={...x.state,room:{code:x.code,tok:x.tok,ver:x.ver,me:1}};store();openBoard()}).catch(e=>toast(e.message));
+}
 
 /* ---------- 성경지도보기 : 시대별 지도, 지명을 누르면 설명 ---------- */
 function mapGeo(v){
@@ -4682,7 +4713,7 @@ function mapSvg(v,o={}){
     const t=ok.find(o=>!hit(o.slice(3)))||ok[0]||c[0];boxes.push(t.slice(3));return{x:t[0],y:t[1],a:t[2]}});
   const route=v.r.length&&!game?`<path class="bm-route" marker-end="url(#bmArw)" d="${d(v.r.map(id=>[MAPP[id][2],MAPP[id][1]]))}"/>`:"";
   return `<svg class="bm-map" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(v.n)} 지도"><defs><marker id="bmArw" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6Z" class="bm-arw"/></marker></defs>
-    <rect width="${W}" height="${H}" class="bm-land"/>${MAP_SEA.map(s=>`<path class="bm-sea" d="${d(s,1)}"/>`).join("")}${MAP_LAND.map(s=>`<path class="bm-land" d="${d(s,1)}"/>`).join("")}${MAP_RIVER.map(s=>`<path class="bm-river" d="${d(s)}"/>`).join("")}${route}
+    <rect x="-4000" y="-4000" width="9000" height="9000" class="bm-land"/>${MAP_SEA.map(s=>`<path class="bm-sea" d="${d(s,1)}"/>`).join("")}${MAP_LAND.map(s=>`<path class="bm-land" d="${d(s,1)}"/>`).join("")}${MAP_RIVER.map(s=>`<path class="bm-river" d="${d(s)}"/>`).join("")}${route}
     ${pts.map((p,i)=>`<g ${game?"data-mq":"data-mapp"}="${p.id}" class="bm-pin${on===p.id?" on":""}${o.bad===p.id?" bad":""}${game?" q":""}"><circle cx="${p.x}" cy="${p.y}" r="${game?20:15}" fill="transparent"/><circle cx="${p.x}" cy="${p.y}" r="${game?7:4.5}"/>${o.hide?"":`<text x="${labels[i].x}" y="${labels[i].y}" text-anchor="${labels[i].a}">${esc(p.n)}</text>`}</g>`).join("")}</svg>`;
 }
 /* 사용 허가가 있는 사진만, 저작자·라이선스·원본 링크와 함께 보여 줘요 */
@@ -4803,13 +4834,13 @@ window.bibleMapAfter=function(){
   const si=document.querySelector("#bmMapS"),sr=document.querySelector("#bmMapR");
   si.oninput=()=>dictShow(si.value,sr);
   document.querySelector("#bmMapF").onsubmit=e=>{e.preventDefault();si.blur();dictShow(si.value,sr)};
-  const v=curView(),{W,H}=mapGeo(v),z=MZ[v.k]||(MZ[v.k]={x:0,y:0,w:W,sel:""}),minW=W/(v.k==="all"?24:8);
+  const v=curView(),{W,H}=mapGeo(v),z=MZ[v.k]||(MZ[v.k]={x:0,y:0,w:W,sel:""}),minW=W/(v.k==="all"?24:8),maxW=W*Math.max(1.15,Math.min(46/(v.b[1]-v.b[0]),6));
   const pins=[...svg.querySelectorAll(".bm-pin")].map(g=>{const c=g.querySelectorAll("circle");return{g,hit:c[0],dot:c[1],t:g.querySelector("text"),x:+c[0].getAttribute("cx"),y:+c[0].getAttribute("cy"),on:g.classList.contains("on")}}).sort((a,b)=>b.on-a.on);
   const draw=()=>{
-    z.w=Math.min(W,Math.max(minW,z.w));const h=z.w*H/W;z.x=Math.min(W-z.w,Math.max(0,z.x));z.y=Math.min(H-h,Math.max(0,z.y));
-    svg.setAttribute("viewBox",`${z.x} ${z.y} ${z.w} ${h}`);svg.style.touchAction=z.w<W-.5?"none":"pan-y";const il=svg.querySelector(".bm-il");if(il)il.style.display=z.w<W-.5?"none":"";
+    z.w=Math.min(maxW,Math.max(minW,z.w));const h=z.w*H/W,lim=(n,a)=>Math.min(Math.max(0,a),Math.max(Math.min(0,a),n));z.x=lim(z.x,W-z.w);z.y=lim(z.y,H-h);
+    svg.setAttribute("viewBox",`${z.x} ${z.y} ${z.w} ${h}`);const fit=Math.abs(z.w-W)<.5;svg.style.touchAction=fit?"pan-y":"none";const il=svg.querySelector(".bm-il");if(il)il.style.display=fit?"":"none";
     const s=W/z.w,VH=H,sc=p=>[(p.x-z.x)*s,(p.y-z.y)*s],seen=pins.filter(p=>{const [a,b]=sc(p);return a>=-4&&a<=W+4&&b>=-4&&b<=VH+4}),boxes=seen.map(p=>{const [a,b]=sc(p);return[a-7,b-7,a+7,b+7]});
-    if(il&&il.dataset.ilx&&z.w>=W-.5){const a=+il.dataset.ilx,b=+il.dataset.ily;boxes.push([a-10,b-10,a+74,b+20])}
+    if(il&&il.dataset.ilx&&fit){const a=+il.dataset.ilx,b=+il.dataset.ily;boxes.push([a-10,b-10,a+74,b+20])}
     const hit=b=>boxes.some(o=>b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1]);
     pins.forEach(p=>{p.hit.setAttribute("r",15/s);p.dot.setAttribute("r",(p.on?7:4.5)/s);p.dot.style.strokeWidth=1.5/s;p.t.style.fontSize=11.5/s+"px";p.t.style.strokeWidth=3/s+"px";p.t.style.display="none"});
     seen.forEach(p=>{const [a,b]=sc(p),w=p.t.textContent.length*11.5+2;
@@ -4817,7 +4848,7 @@ window.bibleMapAfter=function(){
       const ok=c.filter(o=>o[3]>=1&&o[5]<=W-1&&o[4]>=1&&o[6]<=VH-1),t=ok.find(o=>!hit(o.slice(3)))||(v.k==="all"?null:ok[0]);
       if(!t&&!p.on)return;const u=t||c[0];boxes.push(u.slice(3));p.t.style.display="";p.t.setAttribute("x",z.x+u[0]/s);p.t.setAttribute("y",z.y+u[1]/s);p.t.setAttribute("text-anchor",u[2])});
   };
-  const zoomAt=(f,px,py)=>{const nw=Math.min(W,Math.max(minW,z.w*f)),k=nw/z.w;z.x=px-(px-z.x)*k;z.y=py-(py-z.y)*k;z.w=nw;draw()};
+  const zoomAt=(f,px,py)=>{const nw=Math.min(maxW,Math.max(minW,z.w*f)),k=nw/z.w;z.x=px-(px-z.x)*k;z.y=py-(py-z.y)*k;z.w=nw;draw()};
   const toMap=(cx,cy)=>{const r=svg.getBoundingClientRect();return[z.x+(cx-r.left)/r.width*z.w,z.y+(cy-r.top)/r.height*z.w*H/W]};
   document.querySelectorAll("[data-mz]").forEach(b=>b.onclick=()=>{const k=b.dataset.mz;if(k==="fit"){z.x=0;z.y=0;z.w=W;draw();return}const p=pins.find(x=>x.on);if(p&&k==="in"){z.x=p.x-z.w/2;z.y=p.y-z.w*H/W/2}zoomAt(k==="in"?.6:1/.6,z.x+z.w/2,z.y+z.w*H/W/2)});
   svg.addEventListener("wheel",e=>{e.preventDefault();const [a,b]=toMap(e.clientX,e.clientY);zoomAt(e.deltaY<0?.8:1.25,a,b)},{passive:false});
@@ -4825,26 +4856,27 @@ window.bibleMapAfter=function(){
   svg.addEventListener("pointerdown",e=>{pt.set(e.pointerId,[e.clientX,e.clientY]);moved=false;pinch=0});
   svg.addEventListener("pointermove",e=>{const o=pt.get(e.pointerId);if(!o)return;
     if(pt.size===2){pt.set(e.pointerId,[e.clientX,e.clientY]);const [p,q]=[...pt.values()],d=Math.hypot(p[0]-q[0],p[1]-q[1]);if(pinch){const [a,b]=toMap((p[0]+q[0])/2,(p[1]+q[1])/2);zoomAt(pinch/d,a,b)}pinch=d;moved=true;return}
-    const dx=e.clientX-o[0],dy=e.clientY-o[1];if(!moved&&Math.hypot(dx,dy)<6)return;moved=true;if(z.w>=W-.5)return;
+    const dx=e.clientX-o[0],dy=e.clientY-o[1];if(!moved&&Math.hypot(dx,dy)<6)return;moved=true;if(Math.abs(z.w-W)<.5)return;
     const r=svg.getBoundingClientRect();z.x-=dx/r.width*z.w;z.y-=dy/r.height*z.w*H/W;pt.set(e.pointerId,[e.clientX,e.clientY]);draw()});
   const up=e=>{pt.delete(e.pointerId);pinch=0};svg.addEventListener("pointerup",up);svg.addEventListener("pointercancel",up);
   svg.addEventListener("click",e=>{if(moved){e.stopPropagation();moved=false}},true);
-  if(CFG.mp&&CFG.mp!==z.sel&&z.w<W-.5){const p=pins.find(x=>x.on);if(p){z.x=p.x-z.w/2;z.y=p.y-z.w*H/W/2}}
+  if(CFG.mp&&CFG.mp!==z.sel&&Math.abs(z.w-W)>=.5){const p=pins.find(x=>x.on);if(p){z.x=p.x-z.w/2;z.y=p.y-z.w*H/W/2}}
   z.sel=CFG.mp;draw();
 };
 
 /* ---------- 게임 판 ---------- */
-function newGame(){
+function newGame(n=1){
   const ks=shuf(Object.keys(G).flatMap(k=>[k,k,k,k]));
   let gi=0;const cells=[];
   for(let i=0;i<24;i++)cells.push(CORNER[i]||{t:"game",k:ks[gi],p:PLACES[gi++]});
   B={v:2,lv:CFG.lv,turns:TURNS,round:1,cur:0,cells,phase:"roll",dice:[1,1],used:{},pending:null,msg:"",
-    players:[{color:COLORS[0],pos:0,score:0,skip:false}]};
-  save();
+    players:Array.from({length:n},(_,i)=>({name:"",color:COLORS[i],pos:0,score:0,skip:false}))};
+  if(n===2)B.phase="wait";else save();
 }
 function openOv(){
   const ov=document.createElement("div");ov.className="overlay bm-ov";V.ov=ov;document.body.appendChild(ov);
-  const mo=new MutationObserver(()=>{if(!ov.isConnected){mo.disconnect();stopAll();if(V.ov===ov)V.ov=null;if(S.view==="bible")render()}});
+  const poll=setInterval(roomPoll,2500);
+  const mo=new MutationObserver(()=>{if(!ov.isConnected){mo.disconnect();clearInterval(poll);stopAll();if(V.ov===ov)V.ov=null;if(S.view==="bible")render()}});
   mo.observe(document.body,{childList:true});
   ov.addEventListener("click",onAct);
 }
@@ -4856,9 +4888,10 @@ function openSolo(k){
 }
 function resume(){
   drawBoard();
-  if(B.phase==="move")land();
+  if(B.phase==="end")drawEnd();
+  else if(!myTurn())return;
+  else if(B.phase==="move")land();
   else if(B.phase==="intro")intro();
-  else if(B.phase==="end")drawEnd();
 }
 function onAct(e){
   const b=e.target.closest("[data-bm]");if(!b)return;
@@ -4872,16 +4905,18 @@ function onAct(e){
   else if(a==="done"){B=null;A=null;save();V.ov.remove()}
 }
 function cellRC(i){if(i<=6)return[6-i,0];if(i<=12)return[0,i-6];if(i<=18)return[i-12,6];return[6,24-i]}
-const tokStyle=(pi,pos)=>{const [r,c]=cellRC(pos),dx=.74,dy=.28;return `left:${(c+dx)/7*100}%;top:${(r+dy)/7*100}%`};
+const tokStyle=(pi,pos)=>{const [r,c]=cellRC(pos),dx=pi?.72:.28,dy=pi?.72:.28;return `left:${(c+dx)/7*100}%;top:${(r+dy)/7*100}%`};
 const DIE_A=[0,2,3,4],DIE_B=[-1,1,2,3];
 const pips=n=>n<=0?`<b class="z">${n}</b>`:({1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]})[n].map(p=>`<i style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></i>`).join("");
 function midHtml(){
   const p=curP();
   const dice=`<div class="bm-dice"><div id="bmD1">${pips(B.dice[0])}</div><div id="bmD2">${pips(B.dice[1]??1)}</div></div>`;
+  if(B.phase==="wait")return `<p class="bm-msg">방 번호<br><b class="bm-rcode num">${esc(B.room?B.room.code:"")}</b><br><small>상대가 이 번호로 들어오기를 기다려요</small></p>`;
+  if(!myTurn())return `<p class="bm-msg"><b style="color:${p.color}">${esc(p.name)}</b> 차례예요<br><small>${esc(B.msg||(B.phase==="intro"?"게임 중이에요":"기다려 주세요"))}</small></p>${dice}`;
   if(B.phase==="next")return `<p class="bm-msg">${esc(B.msg)}</p>${dice}<button type="button" class="btn primary" data-bm="next">다음으로</button>`;
   return `<p class="bm-msg" id="bmMsg"><b>${Math.min(B.round,B.turns)}라운드</b>${B.msg?`<br><small>${esc(B.msg)}</small>`:""}</p>${dice}<button type="button" class="btn primary" data-bm="roll" id="bmRoll">주사위 굴리기</button>`;
 }
-function scoreHtml(){const p=curP();return `<div class="bm-sc on">점수 <b class="num">${p.score}</b>${p.skip?" 🏜️":""}</div>`}
+function scoreHtml(){return B.players.map((p,i)=>`<div class="bm-sc${B.room&&i===B.cur?" on":""}">${B.room?`<i style="background:${p.color}"></i>${esc(p.name||"기다리는 중")}${i===B.room.me?" (나)":""}`:"점수"} <b class="num">${p.score}</b>${p.skip?" 🏜️":""}</div>`).join("")}
 function drawBoard(){
   const cells=B.cells.map((c,i)=>{const [r,co]=cellRC(i);
     return `<div class="bm-cell ${c.t==="game"?"bm-k-"+c.k:"bm-corner"}" style="grid-row:${r+1};grid-column:${co+1}"><span>${c.t==="game"?G[c.k].i:c.i}</span><em>${esc(c.p)}</em></div>`}).join("");
@@ -4891,7 +4926,7 @@ function drawBoard(){
     ${B.players.map((p,i)=>`<div class="bm-tok" id="bmTok${i}" style="${tokStyle(i,p.pos)};background:${p.color}"></div>`).join("")}</div></div>`;
 }
 function roll(){
-  if(B.phase!=="roll")return;
+  if(B.phase!=="roll"||!myTurn())return;
   const d1=DIE_A[rnd(4)],d2=DIE_B[rnd(4)],sum=d1+d2,p=curP(),from=p.pos,to=(from+sum+24)%24,passed=from+sum>=24;
   p.pos=to;if(passed)p.score+=10;
   B.dice=[d1,d2];B.phase="move";B.passed=passed;B.msg="";save();
@@ -4906,7 +4941,7 @@ function roll(){
 }
 function land(){
   const p=curP(),c=B.cells[p.pos],pre=B.passed?"출발을 지나 +10점! ":"";B.passed=false;
-  const fin=m=>{B.msg=pre+m;B.phase="next";save();drawBoard()};
+  const fin=m=>{B.msg=who()+pre+m;B.phase="next";save();drawBoard()};
   if(c.t==="game"){B.pending={k:c.k,m:1,p:c.p,pre};B.phase="intro";save();drawBoard();intro()}
   else if(c.t==="lot"){const ks=Object.keys(G);B.pending={k:ks[rnd(ks.length)],m:2,p:c.p,pre};B.phase="intro";save();drawBoard();intro()}
   else if(c.t==="start"){p.score+=10;fin("출발 칸에 딱 멈췄어요! +10점 더")}
@@ -4914,14 +4949,14 @@ function land(){
   else{p.score+=20;fin("은혜의 샘! +20점")}
 }
 function nextTurn(){
-  if(B.phase!=="next")return;
+  if(B.phase!=="next"||!myTurn())return;
   B.msg="";
   const notes=[];
   for(;;){
     B.cur++;if(B.cur>=B.players.length){B.cur=0;B.round++}
     if(B.round>B.turns){B.phase="end";save();drawBoard();drawEnd();return}
     const p=curP();if(!p.skip)break;
-    p.skip=false;notes.push("광야에서 한 라운드 쉬었어요");
+    p.skip=false;notes.push(who()+"광야에서 한 라운드 쉬었어요");
   }
   B.msg=notes.join(" · ");B.phase="roll";save();drawBoard();
 }
@@ -4947,13 +4982,14 @@ function finish(pts,note){
   if(A.solo){A.phase="done";
     stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">${got}점</h3><p>${esc(note)}</p><div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="again">다시 하기</button><button type="button" class="btn bm-big" data-bm="exit">목록으로</button></div>`;
     showRank(d.k,A.lv,got);return}
-  const p=curP();p.score+=got;B.pending=null;B.phase="next";B.msg=`${g.n} +${got}점`;save();
+  const p=curP();p.score+=got;B.pending=null;B.phase="next";B.msg=`${who()}${g.n} +${got}점`;save();
   stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">+${got}점</h3><p>${esc(note)}${d.m>1?" (점수 2배)":""}</p><button type="button" class="btn primary bm-big" data-bm="board">판으로 돌아가기</button></div>`;
 }
 function drawEnd(){
-  const p=curP(),el=stageOpen("🏆 게임 끝");
-  el.innerHTML=`<div class="bm-card"><div class="bm-emoji">🏆</div><h3 class="num">${p.score}점</h3><p>${BOARD_NAME} ${LV[B.lv].n} 완주!</p><div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="done">마치기</button></div>`;
-  showRank("board",B.lv,p.score);
+  const el=stageOpen("🏆 게임 끝"),me=B.players[B.room?B.room.me:0],two=B.players.length>1,rank=B.players.slice().sort((a,b)=>b.score-a.score);
+  const top=two&&rank[0].score===rank[1].score?"비겼어요!":two?`${esc(rank[0].name)} 승리!`:`${me.score}점`;
+  el.innerHTML=`<div class="bm-card"><div class="bm-emoji">🏆</div><h3 class="num">${top}</h3><p>${BOARD_NAME} ${LV[B.lv].n} 완주!</p>${two?`<div class="bm-rank">${rank.map((p,i)=>`<div><span class="num">${i+1}</span>${esc(p.name)}<b class="num">${p.score}점</b></div>`).join("")}</div>`:""}<div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="done">마치기</button></div>`;
+  showRank("board",B.lv,me.score);
 }
 /* 점수를 서버에 올리고 그 게임·단계의 랭킹을 받아 교사 이름으로 보여 줘요 */
 function showRank(k,lv,got){
@@ -4965,7 +5001,7 @@ function showRank(k,lv,got){
     const inTop=r.top.some(x=>x.n===r.name);
     box.innerHTML=`<h4>${k==="board"?BOARD_NAME:G[k].n} ${LV[lv].n} 랭킹</h4>${r.newBest?`<p class="bm-new">내 최고 기록!</p>`:""}
       <div class="bm-rank">${r.top.map(x=>row(x.r,x.n,x.s,x.n===r.name)).join("")}${inTop?"":row(r.rank,r.name,r.best,true)}</div>`;
-  }).catch(()=>{if(box.isConnected)box.innerHTML=`<p class="muted">랭킹을 불러오지 못했어요. 이번 점수는 저장되지 않았어요.</p>`});
+  }).catch(e=>{if(box.isConnected)box.innerHTML=`<p class="muted">${esc(e&&e.message&&e.message.includes("로그인")?e.message:"랭킹을 불러오지 못했어요. 이번 점수는 저장되지 않았어요.")}</p>`});
 }
 /* 같은 게임에서 문제가 되풀이되지 않게 쓴 번호를 기억해요 */
 function pick(key,pool,n){
@@ -5243,7 +5279,7 @@ function miniShoot(el){
 
 <script>
 (function () {
-  var BUILD = '20261105132328';
+  var BUILD = '20261105133408';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
