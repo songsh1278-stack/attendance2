@@ -1425,7 +1425,14 @@ function miniType(el){
 }
 
 /* ---------- 성경지도 찾기 : 표시가 이름 없이 나오고 알맞은 곳을 눌러요. 고급은 지명 없이 설명만 ---------- */
+const MAP_AFTER=170;
 const MAP_LV={1:{v:["abraham","exodus","nativity","jesus"],pins:3},2:{v:["kingdom","exile","jesus","church"],pins:4},3:{v:["kingdom","church","paul1","paul2","paul3","rome","rev"],pins:6}};
+/* 문제에 나온 곳만 보이게 지도 범위를 좁혀요. r는 화면에 맞는 세로/가로 비율이고, 주변 지형을 알아보도록 원래 지도의 55%보다는 좁히지 않아요 */
+function mapFit(v,ids,r){
+  const [x0,x1,y0,y1]=v.b,c=Math.cos((y0+y1)/2*Math.PI/180),lo=ids.map(k=>MAPP[k][2]),la=ids.map(k=>MAPP[k][1]);
+  const a=Math.min(...lo),b=Math.max(...lo),d=Math.min(...la),e=Math.max(...la),sw=Math.max((b-a)*c*1.35,(e-d)*1.35/r,(x1-x0)*c*.55),hw=sw/c/2,hh=sw*r/2,cx=(a+b)/2,cy=(d+e)/2;
+  return{...v,b:[cx-hw,cx+hw,cy-hh,cy+hh]};
+}
 function miniMap(el){
   const L=LV[A.lv],C=MAP_LV[A.lv],pool=C.v.flatMap(k=>{const v=MAPV.find(x=>x.k===k);return [...new Set(v.r.concat(v.m))].map(id=>[k,id])});
   const items=pick("map",pool,A.solo?5:3);let i=0,pts=0,right=0,lives=A.solo?A.run.lives:0;
@@ -1436,14 +1443,17 @@ function miniMap(el){
     lifeInfo(lives,pts);
     const [vk,id]=items[i],v=MAPV.find(x=>x.k===vk),m=MAPP[id],ids=pins(v,id),t0=performance.now(),T=L.qt*1000;let over=false;
     const hard=A.lv===3&&!m[3].includes(m[0]);
-    el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><p class="muted num">${i+1} / ${items.length} · ${esc(v.n)}</p><h3>${hard?esc(m[3]):`${esc(m[0])}${(m[0].charCodeAt(m[0].length-1)-0xAC00)%28?"은":"는"} 어디일까요?`}</h3><div id="bmMapQ">${mapSvg(v,{ids,hide:true})}</div><div id="bmAfter"></div></div>`;
+    el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><p class="muted num">${i+1} / ${items.length} · ${esc(v.n)}</p><h3>${hard?esc(m[3]):`${esc(m[0])}${(m[0].charCodeAt(m[0].length-1)-0xAC00)%28?"은":"는"} 어디일까요?`}</h3><div id="bmMapQ"></div><div id="bmAfter"></div></div>`;
     const bar=el.querySelector("#bmBar"),box=el.querySelector("#bmMapQ");
+    /* 정답 설명과 다음 버튼까지 스크롤 없이 보이도록 남는 높이만큼만 지도를 그려요 */
+    const room=Math.max(170,el.getBoundingClientRect().bottom-box.getBoundingClientRect().top-MAP_AFTER);box.style.cssText=`max-width:${Math.round(room/.7)}px;margin:0 auto`;
+    const vz=mapFit(v,ids,Math.max(.7,Math.min(1.1,room/box.clientWidth)));box.innerHTML=mapSvg(vz,{ids,hide:true});
     const choose=k=>{if(over)return;over=true;clearInterval(tid);V.t.delete(tid);
       const rem=Math.max(0,1-(performance.now()-t0)/T),ok=k===id;sfx(ok?"ok":"no");if(ok){right++;pts+=10+(rem>.5?5:0)}else if(A.solo)lives--;
       lifeInfo(lives,pts);
-      box.innerHTML=mapSvg(v,{ids,on:id,bad:ok?"":k});
+      box.innerHTML=mapSvg(vz,{ids,on:id,bad:ok?"":k});
       el.querySelector("#bmAfter").innerHTML=`<p class="bm-note">${ok?"정답이에요!":k===null?"시간이 다 됐어요.":"아쉬워요."} <b>${esc(m[0])}</b> · ${esc(m[3])} (${esc(m[4])})</p><button type="button" class="btn primary bm-big" id="bmNext">${i+1<items.length&&(!A.solo||lives>0)?"다음 문제":"결과 보기"}</button>`;
-      el.querySelector("#bmNext").onclick=()=>{i++;ask()}};
+      const nx=el.querySelector("#bmNext");nx.onclick=()=>{i++;ask()};nx.scrollIntoView({block:"nearest"})};
     box.querySelectorAll("[data-mq]").forEach(g=>g.onclick=()=>choose(g.dataset.mq));
     const tid=every(100,()=>{const r=1-(performance.now()-t0)/T;bar.style.width=Math.max(0,r*100)+"%";if(r<=0)choose(null)});
   };
