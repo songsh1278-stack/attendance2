@@ -795,7 +795,7 @@ const TURNS=8;
 /* 혼자 하는 게임: 판을 통과하면 다음 단계로 올라가고 점수와 목숨이 이어져요 */
 const newRun=()=>({pts:0,lives:3,asked:0,right:0,done:0});
 const LIFE_GAME=k=>["quiz","map","race","type","shoot","twenty"].includes(k);
-const soloTip=k=>(k==="quiz"||k==="map"?"목숨 3개로 시작해요. 틀리거나 시간이 지나면 목숨이 줄어요. 5문제를 풀 때마다 다음 단계에 도전해요.":k==="twenty"?"목숨 3개로 시작해요. 고개를 다 쓰면 목숨이 줄고 새 문제가 나와요. 맞히면 다음 단계에 도전해요. 시간이 끝나면 게임도 끝나요.":k==="cross"?"시간 안에 다 맞히면 다음 단계에 도전해요. 시간이 끝나면 게임도 끝나요.":"목숨이 남은 채로 판을 끝내면 다음 단계에 도전해요. 남은 목숨도 이어져요.")+" 목숨이나 시간이 다하거나 그만하기를 누를 때까지 점수가 이어지고, 단계가 오르면 고급까지 어려워져요.";
+const soloTip=k=>(k==="quiz"||k==="map"?"목숨 3개로 시작해요. 틀리거나 시간이 지나면 목숨이 줄어요. 5문제를 풀 때마다 다음 단계에 도전해요.":k==="twenty"?"목숨 3개로 시작해요. 고개를 다 쓰거나 정답이 틀리면 목숨이 하나 줄어요. 고개를 다 쓰면 새 문제가 나와요. 맞히면 다음 단계에 도전해요. 시간이 끝나면 게임도 끝나요.":k==="cross"?"시간 안에 다 맞히면 다음 단계에 도전해요. 시간이 끝나면 게임도 끝나요.":"목숨이 남은 채로 판을 끝내면 다음 단계에 도전해요. 남은 목숨도 이어져요.")+" 목숨이나 시간이 다하거나 그만하기를 누를 때까지 점수가 이어지고, 단계가 오르면 고급까지 어려워져요.";
 const SOLO={1:{},2:{},3:{}};
 const BOARD_NAME="성경 땅밟기";
 const V={ov:null,t:new Set(),raf:0,off:[]};
@@ -1477,18 +1477,18 @@ function miniCross(el){
 function miniTwenty(el){
   const [a]=pick("twenty",TWENTY[A.lv],1),kind=a[1][0],all=[1,2,3].flatMap(l=>TWENTY[l]).filter(x=>x[1][0]===kind&&x[0]!==a[0]);
   const opts=shuf([a[0],...shuf(all).slice(0,5).map(x=>x[0])]);let left=20,hint=0,over=false;const asked=[],hints=[],T=LV[A.lv].twT*1000,t0=performance.now();
-  const miss=A.solo?A.run.miss:"";if(A.solo)A.run.miss="";
+  const miss=A.solo?A.run.miss:"";if(A.solo)A.run.miss="";let oops=false;
   const end=(win,late)=>{if(over)return;over=true;if(!win&&!late&&A.solo&&--A.run.lives>0){stopAll();A.run.miss=a[0];return miniTwenty(el)}if(win)clear(10+left,undefined,`${a[0]}! 고개 ${left}개를 남기고 맞혔어요`);else finish(0,`${late?"시간이 다 됐어요. ":""}정답: ${a[0]}`)};
   const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`${A.solo?"❤️".repeat(A.run.lives)+" ":""}고개 ${left} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
   const spend=n=>{left=Math.max(0,left-n);if(left<=0){end(false);return false}return true};
   const draw=()=>{
     el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div>${miss?`<div class="bm-note">고개를 다 썼어요. (정답: ${esc(miss)}) 새 문제예요!</div>`:""}<div class="bm-qs">${TW_Q.map(([t,g],i)=>{const d=asked.includes(i);return `<button type="button" data-q="${i}" ${d?"disabled":""}>${t}${d?` <b class="${a[1].includes(g)?"yes":"nope"}">${a[1].includes(g)?"예":"아니요"}</b>`:""}</button>`}).join("")}</div>
-      ${hints.length?`<div class="bm-note">${hints.map(esc).join("<br>")}</div>`:""}
+      ${oops?`<div class="bm-note">아쉬워요. 목숨이 하나 줄었어요.</div>`:""}${hints.length?`<div class="bm-note">${hints.map(esc).join("<br>")}</div>`:""}
       <button type="button" class="btn" id="bmHint" ${hint>=2?"disabled":""}>결정적 힌트 (고개 4개 쓰기)</button>
-      <h4>정답 맞히기 <small class="muted">틀리면 고개 3개가 줄어요</small></h4><div class="bm-opts two">${opts.map((o,i)=>`<button type="button" data-a="${i}">${esc(o)}</button>`).join("")}</div></div>`;
+      <h4>정답 맞히기 <small class="muted">틀리면 ${A.solo?"목숨이 하나":"고개 3개가"} 줄어요</small></h4><div class="bm-opts two">${opts.map((o,i)=>`<button type="button" data-a="${i}">${esc(o)}</button>`).join("")}</div></div>`;
     el.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{asked.push(+b.dataset.q);if(spend(1))draw()});
     el.querySelector("#bmHint").onclick=()=>{hints.push(a[2+hint]);hint++;if(spend(4))draw()};
-    el.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{const v=opts[+b.dataset.a];if(v===a[0])return end(true);opts.splice(+b.dataset.a,1);if(spend(3))draw()});
+    el.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{const v=opts[+b.dataset.a];if(v===a[0])return end(true);opts.splice(+b.dataset.a,1);if(!A.solo){if(spend(3))draw();return}if(A.run.lives<=1)return end(false);A.run.lives--;oops=true;draw()});
     tick();
   };
   draw();every(200,tick);
