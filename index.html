@@ -1701,7 +1701,8 @@ function openGuide(){
 }
 /* ---------- 활동 기록 (총관리자·공동관리자1. 텔레그램 알림 종류·답장은 총관리자만) ---------- */
 const activityCard=()=>`<details class="fold" data-fold="activity"${S.fold.activity?" open":""}><summary><h2 class="sec">활동 기록</h2></summary><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">출석 체크(반별), 명단·반 이동, 번호 변경, 일정, 자료실, 설정, 요청 등 모든 기록 (로그인 포함 보기 가능)</span><button class="btn" id="actOpen">기록 보기</button></div>${S.isCo?"":`<div class="admin-row"><b>텔레그램 알림</b><span class="code none">휴대폰 텔레그램으로 받을 기록 종류</span><button class="btn" id="tgOpen">알림 종류</button></div>`}</div></details>`;
-const bibleCard=()=>[["bibleMap","부록-성경지도보기","시대별 지도, 성경사전, 사진","map","지도 보기"],["bibleGame","부록-성경게임","퀴즈, 말씀 게임","game","게임하기"]].map(([f,t,d,k,b])=>`<details class="fold" data-fold="${f}"${S.fold[f]!==false?" open":""}><summary><h2 class="sec">${t}</h2>${S.isAdmin&&!S.isCo&&S.bibleViews?`<span class="fold-sum num">조회수 ${Number(S.bibleViews[k])||0}</span>`:""}</summary><div class="card admin-list"><div class="admin-row"><span class="code none">${d}</span><button class="btn" data-bmhome="${k}">${b}</button></div></div></details>`).join("");
+const useTime=s=>{s=Number(s)||0;const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?h+"시간 "+m+"분":m+"분"};
+const bibleCard=()=>[["bibleMap","부록-성경지도보기","시대별 지도, 성경사전, 사진","map","지도 보기"],["bibleGame","부록-성경게임","퀴즈, 말씀 게임","game","게임하기"]].map(([f,t,d,k,b])=>`<details class="fold" data-fold="${f}"${S.fold[f]!==false?" open":""}><summary><h2 class="sec">${t}</h2>${S.isAdmin&&!S.isCo&&S.bibleViews?`<span class="fold-sum num">조회수 ${Number(S.bibleViews[k])||0} · 이용시간 ${useTime(S.bibleViews["t"+k])}</span>`:""}</summary><div class="card admin-list"><div class="admin-row"><span class="code none">${d}</span><button class="btn" data-bmhome="${k}">${b}</button></div></div></details>`).join("");
 /* 텔레그램으로 받을 알림 종류 고르기 (총관리자 전용) */
 async function openTgKinds(){
   const ov=document.createElement("div");ov.className="overlay";
@@ -4701,6 +4702,14 @@ function roomPoll(){
 
 const loadSave=()=>{try{const s=JSON.parse(localStorage.getItem("bm-save"));return s&&s.v===2?s:null}catch(_){return null}};
 
+/* 이용시간: 메뉴가 화면에 보이는 동안만 재고, 1분마다 또는 나갈 때 서버에 더해요 */
+let useK="",useAcc=0,useLast=0;
+function useFlush(){const n=Math.round(useAcc);useAcc=0;if(useK&&n>=1)call("bibleHit",useK,n).then(v=>{if(v)S.bibleViews=v}).catch(()=>{})}
+setInterval(()=>{
+  if(!useK)return;const on=S.view==="bible"&&!document.hidden,now=Date.now();
+  if(on)useAcc+=Math.min(15,(now-useLast)/1000);useLast=now;
+  if(useAcc>=60||!on)useFlush();if(S.view!=="bible")useK="";
+},5000);
 /* ---------- 탭 첫 화면 ---------- */
 const lvPick=()=>`<div class="bm-lvs">${[1,2,3].map(l=>`<button type="button" data-bmset="lv:${l}" aria-pressed="${CFG.lv===l}"><b>${LV[l].n}</b><span>${LV[l].d}</span></button>`).join("")}</div>`;
 function boardSetup(){
@@ -4734,7 +4743,7 @@ document.addEventListener("click",e=>{
   const st=e.target.closest("[data-bmset]");
   if(st){const [k,v]=st.dataset.bmset.split(":");CFG[k]=Number(v);render();return}
   const hm=e.target.closest("[data-bmhome]");
-  if(hm){navPush();S.view="bible";S.bpage=hm.dataset.bmhome;CFG.sub="";render();window.scrollTo(0,0);call("bibleHit",hm.dataset.bmhome).then(v=>{if(v)S.bibleViews=v}).catch(()=>{});return}
+  if(hm){navPush();S.view="bible";S.bpage=hm.dataset.bmhome;CFG.sub="";render();window.scrollTo(0,0);call("bibleHit",hm.dataset.bmhome).then(v=>{if(v)S.bibleViews=v}).catch(()=>{});useFlush();useK=hm.dataset.bmhome;useLast=Date.now();return}
   const sb=e.target.closest("[data-bmsub]");
   if(sb){CFG.sub=sb.dataset.bmsub;render();window.scrollTo(0,0);return}
   const mv=e.target.closest("[data-mapv]");
@@ -5339,7 +5348,7 @@ function miniShoot(el){
 
 <script>
 (function () {
-  var BUILD = '20261105144955';
+  var BUILD = '20261105145146';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
