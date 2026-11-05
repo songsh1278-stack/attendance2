@@ -792,6 +792,22 @@ const PLACES=["에덴","우르","하란","애굽","홍해","시내산","여리�
 const COLORS=["#D9483B","#2F7FD6"];
 const CFG={lv:1,sub:"",mv:"abraham",mp:""};
 const TURNS=8;
+/* 효과음: 파일 없이 브라우저에서 소리를 만들어요. [높이, 시작, 길이, 파형, 크기] */
+const SFX={tap:[[520,0,.05,"sine",.05]],ok:[[660,0,.08,"sine",.1],[880,.07,.12,"sine",.1]],no:[[220,0,.16,"square",.05],[165,.12,.2,"square",.05]],hit:[[140,0,.16,"sawtooth",.08]],shot:[[1100,0,.035,"square",.012]],pop:[[420,0,.05,"triangle",.07],[700,.03,.05,"triangle",.05]],power:[[523,0,.07,"sine",.09],[784,.06,.07,"sine",.09],[1047,.12,.12,"sine",.09]],dice:[[300,0,.03,"square",.03],[380,.06,.03,"square",.03],[320,.12,.03,"square",.03],[420,.18,.04,"square",.03]],clear:[[523,0,.1,"sine",.1],[659,.1,.1,"sine",.1],[784,.2,.1,"sine",.1],[1047,.3,.22,"sine",.1]],over:[[392,0,.14,"triangle",.1],[330,.14,.14,"triangle",.1],[262,.28,.28,"triangle",.1]]};
+let sndOn=true,AC=null;try{sndOn=localStorage.getItem("bm-sound")!=="0"}catch(_){}
+function sfx(n){
+  if(!sndOn)return;
+  try{
+    const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+    AC=AC||new C();if(AC.state==="suspended")AC.resume();
+    const t0=AC.currentTime;
+    SFX[n].forEach(([f,at,d,w,v])=>{const o=AC.createOscillator(),g=AC.createGain(),t=t0+at;o.type=w;o.frequency.value=f;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.02)});
+  }catch(_){}
+}
+const sndText=w=>(sndOn?"🔊":"🔇")+(w?` 효과음 ${sndOn?"켜짐":"꺼짐"}`:"");
+const sndBtn=w=>`<button type="button" class="btn bm-snd${w?" wide":""}" data-bmsnd="${w?1:""}" aria-pressed="${sndOn}" aria-label="효과음 켜고 끄기">${sndText(w)}</button>`;
+document.addEventListener("click",e=>{const b=e.target.closest("[data-bmsnd]");if(!b)return;sndOn=!sndOn;try{localStorage.setItem("bm-sound",sndOn?"1":"0")}catch(_){}
+  document.querySelectorAll("[data-bmsnd]").forEach(x=>{x.textContent=sndText(x.dataset.bmsnd);x.setAttribute("aria-pressed",sndOn)});sfx("tap")});
 /* 혼자 하는 게임: 판을 통과하면 다음 단계로 올라가고 점수와 목숨이 이어져요 */
 const newRun=k=>({pts:0,lives:k==="twenty"?5:3,asked:0,right:0,done:0});
 const LIFE_GAME=k=>["quiz","map","race","type","shoot","twenty"].includes(k);
@@ -913,7 +929,7 @@ window.renderBible=function(){
     <div class="card bm-hero"><h2>성경게임</h2><p>단계를 고르고 하고 싶은 게임을 누르세요.</p></div>
     <h2 class="sec">단계</h2>${lvPick()}
     <h2 class="sec">게임</h2>
-    <div class="bm-menu">${Object.keys(G).map(k=>`<button type="button" class="bm-k-${k}" data-bmsolo="${k}"><span>${G[k].i}</span><b>${G[k].n}</b></button>`).join("")}
+    <div class="bm-sndrow">${sndBtn(1)}</div><div class="bm-menu">${Object.keys(G).map(k=>`<button type="button" class="bm-k-${k}" data-bmsolo="${k}"><span>${G[k].i}</span><b>${G[k].n}</b></button>`).join("")}
       <button type="button" class="bm-k-board" data-bmsub="board"><span>🎲</span><b>${BOARD_NAME}</b></button>
       <button type="button" class="bm-k-rank" data-bmsub="rank"><span>🏆</span><b>랭킹 보기</b></button></div>
   </div>`;
@@ -1172,14 +1188,14 @@ function scoreHtml(){return B.players.map((p,i)=>`<div class="bm-sc${B.room&&i==
 function drawBoard(){
   const cells=B.cells.map((c,i)=>{const [r,co]=cellRC(i);
     return `<div class="bm-cell ${c.t==="game"?"bm-k-"+c.k:"bm-corner"}" style="grid-row:${r+1};grid-column:${co+1}"><span>${c.t==="game"?G[c.k].i:c.i}</span><em>${esc(c.p)}</em></div>`}).join("");
-  V.ov.innerHTML=`<div class="bm-wrap"><div class="bm-top"><button type="button" class="btn" data-bm="exit">나가기</button><b>${BOARD_NAME}</b><span class="num">${LV[B.lv].n} ${Math.min(B.round,B.turns)}/${B.turns}</span></div>
+  V.ov.innerHTML=`<div class="bm-wrap"><div class="bm-top"><button type="button" class="btn" data-bm="exit">나가기</button><b>${BOARD_NAME}</b>${sndBtn()}<span class="num">${LV[B.lv].n} ${Math.min(B.round,B.turns)}/${B.turns}</span></div>
     <div class="bm-scores" id="bmScores">${scoreHtml()}</div>
     <div class="bm-board" id="bmBoard">${cells}<div class="bm-mid" id="bmMid">${midHtml()}</div>
     ${B.players.map((p,i)=>`<div class="bm-tok" id="bmTok${i}" style="${tokStyle(i,p.pos)};background:${p.color}"></div>`).join("")}</div></div>`;
 }
 function roll(){
   if(B.phase!=="roll"||!myTurn())return;
-  const d1=DIE_A[rnd(4)],d2=DIE_B[rnd(4)],sum=d1+d2,p=curP(),from=p.pos,to=(from+sum+24)%24,dist=(p.dist||0)+sum,laps=Math.floor(dist/24),passed=laps>(p.laps||0);
+  sfx("dice");const d1=DIE_A[rnd(4)],d2=DIE_B[rnd(4)],sum=d1+d2,p=curP(),from=p.pos,to=(from+sum+24)%24,dist=(p.dist||0)+sum,laps=Math.floor(dist/24),passed=laps>(p.laps||0);
   p.pos=to;p.dist=dist;if(passed){p.laps=laps;p.score+=10}
   B.dice=[d1,d2];B.phase="move";B.passed=passed;B.msg="";save();
   const btn=q("#bmRoll");if(btn)btn.disabled=true;
@@ -1215,7 +1231,7 @@ function nextTurn(){
 function stageOpen(title){
   const old=q(".bm-stage");if(old)old.remove();
   const s=document.createElement("div");s.className="bm-stage";
-  s.innerHTML=`<div class="bm-sh"><button type="button" class="btn" data-bm="exit" aria-label="나가기">✕</button><b>${title}</b><span id="bmInfo" class="num"></span></div><div class="bm-sb" id="bmSb"></div>`;
+  s.innerHTML=`<div class="bm-sh"><button type="button" class="btn" data-bm="exit" aria-label="나가기">✕</button><b>${title}</b>${sndBtn()}<span id="bmInfo" class="num"></span></div><div class="bm-sb" id="bmSb"></div>`;
   V.ov.appendChild(s);return s.querySelector("#bmSb");
 }
 function intro(){
@@ -1228,11 +1244,11 @@ function startMini(){
   if(!A.solo){if(A.pending.tried)return finish(0,"게임 중에 나가서 이번 칸은 0점이에요");A.pending.tried=true;save()}
   const k=A.pending.k,el=stageOpen(G[k].i+" "+G[k].n);
   if(A.solo){A.run.cur=0;q("#bmInfo").insertAdjacentHTML("afterend",`<button type="button" class="btn bm-quit" data-bm="giveup">그만하기</button>`)}
-  ({quiz:()=>miniQuiz(el),race:()=>miniRace(el),map:()=>miniMap(el),type:()=>miniType(el),cross:()=>miniCross(el),twenty:()=>miniTwenty(el),shoot:()=>miniShoot(el)})[k]();
+  sfx("tap");({quiz:()=>miniQuiz(el),race:()=>miniRace(el),map:()=>miniMap(el),type:()=>miniType(el),cross:()=>miniCross(el),twenty:()=>miniTwenty(el),shoot:()=>miniShoot(el)})[k]();
 }
 function finish(pts,note,more=""){
   stopAll();if(A.phase!=="intro")return;
-  const d=A.pending,got=(pts+(A.solo?A.run.pts:0))*d.m,g=G[d.k],face=got>=20?"🎉":got>0?"👏":"🙏";
+  const d=A.pending,got=(pts+(A.solo?A.run.pts:0))*d.m,g=G[d.k],face=got>=20?"🎉":got>0?"👏":"🙏";sfx(A.solo?"over":got>0?"clear":"no");
   if(A.solo){A.phase="done";
     stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">${got}점</h3>${A.run.done?`<p class="muted num">${A.run.done}단계까지 통과</p>`:""}<p>${esc(note)}</p>${more}<div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="again">다시 하기</button><button type="button" class="btn bm-big" data-bm="exit">목록으로</button></div>`;
     showRank(d.k,A.lv0,got);return}
@@ -1243,13 +1259,13 @@ function finish(pts,note,more=""){
 function clear(pts,lives,note,more=""){
   if(!A.solo)return finish(pts,note,more);
   stopAll();if(A.phase!=="intro")return;
-  const r=A.run,k=A.pending.k,g=G[k];
+  const r=A.run,k=A.pending.k,g=G[k];sfx("clear");
   r.pts+=pts;r.cur=0;r.done++;if(lives!==undefined)r.lives=lives;
   if(A.lv<3){A.lv++;A.used=SOLO[A.lv]}
   stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">🎉</div><p class="muted num">${r.done}단계 통과</p><h3 class="num">${r.pts}점</h3><p>${esc(note)}</p>${LIFE_GAME(k)?`<p>${"❤️".repeat(r.lives)}</p>`:""}${more}<p class="muted">다음 단계 난이도: ${LV[A.lv].n}</p><button type="button" class="btn primary bm-big num" data-bm="start">${r.done+1}단계 도전</button><button type="button" class="btn bm-big" data-bm="giveup">그만하고 점수 저장</button></div>`;
 }
 function drawEnd(){
-  const el=stageOpen("🏆 게임 끝"),me=B.players[B.room?B.room.me:0],two=B.players.length>1,rank=B.players.slice().sort((a,b)=>b.score-a.score);
+  sfx("clear");const el=stageOpen("🏆 게임 끝"),me=B.players[B.room?B.room.me:0],two=B.players.length>1,rank=B.players.slice().sort((a,b)=>b.score-a.score);
   const top=two&&rank[0].score===rank[1].score?"비겼어요!":two?`${esc(rank[0].name)} 승리!`:`${me.score}점`;
   el.innerHTML=`<div class="bm-card"><div class="bm-emoji">🏆</div><h3 class="num">${top}</h3><p>${BOARD_NAME} ${LV[B.lv].n} ${B.turns}라운드를 모두 마쳤어요!</p>${two?`<div class="bm-rank">${rank.map((p,i)=>`<div><span class="num">${i+1}</span>${esc(p.name)}<b class="num">${p.score}점</b></div>`).join("")}</div>`:""}<div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="done">마치기</button></div>`;
   showRank("board",B.lv,me.score);
@@ -1273,7 +1289,7 @@ function pick(key,pool,n){
   const got=shuf(left).slice(0,n);A.used[key]=used.concat(got);save();return got.map(i=>pool[i]);
 }
 
-const lifeInfo=(lives,pts)=>{if(!A.solo)return;A.run.cur=pts;q("#bmInfo").textContent=`${"❤️".repeat(lives)} ${A.run.pts+pts}점`};
+const lifeInfo=(lives,pts)=>{if(!A.solo)return;A.run.cur=pts;q("#bmInfo").textContent=`❤️${lives} ${A.run.pts+pts}점`};
 function setEnd(n,right,pts,lives){
   if(!A.solo)return finish(pts,`${n}문제 가운데 ${right}문제를 맞혔어요`);
   const r=A.run;r.asked+=n;r.right+=right;const note=`${r.asked}문제 가운데 ${r.right}문제를 맞혔어요`;
@@ -1291,7 +1307,7 @@ function miniQuiz(el){
     const bar=el.querySelector("#bmBar");
     const pickIt=o=>{if(over)return;over=true;clearInterval(id);V.t.delete(id);
       const rem=Math.max(0,1-(performance.now()-t0)/T),ok=o===it[1];
-      if(ok){right++;pts+=10+(rem>.5?5:0)}else if(A.solo)lives--;
+      sfx(ok?"ok":"no");if(ok){right++;pts+=10+(rem>.5?5:0)}else if(A.solo)lives--;
       lifeInfo(lives,pts);
       el.querySelectorAll("[data-o]").forEach(b=>{const v=opts[+b.dataset.o];b.disabled=true;if(v===it[1])b.classList.add("ok");else if(v===o)b.classList.add("no")});
       el.querySelector("#bmAfter").innerHTML=`<p class="bm-note">${ok?"정답이에요!":o===null?"시간이 다 됐어요.":"아쉬워요."} ${esc(it[5])}</p><button type="button" class="btn primary bm-big" id="bmNext">${i+1<items.length&&(!A.solo||lives>0)?"다음 문제":"결과 보기"}</button>`;
@@ -1319,7 +1335,7 @@ function miniRace(el){
 /* 혼자 할 때는 통과 화면 없이 다음 말씀으로 바로 이어져요 */
 function raceGo(el,car,pts,lives,up){
   stopAll();const r=A.run;r.pts+=pts;r.cur=0;r.lives=lives;
-  if(up){r.done++;if(A.lv<3){A.lv++;A.used=SOLO[A.lv]}}
+  if(up){sfx("clear");r.done++;if(A.lv<3){A.lv++;A.used=SOLO[A.lv]}}
   raceRun(el,car);
 }
 function raceRun(el,car){
@@ -1355,13 +1371,13 @@ function raceRun(el,car){
     rows=rows.filter(r=>{r.y+=sp*dt;r.items.forEach(x=>x.n.style.top=r.y+"px");
       if(!r.done&&r.y>=carY-34){r.done=true;const hit=r.items.find(x=>x.ln===lane);
         if(hit){hit.n.remove();r.items=r.items.filter(x=>x!==hit);
-          if(hit.txt===chunks[at]){at++;verse();carEl.classList.add("good");after(220,()=>carEl.classList.remove("good"));
+          if(hit.txt===chunks[at]){at++;verse();sfx("ok");carEl.classList.add("good");after(220,()=>carEl.classList.remove("good"));
             if(at>=K){end(true);return false}
             rows.forEach(o=>{if(o!==r&&!o.done){const it=o.items.find(x=>x.txt===chunks[at-1]);if(it){it.txt=chunks[at];it.n.textContent=it.txt}}})}
-          else{lives--;carEl.classList.add("bad");after(380,()=>carEl.classList.remove("bad"));if(lives<=0){end(false);return false}}}}
+          else{lives--;sfx("no");carEl.classList.add("bad");after(380,()=>carEl.classList.remove("bad"));if(lives<=0){end(false);return false}}}}
       if(r.y>h+50){r.items.forEach(x=>x.n.remove());return false}return true});
     if(over)return;if(t>=T){if(A.solo&&lives>1){over=true;return raceGo(el,car,Math.round(15*at/K),lives-1,false)}return end(false)}
-    if(A.solo)A.run.cur=Math.round(15*at/K);const s=`${"❤️".repeat(lives)} ${Math.ceil(T-t)}초 · ${at}/${K}`;if(s!==info){info=s;q("#bmInfo").textContent=s}
+    if(A.solo)A.run.cur=Math.round(15*at/K);const s=`❤️${lives} ${Math.ceil(T-t)}초 · ${at}/${K}`;if(s!==info){info=s;q("#bmInfo").textContent=s}
     V.raf=requestAnimationFrame(frame);
   };
   V.raf=requestAnimationFrame(frame);
@@ -1384,8 +1400,8 @@ function miniType(el){
   const mark=()=>{const v=inp.value.trim();live_.forEach(o=>o.n.classList.toggle("on",!!v&&o.w.startsWith(v)))};
   const shoot=()=>{const v=inp.value.trim();inp.value="";if(!v)return mark();tries++;
     const hit=live_.filter(o=>o.w===v).sort((a,b)=>b.y-a.y)[0];
-    if(hit){hit.n.remove();live_=live_.filter(o=>o!==hit);cleared++;keys+=v.normalize("NFD").length+1}
-    else{inp.classList.add("no");setTimeout(()=>inp.classList.remove("no"),300)}
+    if(hit){sfx("ok");hit.n.remove();live_=live_.filter(o=>o!==hit);cleared++;keys+=v.normalize("NFD").length+1}
+    else{sfx("no");inp.classList.add("no");setTimeout(()=>inp.classList.remove("no"),300)}
     mark()};
   inp.oninput=()=>{if(inp.value.endsWith(" "))shoot();else mark()};
   inp.onpaste=e=>e.preventDefault();
@@ -1397,9 +1413,9 @@ function miniType(el){
     const dt=Math.min(.05,(now-last)/1000),H=area.clientHeight;last=now;time-=dt;spawn-=dt;
     if(spawn<=0){spawn=P.gap*(1-Math.min(.35,(45-time)/130));add()}
     const v=P.sp*Math.max(.45,H/520);
-    live_=live_.filter(o=>{o.y+=v*dt;if(o.y>H-30){o.n.remove();lives--;area.classList.add("hurt");after(180,()=>area.classList.remove("hurt"));return false}o.n.style.transform=`translateY(${o.y}px)`;return true});
+    live_=live_.filter(o=>{o.y+=v*dt;if(o.y>H-30){o.n.remove();lives--;sfx("hit");area.classList.add("hurt");after(180,()=>area.classList.remove("hurt"));return false}o.n.style.transform=`translateY(${o.y}px)`;return true});
     if(lives<=0||time<=0)return end();
-    if(A.solo)A.run.cur=Math.min(45,cleared*2);const s=`${"❤️".repeat(lives)} ${Math.ceil(time)}초 · ${cleared}`;if(s!==info){info=s;q("#bmInfo").textContent=s}
+    if(A.solo)A.run.cur=Math.min(45,cleared*2);const s=`❤️${lives} ${Math.ceil(time)}초 · ${cleared}`;if(s!==info){info=s;q("#bmInfo").textContent=s}
     V.raf=requestAnimationFrame(frame);
   };
   V.raf=requestAnimationFrame(frame);
@@ -1420,7 +1436,7 @@ function miniMap(el){
     el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><p class="muted num">${i+1} / ${items.length} · ${esc(v.n)}</p><h3>${hard?esc(m[3]):`${esc(m[0])}${(m[0].charCodeAt(m[0].length-1)-0xAC00)%28?"은":"는"} 어디일까요?`}</h3><div id="bmMapQ">${mapSvg(v,{ids,hide:true})}</div><div id="bmAfter"></div></div>`;
     const bar=el.querySelector("#bmBar"),box=el.querySelector("#bmMapQ");
     const choose=k=>{if(over)return;over=true;clearInterval(tid);V.t.delete(tid);
-      const rem=Math.max(0,1-(performance.now()-t0)/T),ok=k===id;if(ok){right++;pts+=10+(rem>.5?5:0)}else if(A.solo)lives--;
+      const rem=Math.max(0,1-(performance.now()-t0)/T),ok=k===id;sfx(ok?"ok":"no");if(ok){right++;pts+=10+(rem>.5?5:0)}else if(A.solo)lives--;
       lifeInfo(lives,pts);
       box.innerHTML=mapSvg(v,{ids,on:id,bad:ok?"":k});
       el.querySelector("#bmAfter").innerHTML=`<p class="bm-note">${ok?"정답이에요!":k===null?"시간이 다 됐어요.":"아쉬워요."} <b>${esc(m[0])}</b> · ${esc(m[3])} (${esc(m[4])})</p><button type="button" class="btn primary bm-big" id="bmNext">${i+1<items.length&&(!A.solo||lives>0)?"다음 문제":"결과 보기"}</button>`;
@@ -1487,7 +1503,7 @@ function miniCross(el){
   if(!A.solo)el.querySelector("#bmCwEnd").onclick=end;
   el.querySelector("#bmCwF").onsubmit=e=>{e.preventDefault();if(!sel||over)return;
     const v=inp.value.replace(/\s/g,"");if(!v)return;
-    const hit=v===sel.w;if(!hit){(sel.bad=sel.bad||[]).includes(v)||sel.bad.push(v);T-=5000;inp.classList.add("no");setTimeout(()=>inp.classList.remove("no"),400)}
+    const hit=v===sel.w;sfx(hit?"ok":"no");if(!hit){(sel.bad=sel.bad||[]).includes(v)||sel.bad.push(v);T-=5000;inp.classList.add("no");setTimeout(()=>inp.classList.remove("no"),400)}
     [...sel.w].forEach((ch,i)=>{if(hit||v[i]===ch)put(sel,i)});
     pl.forEach(p=>{if(!p.ok&&at(p).every(k=>got.has(k)))p.ok=true});
     if(sel.ok)sel=pl.find(p=>!p.ok)||null;paint();if(!sel)end()};
@@ -1519,7 +1535,7 @@ function miniTwenty(el){
   const show=()=>{box.className="bm-oxq";box.textContent=list[at][0];btns.forEach(x=>x.classList.remove("ans"))};
   btns.forEach(b=>b.onclick=()=>{if(over||lock)return;lock=true;const v=+b.dataset.ox,y=list[at][1],ok=v===y;got.set(at,v);box.classList.add(ok?"ok":"no");
     btns.find(x=>+x.dataset.ox===y).classList.add("ans");
-    if(ok){right++;if(A.solo)A.run.cur=right*3}else lives--;
+    sfx(ok?"ok":"no");if(ok){right++;if(A.solo)A.run.cur=right*3}else lives--;
     tick();after(ok?250:600,()=>{if(lives<=0)return end(false);if(got.size>=list.length)return end(true);at++;lock=false;show()})});
   show();
   tick();every(200,tick);
@@ -1561,14 +1577,14 @@ function shootRun(el,plane){
   const key=e=>{if(e.key==="ArrowLeft")keyV=e.type==="keydown"?-1:0;if(e.key==="ArrowRight")keyV=e.type==="keydown"?1:0;if(keyV)ship.to=null};
   addEventListener("keydown",key);addEventListener("keyup",key);V.off.push(()=>{removeEventListener("keydown",key);removeEventListener("keyup",key)});
   const end=()=>{if(over)return;over=true;const sc=Math.min(45,kills*2+(lives>0?5:0)),nt=`유혹 ${kills}개를 물리쳤어요${lives>0?" 끝까지 버텨서 +5점!":""}`;if(lives>0)clear(sc,lives,nt);else finish(sc,nt)};
-  const hit=()=>{if(inv>0)return;lives--;inv=1.5;if(lives<=0)end()};
+  const hit=()=>{if(inv>0)return;lives--;inv=1.5;sfx("hit");if(lives<=0)end()};
   const pill=(f)=>{x.font="700 13px sans-serif";const tw=x.measureText(f.l).width+16;f.w=tw;return tw};
   const frame=now=>{
     if(!live()||over)return;
     const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;time-=dt;inv=Math.max(0,inv-dt);pow=Math.max(0,pow-dt);fireT-=dt;dropT-=dt;diveT-=dt;
     if(ship.to!==null){const d=ship.to-ship.x,st=SHIP_V*dt;ship.x=Math.abs(d)<=st?ship.to:ship.x+Math.sign(d)*st}
     ship.x=Math.max(20,Math.min(w-20,ship.x+keyV*320*dt));
-    if(fireT<=0){fireT=.24;const y=SY()-16;if(pow>0)bul.push({x:ship.x-9,y},{x:ship.x+9,y});else bul.push({x:ship.x,y})}
+    if(fireT<=0){fireT=.24;sfx("shot");const y=SY()-16;if(pow>0)bul.push({x:ship.x-9,y},{x:ship.x+9,y});else bul.push({x:ship.x,y})}
     if(!foes.length)wave();
     const sway=Math.sin(t*.9)*Math.min(26,w*.05);
     foes.forEach(f=>{if(f.dv){f.y+=(P.sp*1.9)*dt;f.x+=Math.sign(ship.x-f.x)*P.sp*.7*dt;if(f.y>h+30){f.dv=0;f.y=-30}}
@@ -1577,14 +1593,14 @@ function shootRun(el,plane){
     if(dropT<=0&&foes.length){dropT=P.drop;const f=foes[rnd(foes.length)];if(f.y>0)shots.push({x:f.x,y:f.y+12})}
     bul.forEach(b=>b.y-=460*dt);shots.forEach(s=>s.y+=(P.sp+110)*dt);items.forEach(i=>i.y+=110*dt);
     bul=bul.filter(b=>{if(b.y<-10)return false;
-      for(const f of foes){const fw=(f.w||50)/2;if(Math.abs(b.x-f.x)<fw&&Math.abs(b.y-f.y)<14){if(--f.hp<=0){f.dead=1;kills++;if(Math.random()<.12)items.push({x:f.x,y:f.y})}return false}}return true});
+      for(const f of foes){const fw=(f.w||50)/2;if(Math.abs(b.x-f.x)<fw&&Math.abs(b.y-f.y)<14){if(--f.hp<=0){f.dead=1;kills++;sfx("pop");if(Math.random()<.12)items.push({x:f.x,y:f.y})}return false}}return true});
     foes=foes.filter(f=>!f.dead);
     const sy=SY();
     shots=shots.filter(s=>{if(s.y>h+10)return false;if(Math.abs(s.x-ship.x)<16&&Math.abs(s.y-sy)<16){hit();return false}return true});
     foes.forEach(f=>{if(f.dv&&Math.abs(f.x-ship.x)<(f.w||50)/2+12&&Math.abs(f.y-sy)<22){hit();f.dv=0;f.y=-30}});
-    items=items.filter(i=>{if(i.y>h+10)return false;if(Math.abs(i.x-ship.x)<24&&Math.abs(i.y-sy)<24){pow=6;return false}return true});
+    items=items.filter(i=>{if(i.y>h+10)return false;if(Math.abs(i.x-ship.x)<24&&Math.abs(i.y-sy)<24){pow=6;sfx("power");return false}return true});
     if(over)return;if(time<=0)return end();
-    if(A.solo)A.run.cur=Math.min(45,kills*2);const s=`${"❤️".repeat(lives)} ${Math.ceil(time)}초 · ${kills}`;if(s!==info){info=s;q("#bmInfo").textContent=s}
+    if(A.solo)A.run.cur=Math.min(45,kills*2);const s=`❤️${lives} ${Math.ceil(time)}초 · ${kills}`;if(s!==info){info=s;q("#bmInfo").textContent=s}
     x.fillStyle="#0E1630";x.fillRect(0,0,w,h);
     x.fillStyle="#fff";stars.forEach(a=>{x.globalAlpha=a[2]*.7;x.fillRect(a[0]*w,(a[1]*h+t*30*a[2])%h,2,2)});x.globalAlpha=1;
     foes.forEach(f=>{const tw=pill(f);x.fillStyle=f.hp>1?"#A23BC4":f.dv?"#E0562F":"#5B4BC4";x.beginPath();x.roundRect(f.x-tw/2,f.y-13,tw,26,9);x.fill();x.fillStyle="#fff";x.textAlign="center";x.textBaseline="middle";x.fillText(f.l,f.x,f.y+1)});
