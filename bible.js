@@ -1486,11 +1486,11 @@ function miniTwenty(el){
   const end=(win,late)=>{if(over)return;over=true;if(!win&&!late&&A.solo&&--A.run.lives>0){stopAll();A.run.miss=a[0];return miniTwenty(el)}if(win)clear(10+left,undefined,`${a[0]}! 고개 ${left}개를 남기고 맞혔어요`);else finish(0,`${late?"시간이 다 됐어요. ":""}정답: ${a[0]}`)};
   const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`${A.solo?"❤️".repeat(A.run.lives)+" ":""}고개 ${left} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
   const spend=n=>{left=Math.max(0,left-n);if(left<=0){end(false);return false}return true};
-  const draw=()=>{const live=alive(),qs=shown(live);
+  const draw=()=>{const qs=shown(alive());
     el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div>${miss?`<div class="bm-note">고개를 다 썼어요. (정답: ${esc(miss)}) 새 문제예요!</div>`:""}<p class="muted">정답은 ${{p:"사람이에요",l:"장소예요",o:"물건이나 음식이에요"}[kind]}. 질문으로 보기를 좁혀 보세요.</p><div class="bm-qs">${qs.map(i=>{const [t,g]=Q[i],d=asked.includes(i),y=yes(a[0],g);return `<button type="button" data-q="${i}" ${d?"disabled":""}>${t}${d?` <b class="${y?"yes":"nope"}">${y?"예":"아니요"}</b>`:""}</button>`}).join("")}</div>${qs.every(i=>asked.includes(i))?`<p class="muted">더 물어볼 질문이 없어요. 힌트를 쓰거나 정답을 골라 보세요.</p>`:""}
       ${oops?`<div class="bm-note">아쉬워요. 목숨이 하나 줄었어요.</div>`:""}${hints.length?`<div class="bm-note">${hints.map(esc).join("<br>")}</div>`:""}
       <button type="button" class="btn" id="bmHint" ${hint>=2?"disabled":""}>결정적 힌트 (고개 4개 쓰기)</button>
-      <h4>정답 맞히기 <small class="muted">틀리면 ${A.solo?"목숨이 하나":"고개 3개가"} 줄어요</small></h4><div class="bm-opts two">${opts.map((o,i)=>`<button type="button" data-a="${i}" ${live.includes(o)?"":'class="out" disabled'}>${esc(o)}</button>`).join("")}</div></div>`;
+      <h4>정답 맞히기 <small class="muted">틀리면 ${A.solo?"목숨이 하나":"고개 3개가"} 줄어요</small></h4><div class="bm-opts two">${opts.map((o,i)=>`<button type="button" data-a="${i}">${esc(o)}</button>`).join("")}</div></div>`;
     el.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{asked.push(+b.dataset.q);if(spend(1))draw()});
     el.querySelector("#bmHint").onclick=()=>{hints.push(a[2+hint]);hint++;if(spend(4))draw()};
     el.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{const v=opts[+b.dataset.a];if(v===a[0])return end(true);opts.splice(+b.dataset.a,1);if(!A.solo){if(spend(3))draw();return}if(A.run.lives<=1)return end(false);A.run.lives--;oops=true;draw()});
