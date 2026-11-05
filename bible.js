@@ -795,7 +795,7 @@ const TURNS=8;
 /* 혼자 하는 게임: 판을 통과하면 다음 단계로 올라가고 점수와 목숨이 이어져요 */
 const newRun=()=>({pts:0,lives:3,asked:0,right:0,done:0});
 const LIFE_GAME=k=>["quiz","map","race","type","shoot","twenty"].includes(k);
-const soloTip=k=>(k==="quiz"||k==="map"?"목숨 3개로 시작해요. 틀리거나 시간이 지나면 목숨이 줄어요. 5문제를 풀 때마다 다음 단계에 도전해요.":k==="twenty"?"목숨 3개로 시작해요. 고개를 다 쓰거나 정답이 틀리면 목숨이 하나 줄어요. 고개를 다 쓰면 새 문제가 나와요. 맞히면 다음 단계에 도전해요. 시간이 끝나면 게임도 끝나요.":k==="cross"?"시간 안에 다 맞히면 다음 단계에 도전해요. 시간이 끝나면 게임도 끝나요.":"목숨이 남은 채로 판을 끝내면 다음 단계에 도전해요. 남은 목숨도 이어져요.")+" 목숨이나 시간이 다하거나 그만하기를 누를 때까지 점수가 이어지고, 단계가 오르면 고급까지 어려워져요.";
+const soloTip=k=>(k==="quiz"||k==="map"?"목숨 3개로 시작해요. 틀리거나 시간이 지나면 목숨이 줄어요. 5문제를 풀 때마다 다음 단계에 도전해요.":k==="twenty"?"목숨 3개로 시작해요. 고개를 다 쓰거나 정답이 틀리면 목숨이 하나 줄어요. 고개를 다 쓰면 새 문제가 나와요. 맞히면 다음 단계에 도전해요. 시간이 끝나면 게임도 끝나요.":k==="race"?"말씀을 다 받으면 멈추지 않고 다음 말씀이 바로 이어져요. 시간 안에 못 받으면 목숨이 하나 줄고 새 말씀이 나와요.":k==="cross"?"시간 안에 다 맞히면 다음 단계에 도전해요. 시간이 끝나면 게임도 끝나요.":"목숨이 남은 채로 판을 끝내면 다음 단계에 도전해요. 남은 목숨도 이어져요.")+" 목숨이나 시간이 다하거나 그만하기를 누를 때까지 점수가 이어지고, 단계가 오르면 고급까지 어려워져요.";
 const SOLO={1:{},2:{},3:{}};
 const BOARD_NAME="성경 땅밟기";
 const V={ov:null,t:new Set(),raf:0,off:[]};
@@ -1303,19 +1303,25 @@ function miniRace(el){
   el.innerHTML=`<div class="bm-card"><h3>자동차를 고르세요</h3><div class="bm-cars">${CARS.map((c,i)=>`<button type="button" data-car="${i}" aria-pressed="${i===last}">${carSvg(i)}<b>${c[0]}</b></button>`).join("")}</div></div>`;
   el.querySelectorAll("[data-car]").forEach(b=>b.onclick=()=>{const i=+b.dataset.car;try{localStorage.setItem("bm-car",i)}catch(_){}if(A.solo)A.run.car=i;raceRun(el,i)});
 }
+/* 혼자 할 때는 통과 화면 없이 다음 말씀으로 바로 이어져요 */
+function raceGo(el,car,pts,lives,up){
+  stopAll();const r=A.run;r.pts+=pts;r.cur=0;r.lives=lives;
+  if(up){r.done++;if(A.lv<3){A.lv++;A.used=SOLO[A.lv]}}
+  raceRun(el,car);
+}
 function raceRun(el,car){
   const L=LV[A.lv],[v]=pick("race",VERSE[A.lv],1),words=v[1].split(" "),K=Math.min(A.lv===1?5:A.lv===2?7:9,words.length),chunks=[];
   for(let i=0;i<K;i++)chunks.push(words.slice(Math.floor(i*words.length/K),Math.floor((i+1)*words.length/K)).join(" "));
   const others=VERSE[A.lv].filter(x=>x!==v).flatMap(x=>x[1].split(" ")).filter(w=>w.length>=2&&!chunks.includes(w));
   el.style.padding="0";el.style.overflow="hidden";
-  el.innerHTML=`<div class="bm-rc"><div class="bm-rv"><small class="muted">${esc(v[0])}</small><p id="bmRv"></p></div><div class="bm-road" id="bmRoad"><i></i><i></i><div class="bm-car" id="bmCar">${carSvg(car)}</div></div></div>`;
+  el.innerHTML=`<div class="bm-rc"><div class="bm-rv"><small class="muted">${A.solo?`${A.run.done+1}단계 · ${A.run.pts}점 · `:""}${esc(v[0])}</small><p id="bmRv"></p></div><div class="bm-road" id="bmRoad"><i></i><i></i><div class="bm-car" id="bmCar">${carSvg(car)}</div></div></div>`;
   const road=el.querySelector("#bmRoad"),carEl=el.querySelector("#bmCar"),rv=el.querySelector("#bmRv");
-  let at=0,lane=1,lives=A.solo?A.run.lives:3,rows=[],last=performance.now(),t=0,gapY=0,over=false,info="",lock=0;
+  let at=0,lane=A.solo&&A.run.lane!==undefined?A.run.lane:1,lives=A.solo?A.run.lives:3,rows=[],last=performance.now(),t=0,gapY=0,over=false,info="",lock=0;
   const H=()=>road.clientHeight,speed=()=>L.rs*Math.max(.8,H()/520),T=K*(H()*.5/speed())*3.2+6;
   const verse=()=>{rv.innerHTML=chunks.map((c,i)=>`<span class="${i<at?"ok":i===at&&A.lv===1?"cur":""}">${esc(c)}</span>`).join(" ")};
-  const setLane=n=>{lane=Math.max(0,Math.min(2,n));carEl.style.left=(lane+.5)/3*100+"%"};
+  const setLane=n=>{lane=Math.max(0,Math.min(2,n));if(A.solo)A.run.lane=lane;carEl.style.left=(lane+.5)/3*100+"%"};
   const end=win=>{if(over)return;over=true;const left=Math.max(0,1-t/T);
-    if(win)clear(20+Math.round(left*5)+lives*2,lives,`말씀을 끝까지 받았어요! ${v[0]}`);else finish(Math.round(15*at/K),`${K}조각 가운데 ${at}조각을 받았어요. ${v[0]}`)};
+    if(win&&A.solo)raceGo(el,car,20+Math.round(left*5)+lives*2,lives,true);else if(win)clear(20+Math.round(left*5)+lives*2,lives,`말씀을 끝까지 받았어요! ${v[0]}`);else finish(Math.round(15*at/K),`${K}조각 가운데 ${at}조각을 받았어요. ${v[0]}`)};
   const decoys=()=>{const later=chunks.slice(at+1),o=()=>others[rnd(others.length)]||similar(chunks[at]),near=similar(chunks[at]),out=[];
     if(A.lv===1)out.push(o());
     else if(A.lv===2)out.push(Math.random()<.35?near:o(),later.length?later[rnd(later.length)]:o());
@@ -1327,7 +1333,7 @@ function raceRun(el,car){
   road.addEventListener("pointerdown",pressLane);road.addEventListener("pointermove",pressLane);
   const key=e=>{if(e.key==="ArrowLeft")setLane(lane-1);if(e.key==="ArrowRight")setLane(lane+1)};
   addEventListener("keydown",key);V.off.push(()=>removeEventListener("keydown",key));
-  verse();setLane(1);
+  verse();setLane(lane);
   const frame=now=>{
     if(!live()||over)return;
     const dt=Math.min(.05,(now-last)/1000),h=H(),sp=speed(),carY=h-158;last=now;t+=dt;gapY-=sp*dt;
@@ -1341,7 +1347,7 @@ function raceRun(el,car){
             rows.forEach(o=>{if(o!==r&&!o.done){const it=o.items.find(x=>x.txt===chunks[at-1]);if(it){it.txt=chunks[at];it.n.textContent=it.txt}}})}
           else{lives--;carEl.classList.add("bad");after(380,()=>carEl.classList.remove("bad"));if(lives<=0){end(false);return false}}}}
       if(r.y>h+50){r.items.forEach(x=>x.n.remove());return false}return true});
-    if(over)return;if(t>=T)return end(false);
+    if(over)return;if(t>=T){if(A.solo&&lives>1){over=true;return raceGo(el,car,Math.round(15*at/K),lives-1,false)}return end(false)}
     if(A.solo)A.run.cur=Math.round(15*at/K);const s=`${"❤️".repeat(lives)} ${Math.ceil(T-t)}초 · ${at}/${K}`;if(s!==info){info=s;q("#bmInfo").textContent=s}
     V.raf=requestAnimationFrame(frame);
   };
