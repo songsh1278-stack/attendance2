@@ -923,7 +923,18 @@ document.addEventListener("click",e=>{
   if(go){if(go.dataset.bmgo==="new")newGame();else B=B||loadSave();if(B)openBoard()}
 });
 document.addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;const g=e.target.closest&&e.target.closest("[data-mapp],[data-mq]");if(!g)return;e.preventDefault();if(g.onclick)g.onclick();else g.dispatchEvent(new MouseEvent("click",{bubbles:true}))});
-window.bmHome=k=>{navPush();S.view="bible";S.bpage=k;CFG.sub="";rerender();window.scrollTo(0,0);call("bibleHit",k).then(v=>{if(v)S.bibleViews=v}).catch(()=>{});useFlush();useK=k;useLast=Date.now()};
+window.bmHome=k=>{navPush();S.view="bible";S.bpage=k;CFG.sub="";rerender();window.scrollTo(0,0);if(k==="jubo")juboLoad();call("bibleHit",k).then(v=>{if(v)S.bibleViews=v}).catch(()=>{});useFlush();useK=k;useLast=Date.now()};
+/* ---------- 부록-주보보기 : 교회 홈페이지의 주보 그림을 서버가 찾아 줘요 ---------- */
+const JUBO_URL="https:"+"/"+"/www.sdcc.or.kr/chnet2/home/?code=bd02&step1=12&sid=107";
+let JB={list:[],k:"",img:[],busy:true,err:false};
+const juboBody=()=>`${JB.list.length?`<div class="bm-mapc">${JB.list.map(x=>`<button type="button" data-jubo="${esc(x.k)}" aria-pressed="${x.k===JB.k}">${esc(x.t)}</button>`).join("")}</div>`:""}
+  ${JB.busy?`<p class="muted bm-maph">주보를 불러오는 중이에요…</p>`:JB.err?`<p class="muted bm-maph">주보를 불러오지 못했어요. 아래 홈페이지에서 봐 주세요.</p>`:JB.img.length?`<p class="muted bm-maph">그림을 누르면 크게 볼 수 있어요.</p><div class="bm-jubo">${JB.img.map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="주보 ${i+1}쪽" loading="lazy"></a>`).join("")}</div>`:`<p class="muted bm-maph">이 주보에는 그림이 없어요. 아래 홈페이지에서 봐 주세요.</p>`}`;
+const juboDraw=()=>{const b=document.querySelector("#bmJubo");if(b)b.innerHTML=juboBody()};
+function juboLoad(k){JB.busy=true;JB.err=false;if(k)JB.k=k;juboDraw();
+  call("jubo",k||"").then(d=>{JB={...d,busy:false,err:false};juboDraw()}).catch(()=>{JB.busy=false;JB.err=true;juboDraw()})}
+window.renderJubo=()=>`<div class="bm-home"><div id="bmJubo">${juboBody()}</div><a class="btn bm-big" href="${esc(JUBO_URL)}" target="_blank" rel="noopener">교회 홈페이지에서 보기</a></div>`;
+document.addEventListener("click",e=>{const b=e.target.closest("[data-jubo]");if(b&&b.dataset.jubo!==JB.k)juboLoad(b.dataset.jubo)});
+
 /* ---------- 성경지도보기 : 시대별 지도, 지명을 누르면 설명 ---------- */
 function mapGeo(v){
   const [x0,x1,y0,y1]=v.b,W=360,H=Math.round(W*(y1-y0)/((x1-x0)*Math.cos((y0+y1)/2*Math.PI/180)));

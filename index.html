@@ -711,6 +711,8 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
 .bm-mapg{margin:8px 2px 4px;font-size:13px;font-weight:700;color:var(--muted)}
 .bm-mapw{position:relative}
 .bm-msearch{position:static;margin-bottom:6px}
+.bm-jubo a{display:block;margin-bottom:8px}
+.bm-jubo img{display:block;width:100%;min-height:200px;border:1px solid var(--line);border-radius:8px;background:var(--sunk)}
 .bm-recent{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px}
 .bm-recent:not(:empty){margin-bottom:8px}
 .bm-rq{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:99px;max-width:100%}
@@ -1168,7 +1170,7 @@ function renderChips(){
 }
 function renderTeams(){
   const home=S.view==="home",bible=S.view==="bible";document.body.classList.toggle("home",home||bible);
-  $("#homeBtn").hidden=home;{const hr=$("#hdrRefresh");if(hr)hr.hidden=false}if(home)$("#brandTitle").innerHTML=`<span class="tw">신당중앙교회</span> <span class="tw">교육팀 출석부</span>`;else if(bible)$("#brandTitle").textContent=S.bpage==="map"?"성경지도":"성경게임";else{const r=roleLabel();$("#brandTitle").innerHTML=esc(TEAMS[S.team].label)+(r?`<span class="role-badge">${esc(r)}</span>`:"")}
+  $("#homeBtn").hidden=home;{const hr=$("#hdrRefresh");if(hr)hr.hidden=false}if(home)$("#brandTitle").innerHTML=`<span class="tw">신당중앙교회</span> <span class="tw">교육팀 출석부</span>`;else if(bible)$("#brandTitle").textContent=S.bpage==="map"?"성경지도":S.bpage==="jubo"?"교회 주보":"성경게임";else{const r=roleLabel();$("#brandTitle").innerHTML=esc(TEAMS[S.team].label)+(r?`<span class="role-badge">${esc(r)}</span>`:"")}
   fitBrand();
 }
 /* 맨 위 제목: 줄바꿈은 '신당중앙교회' / '교육팀 출석부' 사이에서만. 한 덩어리도 안 들어갈 만큼 좁으면 글자 크기를 줄인다 */
@@ -1753,7 +1755,7 @@ function openGuide(){
 /* ---------- 활동 기록 (총관리자·공동관리자1. 텔레그램 알림 종류·답장은 총관리자만) ---------- */
 const activityCard=()=>`<details class="fold" data-fold="activity"${S.fold.activity?" open":""}><summary><h2 class="sec">활동 기록</h2></summary><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">출석 체크(반별), 명단·반 이동, 번호 변경, 일정, 자료실, 설정, 요청 등 모든 기록 (로그인 포함 보기 가능)</span><button class="btn" id="actOpen">기록 보기</button></div>${S.isCo?"":`<div class="admin-row"><b>텔레그램 알림</b><span class="code none">휴대폰 텔레그램으로 받을 기록 종류</span><button class="btn" id="tgOpen">알림 종류</button></div>`}</div></details>`;
 const useTime=(t,n)=>{const s=Math.round((Number(t)||0)/(Number(n)||1)),h=Math.floor(s/3600),m=Math.floor(s%3600/60),c=s%60;return h?h+"시간 "+m+"분":m?m+"분 "+c+"초":c+"초"};
-const bibleCard=()=>[["bibleMap","부록-성경지도보기","시대별 지도, 성경사전, 사진","map","지도 보기"],["bibleGame","부록-성경게임","퀴즈, 말씀게임으로 성경지식 쌓기","game","게임하기"]].map(([f,t,d,k,b])=>`<details class="fold" data-fold="${f}"${S.fold[f]!==false?" open":""}><summary><h2 class="sec">${t}</h2>${S.isAdmin&&!S.isCo&&S.bibleViews?`<span class="fold-sum num">조회수 ${Number(S.bibleViews[k])||0} · 평균 이용시간 ${useTime(S.bibleViews["t"+k],S.bibleViews[k])}</span>`:""}</summary><div class="card admin-list"><div class="admin-row"><span class="code none">${d}</span><button class="btn" data-bmhome="${k}">${b}</button></div></div></details>`).join("");
+const bibleCard=()=>[["bibleMap","부록-성경지도보기","시대별 지도, 성경사전, 사진","map","지도 보기"],["bibleGame","부록-성경게임","퀴즈, 말씀게임으로 성경지식 쌓기","game","게임하기"],["bibleJubo","부록-주보보기","이번 주 교회 주보와 지난 주보","jubo","주보 보기"]].map(([f,t,d,k,b])=>`<details class="fold" data-fold="${f}"${S.fold[f]!==false?" open":""}><summary><h2 class="sec">${t}</h2>${S.isAdmin&&!S.isCo&&S.bibleViews?`<span class="fold-sum num">조회수 ${Number(S.bibleViews[k])||0} · 평균 이용시간 ${useTime(S.bibleViews["t"+k],S.bibleViews[k])}</span>`:""}</summary><div class="card admin-list"><div class="admin-row"><span class="code none">${d}</span><button class="btn" data-bmhome="${k}">${b}</button></div></div></details>`).join("");
 /* 텔레그램으로 받을 알림 종류 고르기 (총관리자 전용) */
 async function openTgKinds(){
   const ov=document.createElement("div");ov.className="overlay";
@@ -3438,7 +3440,7 @@ function render(){
   /* 보조교사: 일정 탭만 */
   {const sub=isSub();document.querySelectorAll("nav.tabs button").forEach(b=>{const k=b.dataset.tab;if(k==="schedule")return;if(sub)b.hidden=true;else if(k!=="talent"&&k!=="prenew")b.hidden=false});if(sub)S.tab="schedule"}
   if(S.view==="home"){$("#view").innerHTML=renderHome();return}
-  if(S.view==="bible"&&(S.bibleDirty||!document.querySelector("#view .bm-home"))&&window.renderBible){S.bibleDirty=false;$("#view").innerHTML=S.bpage==="map"?renderBibleMap():renderBible();if(S.bpage==="map")bibleMapAfter()}if(S.view==="bible")return
+  if(S.view==="bible"&&(S.bibleDirty||!document.querySelector("#view .bm-home"))&&window.renderBible){S.bibleDirty=false;$("#view").innerHTML=S.bpage==="map"?renderBibleMap():S.bpage==="jubo"?renderJubo():renderBible();if(S.bpage==="map")bibleMapAfter()}if(S.view==="bible")return
   setTeam(S.team);renderDate();renderChips();
   const v=$("#view");const ae=document.activeElement;const focusQ=ae&&ae.id==="q";const pos=focusQ?ae.selectionStart:0;
   const tvAttr=ae&&ae.dataset?(ae.dataset.tv?"tv":ae.dataset.total?"total":null):null;const tvId=tvAttr&&ae.dataset[tvAttr],tvVal=tvId?ae.value:null;
@@ -3859,7 +3861,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261105230942';
+  var BUILD = '20261105231341';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
