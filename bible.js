@@ -1477,11 +1477,24 @@ function miniCross(el){
 }
 
 /* ---------- 스무고개 ---------- */
+/* 정답 보기는 같은 종류를 한 바퀴 다 쓸 때까지 되풀이하지 않아요 */
+const TW_BAG={};
+function twOthers(kind,all,n){
+  const got=[];let bag=(TW_BAG[kind]||[]).filter(x=>all.some(y=>y[0]===x));
+  while(got.length<n){if(!bag.length)bag=shuf(all.map(x=>x[0]));const w=bag.pop();if(!got.includes(w))got.push(w)}
+  TW_BAG[kind]=bag;return got;
+}
+/* 판마다 달라지는 이야기 질문: 구약·신약이 다른 보기의 힌트라 정답에는 해당하지 않아요. 정답의 이야기도 하나 섞어요 */
+function twStory(a,kind,opts,all){
+  const far=opts.filter(n=>n!==a[0]&&all.find(x=>x[0]===n)[1][1]!==a[1][1]);if(!far.length)return[];
+  const say=h=>`“${esc(h)}” 맞나요?`;
+  return shuf([[say(a[3]),kind],...shuf(far).slice(0,3).map(n=>[say(all.find(x=>x[0]===n)[2+rnd(2)]),"?"])]);
+}
 function miniTwenty(el){
   const [a]=pick("twenty",TWENTY[A.lv],1),kind=a[1][0],all=[1,2,3].flatMap(l=>TWENTY[l]).filter(x=>x[1][0]===kind&&x[0]!==a[0]);
-  const opts=shuf([a[0],...shuf(all).slice(0,5).map(x=>x[0])]);let left=20,hint=0,over=false;const asked=[],hints=[],T=LV[A.lv].twT*1000,t0=performance.now();
-  /* 보기가 모두 같은 종류라 종류는 먼저 알려 주고, 그 종류의 질문을 처음부터 모두 보여 줘요 */
-  const Q=TW_Q[kind];
+  const opts=shuf([a[0],...twOthers(kind,all,5)]);let left=20,hint=0,over=false;const asked=[],hints=[],T=LV[A.lv].twT*1000,t0=performance.now();
+  /* 보기가 모두 같은 종류라 종류는 먼저 알려 주고, 그 종류의 질문과 이번 판의 이야기 질문을 모두 보여 줘요 */
+  const Q=[...TW_Q[kind],...twStory(a,kind,opts,all)];
   const miss=A.solo?A.run.miss:"";if(A.solo)A.run.miss="";let oops=false;
   const end=(win,late)=>{if(over)return;over=true;if(!win&&!late&&A.solo&&--A.run.lives>0){stopAll();A.run.miss=a[0];return miniTwenty(el)}if(win)clear(10+left,undefined,`${a[0]}! 고개 ${left}개를 남기고 맞혔어요`);else finish(0,`${late?"시간이 다 됐어요. ":""}정답: ${a[0]}`)};
   const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`${A.solo?"❤️".repeat(A.run.lives)+" ":""}고개 ${left} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
