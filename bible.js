@@ -784,7 +784,7 @@ const G={
   type:{n:"말씀타자",i:"⌨️",r:"떨어지는 성경 낱말을 입력하고 엔터나 띄어쓰기를 누르면 사라져요. 바닥에 세 번 닿으면 끝나요. 45초 동안 버텨 보세요."},
   map:{n:"성경지도 찾기",i:"🗺️",r:"문제를 읽고 지도에서 알맞은 곳을 눌러요. 빨리 맞히면 점수가 더 올라요."},
   cross:{n:"가로세로낱말퀴즈",i:"✏️",r:"뜻풀이를 누르고 낱말을 입력하세요. 틀리면 시간이 5초 줄어요."},
-  twenty:{n:"스무고개",i:"❓",r:"질문을 눌러 예·아니요를 듣고 시간 안에 정답을 맞혀요. 고개가 많이 남을수록 점수가 높아요."},
+  twenty:{n:"스무고개",i:"❓",r:"질문을 눌러 예·아니요를 듣고 시간 안에 정답을 맞혀요. 질문 하나에 고개 2개를 써요. 고개가 많이 남을수록 점수가 높아요."},
   shoot:{n:"말씀 슈팅",i:"🚀",r:"비행기를 고르고, 화면을 누르면 그쪽으로 저절로 움직여요. 빛은 저절로 나가요. 40초 동안 유혹을 물리치세요."}
 };
 const CORNER={0:{t:"start",p:"출발",i:"🚩"},6:{t:"rest",p:"광야",i:"🏜️"},12:{t:"grace",p:"은혜의 샘",i:"💧"},18:{t:"lot",p:"제비뽑기",i:"🎲"}};
@@ -1488,7 +1488,7 @@ function miniTwenty(el){
       ${oops?`<div class="bm-note">아쉬워요. 목숨이 하나 줄었어요.</div>`:""}${hints.length?`<div class="bm-note">${hints.map(esc).join("<br>")}</div>`:""}
       <button type="button" class="btn" id="bmHint" ${hint>=2?"disabled":""}>결정적 힌트 (고개 4개 쓰기)</button>
       <h4>정답 맞히기 <small class="muted">틀리면 ${A.solo?"목숨이 하나":"고개 3개가"} 줄어요</small></h4><div class="bm-opts two">${opts.map((o,i)=>`<button type="button" data-a="${i}">${esc(o)}</button>`).join("")}</div></div>`;
-    el.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{asked.push(+b.dataset.q);if(spend(1))draw()});
+    el.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{asked.push(+b.dataset.q);if(spend(2))draw()});
     el.querySelector("#bmHint").onclick=()=>{hints.push(a[2+hint]);hint++;if(spend(4))draw()};
     el.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{const v=opts[+b.dataset.a];if(v===a[0])return end(true);opts.splice(+b.dataset.a,1);if(!A.solo){if(spend(3))draw();return}if(A.run.lives<=1)return end(false);A.run.lives--;oops=true;draw()});
     tick();
