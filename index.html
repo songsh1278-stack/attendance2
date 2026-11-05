@@ -884,6 +884,9 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
 .bm-rev p{margin:2px 0}
 .bm-rev .no{color:var(--danger)}
 .bm-quit{flex:none;min-height:36px;padding:4px 10px;font-size:13px;white-space:nowrap}
+.bm-rules{display:grid;gap:6px;margin:10px 0;text-align:left;font-size:14px;line-height:1.45}
+.bm-rules>div{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.bm-rules b{display:block;font-size:13px;color:var(--accent)}
 .bm-qs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
 .bm-qs button{padding:8px;font-size:13px;line-height:1.3;color:var(--ink);min-height:44px}
 .bm-qs button:disabled{background:var(--sunk);color:var(--ink)}
@@ -3825,7 +3828,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261105180136';
+  var BUILD = '20261105180822';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
