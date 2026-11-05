@@ -785,7 +785,7 @@ const G={
   map:{n:"성경지도 찾기",i:"🗺️",r:"문제를 읽고 지도에서 알맞은 곳을 눌러요. 빨리 맞히면 점수가 더 올라요."},
   cross:{n:"가로세로낱말퀴즈",i:"✏️",r:"뜻풀이를 누르고 낱말을 입력하세요. 틀리면 시간이 5초 줄어요."},
   twenty:{n:"스무고개",i:"❓",r:"질문을 눌러 예·아니요를 듣고 정답을 맞혀요. 고개가 많이 남을수록 점수가 높아요."},
-  shoot:{n:"말씀 슈팅",i:"🚀",r:"화면을 누르면 빛의 배가 그쪽으로 저절로 움직여요. 빛은 저절로 나가요. 40초 동안 유혹을 물리치세요."}
+  shoot:{n:"말씀 슈팅",i:"🚀",r:"비행기를 고르고, 화면을 누르면 그쪽으로 저절로 움직여요. 빛은 저절로 나가요. 40초 동안 유혹을 물리치세요."}
 };
 const CORNER={0:{t:"start",p:"출발",i:"🚩"},6:{t:"rest",p:"광야",i:"🏜️"},12:{t:"grace",p:"은혜의 샘",i:"💧"},18:{t:"lot",p:"제비뽑기",i:"🎲"}};
 const PLACES=["에덴","우르","하란","애굽","홍해","시내산","여리고","실로","베들레헴","예루살렘","바벨론","니느웨","나사렛","갈릴리","가버나움","베다니","안디옥","에베소","고린도","로마"];
@@ -1465,10 +1465,28 @@ function miniTwenty(el){
   draw();
 }
 
-/* ---------- 말씀 슈팅 : 빛의 배로 유혹의 낱말을 물리쳐요 ---------- */
+/* ---------- 말씀 슈팅 : 귀여운 비행기로 유혹의 낱말을 물리쳐요 ---------- */
 const FOES=["욕심","미움","거짓","교만","시기","불평","게으름","두려움","다툼","원망"];
 const SHIP_V=520;
+const FLIP=b=>`${b}<g transform="matrix(-1 0 0 1 60 0)">${b}</g>`;
+const PLANES=[
+  ["포근이",24,`<path d="M4 38C4 30 16 28 30 28S56 30 56 38C56 42 52 43 48 42L30 38L12 42C8 43 4 42 4 38Z" fill="#3E9FD8"/><path d="M19 56C19 51 41 51 41 56C41 60 19 60 19 56Z" fill="#3E9FD8"/><ellipse cx="30" cy="30" rx="15" ry="25" fill="#7CCDF7"/><ellipse cx="30" cy="44" rx="8" ry="6" fill="#D8F2FF"/>`],
+  ["콩닥이",25,`<rect x="3" y="19" width="54" height="12" rx="6" fill="#F7B267"/><rect x="11" y="39" width="38" height="9" rx="4.5" fill="#F7B267"/><path d="M21 54H39L42 61H18Z" fill="#C94B3F"/><rect x="17" y="8" width="26" height="49" rx="13" fill="#EF6A5B"/><ellipse cx="30" cy="6" rx="15" ry="2.8" fill="#6B5B53"/><circle cx="30" cy="7" r="3.8" fill="#FFD35C"/>`],
+  ["반짝이",27,`${FLIP('<path d="M16 37L5 53C4 57 7 58 10 57L19 52Z" fill="#EF6A5B"/>')}<path d="M24 55C25 61 28 63 30 63S35 61 36 55Z" fill="#FF8A4C"/><path d="M30 2C41 10 46 22 46 34C46 44 42 52 38 56H22C18 52 14 44 14 34C14 22 19 10 30 2Z" fill="#FFD35C"/><path d="M30 2C34 5 37 9 39 13H21C23 9 26 5 30 2Z" fill="#EF6A5B"/><path d="M30 38L32 43L37 43L33 46L35 51L30 48L25 51L27 46L23 43L28 43Z" fill="#FFF7D6"/>`],
+  ["윙윙이",25,`${FLIP('<ellipse cx="11" cy="28" rx="10" ry="15" transform="rotate(-18 11 28)" fill="#DDF3FF"/><path d="M25 13C24 8 21 6 19 5" fill="none" stroke="#4A3A2C" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="4.5" r="2.2" fill="#4A3A2C"/>')}<ellipse cx="30" cy="34" rx="15" ry="24" fill="#FFC94A"/><path d="M15.5 38H44.5C44.3 40 44 41.5 43.5 43H16.5C16 41.5 15.7 40 15.5 38Z" fill="#4A3A2C"/><path d="M19 49H41C39.5 51.5 37.5 53.5 35 55H25C22.5 53.5 20.5 51.5 19 49Z" fill="#4A3A2C"/>`],
+  ["구구",21,`${FLIP('<path d="M26 24C15 18 5 22 3 31C2 36 6 38 9 36C10 40 14 41 17 38C19 41 24 41 27 37Z" fill="#CFE3F2"/>')}<path d="M23 48L17 60C24 63 36 63 43 60L37 48Z" fill="#CFE3F2"/><ellipse cx="30" cy="30" rx="13" ry="23" fill="#FBF8F1"/><ellipse cx="39" cy="6" rx="7" ry="2.8" transform="rotate(-20 39 6)" fill="#6FBF73"/><path d="M26 9L30 3L34 9Z" fill="#F29A4A"/>`]
+];
+function planeSvg(i){
+  const [,y,b]=PLANES[i];
+  return `<svg xmlns="${"http:"+"/"+"/www.w3.org/2000/svg"}" viewBox="0 0 60 64" width="120" height="128" aria-hidden="true">${b}<circle cx="23" cy="${y+4}" r="3" fill="#FF9AA8" opacity=".75"/><circle cx="37" cy="${y+4}" r="3" fill="#FF9AA8" opacity=".75"/><circle cx="25" cy="${y}" r="2.4" fill="#2B2B3A"/><circle cx="35" cy="${y}" r="2.4" fill="#2B2B3A"/><circle cx="25.8" cy="${y-.8}" r=".8" fill="#fff"/><circle cx="35.8" cy="${y-.8}" r=".8" fill="#fff"/><path d="M27.5 ${y+3}Q30 ${y+6} 32.5 ${y+3}" fill="none" stroke="#2B2B3A" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+}
 function miniShoot(el){
+  let last=0;try{last=+localStorage.getItem("bm-plane")||0}catch(_){}
+  el.innerHTML=`<div class="bm-card"><h3>비행기를 고르세요</h3><div class="bm-cars">${PLANES.map((c,i)=>`<button type="button" data-plane="${i}" aria-pressed="${i===last}">${planeSvg(i)}<b>${c[0]}</b></button>`).join("")}</div></div>`;
+  el.querySelectorAll("[data-plane]").forEach(b=>b.onclick=()=>{const i=+b.dataset.plane;try{localStorage.setItem("bm-plane",i)}catch(_){}shootRun(el,i)});
+}
+function shootRun(el,plane){
+  const img=new Image();img.src="data:image/svg+xml,"+encodeURIComponent(planeSvg(plane));
   el.innerHTML=`<canvas id="bmCv" class="bm-cv" aria-label="말씀 슈팅 게임 화면"></canvas>`;
   const cv=el.querySelector("#bmCv"),x=cv.getContext("2d"),P=LV[A.lv].sh,dpr=Math.min(2,window.devicePixelRatio||1);
   let w=0,h=0;const size=()=>{w=el.clientWidth;h=el.clientHeight;cv.width=w*dpr;cv.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0)};size();
@@ -1512,7 +1530,10 @@ function miniShoot(el){
     x.fillStyle="#FFE27A";bul.forEach(b=>x.fillRect(b.x-2,b.y-8,4,14));
     x.fillStyle="#FF7A7A";shots.forEach(a=>{x.beginPath();x.arc(a.x,a.y,5,0,7);x.fill()});
     x.font="20px sans-serif";x.textAlign="center";items.forEach(i=>x.fillText("📜",i.x,i.y));
-    if(!(inv>0&&Math.floor(t*10)%2)){x.fillStyle=pow>0?"#FFE27A":"#8FE3FF";x.beginPath();x.moveTo(ship.x,sy-18);x.lineTo(ship.x+17,sy+14);x.lineTo(ship.x,sy+7);x.lineTo(ship.x-17,sy+14);x.closePath();x.fill();x.fillStyle="#fff";x.beginPath();x.arc(ship.x,sy-1,4,0,7);x.fill()}
+    if(!(inv>0&&Math.floor(t*10)%2)){x.save();if(pow>0){x.shadowColor="#FFE27A";x.shadowBlur=18}
+      if(img.complete&&img.naturalWidth)x.drawImage(img,ship.x-24,sy-26,48,51.2);
+      else{x.fillStyle="#8FE3FF";x.beginPath();x.arc(ship.x,sy,16,0,7);x.fill()}
+      x.restore()}
     V.raf=requestAnimationFrame(frame);
   };
   V.raf=requestAnimationFrame(frame);
