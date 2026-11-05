@@ -791,8 +791,7 @@ const CORNER={0:{t:"start",p:"출발",i:"🚩"},6:{t:"rest",p:"광야",i:"🏜�
 const PLACES=["에덴","우르","하란","애굽","홍해","시내산","여리고","실로","베들레헴","예루살렘","바벨론","니느웨","나사렛","갈릴리","가버나움","베다니","안디옥","에베소","고린도","로마"];
 const COLORS=["#D9483B","#2F7FD6"];
 const CFG={lv:1,sub:"",mv:"abraham",mp:""};
-const TURNS=8,BOARD_LIVES=5;
-const heartsOf=p=>p.lives===undefined?BOARD_LIVES:p.lives;
+const TURNS=8;
 /* 혼자 하는 게임: 판을 통과하면 다음 단계로 올라가고 점수와 목숨이 이어져요 */
 const newRun=()=>({pts:0,lives:3,asked:0,right:0,done:0});
 const LIFE_GAME=k=>["quiz","map","race","type","shoot","twenty"].includes(k);
@@ -881,7 +880,7 @@ function boardSetup(){
   const s=B||loadSave();
   return `<div class="bm-home">
     <button type="button" class="btn bm-back" data-bmsub="">‹ 성경게임</button>
-    <div class="card bm-hero"><h2>🎲 ${BOARD_NAME}</h2><p>두 개의 주사위를 굴려 성경 땅을 돌아요. 주사위 하나는 0·2·3·4, 다른 하나는 -1·1·2·3이에요. 합이 -1이면 한 칸 뒤로 가요. 멈춘 칸의 게임을 이겨 8라운드 동안 점수를 모으세요. 칸의 게임은 한 판만 하고 다음 주사위로 넘어가요. 목숨은 5개이고 칸의 게임을 통과하지 못하면 하나 줄어요. 목숨을 다 쓰면 8라운드 전에도 끝나요.</p></div>
+    <div class="card bm-hero"><h2>🎲 ${BOARD_NAME}</h2><p>두 개의 주사위를 굴려 성경 땅을 돌아요. 주사위 하나는 0·2·3·4, 다른 하나는 -1·1·2·3이에요. 합이 -1이면 한 칸 뒤로 가요. 멈춘 칸의 게임을 이겨 8라운드 동안 점수를 모으세요. 칸의 게임은 한 판만 하고 다음 주사위로 넘어가요. 8라운드 동안 모은 점수로 겨뤄요.</p></div>
     ${s?`<button type="button" class="btn primary bm-big" data-bmgo="resume">이어하기 · ${LV[s.lv].n} ${Math.min(s.round,s.turns)}/${s.turns}라운드</button>`:""}
     <h2 class="sec">단계</h2>${lvPick()}
     <h2 class="sec">1인용</h2><button type="button" class="btn ${s?"":"primary "}bm-big" data-bmgo="new" style="margin-top:0">${s?"새 게임 시작":"혼자 시작"}</button>
@@ -1108,7 +1107,7 @@ function newGame(n=1){
   let gi=0;const cells=[];
   for(let i=0;i<24;i++)cells.push(CORNER[i]||{t:"game",k:ks[gi],p:PLACES[gi++]});
   B={v:2,lv:CFG.lv,turns:TURNS,round:1,cur:0,cells,phase:"roll",dice:[1,1],used:{},pending:null,msg:"",
-    players:Array.from({length:n},(_,i)=>({name:"",color:COLORS[i],pos:0,score:0,skip:false,lives:BOARD_LIVES}))};
+    players:Array.from({length:n},(_,i)=>({name:"",color:COLORS[i],pos:0,score:0,skip:false}))};
   if(n===2)B.phase="wait";else save();
 }
 function openOv(){
@@ -1141,7 +1140,7 @@ function onAct(e){
   else if(a==="start")startMini();
   else if(a==="giveup")finish(A.run.cur||0,"중간에 그만뒀어요. 지금까지 얻은 점수를 저장했어요");
   else if(a==="again"){stopAll();A.phase="intro";A.lv=A.lv0;A.used=SOLO[A.lv];A.run=newRun();startMini()}
-  else if(a==="board"){stopAll();drawBoard();if(B.phase==="end")drawEnd();else nextTurn()}
+  else if(a==="board"){stopAll();drawBoard();nextTurn()}
   else if(a==="done"){B=null;A=null;save();V.ov.remove()}
 }
 function cellRC(i){if(i<=6)return[6-i,0];if(i<=12)return[0,i-6];if(i<=18)return[i-12,6];return[6,24-i]}
@@ -1156,7 +1155,7 @@ function midHtml(){
   if(B.phase==="next")return `<p class="bm-msg">${esc(B.msg)}</p>${dice}<button type="button" class="btn primary" data-bm="next">다음으로</button>`;
   return `<p class="bm-msg" id="bmMsg"><b>${Math.min(B.round,B.turns)}라운드</b>${B.msg?`<br><small>${esc(B.msg)}</small>`:""}</p>${dice}<button type="button" class="btn primary" data-bm="roll" id="bmRoll">주사위 굴리기</button>`;
 }
-function scoreHtml(){return B.players.map((p,i)=>`<div class="bm-sc${B.room&&i===B.cur?" on":""}">${B.room?`<i style="background:${p.color}"></i>${esc(p.name||"기다리는 중")}${i===B.room.me?" (나)":""}`:"점수"} <b class="num">${p.score}</b> <span class="num">❤️${heartsOf(p)}</span>${p.skip?" 🏜️":""}</div>`).join("")}
+function scoreHtml(){return B.players.map((p,i)=>`<div class="bm-sc${B.room&&i===B.cur?" on":""}">${B.room?`<i style="background:${p.color}"></i>${esc(p.name||"기다리는 중")}${i===B.room.me?" (나)":""}`:"점수"} <b class="num">${p.score}</b>${p.skip?" 🏜️":""}</div>`).join("")}
 function drawBoard(){
   const cells=B.cells.map((c,i)=>{const [r,co]=cellRC(i);
     return `<div class="bm-cell ${c.t==="game"?"bm-k-"+c.k:"bm-corner"}" style="grid-row:${r+1};grid-column:${co+1}"><span>${c.t==="game"?G[c.k].i:c.i}</span><em>${esc(c.p)}</em></div>`}).join("");
@@ -1224,12 +1223,12 @@ function finish(pts,note,more=""){
   if(A.solo){A.phase="done";
     stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">${got}점</h3>${A.run.done?`<p class="muted num">${A.run.done}단계까지 통과</p>`:""}<p>${esc(note)}</p>${more}<div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="again">다시 하기</button><button type="button" class="btn bm-big" data-bm="exit">목록으로</button></div>`;
     showRank(d.k,A.lv0,got);return}
-  const p=curP(),lost=!d.pass;p.score+=got;if(lost)p.lives=heartsOf(p)-1;const dead=lost&&p.lives<=0;B.pending=null;B.phase=dead?"end":"next";B.msg=`${who()}${g.n} +${got}점${lost?" · 목숨 하나 줄었어요":""}`;save();
-  stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">+${got}점</h3><p>${esc(note)}${d.m>1?" (점수 2배)":""}</p>${lost?`<p class="bm-new num">${dead?"목숨을 다 썼어요!":`통과하지 못해 목숨이 하나 줄었어요. ❤️${p.lives}`}</p>`:""}${more}<button type="button" class="btn primary bm-big" data-bm="board">${dead?"결과 보기":"다음 주사위로"}</button></div>`;
+  const p=curP();p.score+=got;B.pending=null;B.phase="next";B.msg=`${who()}${g.n} +${got}점`;save();
+  stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">+${got}점</h3><p>${esc(note)}${d.m>1?" (점수 2배)":""}</p>${more}<button type="button" class="btn primary bm-big" data-bm="board">다음 주사위로</button></div>`;
 }
 /* 판을 통과했을 때: 혼자 하면 다음 단계로, 땅밟기 칸에서는 그대로 끝나요. lives를 안 주면 목숨은 그대로예요 */
 function clear(pts,lives,note,more=""){
-  if(!A.solo){A.pending.pass=true;return finish(pts,note,more)}
+  if(!A.solo)return finish(pts,note,more);
   stopAll();if(A.phase!=="intro")return;
   const r=A.run,k=A.pending.k,g=G[k];
   r.pts+=pts;r.cur=0;r.done++;if(lives!==undefined)r.lives=lives;
@@ -1239,7 +1238,7 @@ function clear(pts,lives,note,more=""){
 function drawEnd(){
   const el=stageOpen("🏆 게임 끝"),me=B.players[B.room?B.room.me:0],two=B.players.length>1,rank=B.players.slice().sort((a,b)=>b.score-a.score);
   const top=two&&rank[0].score===rank[1].score?"비겼어요!":two?`${esc(rank[0].name)} 승리!`:`${me.score}점`;
-  el.innerHTML=`<div class="bm-card"><div class="bm-emoji">🏆</div><h3 class="num">${top}</h3><p>${BOARD_NAME} ${LV[B.lv].n} ${B.players.some(p=>heartsOf(p)<=0)?`목숨을 다 써서 ${Math.min(B.round,B.turns)}라운드에서 끝났어요`:`${B.turns}라운드를 모두 마쳤어요!`}</p>${two?`<div class="bm-rank">${rank.map((p,i)=>`<div><span class="num">${i+1}</span>${esc(p.name)}<b class="num">${p.score}점</b></div>`).join("")}</div>`:""}<div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="done">마치기</button></div>`;
+  el.innerHTML=`<div class="bm-card"><div class="bm-emoji">🏆</div><h3 class="num">${top}</h3><p>${BOARD_NAME} ${LV[B.lv].n} ${B.turns}라운드를 모두 마쳤어요!</p>${two?`<div class="bm-rank">${rank.map((p,i)=>`<div><span class="num">${i+1}</span>${esc(p.name)}<b class="num">${p.score}점</b></div>`).join("")}</div>`:""}<div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="done">마치기</button></div>`;
   showRank("board",B.lv,me.score);
 }
 /* 점수를 서버에 올리고 그 게임·단계의 랭킹을 받아 교사 이름으로 보여 줘요 */
@@ -1263,7 +1262,7 @@ function pick(key,pool,n){
 
 const lifeInfo=(lives,pts)=>{if(!A.solo)return;A.run.cur=pts;q("#bmInfo").textContent=`${"❤️".repeat(lives)} ${A.run.pts+pts}점`};
 function setEnd(n,right,pts,lives){
-  if(!A.solo){const nt=`${n}문제 가운데 ${right}문제를 맞혔어요`;return right*2>=n?clear(pts,undefined,nt):finish(pts,nt)}
+  if(!A.solo)return finish(pts,`${n}문제 가운데 ${right}문제를 맞혔어요`);
   const r=A.run;r.asked+=n;r.right+=right;const note=`${r.asked}문제 가운데 ${r.right}문제를 맞혔어요`;
   if(lives>0)clear(pts,lives,note);else finish(pts,note);
 }
