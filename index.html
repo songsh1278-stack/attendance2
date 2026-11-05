@@ -1701,7 +1701,7 @@ function openGuide(){
 }
 /* ---------- 활동 기록 (총관리자·공동관리자1. 텔레그램 알림 종류·답장은 총관리자만) ---------- */
 const activityCard=()=>`<details class="fold" data-fold="activity"${S.fold.activity?" open":""}><summary><h2 class="sec">활동 기록</h2></summary><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">출석 체크(반별), 명단·반 이동, 번호 변경, 일정, 자료실, 설정, 요청 등 모든 기록 (로그인 포함 보기 가능)</span><button class="btn" id="actOpen">기록 보기</button></div>${S.isCo?"":`<div class="admin-row"><b>텔레그램 알림</b><span class="code none">휴대폰 텔레그램으로 받을 기록 종류</span><button class="btn" id="tgOpen">알림 종류</button></div>`}</div></details>`;
-const bibleCard=()=>[["bibleMap","부록-성경지도보기","시대별 지도, 성경사전, 사진","map","지도 보기"],["bibleGame","부록-성경게임","퀴즈, 말씀 게임, 주사위판과 교사 랭킹","game","게임하기"]].map(([f,t,d,k,b])=>`<details class="fold" data-fold="${f}"${S.fold[f]!==false?" open":""}><summary><h2 class="sec">${t}</h2></summary><div class="card admin-list"><div class="admin-row"><span class="code none">${d}</span><button class="btn" data-bmhome="${k}">${b}</button></div></div></details>`).join("");
+const bibleCard=()=>[["bibleMap","부록-성경지도보기","시대별 지도, 성경사전, 사진","map","지도 보기"],["bibleGame","부록-성경게임","퀴즈, 말씀 게임","game","게임하기"]].map(([f,t,d,k,b])=>`<details class="fold" data-fold="${f}"${S.fold[f]!==false?" open":""}><summary><h2 class="sec">${t}</h2></summary><div class="card admin-list"><div class="admin-row"><span class="code none">${d}</span><button class="btn" data-bmhome="${k}">${b}</button></div></div></details>`).join("");
 /* 텔레그램으로 받을 알림 종류 고르기 (총관리자 전용) */
 async function openTgKinds(){
   const ov=document.createElement("div");ov.className="overlay";
@@ -5339,7 +5339,7 @@ function miniShoot(el){
 
 <script>
 (function () {
-  var BUILD = '20261105135221';
+  var BUILD = '20261105135641';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
