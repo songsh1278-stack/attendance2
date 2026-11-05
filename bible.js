@@ -783,7 +783,7 @@ const G={
   race:{n:"말씀레이싱",i:"🏁",r:"자동차를 고르고, 가고 싶은 쪽을 누르면 자동차가 그 줄로 저절로 가요. 누른 채로 끌어도 따라와요. 위 말씀의 순서대로 조각을 받고 다른 말이나 비슷한 말은 피하세요."},
   type:{n:"말씀타자",i:"⌨️",r:"떨어지는 성경 낱말을 입력하고 엔터나 띄어쓰기를 누르면 사라져요. 바닥에 세 번 닿으면 끝나요. 45초 동안 버텨 보세요."},
   map:{n:"성경지도 찾기",i:"🗺️",r:"문제를 읽고 지도에서 알맞은 곳을 눌러요. 빨리 맞히면 점수가 더 올라요."},
-  cross:{n:"가로세로낱말퀴즈",i:"✏️",r:"뜻풀이를 누르고 낱말을 입력하세요. 틀리면 시간이 5초 줄어요."},
+  cross:{n:"가로세로낱말퀴즈",i:"✏️",r:"뜻풀이를 누르고 낱말을 입력하세요. 틀려도 맞은 글자는 칸에 남고, 시간이 5초 줄어요."},
   twenty:{n:"스무고개",i:"❓",r:"질문을 눌러 예·아니요를 듣고 시간 안에 정답을 맞혀요. 질문 하나에 고개 2개를 써요. 고개가 많이 남을수록 점수가 높아요."},
   shoot:{n:"말씀 슈팅",i:"🚀",r:"비행기를 고르고, 화면을 누르면 그쪽으로 저절로 움직여요. 빛은 저절로 나가요. 40초 동안 유혹을 물리치세요."}
 };
@@ -1448,7 +1448,7 @@ function miniCross(el){
   const H=r1-r0+1,W=c1-c0+1,num=new Map();let no=0;
   pl.slice().sort((a,b)=>a.r-b.r||a.col-b.col).forEach(p=>{const k=p.r+","+p.col;if(!num.has(k))num.set(k,++no);p.no=num.get(k)});
   const at=p=>[...p.w].map((_,i)=>(p.r+(p.d?i:0))+","+(p.col+(p.d?0:i)));
-  let sel=pl[0],T=L.cwT*1000,t0=performance.now(),over=false;
+  let sel=pl[0],T=L.cwT*1000,t0=performance.now(),over=false;const got=new Set();
   let grid="";for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++){const k=r+","+c;grid+=map.has(k)?`<div class="bm-cc" data-k="${k}">${num.has(k)?`<sup>${num.get(k)}</sup>`:""}<span></span></div>`:`<div></div>`}
   const clue=d=>pl.filter(p=>p.d===d).sort((a,b)=>a.no-b.no).map(p=>`<button type="button" data-w="${pl.indexOf(p)}"><b class="num">${p.no}</b> ${esc(p.c)} <small class="num">(${p.w.length}글자)</small></button>`).join("");
   el.innerHTML=`<div class="bm-q bm-cw"><div class="bm-bar"><div id="bmBar"></div></div>
@@ -1456,6 +1456,8 @@ function miniCross(el){
     <form class="bm-in" id="bmCwF"><input id="bmCwI" autocomplete="off" aria-label="낱말 입력"><button type="submit" class="btn primary">넣기</button></form>
     <div class="bm-clues"><h4>가로</h4>${clue(0)}<h4>세로</h4>${clue(1)}</div>${A.solo?"":`<button type="button" class="btn" id="bmCwEnd">그만하고 채점</button>`}</div>`;
   const inp=el.querySelector("#bmCwI"),bar=el.querySelector("#bmBar");
+  /* 맞은 글자는 칸에 남겨요. 칸이 다 차면 그 낱말은 푼 것으로 쳐요 */
+  const put=(p,i)=>{const k=at(p)[i],c=el.querySelector(`[data-k="${k}"]`);got.add(k);c.querySelector("span").textContent=p.w[i];c.classList.add("ok")};
   const paint=()=>{if(A.solo)A.run.cur=pl.filter(p=>p.ok).length*5;el.querySelectorAll(".bm-cc").forEach(x=>x.classList.remove("sel"));if(sel)at(sel).forEach(k=>el.querySelector(`[data-k="${k}"]`).classList.add("sel"));
     el.querySelectorAll("[data-w]").forEach(b=>{const p=pl[+b.dataset.w];b.classList.toggle("on",p===sel);b.classList.toggle("ok",!!p.ok)});
     inp.placeholder=sel?`${sel.no}번 ${sel.d?"세로":"가로"} ${sel.w.length}글자`:"";inp.value=""};
@@ -1466,9 +1468,10 @@ function miniCross(el){
   if(!A.solo)el.querySelector("#bmCwEnd").onclick=end;
   el.querySelector("#bmCwF").onsubmit=e=>{e.preventDefault();if(!sel||over)return;
     const v=inp.value.replace(/\s/g,"");if(!v)return;
-    if(v===sel.w){sel.ok=true;at(sel).forEach((k,i)=>{const c=el.querySelector(`[data-k="${k}"]`);c.querySelector("span").textContent=sel.w[i];c.classList.add("ok")});
-      sel=pl.find(p=>!p.ok)||null;paint();if(!sel)end()}
-    else{(sel.bad=sel.bad||[]).includes(v)||sel.bad.push(v);T-=5000;inp.value="";inp.classList.add("no");setTimeout(()=>inp.classList.remove("no"),400)}};
+    const hit=v===sel.w;if(!hit){(sel.bad=sel.bad||[]).includes(v)||sel.bad.push(v);T-=5000;inp.classList.add("no");setTimeout(()=>inp.classList.remove("no"),400)}
+    [...sel.w].forEach((ch,i)=>{if(hit||v[i]===ch)put(sel,i)});
+    pl.forEach(p=>{if(!p.ok&&at(p).every(k=>got.has(k)))p.ok=true});
+    if(sel.ok)sel=pl.find(p=>!p.ok)||null;paint();if(!sel)end()};
   paint();
   every(200,()=>{const r=1-(performance.now()-t0)/T;bar.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=Math.max(0,Math.ceil(r*T/1000))+"초";if(r<=0)end()});
 }
