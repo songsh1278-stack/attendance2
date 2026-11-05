@@ -609,7 +609,7 @@ const TWENTY={1:[
 ["갈대 상자","oO","역청과 나무 진을 칠했어요","아기를 담아 나일 강가에 두었어요","출 2:3","출 2:3"],
 ["몰약","oN","박사들의 예물이에요","니고데모가 침향과 함께 가져왔어요","마 2:11","요 19:39"]
 ]};
-const TW_Q={p:[["주로 구약 이야기에 나오나요?","O"],["남자인가요?","m"],["창세기 이야기에서 유명한가요?","g"],["왕이었나요?","k"],["선지자로 유명한가요?","r"],["전쟁 이야기로 유명한가요?","b"],["예수님의 열두 제자였나요?","d"]],l:[["주로 구약 이야기에 나오나요?","O"],["도시인가요?","c"],["산인가요?","h"],["창세기 이야기에서 유명한가요?","g"],["전쟁 이야기로 유명한가요?","b"]],o:[["주로 구약 이야기에 나오나요?","O"],["먹을 수 있나요?","e"],["창세기 이야기에서 유명한가요?","g"],["전쟁 이야기로 유명한가요?","b"]]};
+const TW_Q={O:"주로 구약 이야기에 나와요",N:"주로 신약 이야기에 나와요",m:"남자예요",f:"여자예요",k:"왕이었어요",r:"선지자로 유명해요",d:"예수님의 열두 제자였어요",g:"창세기 이야기에서 유명해요",b:"전쟁 이야기로 유명해요",c:"도시예요",h:"산이에요",e:"먹을 수 있어요"};
 /* 성경지도. MAPP: 키 → [지명, 위도, 경도, 설명, 위치, 근거문구]. 위치는 대략적인 현대 추정 위치 */
 const MAPP={
 ur:["우르",30.96,46.10,"아브라함의 가족이 가나안으로 가려고 떠난 갈대아인의 땅이에요.","창 11:31","갈대아인의 우르"],
@@ -784,7 +784,7 @@ const G={
   type:{n:"말씀타자",i:"⌨️"},
   map:{n:"성경지도 찾기",i:"🗺️"},
   cross:{n:"가로세로낱말퀴즈",i:"✏️"},
-  twenty:{n:"스무고개",i:"❓"},
+  twenty:{n:"맞는 설명 찾기",i:"✅"},
   shoot:{n:"말씀 슈팅",i:"🚀"}
 };
 const CORNER={0:{t:"start",p:"출발",i:"🚩"},6:{t:"rest",p:"광야",i:"🏜️"},12:{t:"grace",p:"은혜의 샘",i:"💧"},18:{t:"lot",p:"제비뽑기",i:"🎲"}};
@@ -793,7 +793,7 @@ const COLORS=["#D9483B","#2F7FD6"];
 const CFG={lv:1,sub:"",mv:"abraham",mp:""};
 const TURNS=8;
 /* 혼자 하는 게임: 판을 통과하면 다음 단계로 올라가고 점수와 목숨이 이어져요 */
-const newRun=()=>({pts:0,lives:3,asked:0,right:0,done:0});
+const newRun=k=>({pts:0,lives:k==="twenty"?5:3,asked:0,right:0,done:0});
 const LIFE_GAME=k=>["quiz","map","race","type","shoot","twenty"].includes(k);
 /* 게임을 시작하기 전에 보여 주는 규칙: 방법, 점수, 끝나는 조건 */
 const rulesOf=k=>{
@@ -804,7 +804,7 @@ const rulesOf=k=>{
     race:["자동차를 고르고, 가고 싶은 쪽을 누르면 그 줄로 저절로 가요. 위 말씀의 순서대로 조각을 받고 다른 말은 피하세요.","말씀을 다 받으면 20점에 남은 시간과 목숨만큼 더 받아요. 다 못 받으면 받은 조각만큼 점수를 받아요.",s?`${life} 다른 말을 받으면 하나 줄고, 시간이 지나면 하나 줄면서 새 말씀이 나와요. 말씀을 다 받으면 다음 말씀이 바로 이어져요.`:"말씀을 다 받거나, 목숨 3개를 다 쓰거나, 시간이 끝나면 끝나요."],
     type:["떨어지는 성경 낱말을 입력하고 엔터나 띄어쓰기를 누르면 사라져요.","낱말 하나에 2점, 끝까지 버티면 5점을 더 받아요. 한 판 최고 45점이에요.",s?`${life} 낱말이 바닥에 닿으면 하나 줄어요. 45초를 버티면 다음 단계로 가요.`:"45초를 버티거나 낱말이 바닥에 세 번 닿으면 끝나요."],
     cross:[`뜻풀이를 누르고 낱말을 입력해요. 틀려도 맞은 글자는 칸에 남고, 시간이 5초 줄어요. 제한 시간은 ${L.cwT}초예요.`,"낱말 하나에 5점, 다 풀면 보너스를 더 받아요. 한 판 최고 45점이에요.",s?"다 풀면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.":"다 풀거나, 시간이 끝나거나, 그만하고 채점을 누르면 끝나요."],
-    twenty:[`질문을 눌러 예·아니요를 듣고 정답을 골라요. 질문 하나에 고개 2개, 힌트에 4개를 써요. 제한 시간은 ${L.twT}초예요.`,"맞히면 10점에 남은 고개 수만큼 더 받아요.",s?`${life} 정답이 틀리거나 고개를 다 쓰면 하나 줄어요. 고개를 다 쓰면 새 문제가 나와요. 맞히면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.`:"맞히거나, 고개를 다 쓰거나, 시간이 끝나면 끝나요. 틀리면 고개 3개가 줄고, 못 맞히면 0점이에요."],
+    twenty:[`성경 인물이나 장소, 물건을 먼저 보여 줘요. 설명 10개마다 맞으면 O, 틀리면 X를 골라요. 제한 시간은 ${L.twT}초예요.`,"맞힌 설명 하나에 3점, 10개를 다 고르면 보너스를 더 받아요.",s?"기회 5번으로 시작해요. 틀리면 하나 줄어요. 10개를 다 고르면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.":"10개를 다 고르거나, 기회 5번을 다 쓰거나, 시간이 끝나면 끝나요."],
     shoot:["비행기를 고르고, 화면을 누르면 그쪽으로 저절로 움직여요. 빛은 저절로 나가요.","유혹 하나에 2점, 끝까지 버티면 5점을 더 받아요. 한 판 최고 45점이에요.",s?`${life} 공격이나 유혹에 부딪히면 하나 줄어요. 40초를 버티면 다음 단계로 가요.`:"40초를 버티거나 세 번 부딪히면 끝나요."]
   }[k];
   return [["방법",R[0]],["점수",R[1]],["끝나는 때",R[2]+(s?" 그만하기를 누르면 그때까지의 점수를 저장해요. 점수는 끝날 때까지 이어지고, 단계가 오르면 고급까지 어려워져요.":"")]];
@@ -1133,7 +1133,7 @@ function openOv(){
 function openBoard(){if(live())return;A=B;openOv();resume()}
 function openSolo(k){
   if(live())return;
-  A={solo:true,lv:CFG.lv,lv0:CFG.lv,run:newRun(),used:SOLO[CFG.lv],phase:"intro",pending:{k,m:1,p:""},cur:0,players:[{color:COLORS[0],score:0}]};
+  A={solo:true,lv:CFG.lv,lv0:CFG.lv,run:newRun(k),used:SOLO[CFG.lv],phase:"intro",pending:{k,m:1,p:""},cur:0,players:[{color:COLORS[0],score:0}]};
   openOv();intro();
 }
 function resume(){
@@ -1152,7 +1152,7 @@ function onAct(e){
   else if(a==="solo"&&B&&B.room){B.phase="roll";goSolo(true)}
   else if(a==="start")startMini();
   else if(a==="giveup")finish(A.run.cur||0,"중간에 그만뒀어요. 지금까지 얻은 점수를 저장했어요");
-  else if(a==="again"){stopAll();A.phase="intro";A.lv=A.lv0;A.used=SOLO[A.lv];A.run=newRun();startMini()}
+  else if(a==="again"){stopAll();A.phase="intro";A.lv=A.lv0;A.used=SOLO[A.lv];A.run=newRun(A.pending.k);startMini()}
   else if(a==="board"){stopAll();drawBoard();nextTurn()}
   else if(a==="done"){B=null;A=null;save();V.ov.remove()}
 }
@@ -1495,40 +1495,29 @@ function miniCross(el){
   every(200,()=>{const r=1-(performance.now()-t0)/T;bar.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=Math.max(0,Math.ceil(r*T/1000))+"초";if(r<=0)end()});
 }
 
-/* ---------- 스무고개 ---------- */
-/* 정답 보기는 같은 종류를 한 바퀴 다 쓸 때까지 되풀이하지 않아요 */
-const TW_BAG={};
-function twOthers(kind,all,n){
-  const got=[];let bag=(TW_BAG[kind]||[]).filter(x=>all.some(y=>y[0]===x));
-  while(got.length<n){if(!bag.length)bag=shuf(all.map(x=>x[0]));const w=bag.pop();if(!got.includes(w))got.push(w)}
-  TW_BAG[kind]=bag;return got;
-}
-/* 판마다 달라지는 이야기 질문: 구약·신약이 다른 보기의 힌트라 정답에는 해당하지 않아요. 정답의 이야기도 하나 섞어요 */
-function twStory(a,kind,opts,all){
-  const far=opts.filter(n=>n!==a[0]&&all.find(x=>x[0]===n)[1][1]!==a[1][1]);if(!far.length)return[];
-  const say=h=>`“${esc(h)}” 맞나요?`;
-  return shuf([[say(a[3]),kind],...shuf(far).slice(0,3).map(n=>[say(all.find(x=>x[0]===n)[2+rnd(2)]),"?"])]);
+/* ---------- 맞는 설명 찾기 : 정답을 보여 주고 설명 10개마다 O나 X를 골라요 ---------- */
+/* 틀린 설명으로 쓰면 안 되는 힌트: 구약·신약이 달라도 다른 인물이나 장소에 맞을 수 있어요 */
+const TW_VAGUE=new Set(["천사가 찾아왔어요","총독이었어요","유대 땅의 왕이었어요","사내아이를 다 죽였어요","아론의 자손이에요","유대인의 지도자였어요","모든 백성의 존경을 받는 율법 교사였어요","성경에 능통했어요","백성을 많이 구제했어요","예루살렘의 의롭고 경건한 사람이에요","아기를 안고 하나님을 찬송했어요","물로 손을 씻었어요","양 치는 자였어요","양을 치는 사람이었어요","하루 세 번 기도했어요","유력한 사람이었어요","다윗의 아들이에요","성전을 건축했어요","왕이 높인 대신이에요","하나님의 영으로 지혜를 받았어요","유다 지파 사람이에요","선지자라고 불렸어요","떡과 포도주를 가지고 나왔어요","돌로 침을 받았어요","나실인이었어요","율법에 익숙한 학자예요","궁이 있었어요","혼례가 있었어요","예수님이 기도하신 곳이에요","온 성에 우상이 가득했어요","장대 위에 달았어요","쳐다본즉 살았어요","다섯 개가 있었어요","한 아이가 가지고 있었어요"]);
+function twBuild(a){
+  const pool=[1,2,3].flatMap(l=>TWENTY[l]),tg=a[1],far=pool.filter(x=>x[1][1]!==tg[1]);
+  const yes=[...new Set([TW_Q[tg[1]],a[2],a[3],...[...tg.slice(2)].map(c=>TW_Q[c])])];
+  const hints=list=>shuf(list.flatMap(x=>[x[2],x[3]])).filter(h=>!TW_VAGUE.has(h)&&!yes.includes(h));
+  const no=[...new Set([TW_Q[tg[1]==="O"?"N":"O"],...(tg[0]==="p"?[TW_Q[tg[2]==="m"?"f":"m"]]:[]),...hints(far.filter(x=>x[1][0]===tg[0])),...hints(far.filter(x=>x[1][0]!==tg[0]))])].slice(0,10-yes.length);
+  return shuf([...yes.map(t=>[t,1]),...no.map(t=>[t,0])]);
 }
 function miniTwenty(el){
-  const [a]=pick("twenty",TWENTY[A.lv],1),kind=a[1][0],all=[1,2,3].flatMap(l=>TWENTY[l]).filter(x=>x[1][0]===kind&&x[0]!==a[0]);
-  const opts=shuf([a[0],...twOthers(kind,all,5)]);let left=20,hint=0,over=false;const asked=[],hints=[],T=LV[A.lv].twT*1000,t0=performance.now();
-  /* 보기가 모두 같은 종류라 종류는 먼저 알려 주고, 그 종류의 질문과 이번 판의 이야기 질문을 모두 보여 줘요 */
-  const Q=[...TW_Q[kind],...twStory(a,kind,opts,all)];
-  const miss=A.solo?A.run.miss:"";if(A.solo)A.run.miss="";let oops=false;
-  const end=(win,late)=>{if(over)return;over=true;if(!win&&!late&&A.solo&&--A.run.lives>0){stopAll();A.run.miss=a[0];return miniTwenty(el)}if(win)clear(10+left,undefined,`${a[0]}! 고개 ${left}개를 남기고 맞혔어요`);else finish(0,`${late?"시간이 다 됐어요. ":""}정답: ${a[0]}`)};
-  const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`${A.solo?"❤️".repeat(A.run.lives)+" ":""}고개 ${left} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
-  const spend=n=>{left=Math.max(0,left-n);if(left<=0){end(false);return false}return true};
-  const draw=()=>{
-    el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div>${miss?`<div class="bm-note">고개를 다 썼어요. (정답: ${esc(miss)}) 새 문제예요!</div>`:""}<p class="muted">정답은 ${{p:"사람이에요",l:"장소예요",o:"물건이나 음식이에요"}[kind]}. 질문으로 보기를 좁혀 보세요.</p><div class="bm-qs">${Q.map(([t,g],i)=>{const d=asked.includes(i),y=a[1].includes(g);return `<button type="button" data-q="${i}" ${d?"disabled":""}>${t}${d?` <b class="${y?"yes":"nope"}">${y?"예":"아니요"}</b>`:""}</button>`}).join("")}</div>${asked.length>=Q.length?`<p class="muted">더 물어볼 질문이 없어요. 힌트를 쓰거나 정답을 골라 보세요.</p>`:""}
-      ${oops?`<div class="bm-note">아쉬워요. 목숨이 하나 줄었어요.</div>`:""}${hints.length?`<div class="bm-note">${hints.map(esc).join("<br>")}</div>`:""}
-      <button type="button" class="btn" id="bmHint" ${hint>=2?"disabled":""}>결정적 힌트 (고개 4개 쓰기)</button>
-      <h4>정답 맞히기 <small class="muted">틀리면 ${A.solo?"목숨이 하나":"고개 3개가"} 줄어요</small></h4><div class="bm-opts two">${opts.map((o,i)=>`<button type="button" data-a="${i}">${esc(o)}</button>`).join("")}</div></div>`;
-    el.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{asked.push(+b.dataset.q);if(spend(2))draw()});
-    el.querySelector("#bmHint").onclick=()=>{hints.push(a[2+hint]);hint++;if(spend(4))draw()};
-    el.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{const v=opts[+b.dataset.a];if(v===a[0])return end(true);opts.splice(+b.dataset.a,1);if(!A.solo){if(spend(3))draw();return}if(A.run.lives<=1)return end(false);A.run.lives--;oops=true;draw()});
-    tick();
-  };
-  draw();every(200,tick);
+  const [a]=pick("twenty",TWENTY[A.lv],1),list=twBuild(a),t0=performance.now(),T=LV[A.lv].twT*1000,got=new Map();
+  let right=0,lives=A.solo?A.run.lives:5,over=false;
+  const end=(win,late)=>{if(over)return;over=true;const left=Math.max(0,T-(performance.now()-t0))/1000,sc=right*3+(win?5+Math.floor(left/15):0),note=`${a[0]}: 설명 ${list.length}개 가운데 ${right}개를 맞혔어요`;
+    const miss=list.map(([t,y],i)=>got.get(i)===y?"":`<div>${esc(t)} · 정답 <b>${y?"O":"X"}</b></div>`).join(""),more=miss?`<div class="bm-rev"><h4>틀린 내용</h4>${miss}</div>`:"";
+    if(win)clear(sc,A.solo?lives:undefined,note,more);else finish(sc,(late?"시간이 다 됐어요. ":"")+note,more)};
+  const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`${"❤️".repeat(lives)} ${got.size}/${list.length} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
+  el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><div class="bm-tw"><b>${esc(a[0])}</b><span class="muted">설명마다 맞으면 O, 틀리면 X를 고르세요</span></div><div class="bm-oxs">${list.map(([t],i)=>`<div class="bm-ox"><span>${esc(t)}</span><button type="button" data-ox="${i}:1" aria-label="맞아요">O</button><button type="button" data-ox="${i}:0" aria-label="틀려요">X</button></div>`).join("")}</div></div>`;
+  el.querySelectorAll("[data-ox]").forEach(b=>b.onclick=()=>{const [i,v]=b.dataset.ox.split(":").map(Number);if(over||got.has(i))return;got.set(i,v);
+    const y=list[i][1],row=b.parentNode;row.classList.add(v===y?"ok":"no");row.querySelectorAll("button").forEach(x=>{x.disabled=true;if(+x.dataset.ox.split(":")[1]===y)x.classList.add("ans")});
+    if(v===y){right++;if(A.solo)A.run.cur=right*3}else{lives--;if(lives<=0)return end(false)}
+    if(got.size>=list.length)return end(true);tick()});
+  tick();every(200,tick);
 }
 
 /* ---------- 말씀 슈팅 : 귀여운 비행기로 유혹의 낱말을 물리쳐요 ---------- */
