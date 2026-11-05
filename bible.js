@@ -794,6 +794,7 @@ const CFG={lv:1,sub:"",mv:"abraham",mp:""};
 const TURNS=8;
 /* 효과음: 파일 없이 브라우저에서 소리를 만들어요. [높이, 시작, 길이, 파형, 크기] */
 const SFX={tap:[[520,0,.05,"sine",.05]],ok:[[660,0,.08,"sine",.1],[880,.07,.12,"sine",.1]],no:[[220,0,.16,"square",.05],[165,.12,.2,"square",.05]],hit:[[140,0,.16,"sawtooth",.08]],shot:[[1100,0,.035,"square",.012]],pop:[[420,0,.05,"triangle",.07],[700,.03,.05,"triangle",.05]],power:[[523,0,.07,"sine",.09],[784,.06,.07,"sine",.09],[1047,.12,.12,"sine",.09]],dice:[[300,0,.03,"square",.03],[380,.06,.03,"square",.03],[320,.12,.03,"square",.03],[420,.18,.04,"square",.03]],clear:[[523,0,.1,"sine",.1],[659,.1,.1,"sine",.1],[784,.2,.1,"sine",.1],[1047,.3,.22,"sine",.1]],over:[[392,0,.14,"triangle",.1],[330,.14,.14,"triangle",.1],[262,.28,.28,"triangle",.1]]};
+const SFX_VOL=.4;
 let sndOn=true,AC=null;try{sndOn=localStorage.getItem("bm-sound")!=="0"}catch(_){}
 function sfx(n){
   if(!sndOn)return;
@@ -801,7 +802,7 @@ function sfx(n){
     const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
     AC=AC||new C();if(AC.state==="suspended")AC.resume();
     const t0=AC.currentTime;
-    SFX[n].forEach(([f,at,d,w,v])=>{const o=AC.createOscillator(),g=AC.createGain(),t=t0+at;o.type=w;o.frequency.value=f;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.02)});
+    SFX[n].forEach(([f,at,d,w,v])=>{const o=AC.createOscillator(),g=AC.createGain(),t=t0+at;o.type=w;o.frequency.value=f;g.gain.setValueAtTime(v*SFX_VOL,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.02)});
   }catch(_){}
 }
 const sndText=w=>(sndOn?"🔊":"🔇")+(w?` 효과음 ${sndOn?"켜짐":"꺼짐"}`:"");
