@@ -1513,7 +1513,7 @@ function miniTwenty(el){
   const end=(win,late)=>{if(over)return;over=true;const left=Math.max(0,T-(performance.now()-t0))/1000,sc=right*3+(win?5+Math.floor(left/15):0),note=`${a[0]}: 설명 ${list.length}개 가운데 ${right}개를 맞혔어요`;
     const miss=list.map(([t,y],i)=>got.get(i)===y?"":`<div>${esc(t)} · 정답 <b>${y?"O":"X"}</b></div>`).join(""),more=miss?`<div class="bm-rev"><h4>틀린 내용</h4>${miss}</div>`:"";
     if(win)clear(sc,A.solo?lives:undefined,note,more);else finish(sc,(late?"시간이 다 됐어요. ":"")+note,more)};
-  const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`${"❤️".repeat(lives)} ${got.size}/${list.length} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
+  const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`❤️${lives} ${got.size}/${list.length} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
   el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><div class="bm-tw"><b>${esc(a[0])}</b></div><div class="bm-oxq" id="bmOxQ"></div><div class="bm-oxb"><button type="button" data-ox="1" aria-label="맞아요">O</button><button type="button" data-ox="0" aria-label="틀려요">X</button></div></div>`;
   const box=el.querySelector("#bmOxQ"),btns=[...el.querySelectorAll("[data-ox]")];
   const show=()=>{box.className="bm-oxq";box.textContent=list[at][0];btns.forEach(x=>x.classList.remove("ans"))};
