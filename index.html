@@ -670,7 +670,8 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
   .toast{bottom:calc(52px + env(safe-area-inset-bottom,0px))}
 }
 /* ---------- 성경브루마블 ---------- */
-nav.tabs button[data-tab="bible"],nav.tabs button[data-tab="biblemap"]{letter-spacing:-.06em;min-width:0;font-size:10.5px}
+.bm-homeg{margin-top:10px}
+.bm-homeg .dept{min-height:96px}
 .bm-home{padding-bottom:12px}
 .bm-hero{margin-top:12px}
 .bm-hero h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0 0 4px}
@@ -838,8 +839,6 @@ nav.tabs button[data-tab="bible"],nav.tabs button[data-tab="biblemap"]{letter-sp
   <button data-tab="bday"><svg viewBox="0 0 24 24"><path d="M5 20h14v-7H5z"/><path d="M4 13h16M12 13V9M9 9h6"/><path d="M12 6.5c-.8-.8-.8-2 0-3 .8 1 .8 2.2 0 3z"/></svg>생일</button>
   <button data-tab="talent"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5v9M9.5 9.5h3.8a1.7 1.7 0 010 3.4h-2.6a1.7 1.7 0 000 3.4h3.8"/></svg>달란트</button>
   <button data-tab="stats"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>통계</button>
-  <button data-tab="bible" hidden><svg viewBox="0 0 24 24"><path d="M6 4h12a1 1 0 011 1v15H7a2 2 0 01-2-2V5a1 1 0 011-1z"/><path d="M5 18a2 2 0 012-2h12M12 7v6M9.5 9.5h5"/></svg>성경게임</button>
-  <button data-tab="biblemap" hidden><svg viewBox="0 0 24 24"><path d="M9 4L3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4z"/><path d="M9 4v14M15 6v14"/></svg>성경지도</button>
 </div></nav>
 
 <script>
@@ -1052,11 +1051,11 @@ function renderChips(){
   const items=[["all","전체"],...GROUPS].map(([g,l])=>{
     const ps=activePeople(g).filter(p=>g!=="all"||p.group!=="T");const on=ps.filter(p=>isOn(k,p.id)).length;
     return `<button class="chip" data-g="${g}" aria-pressed="${S.group===g}"${canRenameClass(g)?` title="더블클릭(휴대폰은 두 번 톡톡)하면 반 이름을 바꿀 수 있어요"`:""}>${l}${S.tab==="check"?`<span class="c num">${on}/${ps.length}</span>`:S.tab==="roster"?`<span class="c num">${rosterCnt(g)}</span>`:""}</button>`});
-  $("#chips").innerHTML=items.join("");$("#chips").hidden=S.tab==="schedule"||S.tab==="prenew"||S.tab==="bible"||S.tab==="biblemap";
+  $("#chips").innerHTML=items.join("");$("#chips").hidden=S.tab==="schedule"||S.tab==="prenew";
 }
 function renderTeams(){
-  const home=S.view==="home";document.body.classList.toggle("home",home);
-  $("#homeBtn").hidden=home;{const hr=$("#hdrRefresh");if(hr)hr.hidden=false}if(home)$("#brandTitle").innerHTML=`<span class="tw">신당중앙교회</span> <span class="tw">교육팀 출석부</span>`;else{const r=roleLabel();$("#brandTitle").innerHTML=esc(TEAMS[S.team].label)+(r?`<span class="role-badge">${esc(r)}</span>`:"")}
+  const home=S.view==="home",bible=S.view==="bible";document.body.classList.toggle("home",home||bible);
+  $("#homeBtn").hidden=home;{const hr=$("#hdrRefresh");if(hr)hr.hidden=false}if(home)$("#brandTitle").innerHTML=`<span class="tw">신당중앙교회</span> <span class="tw">교육팀 출석부</span>`;else if(bible)$("#brandTitle").textContent=S.bpage==="map"?"성경지도":"성경게임";else{const r=roleLabel();$("#brandTitle").innerHTML=esc(TEAMS[S.team].label)+(r?`<span class="role-badge">${esc(r)}</span>`:"")}
   fitBrand();
 }
 /* 맨 위 제목: 줄바꿈은 '신당중앙교회' / '교육팀 출석부' 사이에서만. 한 덩어리도 안 들어갈 만큼 좁으면 글자 크기를 줄인다 */
@@ -1075,7 +1074,7 @@ function renderDate(){
   $("#todayTag").hidden=S.date!==keyOf(lastSunday());$("#todayTag").textContent=realSunday()<START?"시작 주일":"이번 주";
   $("#datePick").min=START_KEY;$("#prev").disabled=S.date<=START_KEY;
   $("#datePick").value=S.date;
-  $("#datebar").hidden=S.tab==="roster"||S.tab==="schedule"||S.tab==="prenew"||S.tab==="bible"||S.tab==="biblemap";
+  $("#datebar").hidden=S.tab==="roster"||S.tab==="schedule"||S.tab==="prenew";
 }
 const safePhoto=v=>typeof v==="string"&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v)?v:"";
 const photoOf=p=>{const ph=safePhoto(p.photo);if(ph)return ph;const c=p.id&&S.photos.get(p.id);return c?c[1]:""};
@@ -3234,6 +3233,8 @@ function renderHome(){
       <span class="stat num">${!S.ready?"불러오는 중…":open?(((S.scope||{})[t]||{}).level==="sub"?"보조교사 · 일정 보기":`${((S.scope||{})[t]||{}).level==="grade"?"내 반":"재적"} ${ps.length}명 · 출석 ${on}명`):`재적 ${(S.counts||{})[t]||0}명 · 번호 입력 후 확인`}</span></button>`;
   }
   h+=`</div>`;
+  /* 성경게임·성경지도: 일단 총관리자만 */
+  if(S.isAdmin&&!S.isCo)h+=`<div class="dept-grid bm-homeg"><button class="dept" data-bmhome="game"><span class="top"><span class="name">성경게임</span></span><span class="range">퀴즈 · 게임 · 랭킹</span></button><button class="dept" data-bmhome="map"><span class="top"><span class="name">성경지도</span></span><span class="range">시대별 지도와 지명</span></button></div>`;
   /* 팀 관리자: 부서 카드 바로 아래에 반별 출석 현황 */
   if(!S.isAdmin&&S.ready)for(const t of Object.keys(TEAMS).filter(t=>canEnter(t)&&((S.scope||{})[t]||{}).level==="dept"))h+=renderClassSummary(t);
   /* 반 담임 사용 설명서: 접기 기능, 기본은 접힘 */
@@ -3317,18 +3318,18 @@ function openStaffEdit(email){
 }
 function render(){
   if(S.view==="dept"&&!canEnter(S.team))S.view="home";
+  if(S.view==="bible"&&!(S.isAdmin&&!S.isCo))S.view="home";
   renderTeams();
   {const tt=document.querySelector('[data-tab="talent"]');if(tt)tt.hidden=!talentOn();if(S.tab==="talent"&&!talentOn())S.tab="check";}
   {const pt=document.querySelector('[data-tab="prenew"]');if(pt)pt.hidden=!preNewOn();if(S.tab==="prenew"&&!preNewOn())S.tab="check";}
-  /* 성경게임: 일단 총관리자만 */
-  {const ok=S.isAdmin&&!S.isCo;["bible","biblemap"].forEach(k=>{const bt=document.querySelector('[data-tab="'+k+'"]');if(bt)bt.hidden=!ok});if((S.tab==="bible"||S.tab==="biblemap")&&!ok)S.tab="check";}
   /* 보조교사: 일정 탭만 */
-  {const sub=isSub();document.querySelectorAll("nav.tabs button").forEach(b=>{const k=b.dataset.tab;if(k==="schedule")return;if(sub)b.hidden=true;else if(k!=="talent"&&k!=="prenew"&&k!=="bible"&&k!=="biblemap")b.hidden=false});if(sub)S.tab="schedule"}
+  {const sub=isSub();document.querySelectorAll("nav.tabs button").forEach(b=>{const k=b.dataset.tab;if(k==="schedule")return;if(sub)b.hidden=true;else if(k!=="talent"&&k!=="prenew")b.hidden=false});if(sub)S.tab="schedule"}
   if(S.view==="home"){$("#view").innerHTML=renderHome();return}
+  if(S.view==="bible"){$("#view").innerHTML=S.bpage==="map"?renderBibleMap():renderBible();return}
   setTeam(S.team);renderDate();renderChips();
   const v=$("#view");const ae=document.activeElement;const focusQ=ae&&ae.id==="q";const pos=focusQ?ae.selectionStart:0;
   const tvAttr=ae&&ae.dataset?(ae.dataset.tv?"tv":ae.dataset.total?"total":null):null;const tvId=tvAttr&&ae.dataset[tvAttr],tvVal=tvId?ae.value:null;
-  v.innerHTML=S.tab==="schedule"?renderSchedule():S.tab==="check"?renderCheck():S.tab==="roster"?renderRoster():S.tab==="stats"?renderStats():S.tab==="talent"?renderTalent():S.tab==="prenew"?renderPreNew():S.tab==="bible"?renderBible():S.tab==="biblemap"?renderBibleMap():renderBday();
+  v.innerHTML=S.tab==="schedule"?renderSchedule():S.tab==="check"?renderCheck():S.tab==="roster"?renderRoster():S.tab==="stats"?renderStats():S.tab==="talent"?renderTalent():S.tab==="prenew"?renderPreNew():renderBday();
   if(focusQ){const q=$("#q");q.focus();q.setSelectionRange(pos,pos)}
   if(tvId){const el=v.querySelector(`[data-${tvAttr}="${tvId}"]`);if(el){el.value=tvVal;el.focus()}}
   document.querySelectorAll("nav.tabs button").forEach(b=>b.dataset.tab===S.tab?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));relabel();if((S.tab==="check"||S.tab==="roster")&&(!S.book||S.book.team!==S.team)&&!S.bookLoading)setTimeout(loadContacts,0);
@@ -4605,6 +4606,8 @@ window.renderBible=function(){
 document.addEventListener("click",e=>{
   const st=e.target.closest("[data-bmset]");
   if(st){const [k,v]=st.dataset.bmset.split(":");CFG[k]=Number(v);render();return}
+  const hm=e.target.closest("[data-bmhome]");
+  if(hm){if(!allowed())return;navPush();S.view="bible";S.bpage=hm.dataset.bmhome;CFG.sub="";render();window.scrollTo(0,0);return}
   const sb=e.target.closest("[data-bmsub]");
   if(sb){CFG.sub=sb.dataset.bmsub;render();window.scrollTo(0,0);return}
   const mv=e.target.closest("[data-mapv]");
@@ -4657,7 +4660,7 @@ function newGame(){
 }
 function openOv(){
   const ov=document.createElement("div");ov.className="overlay bm-ov";V.ov=ov;document.body.appendChild(ov);
-  const mo=new MutationObserver(()=>{if(!ov.isConnected){mo.disconnect();stopAll();if(V.ov===ov)V.ov=null;if(S.tab==="bible")render()}});
+  const mo=new MutationObserver(()=>{if(!ov.isConnected){mo.disconnect();stopAll();if(V.ov===ov)V.ov=null;if(S.view==="bible")render()}});
   mo.observe(document.body,{childList:true});
   ov.addEventListener("click",onAct);
 }
@@ -4994,7 +4997,7 @@ function miniShoot(el){
 
 <script>
 (function () {
-  var BUILD = '20261105111318';
+  var BUILD = '20261105112908';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
