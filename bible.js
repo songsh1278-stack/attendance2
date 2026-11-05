@@ -1477,17 +1477,14 @@ function miniCross(el){
 function miniTwenty(el){
   const [a]=pick("twenty",TWENTY[A.lv],1),kind=a[1][0],all=[1,2,3].flatMap(l=>TWENTY[l]).filter(x=>x[1][0]===kind&&x[0]!==a[0]);
   const opts=shuf([a[0],...shuf(all).slice(0,5).map(x=>x[0])]);let left=20,hint=0,over=false;const asked=[],hints=[],T=LV[A.lv].twT*1000,t0=performance.now();
-  /* 보기가 모두 같은 종류라 종류는 먼저 알려 주고, 큰 질문을 한 뒤 남은 보기를 가르는 질문만 보여 줘요 */
-  const Q=TW_Q[kind],root=kind==="p"?2:1,tag=n=>n===a[0]?a[1]:all.find(x=>x[0]===n)[1],yes=(n,g)=>tag(n).includes(g);
-  const alive=()=>opts.filter(n=>asked.every(i=>yes(n,Q[i][1])===yes(a[0],Q[i][1])));
-  const splits=(i,c)=>{const y=c.filter(n=>yes(n,Q[i][1])).length;return y>0&&y<c.length};
-  const shown=c=>{const open=Q.slice(0,root).every((_,i)=>asked.includes(i)||!splits(i,c));return Q.map((_,i)=>i).filter(i=>asked.includes(i)||splits(i,c)&&(i<root||open))};
+  /* 보기가 모두 같은 종류라 종류는 먼저 알려 주고, 그 종류의 질문을 처음부터 모두 보여 줘요 */
+  const Q=TW_Q[kind];
   const miss=A.solo?A.run.miss:"";if(A.solo)A.run.miss="";let oops=false;
   const end=(win,late)=>{if(over)return;over=true;if(!win&&!late&&A.solo&&--A.run.lives>0){stopAll();A.run.miss=a[0];return miniTwenty(el)}if(win)clear(10+left,undefined,`${a[0]}! 고개 ${left}개를 남기고 맞혔어요`);else finish(0,`${late?"시간이 다 됐어요. ":""}정답: ${a[0]}`)};
   const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`${A.solo?"❤️".repeat(A.run.lives)+" ":""}고개 ${left} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
   const spend=n=>{left=Math.max(0,left-n);if(left<=0){end(false);return false}return true};
-  const draw=()=>{const qs=shown(alive());
-    el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div>${miss?`<div class="bm-note">고개를 다 썼어요. (정답: ${esc(miss)}) 새 문제예요!</div>`:""}<p class="muted">정답은 ${{p:"사람이에요",l:"장소예요",o:"물건이나 음식이에요"}[kind]}. 질문으로 보기를 좁혀 보세요.</p><div class="bm-qs">${qs.map(i=>{const [t,g]=Q[i],d=asked.includes(i),y=yes(a[0],g);return `<button type="button" data-q="${i}" ${d?"disabled":""}>${t}${d?` <b class="${y?"yes":"nope"}">${y?"예":"아니요"}</b>`:""}</button>`}).join("")}</div>${qs.every(i=>asked.includes(i))?`<p class="muted">더 물어볼 질문이 없어요. 힌트를 쓰거나 정답을 골라 보세요.</p>`:""}
+  const draw=()=>{
+    el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div>${miss?`<div class="bm-note">고개를 다 썼어요. (정답: ${esc(miss)}) 새 문제예요!</div>`:""}<p class="muted">정답은 ${{p:"사람이에요",l:"장소예요",o:"물건이나 음식이에요"}[kind]}. 질문으로 보기를 좁혀 보세요.</p><div class="bm-qs">${Q.map(([t,g],i)=>{const d=asked.includes(i),y=a[1].includes(g);return `<button type="button" data-q="${i}" ${d?"disabled":""}>${t}${d?` <b class="${y?"yes":"nope"}">${y?"예":"아니요"}</b>`:""}</button>`}).join("")}</div>${asked.length>=Q.length?`<p class="muted">더 물어볼 질문이 없어요. 힌트를 쓰거나 정답을 골라 보세요.</p>`:""}
       ${oops?`<div class="bm-note">아쉬워요. 목숨이 하나 줄었어요.</div>`:""}${hints.length?`<div class="bm-note">${hints.map(esc).join("<br>")}</div>`:""}
       <button type="button" class="btn" id="bmHint" ${hint>=2?"disabled":""}>결정적 힌트 (고개 4개 쓰기)</button>
       <h4>정답 맞히기 <small class="muted">틀리면 ${A.solo?"목숨이 하나":"고개 3개가"} 줄어요</small></h4><div class="bm-opts two">${opts.map((o,i)=>`<button type="button" data-a="${i}">${esc(o)}</button>`).join("")}</div></div>`;
