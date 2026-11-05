@@ -750,8 +750,11 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
 .bm-road>i:nth-of-type(1){left:33.33%}
 .bm-road>i:nth-of-type(2){left:66.66%}
 .bm-rp{position:absolute;top:-44px;transform:translateX(-50%);width:30%;background:#fff;color:#17302B;border-radius:10px;padding:5px 4px;font-size:13.5px;font-weight:700;line-height:1.25;text-align:center;box-shadow:0 2px 5px rgba(0,0,0,.35);word-break:keep-all;will-change:top}
-.bm-car{position:absolute;bottom:12px;left:50%;width:56px;height:75px;margin-left:-28px;transition:left .13s ease-out}
+.bm-car{position:absolute;bottom:78px;left:50%;width:56px;height:75px;margin-left:-28px;transition:left .13s ease-out}
 .bm-car svg{width:100%;height:100%;display:block}
+.bm-rl{position:absolute;bottom:16px;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:22px;display:grid;place-items:center;pointer-events:none}
+.bm-rl.l{left:10px}
+.bm-rl.r{right:10px}
 .bm-car.good{filter:drop-shadow(0 0 9px #8BF0B0)}
 .bm-car.bad{animation:bmShake .36s}
 @keyframes bmShake{25%{transform:translateX(-7px) rotate(-7deg)}75%{transform:translateX(7px) rotate(7deg)}}
@@ -4589,7 +4592,7 @@ const LV={
 };
 const G={
   quiz:{n:"성경퀴즈+넌센스",i:"📖",r:"네 가지 보기에서 정답을 골라요. 성경퀴즈에 넌센스 문제가 섞여 나와요. 빨리 맞히면 점수가 더 올라요."},
-  race:{n:"말씀레이싱",i:"🏁",r:"자동차를 고르고, 도로를 눌러 차선을 옮겨요. 위 말씀의 순서대로 조각을 받고 다른 말이나 비슷한 말은 피하세요."},
+  race:{n:"말씀레이싱",i:"🏁",r:"자동차를 고르고, 왼쪽이나 오른쪽을 눌러 한 칸씩 옮겨요. 위 말씀의 순서대로 조각을 받고 다른 말이나 비슷한 말은 피하세요."},
   type:{n:"말씀타자",i:"⌨️",r:"떨어지는 성경 낱말을 입력하고 엔터나 띄어쓰기를 누르면 사라져요. 바닥에 세 번 닿으면 끝나요. 45초 동안 버텨 보세요."},
   map:{n:"성경지도 찾기",i:"🗺️",r:"문제를 읽고 지도에서 알맞은 곳을 눌러요. 빨리 맞히면 점수가 더 올라요."},
   cross:{n:"가로세로낱말퀴즈",i:"✏️",r:"뜻풀이를 누르고 낱말을 입력하세요. 틀리면 시간이 5초 줄어요."},
@@ -5010,7 +5013,7 @@ function raceRun(el,car){
   for(let i=0;i<K;i++)chunks.push(words.slice(Math.floor(i*words.length/K),Math.floor((i+1)*words.length/K)).join(" "));
   const others=VERSE[A.lv].filter(x=>x!==v).flatMap(x=>x[1].split(" ")).filter(w=>w.length>=2&&!chunks.includes(w));
   el.style.padding="0";el.style.overflow="hidden";
-  el.innerHTML=`<div class="bm-rc"><div class="bm-rv"><small class="muted">${esc(v[0])}</small><p id="bmRv"></p></div><div class="bm-road" id="bmRoad"><i></i><i></i><div class="bm-car" id="bmCar">${carSvg(car)}</div></div></div>`;
+  el.innerHTML=`<div class="bm-rc"><div class="bm-rv"><small class="muted">${esc(v[0])}</small><p id="bmRv"></p></div><div class="bm-road" id="bmRoad"><i></i><i></i><div class="bm-car" id="bmCar">${carSvg(car)}</div><b class="bm-rl l">◀</b><b class="bm-rl r">▶</b></div></div>`;
   const road=el.querySelector("#bmRoad"),carEl=el.querySelector("#bmCar"),rv=el.querySelector("#bmRv");
   let at=0,lane=1,lives=3,rows=[],last=performance.now(),t=0,gapY=0,over=false,info="",lock=0;
   const H=()=>road.clientHeight,speed=()=>L.rs*Math.max(.8,H()/520),T=K*(H()*.5/speed())*3.2+6;
@@ -5025,14 +5028,14 @@ function raceRun(el,car){
     return out.filter((x,i)=>x!==chunks[at]&&out.indexOf(x)===i)};
   const pill=(txt,ln)=>{const n=document.createElement("span");n.className="bm-rp";n.textContent=txt;n.style.left=(ln+.5)/3*100+"%";road.appendChild(n);return{txt,ln,n}};
   const spawn=()=>{const ls=shuf([0,1,2]),items=[pill(chunks[at],ls[0])];decoys().forEach((d,i)=>{if(ls[i+1]!==undefined)items.push(pill(d,ls[i+1]))});rows.push({y:-44,items,done:false})};
-  const pressLane=e=>{const b=road.getBoundingClientRect();setLane(Math.floor((e.clientX-b.left)/b.width*3));e.preventDefault()};
+  const pressLane=e=>{const b=road.getBoundingClientRect();setLane(lane+(e.clientX-b.left<b.width/2?-1:1));e.preventDefault()};
   road.addEventListener("pointerdown",pressLane);
   const key=e=>{if(e.key==="ArrowLeft")setLane(lane-1);if(e.key==="ArrowRight")setLane(lane+1)};
   addEventListener("keydown",key);V.off.push(()=>removeEventListener("keydown",key));
   verse();setLane(1);
   const frame=now=>{
     if(!live()||over)return;
-    const dt=Math.min(.05,(now-last)/1000),h=H(),sp=speed(),carY=h-92;last=now;t+=dt;gapY-=sp*dt;
+    const dt=Math.min(.05,(now-last)/1000),h=H(),sp=speed(),carY=h-158;last=now;t+=dt;gapY-=sp*dt;
     if(gapY<=0){spawn();gapY=h*.5}
     road.style.setProperty("--off",(t*sp%48)+"px");
     rows=rows.filter(r=>{r.y+=sp*dt;r.items.forEach(x=>x.n.style.top=r.y+"px");
@@ -5240,7 +5243,7 @@ function miniShoot(el){
 
 <script>
 (function () {
-  var BUILD = '20261105131715';
+  var BUILD = '20261105132328';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
