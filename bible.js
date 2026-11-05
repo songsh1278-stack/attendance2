@@ -1211,14 +1211,14 @@ function startMini(){
   const k=A.pending.k,el=stageOpen(G[k].i+" "+G[k].n);
   ({quiz:()=>miniQuiz(el),race:()=>miniRace(el),map:()=>miniMap(el),type:()=>miniType(el),cross:()=>miniCross(el),twenty:()=>miniTwenty(el),shoot:()=>miniShoot(el)})[k]();
 }
-function finish(pts,note){
+function finish(pts,note,more=""){
   stopAll();if(A.phase!=="intro")return;
   const d=A.pending,got=pts*d.m,g=G[d.k],face=got>=20?"🎉":got>0?"👏":"🙏";
   if(A.solo){A.phase="done";
-    stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">${got}점</h3><p>${esc(note)}</p><div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="again">다시 하기</button><button type="button" class="btn bm-big" data-bm="exit">목록으로</button></div>`;
+    stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">${got}점</h3><p>${esc(note)}</p>${more}<div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="again">다시 하기</button><button type="button" class="btn bm-big" data-bm="exit">목록으로</button></div>`;
     showRank(d.k,A.lv,got);return}
   const p=curP();p.score+=got;B.pending=null;B.phase="next";B.msg=`${who()}${g.n} +${got}점`;save();
-  stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">+${got}점</h3><p>${esc(note)}${d.m>1?" (점수 2배)":""}</p><button type="button" class="btn primary bm-big" data-bm="board">판으로 돌아가기</button></div>`;
+  stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">+${got}점</h3><p>${esc(note)}${d.m>1?" (점수 2배)":""}</p>${more}<button type="button" class="btn primary bm-big" data-bm="board">판으로 돌아가기</button></div>`;
 }
 function drawEnd(){
   const el=stageOpen("🏆 게임 끝"),me=B.players[B.room?B.room.me:0],two=B.players.length>1,rank=B.players.slice().sort((a,b)=>b.score-a.score);
@@ -1410,6 +1410,12 @@ function cwBuild(pool,n,maxW){
   return{pl,map};
 }
 function cwMake(pool,n){let best=null;for(let i=0;i<60;i++){const g=cwBuild(pool,n,9);if(!best||g.pl.length>best.pl.length)best=g;if(best.pl.length>=n)break}return best}
+/* 게임이 끝나면 틀렸던 낱말과 못 푼 낱말을 정답과 함께 보여 줘요 */
+function cwReview(pl){
+  const bad=pl.filter(p=>!p.ok||p.bad).sort((a,b)=>a.d-b.d||a.no-b.no);
+  if(!bad.length)return `<p class="bm-new">틀린 낱말 없이 모두 맞혔어요!</p>`;
+  return `<div class="bm-rev"><h4>틀린 내용 <small class="muted num">${bad.length}개</small></h4>${bad.map(p=>`<div><p><b class="num">${p.no}번 ${p.d?"세로":"가로"}</b> ${esc(p.c)}</p>${p.bad?`<p class="no">내가 쓴 답: ${p.bad.map(x=>esc(x)).join(", ")}</p>`:""}<p>${p.ok?"다시 풀어 맞혔어요":"못 풀었어요"} · 정답 <b>${esc(p.w)}</b></p></div>`).join("")}</div>`;
+}
 function miniCross(el){
   const L=LV[A.lv],{pl,map}=cwMake(WORD[A.lv],L.cw);
   let r0=1e9,c0=1e9,r1=-1e9,c1=-1e9;map.forEach((_,k)=>{const [r,c]=k.split(",").map(Number);r0=Math.min(r0,r);c0=Math.min(c0,c);r1=Math.max(r1,r);c1=Math.max(c1,c)});
@@ -1428,7 +1434,7 @@ function miniCross(el){
     el.querySelectorAll("[data-w]").forEach(b=>{const p=pl[+b.dataset.w];b.classList.toggle("on",p===sel);b.classList.toggle("ok",!!p.ok)});
     inp.placeholder=sel?`${sel.no}번 ${sel.d?"세로":"가로"} ${sel.w.length}글자`:"";inp.value=""};
   const end=()=>{if(over)return;over=true;const ok=pl.filter(p=>p.ok).length,all=ok===pl.length,left=Math.max(0,T-(performance.now()-t0))/1000;
-    finish(Math.min(45,ok*5+(all?10+Math.floor(left/15):0)),`${pl.length}낱말 가운데 ${ok}개를 찾았어요`+(all?" 완성 보너스!":""))};
+    finish(Math.min(45,ok*5+(all?10+Math.floor(left/15):0)),`${pl.length}낱말 가운데 ${ok}개를 찾았어요`+(all?" 완성 보너스!":""),cwReview(pl))};
   el.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{const p=pl[+b.dataset.w];if(p.ok)return;sel=p;paint();inp.focus()});
   el.querySelectorAll(".bm-cc").forEach(x=>x.onclick=()=>{const hit=pl.filter(p=>!p.ok&&at(p).includes(x.dataset.k));if(!hit.length)return;sel=hit[(hit.indexOf(sel)+1)%hit.length];paint();inp.focus()});
   el.querySelector("#bmCwEnd").onclick=end;
@@ -1436,7 +1442,7 @@ function miniCross(el){
     const v=inp.value.replace(/\s/g,"");if(!v)return;
     if(v===sel.w){sel.ok=true;at(sel).forEach((k,i)=>{const c=el.querySelector(`[data-k="${k}"]`);c.querySelector("span").textContent=sel.w[i];c.classList.add("ok")});
       sel=pl.find(p=>!p.ok)||null;paint();if(!sel)end()}
-    else{T-=5000;inp.value="";inp.classList.add("no");setTimeout(()=>inp.classList.remove("no"),400)}};
+    else{(sel.bad=sel.bad||[]).includes(v)||sel.bad.push(v);T-=5000;inp.value="";inp.classList.add("no");setTimeout(()=>inp.classList.remove("no"),400)}};
   paint();
   every(200,()=>{const r=1-(performance.now()-t0)/T;bar.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=Math.max(0,Math.ceil(r*T/1000))+"초";if(r<=0)end()});
 }
