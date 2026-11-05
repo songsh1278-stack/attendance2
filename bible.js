@@ -794,8 +794,8 @@ const CFG={lv:1,sub:"",mv:"abraham",mp:""};
 const TURNS=8;
 /* 혼자 하는 게임: 판을 통과하면 다음 단계로 올라가고 점수와 목숨이 이어져요 */
 const newRun=()=>({pts:0,lives:3,asked:0,right:0,done:0});
-const LIFE_GAME=k=>["quiz","map","race","type","shoot"].includes(k);
-const soloTip=k=>(k==="quiz"||k==="map"?"목숨 3개로 시작해요. 틀리거나 시간이 지나면 목숨이 줄어요. 5문제를 풀 때마다 다음 단계에 도전해요.":LIFE_GAME(k)?"목숨이 남은 채로 판을 끝내면 다음 단계에 도전해요. 남은 목숨도 이어져요.":"다 맞히면 다음 단계에 도전해요.")+" 점수는 계속 이어지고, 단계가 오르면 고급까지 어려워져요.";
+const LIFE_GAME=k=>["quiz","map","race","type","shoot","twenty"].includes(k);
+const soloTip=k=>(k==="quiz"||k==="map"?"목숨 3개로 시작해요. 틀리거나 시간이 지나면 목숨이 줄어요. 5문제를 풀 때마다 다음 단계에 도전해요.":k==="twenty"?"목숨 3개로 시작해요. 고개를 다 쓰면 목숨이 줄고 새 문제가 나와요. 맞히면 다음 단계에 도전해요. 시간이 끝나면 게임도 끝나요.":k==="cross"?"시간 안에 다 맞히면 다음 단계에 도전해요. 시간이 끝나면 게임도 끝나요.":"목숨이 남은 채로 판을 끝내면 다음 단계에 도전해요. 남은 목숨도 이어져요.")+" 목숨이나 시간이 다하거나 그만하기를 누를 때까지 점수가 이어지고, 단계가 오르면 고급까지 어려워져요.";
 const SOLO={1:{},2:{},3:{}};
 const BOARD_NAME="성경 땅밟기";
 const V={ov:null,t:new Set(),raf:0,off:[]};
@@ -1138,8 +1138,8 @@ function onAct(e){
   else if(a==="next")nextTurn();
   else if(a==="solo"&&B&&B.room){B.phase="roll";goSolo(true)}
   else if(a==="start")startMini();
+  else if(a==="giveup")finish(A.run.cur||0,"중간에 그만뒀어요. 지금까지 얻은 점수를 저장했어요");
   else if(a==="again"){stopAll();A.phase="intro";A.lv=A.lv0;A.used=SOLO[A.lv];A.run=newRun();startMini()}
-  else if(a==="stoprun")finish(0,"여기서 마치고 점수를 저장했어요");
   else if(a==="board"){stopAll();drawBoard()}
   else if(a==="done"){B=null;A=null;save();V.ov.remove()}
 }
@@ -1214,6 +1214,7 @@ function startMini(){
   if(A.phase!=="intro"||!A.pending)return;
   if(!A.solo){if(A.pending.tried)return finish(0,"게임 중에 나가서 이번 칸은 0점이에요");A.pending.tried=true;save()}
   const k=A.pending.k,el=stageOpen(G[k].i+" "+G[k].n);
+  if(A.solo){A.run.cur=0;q("#bmInfo").insertAdjacentHTML("afterend",`<button type="button" class="btn bm-quit" data-bm="giveup">그만하기</button>`)}
   ({quiz:()=>miniQuiz(el),race:()=>miniRace(el),map:()=>miniMap(el),type:()=>miniType(el),cross:()=>miniCross(el),twenty:()=>miniTwenty(el),shoot:()=>miniShoot(el)})[k]();
 }
 function finish(pts,note,more=""){
@@ -1230,9 +1231,9 @@ function clear(pts,lives,note,more=""){
   if(!A.solo)return finish(pts,note,more);
   stopAll();if(A.phase!=="intro")return;
   const r=A.run,k=A.pending.k,g=G[k];
-  r.pts+=pts;r.done++;if(lives!==undefined)r.lives=lives;
+  r.pts+=pts;r.cur=0;r.done++;if(lives!==undefined)r.lives=lives;
   if(A.lv<3){A.lv++;A.used=SOLO[A.lv]}
-  stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">🎉</div><p class="muted num">${r.done}단계 통과</p><h3 class="num">${r.pts}점</h3><p>${esc(note)}</p>${LIFE_GAME(k)?`<p>${"❤️".repeat(r.lives)}</p>`:""}${more}<p class="muted">다음 단계 난이도: ${LV[A.lv].n}</p><button type="button" class="btn primary bm-big num" data-bm="start">${r.done+1}단계 도전</button><button type="button" class="btn bm-big" data-bm="stoprun">여기서 마치고 점수 저장</button></div>`;
+  stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">🎉</div><p class="muted num">${r.done}단계 통과</p><h3 class="num">${r.pts}점</h3><p>${esc(note)}</p>${LIFE_GAME(k)?`<p>${"❤️".repeat(r.lives)}</p>`:""}${more}<p class="muted">다음 단계 난이도: ${LV[A.lv].n}</p><button type="button" class="btn primary bm-big num" data-bm="start">${r.done+1}단계 도전</button><button type="button" class="btn bm-big" data-bm="giveup">그만하고 점수 저장</button></div>`;
 }
 function drawEnd(){
   const el=stageOpen("🏆 게임 끝"),me=B.players[B.room?B.room.me:0],two=B.players.length>1,rank=B.players.slice().sort((a,b)=>b.score-a.score);
@@ -1259,7 +1260,7 @@ function pick(key,pool,n){
   const got=shuf(left).slice(0,n);A.used[key]=used.concat(got);save();return got.map(i=>pool[i]);
 }
 
-const lifeInfo=(lives,pts)=>{if(A.solo)q("#bmInfo").textContent=`${"❤️".repeat(lives)} ${A.run.pts+pts}점`};
+const lifeInfo=(lives,pts)=>{if(!A.solo)return;A.run.cur=pts;q("#bmInfo").textContent=`${"❤️".repeat(lives)} ${A.run.pts+pts}점`};
 function setEnd(n,right,pts,lives){
   if(!A.solo)return finish(pts,`${n}문제 가운데 ${right}문제를 맞혔어요`);
   const r=A.run;r.asked+=n;r.right+=right;const note=`${r.asked}문제 가운데 ${r.right}문제를 맞혔어요`;
@@ -1341,7 +1342,7 @@ function raceRun(el,car){
           else{lives--;carEl.classList.add("bad");after(380,()=>carEl.classList.remove("bad"));if(lives<=0){end(false);return false}}}}
       if(r.y>h+50){r.items.forEach(x=>x.n.remove());return false}return true});
     if(over)return;if(t>=T)return end(false);
-    const s=`${"❤️".repeat(lives)} ${Math.ceil(T-t)}초 · ${at}/${K}`;if(s!==info){info=s;q("#bmInfo").textContent=s}
+    if(A.solo)A.run.cur=Math.round(15*at/K);const s=`${"❤️".repeat(lives)} ${Math.ceil(T-t)}초 · ${at}/${K}`;if(s!==info){info=s;q("#bmInfo").textContent=s}
     V.raf=requestAnimationFrame(frame);
   };
   V.raf=requestAnimationFrame(frame);
@@ -1379,7 +1380,7 @@ function miniType(el){
     const v=P.sp*Math.max(.45,H/520);
     live_=live_.filter(o=>{o.y+=v*dt;if(o.y>H-30){o.n.remove();lives--;area.classList.add("hurt");after(180,()=>area.classList.remove("hurt"));return false}o.n.style.transform=`translateY(${o.y}px)`;return true});
     if(lives<=0||time<=0)return end();
-    const s=`${"❤️".repeat(lives)} ${Math.ceil(time)}초 · ${cleared}`;if(s!==info){info=s;q("#bmInfo").textContent=s}
+    if(A.solo)A.run.cur=Math.min(45,cleared*2);const s=`${"❤️".repeat(lives)} ${Math.ceil(time)}초 · ${cleared}`;if(s!==info){info=s;q("#bmInfo").textContent=s}
     V.raf=requestAnimationFrame(frame);
   };
   V.raf=requestAnimationFrame(frame);
@@ -1453,16 +1454,16 @@ function miniCross(el){
   el.innerHTML=`<div class="bm-q bm-cw"><div class="bm-bar"><div id="bmBar"></div></div>
     <div class="bm-grid" style="grid-template-columns:repeat(${W},minmax(0,38px))">${grid}</div>
     <form class="bm-in" id="bmCwF"><input id="bmCwI" autocomplete="off" aria-label="낱말 입력"><button type="submit" class="btn primary">넣기</button></form>
-    <div class="bm-clues"><h4>가로</h4>${clue(0)}<h4>세로</h4>${clue(1)}</div><button type="button" class="btn" id="bmCwEnd">그만하고 채점</button></div>`;
+    <div class="bm-clues"><h4>가로</h4>${clue(0)}<h4>세로</h4>${clue(1)}</div>${A.solo?"":`<button type="button" class="btn" id="bmCwEnd">그만하고 채점</button>`}</div>`;
   const inp=el.querySelector("#bmCwI"),bar=el.querySelector("#bmBar");
-  const paint=()=>{el.querySelectorAll(".bm-cc").forEach(x=>x.classList.remove("sel"));if(sel)at(sel).forEach(k=>el.querySelector(`[data-k="${k}"]`).classList.add("sel"));
+  const paint=()=>{if(A.solo)A.run.cur=pl.filter(p=>p.ok).length*5;el.querySelectorAll(".bm-cc").forEach(x=>x.classList.remove("sel"));if(sel)at(sel).forEach(k=>el.querySelector(`[data-k="${k}"]`).classList.add("sel"));
     el.querySelectorAll("[data-w]").forEach(b=>{const p=pl[+b.dataset.w];b.classList.toggle("on",p===sel);b.classList.toggle("ok",!!p.ok)});
     inp.placeholder=sel?`${sel.no}번 ${sel.d?"세로":"가로"} ${sel.w.length}글자`:"";inp.value=""};
   const end=()=>{if(over)return;over=true;const ok=pl.filter(p=>p.ok).length,all=ok===pl.length,left=Math.max(0,T-(performance.now()-t0))/1000;
     const sc=Math.min(45,ok*5+(all?10+Math.floor(left/15):0)),nt=`${pl.length}낱말 가운데 ${ok}개를 찾았어요`+(all?" 완성 보너스!":"");if(all)clear(sc,undefined,nt,cwReview(pl));else finish(sc,nt,cwReview(pl))};
   el.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{const p=pl[+b.dataset.w];if(p.ok)return;sel=p;paint();inp.focus()});
   el.querySelectorAll(".bm-cc").forEach(x=>x.onclick=()=>{const hit=pl.filter(p=>!p.ok&&at(p).includes(x.dataset.k));if(!hit.length)return;sel=hit[(hit.indexOf(sel)+1)%hit.length];paint();inp.focus()});
-  el.querySelector("#bmCwEnd").onclick=end;
+  if(!A.solo)el.querySelector("#bmCwEnd").onclick=end;
   el.querySelector("#bmCwF").onsubmit=e=>{e.preventDefault();if(!sel||over)return;
     const v=inp.value.replace(/\s/g,"");if(!v)return;
     if(v===sel.w){sel.ok=true;at(sel).forEach((k,i)=>{const c=el.querySelector(`[data-k="${k}"]`);c.querySelector("span").textContent=sel.w[i];c.classList.add("ok")});
@@ -1476,11 +1477,12 @@ function miniCross(el){
 function miniTwenty(el){
   const [a]=pick("twenty",TWENTY[A.lv],1),kind=a[1][0],all=[1,2,3].flatMap(l=>TWENTY[l]).filter(x=>x[1][0]===kind&&x[0]!==a[0]);
   const opts=shuf([a[0],...shuf(all).slice(0,5).map(x=>x[0])]);let left=20,hint=0,over=false;const asked=[],hints=[],T=LV[A.lv].twT*1000,t0=performance.now();
-  const end=(win,late)=>{if(over)return;over=true;if(win)clear(10+left,undefined,`${a[0]}! 고개 ${left}개를 남기고 맞혔어요`);else finish(0,`${late?"시간이 다 됐어요. ":""}정답: ${a[0]}`)};
-  const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`고개 ${left} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
+  const miss=A.solo?A.run.miss:"";if(A.solo)A.run.miss="";
+  const end=(win,late)=>{if(over)return;over=true;if(!win&&!late&&A.solo&&--A.run.lives>0){stopAll();A.run.miss=a[0];return miniTwenty(el)}if(win)clear(10+left,undefined,`${a[0]}! 고개 ${left}개를 남기고 맞혔어요`);else finish(0,`${late?"시간이 다 됐어요. ":""}정답: ${a[0]}`)};
+  const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`${A.solo?"❤️".repeat(A.run.lives)+" ":""}고개 ${left} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
   const spend=n=>{left=Math.max(0,left-n);if(left<=0){end(false);return false}return true};
   const draw=()=>{
-    el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><div class="bm-qs">${TW_Q.map(([t,g],i)=>{const d=asked.includes(i);return `<button type="button" data-q="${i}" ${d?"disabled":""}>${t}${d?` <b class="${a[1].includes(g)?"yes":"nope"}">${a[1].includes(g)?"예":"아니요"}</b>`:""}</button>`}).join("")}</div>
+    el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div>${miss?`<div class="bm-note">고개를 다 썼어요. (정답: ${esc(miss)}) 새 문제예요!</div>`:""}<div class="bm-qs">${TW_Q.map(([t,g],i)=>{const d=asked.includes(i);return `<button type="button" data-q="${i}" ${d?"disabled":""}>${t}${d?` <b class="${a[1].includes(g)?"yes":"nope"}">${a[1].includes(g)?"예":"아니요"}</b>`:""}</button>`}).join("")}</div>
       ${hints.length?`<div class="bm-note">${hints.map(esc).join("<br>")}</div>`:""}
       <button type="button" class="btn" id="bmHint" ${hint>=2?"disabled":""}>결정적 힌트 (고개 4개 쓰기)</button>
       <h4>정답 맞히기 <small class="muted">틀리면 고개 3개가 줄어요</small></h4><div class="bm-opts two">${opts.map((o,i)=>`<button type="button" data-a="${i}">${esc(o)}</button>`).join("")}</div></div>`;
@@ -1551,7 +1553,7 @@ function shootRun(el,plane){
     foes.forEach(f=>{if(f.dv&&Math.abs(f.x-ship.x)<(f.w||50)/2+12&&Math.abs(f.y-sy)<22){hit();f.dv=0;f.y=-30}});
     items=items.filter(i=>{if(i.y>h+10)return false;if(Math.abs(i.x-ship.x)<24&&Math.abs(i.y-sy)<24){pow=6;return false}return true});
     if(over)return;if(time<=0)return end();
-    const s=`${"❤️".repeat(lives)} ${Math.ceil(time)}초 · ${kills}`;if(s!==info){info=s;q("#bmInfo").textContent=s}
+    if(A.solo)A.run.cur=Math.min(45,kills*2);const s=`${"❤️".repeat(lives)} ${Math.ceil(time)}초 · ${kills}`;if(s!==info){info=s;q("#bmInfo").textContent=s}
     x.fillStyle="#0E1630";x.fillRect(0,0,w,h);
     x.fillStyle="#fff";stars.forEach(a=>{x.globalAlpha=a[2]*.7;x.fillRect(a[0]*w,(a[1]*h+t*30*a[2])%h,2,2)});x.globalAlpha=1;
     foes.forEach(f=>{const tw=pill(f);x.fillStyle=f.hp>1?"#A23BC4":f.dv?"#E0562F":"#5B4BC4";x.beginPath();x.roundRect(f.x-tw/2,f.y-13,tw,26,9);x.fill();x.fillStyle="#fff";x.textAlign="center";x.textBaseline="middle";x.fillText(f.l,f.x,f.y+1)});
