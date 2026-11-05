@@ -743,7 +743,7 @@ const MAPV=[
 {k:"paul2",n:"바울 2차",b:[20.5,37.5,31,43],t:"실라와 함께 떠나 유럽까지 복음을 전한 여행이에요. (행 15:36~18:22)",r:["antioch","tarsus","derbe","lystra","troas","neapolis","philippi","thessalonica","berea","athens","corinth","ephesus","caesarea","jerusalem","antioch"],m:["amphipolis","apollonia","cenchreae"]},
 {k:"paul3",n:"바울 3차",b:[20.5,37.5,31,43],t:"에베소에서 오래 머물고 예루살렘으로 돌아온 여행이에요. (행 18:23~21장)",r:["antioch","ephesus","philippi","corinth","troas","miletus","tyre","caesarea","jerusalem"],m:["assos","mitylene","samos","cos","rhodes","patara"]},
 {k:"rome",n:"로마로 가는 길",b:[11,37,30.5,43],t:"죄수의 몸으로 바다를 건너 로마까지 간 여행이에요. (행 27~28장)",r:["caesarea","sidon","myra","fairhavens","malta","syracuse","rhegium","puteoli","rome"],m:["nicopolis"]},
-{k:"rev",n:"일곱 교회",b:[25.6,30,36.9,39.7],t:"요한계시록에 나오는 일곱 교회와 요한이 있던 밧모 섬이에요. (계 1~3장)",r:["ephesus","smyrna","pergamum","thyatira","sardis","philadelphia","laodicea"],m:["patmos","colossae","hierapolis"]}
+{k:"rev",n:"일곱 교회",b:[25.6,30,36.9,39.7],t:"요한계시록에 나오는 일곱 교회와 요한이 있던 밧모 섬이에요. (계 1~3장) 일곱 교회는 모두 현재 튀르키예(터키) 서부에 있어요. 당시에는 로마의 아시아 지방이었어요.",r:["ephesus","smyrna","pergamum","thyatira","sardis","philadelphia","laodicea"],m:["patmos","colossae","hierapolis"]}
 ];
 /* 경도, 위도 순서의 단순화한 지형 */
 const MAP_SEA=[
