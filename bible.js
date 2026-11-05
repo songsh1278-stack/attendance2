@@ -816,17 +816,17 @@ const newRun=k=>({pts:0,lives:k==="twenty"?5:3,asked:0,right:0,done:0});
 const LIFE_GAME=k=>["quiz","map","race","type","shoot","twenty"].includes(k);
 /* 게임을 시작하기 전에 보여 주는 규칙: 방법, 점수, 끝나는 조건 */
 const rulesOf=k=>{
-  const L=LV[A.lv],s=A.solo,life="목숨 3개로 시작해요.",n=s?5:3;
+  const L=LV[A.lv],s=A.solo,life=s?"목숨 3개로 시작해요.":"목숨은 1개예요.",n=5;
   const R={
-    quiz:[`네 가지 보기에서 정답을 골라요. 넌센스 문제도 섞여 나와요. 문제마다 ${L.qt}초가 주어져요.`,"맞히면 10점, 시간이 절반 넘게 남았을 때 맞히면 15점이에요.",s?`${life} 틀리거나 시간이 지나면 하나 줄어요. ${n}문제를 풀면 다음 단계로 가요.`:`${n}문제를 풀면 끝나요.`],
-    map:[`문제를 읽고 지도에서 알맞은 곳을 눌러요. 문제마다 ${L.qt}초가 주어져요.`,"맞히면 10점, 시간이 절반 넘게 남았을 때 맞히면 15점이에요.",s?`${life} 틀리거나 시간이 지나면 하나 줄어요. ${n}문제를 풀면 다음 단계로 가요.`:`${n}문제를 풀면 끝나요.`],
-    race:["자동차를 고르고, 가고 싶은 쪽을 누르면 그 줄로 저절로 가요. 위 말씀의 순서대로 조각을 받고 다른 말은 피하세요.","말씀을 다 받으면 20점에 남은 시간과 목숨만큼 더 받아요. 다 못 받으면 받은 조각만큼 점수를 받아요.",s?`${life} 다른 말을 받으면 하나 줄고, 시간이 지나면 하나 줄면서 새 말씀이 나와요. 말씀을 다 받으면 다음 말씀이 바로 이어져요.`:"말씀을 다 받거나, 목숨 3개를 다 쓰거나, 시간이 끝나면 끝나요."],
-    type:["떨어지는 성경 낱말을 입력하고 엔터나 띄어쓰기를 누르면 사라져요.","낱말 하나에 2점, 끝까지 버티면 5점을 더 받아요. 한 판 최고 45점이에요.",s?`${life} 낱말이 바닥에 닿으면 하나 줄어요. 45초를 버티면 다음 단계로 가요.`:"45초를 버티거나 낱말이 바닥에 세 번 닿으면 끝나요."],
-    cross:[`뜻풀이를 누르고 낱말을 입력해요. 틀려도 맞은 글자는 칸에 남고, 시간이 5초 줄어요. 제한 시간은 ${L.cwT}초예요.`,"낱말 하나에 5점, 다 풀면 보너스를 더 받아요. 한 판 최고 45점이에요.",s?"다 풀면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.":"다 풀거나, 시간이 끝나거나, 그만하고 채점을 누르면 끝나요."],
-    twenty:[`${s?"인물·장소·물건 판과 성경 상식 판이 번갈아 나와요":"인물·장소·물건이나 성경 상식 문제가 나와요"}. 설명이 하나씩 나오면 맞으면 O, 틀리면 X를 빠르게 골라요. 고르면 바로 다음 설명으로 넘어가요. 제한 시간은 ${L.twT}초예요.`,"맞힌 설명 하나에 3점, 7~8개를 다 고르면 보너스를 더 받아요. 빨리 끝낼수록 보너스가 커요.",s?"기회 5번으로 시작해요. 틀리면 하나 줄어요. 7~8개를 다 고르면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.":"7~8개를 다 고르거나, 기회 5번을 다 쓰거나, 시간이 끝나면 끝나요."],
-    shoot:[`비행기를 고르고, 화면 아무 곳에서나 손가락을 끌면 끈 만큼 상하좌우로 움직여요. 컴퓨터는 마우스나 방향키로 움직여요. 빛은 저절로 나가요. 초록색 좋은 말씀(성령의 아홉 열매 등)은 비행기로 받고, 나쁜 말씀은 빛으로 깨요. 적의 총알은 한 번에 ${L.sh.shot}개씩 나와요.`,"나쁜 말씀을 깨면 1점, 좋은 말씀을 받으면 2점, 끝까지 버티면 5점을 더 받아요. 좋은 말씀이든 나쁜 말씀이든 바닥에 떨어지면 2점이 줄어요. 한 판 최고 45점이에요.",s?`${life} 총알이나 나쁜 말씀에 부딪히면 하나 줄어요. 40초를 버티면 다음 단계로 가요.`:"40초를 버티거나 세 번 부딪히면 끝나요.","좋은 것: 🛡️ 방어막(한 번 막아 줘요), ⚡ 레이저(4초), 💣 폭탄(나쁜 말씀과 총알을 모두 없애요). 나쁜 것: 🐌 느려짐(4초), 🧊 얼음(2초 동안 못 움직이고 못 쏴요)."]
+    quiz:[`네 가지 보기에서 정답을 골라요. 넌센스 문제도 섞여 나와요. 문제마다 ${L.qt}초가 주어져요.`,"맞히면 10점, 시간이 절반 넘게 남았을 때 맞히면 15점이에요.",`${life} 틀리거나 시간이 지나면 하나 줄어요. ${n}문제를 풀면 다음 단계로 가요.`],
+    map:[`문제를 읽고 지도에서 알맞은 곳을 눌러요. 문제마다 ${L.qt}초가 주어져요.`,"맞히면 10점, 시간이 절반 넘게 남았을 때 맞히면 15점이에요.",`${life} 틀리거나 시간이 지나면 하나 줄어요. ${n}문제를 풀면 다음 단계로 가요.`],
+    race:["자동차를 고르고, 가고 싶은 쪽을 누르면 그 줄로 저절로 가요. 위 말씀의 순서대로 조각을 받고 다른 말은 피하세요.","말씀을 다 받으면 20점에 남은 시간과 목숨만큼 더 받아요. 다 못 받으면 받은 조각만큼 점수를 받아요.",`${life} 다른 말을 받으면 하나 줄고, 시간이 지나면 하나 줄면서 새 말씀이 나와요. 말씀을 다 받으면 다음 말씀이 바로 이어져요.`],
+    type:["떨어지는 성경 낱말을 입력하고 엔터나 띄어쓰기를 누르면 사라져요.","낱말 하나에 2점, 끝까지 버티면 5점을 더 받아요. 한 판 최고 45점이에요.",`${life} 낱말이 바닥에 닿으면 하나 줄어요. 45초를 버티면 다음 단계로 가요.`],
+    cross:[`뜻풀이를 누르고 낱말을 입력해요. 틀려도 맞은 글자는 칸에 남고, 시간이 5초 줄어요. 제한 시간은 ${L.cwT}초예요.`,"낱말 하나에 5점, 다 풀면 보너스를 더 받아요. 한 판 최고 45점이에요.","다 풀면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요."],
+    twenty:[`인물·장소·물건 판과 성경 상식 판이 번갈아 나와요. 설명이 하나씩 나오면 맞으면 O, 틀리면 X를 빠르게 골라요. 고르면 바로 다음 설명으로 넘어가요. 제한 시간은 ${L.twT}초예요.`,"맞힌 설명 하나에 3점, 7~8개를 다 고르면 보너스를 더 받아요. 빨리 끝낼수록 보너스가 커요.",`${s?"기회 5번으로 시작해요. 틀리면 하나 줄어요.":"기회는 1번이에요. 틀리면 끝나요."} 7~8개를 다 고르면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.`],
+    shoot:[`비행기를 고르고, 화면 아무 곳에서나 손가락을 끌면 끈 만큼 상하좌우로 움직여요. 컴퓨터는 마우스나 방향키로 움직여요. 빛은 저절로 나가요. 초록색 좋은 말씀(성령의 아홉 열매 등)은 비행기로 받고, 나쁜 말씀은 빛으로 깨요. 적의 총알은 한 번에 ${L.sh.shot}개씩 나와요.`,"나쁜 말씀을 깨면 1점, 좋은 말씀을 받으면 2점, 끝까지 버티면 5점을 더 받아요. 좋은 말씀이든 나쁜 말씀이든 바닥에 떨어지면 2점이 줄어요. 한 판 최고 45점이에요.",`${life} 총알이나 나쁜 말씀에 부딪히면 하나 줄어요. 40초를 버티면 다음 단계로 가요.`,"좋은 것: 🛡️ 방어막(한 번 막아 줘요), ⚡ 레이저(4초), 💣 폭탄(나쁜 말씀과 총알을 모두 없애요). 나쁜 것: 🐌 느려짐(4초), 🧊 얼음(2초 동안 못 움직이고 못 쏴요)."]
   }[k];
-  return [["방법",R[0]],["점수",R[1]],...(R[3]?[["아이템",R[3]]]:[]),["끝나는 때",R[2]+(s?" 그만하기를 누르면 그때까지의 점수를 저장해요. 점수는 끝날 때까지 이어지고, 단계가 오르면 고급까지 어려워져요.":"")]];
+  return [["방법",R[0]],["점수",R[1]],...(R[3]?[["아이템",R[3]]]:[]),["끝나는 때",R[2]+(s?" 그만하기를 누르면 그때까지의 점수를 저장해요. 점수는 끝날 때까지 이어지고, 단계가 오르면 고급까지 어려워져요.":" 게임이 끝날 때까지 단계가 이어지고, 단계가 오르면 고급까지 어려워져요. 얻은 점수는 모두 내 점수에 더해요.")]];
 };
 const SOLO={1:{},2:{},3:{}};
 const BOARD_NAME="성경 땅밟기";
@@ -912,7 +912,7 @@ function boardSetup(){
   const s=B||loadSave();
   return `<div class="bm-home">
     <button type="button" class="btn bm-back" data-bmsub="">‹ 성경게임</button>
-    <div class="card bm-hero"><h2>🎲 ${BOARD_NAME}</h2><p>두 개의 주사위를 굴려 성경 땅을 돌아요. 주사위 하나는 0·2·3·4, 다른 하나는 -1·1·2·3이에요. 합이 -1이면 한 칸 뒤로 가요. 멈춘 칸의 게임은 한 판만 하고 다음 주사위로 넘어가요. 출발을 지나면 10점, 출발 칸에 멈추면 10점 더, 은혜의 샘은 20점을 받아요. 광야에 멈추면 다음 라운드를 쉬고, 제비뽑기 칸의 게임은 점수가 2배예요.</p><p class="bm-new">8라운드 누적 점수로 순위를 정해요.</p></div>
+    <div class="card bm-hero"><h2>🎲 ${BOARD_NAME}</h2><p>두 개의 주사위를 굴려 성경 땅을 돌아요. 주사위 하나는 0·2·3·4, 다른 하나는 -1·1·2·3이에요. 합이 -1이면 한 칸 뒤로 가요. 멈춘 칸의 게임은 목숨 1개로 끝날 때까지 단계를 이어서 하고, 얻은 점수를 모두 받아요. 출발을 지나면 10점, 출발 칸에 멈추면 10점 더, 은혜의 샘은 20점을 받아요. 광야에 멈추면 다음 라운드를 쉬고, 제비뽑기 칸의 게임은 점수가 2배예요.</p><p class="bm-new">8라운드 누적 점수로 순위를 정해요.</p></div>
     ${s?`<button type="button" class="btn primary bm-big" data-bmgo="resume">이어하기 · ${LV[s.lv].n} ${Math.min(s.round,s.turns)}/${s.turns}라운드</button>`:""}
     <h2 class="sec">단계</h2>${lvPick()}
     <h2 class="sec">1인용</h2><button type="button" class="btn ${s?"":"primary "}bm-big" data-bmgo="new" style="margin-top:0">${s?"새 게임 시작":"혼자 시작"}</button>
@@ -1254,28 +1254,32 @@ function intro(){
 }
 function startMini(){
   if(A.phase!=="intro"||!A.pending)return;
-  if(!A.solo){if(A.pending.tried)return finish(0,"게임 중에 나가서 이번 칸은 0점이에요");A.pending.tried=true;save()}
+  /* 땅밟기 칸: 목숨 1개로 혼자 하기와 같은 단계제를 돌리고, 끝나면 finish에서 판으로 돌아가요 */
+  if(!A.solo){const d=A.pending;if(d.tried)return finish(d.pts||0,`게임 중에 나가서 ${d.pts?"통과한 단계의 점수만 받아요":"이번 칸은 0점이에요"}`);d.tried=true;save();
+    A={solo:true,board:true,lv:B.lv,lv0:B.lv,run:{...newRun(d.k),lives:1},used:B.used,phase:"intro",pending:d}}
   const k=A.pending.k,el=stageOpen(G[k].i+" "+G[k].n);
-  if(A.solo){A.run.cur=0;q("#bmInfo").insertAdjacentHTML("afterend",`<button type="button" class="btn bm-quit" data-bm="giveup">그만하기</button>`)}
+  if(A.solo)A.run.cur=0;
+  if(A.solo&&!A.board){q("#bmInfo").insertAdjacentHTML("afterend",`<button type="button" class="btn bm-quit" data-bm="giveup">그만하기</button>`)}
   sfx("tap");({quiz:()=>miniQuiz(el),race:()=>miniRace(el),map:()=>miniMap(el),type:()=>miniType(el),cross:()=>miniCross(el),twenty:()=>miniTwenty(el),shoot:()=>miniShoot(el)})[k]();
 }
 function finish(pts,note,more=""){
   stopAll();if(A.phase!=="intro")return;
-  const d=A.pending,got=(pts+(A.solo?A.run.pts:0))*d.m,g=G[d.k],face=got>=20?"🎉":got>0?"👏":"🙏";sfx(A.solo?"over":got>0?"clear":"no");
-  if(A.solo){A.phase="done";
+  const d=A.pending,got=(pts+(A.solo?A.run.pts:0))*d.m,g=G[d.k],face=got>=20?"🎉":got>0?"👏":"🙏";sfx(A.solo?"over":got>0?"clear":"no");const done=A.solo?A.run.done:0;
+  if(A.solo&&!A.board){A.phase="done";
     stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">${got}점</h3>${A.run.done?`<p class="muted num">${A.run.done}단계까지 통과</p>`:""}<p>${esc(note)}</p>${more}<div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="again">다시 하기</button><button type="button" class="btn bm-big" data-bm="exit">목록으로</button></div>`;
     showRank(d.k,A.lv0,got);return}
-  const p=curP();p.score+=got;B.pending=null;B.phase="next";B.msg=`${who()}${g.n} +${got}점`;save();
-  stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">+${got}점</h3><p>${esc(note)}${d.m>1?" (점수 2배)":""}</p>${more}<button type="button" class="btn primary bm-big" data-bm="board">다음 주사위로</button></div>`;
+  A=B;const p=curP();p.score+=got;B.pending=null;B.phase="next";B.msg=`${who()}${g.n} +${got}점`;save();
+  stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">+${got}점</h3>${done?`<p class="muted num">${done}단계까지 통과</p>`:""}<p>${esc(note)}${d.m>1?" (점수 2배)":""}</p>${more}<button type="button" class="btn primary bm-big" data-bm="board">다음 주사위로</button></div>`;
 }
-/* 판을 통과했을 때: 혼자 하면 다음 단계로, 땅밟기 칸에서는 그대로 끝나요. lives를 안 주면 목숨은 그대로예요 */
+/* 판을 통과하면 다음 단계로 가요. 땅밟기 칸은 그만둘 수 없고 목숨이 없어질 때까지 이어져요. lives를 안 주면 목숨은 그대로예요 */
 function clear(pts,lives,note,more=""){
   if(!A.solo)return finish(pts,note,more);
   stopAll();if(A.phase!=="intro")return;
   const r=A.run,k=A.pending.k,g=G[k];sfx("clear");
   r.pts+=pts;r.cur=0;r.done++;if(lives!==undefined)r.lives=lives;
+  if(A.board){A.pending.pts=r.pts;save()}
   if(A.lv<3){A.lv++;A.used=SOLO[A.lv]}
-  stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">🎉</div><p class="muted num">${r.done}단계 통과</p><h3 class="num">${r.pts}점</h3><p>${esc(note)}</p>${LIFE_GAME(k)?`<p>${"❤️".repeat(r.lives)}</p>`:""}${more}<p class="muted">다음 단계 난이도: ${LV[A.lv].n}</p><button type="button" class="btn primary bm-big num" data-bm="start">${r.done+1}단계 도전</button><button type="button" class="btn bm-big" data-bm="giveup">그만하고 점수 저장</button></div>`;
+  stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">🎉</div><p class="muted num">${r.done}단계 통과</p><h3 class="num">${r.pts}점</h3><p>${esc(note)}</p>${LIFE_GAME(k)?`<p>${"❤️".repeat(r.lives)}</p>`:""}${more}<p class="muted">다음 단계 난이도: ${LV[A.lv].n}</p><button type="button" class="btn primary bm-big num" data-bm="start">${r.done+1}단계 도전</button>${A.board?"":`<button type="button" class="btn bm-big" data-bm="giveup">그만하고 점수 저장</button>`}</div>`;
 }
 function drawEnd(){
   sfx("clear");const el=stageOpen("🏆 게임 끝"),me=B.players[B.room?B.room.me:0],two=B.players.length>1,rank=B.players.slice().sort((a,b)=>b.score-a.score);
@@ -1347,7 +1351,7 @@ function miniRace(el){
 }
 /* 혼자 할 때는 통과 화면 없이 다음 말씀으로 바로 이어져요 */
 function raceGo(el,car,pts,lives,up){
-  stopAll();const r=A.run;r.pts+=pts;r.cur=0;r.lives=lives;
+  stopAll();const r=A.run;r.pts+=pts;r.cur=0;r.lives=lives;if(A.board){A.pending.pts=r.pts;save()}
   if(up){sfx("clear");r.done++;if(A.lv<3){A.lv++;A.used=SOLO[A.lv]}}
   raceRun(el,car);
 }
@@ -1555,7 +1559,7 @@ function miniTwenty(el){
   const fact=(A.solo?A.run.done:rnd(2))%2===1,[a]=fact?[["성경 상식"]]:pick("twenty",TWENTY[A.lv],1),list=fact?oxFacts():twBuild(a),t0=performance.now(),T=LV[A.lv].twT*1000,got=new Map();
   let right=0,lives=A.solo?A.run.lives:5,over=false,at=0,lock=false;
   const end=(win,late)=>{if(over)return;over=true;const left=Math.max(0,T-(performance.now()-t0))/1000,sc=right*3+(win?5+Math.floor(left/15):0),note=`${a[0]}: 설명 ${list.length}개 가운데 ${right}개를 맞혔어요`;
-    const miss=list.map(([t,y],i)=>got.get(i)===y?"":`<div>${esc(t)} · 정답 <b>${y?"O":"X"}</b></div>`).join(""),more=miss?`<div class="bm-rev"><h4>틀린 내용</h4>${miss}</div>`:"";
+    const miss=list.map(([t,y],i)=>!got.has(i)||got.get(i)===y?"":`<div>${esc(t)} · 정답 <b>${y?"O":"X"}</b></div>`).join(""),more=miss?`<div class="bm-rev"><h4>틀린 내용</h4>${miss}</div>`:"";
     if(win)clear(sc,A.solo?lives:undefined,note,more);else finish(sc,(late?"시간이 다 됐어요. ":"")+note,more)};
   const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`❤️${lives} ${got.size}/${list.length} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
   el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><div class="bm-tw"><b>${esc(a[0])}</b></div><div class="bm-oxq" id="bmOxQ"></div><div class="bm-oxb"><button type="button" data-ox="1" aria-label="맞아요">O</button><button type="button" data-ox="0" aria-label="틀려요">X</button></div></div>`;
