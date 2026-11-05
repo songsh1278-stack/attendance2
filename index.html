@@ -4635,10 +4635,31 @@ function roomApply(st,ver){
   stopAll();drawBoard();
   if(B.phase==="end")drawEnd();else if(myTurn()){if(B.phase==="intro")intro();else if(B.phase==="move")land()}
 }
-function roomPoll(){
-  if(!B||!B.room||pushBusy||(myTurn()&&B.phase!=="wait"))return;
-  call("roomGet",B.room.code,B.room.ver).then(x=>{if(!B||!B.room)return;if(x.gone){toast("방이 끝났어요");return}if(x.state)roomApply(x.state,x.ver)}).catch(()=>{});
+/* 상대가 나가면 남은 사람은 1인용으로 이어서 해요. 내 점수와 위치는 그대로예요 */
+const ROOM_AWAY=90;
+function goSolo(tell){
+  const r=B.room,me=B.players[r.me],other=B.cur!==r.me;
+  if(tell){const {room,...st}=B;call("roomSave",{code:r.code,tok:r.tok,ver:r.ver,state:{...st,split:true}}).catch(()=>{})}
+  if(other&&r.me===0)B.round++;
+  B.players=[me];B.cur=0;B.room=null;
+  if(other){B.pending=null;B.msg="";B.phase=B.round>B.turns?"end":"roll"}
+  store();toast(tell?"상대가 나가서 1인용으로 바꿨어요":"이 판은 1인용으로 이어서 해요");
+  if(!live())return;
+  if(q(".bm-stage")&&!other){const sc=q("#bmScores");if(sc)sc.innerHTML=scoreHtml();return}
+  stopAll();drawBoard();if(B.phase==="end")drawEnd();
 }
+function roomPoll(){
+  if(!B||!B.room||pushBusy)return;
+  const r=B.room;
+  call("roomGet",r.code,r.ver,r.me).then(x=>{
+    if(!B||B.room!==r)return;
+    if(x.gone){if(B.phase!=="wait"&&B.phase!=="end")goSolo(false);return}
+    if(x.state&&x.state.split)return goSolo(false);
+    if(x.state&&(!myTurn()||B.phase==="wait"))return roomApply(x.state,x.ver);
+    if(x.away>=ROOM_AWAY&&B.phase!=="wait"&&B.phase!=="end")goSolo(true);
+  }).catch(()=>{});
+}
+
 const loadSave=()=>{try{const s=JSON.parse(localStorage.getItem("bm-save"));return s&&s.v===2?s:null}catch(_){return null}};
 
 /* ---------- 탭 첫 화면 ---------- */
@@ -5279,7 +5300,7 @@ function miniShoot(el){
 
 <script>
 (function () {
-  var BUILD = '20261105133408';
+  var BUILD = '20261105134247';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
