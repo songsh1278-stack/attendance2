@@ -609,7 +609,7 @@ const TWENTY={1:[
 ["갈대 상자","oO","역청과 나무 진을 칠했어요","아기를 담아 나일 강가에 두었어요","출 2:3","출 2:3"],
 ["몰약","oN","박사들의 예물이에요","니고데모가 침향과 함께 가져왔어요","마 2:11","요 19:39"]
 ]};
-const TW_Q={O:"주로 구약 이야기에 나와요",N:"주로 신약 이야기에 나와요",m:"남자예요",f:"여자예요",k:"왕이었어요",r:"선지자로 유명해요",d:"예수님의 열두 제자였어요",g:"창세기 이야기에서 유명해요",b:"전쟁 이야기로 유명해요",c:"도시예요",h:"산이에요",e:"먹을 수 있어요"};
+const TW_Q={O:"주로 구약 이야기에 나와요",N:"주로 신약 이야기에 나와요",k:"왕이었어요",r:"선지자로 유명해요",d:"예수님의 열두 제자였어요",g:"창세기 이야기에서 유명해요",b:"전쟁 이야기로 유명해요",c:"도시예요",h:"산이에요",e:"먹을 수 있어요"};
 /* 성경지도. MAPP: 키 → [지명, 위도, 경도, 설명, 위치, 근거문구]. 위치는 대략적인 현대 추정 위치 */
 const MAPP={
 ur:["우르",30.96,46.10,"아브라함의 가족이 가나안으로 가려고 떠난 갈대아인의 땅이에요.","창 11:31","갈대아인의 우르"],
@@ -823,7 +823,7 @@ const rulesOf=k=>{
     race:["자동차를 고르고, 가고 싶은 쪽을 누르면 그 줄로 저절로 가요. 위 말씀의 순서대로 조각을 받고 다른 말은 피하세요.","말씀을 다 받으면 20점에 남은 시간과 목숨만큼 더 받아요. 다 못 받으면 받은 조각만큼 점수를 받아요.",s?`${life} 다른 말을 받으면 하나 줄고, 시간이 지나면 하나 줄면서 새 말씀이 나와요. 말씀을 다 받으면 다음 말씀이 바로 이어져요.`:"말씀을 다 받거나, 목숨 3개를 다 쓰거나, 시간이 끝나면 끝나요."],
     type:["떨어지는 성경 낱말을 입력하고 엔터나 띄어쓰기를 누르면 사라져요.","낱말 하나에 2점, 끝까지 버티면 5점을 더 받아요. 한 판 최고 45점이에요.",s?`${life} 낱말이 바닥에 닿으면 하나 줄어요. 45초를 버티면 다음 단계로 가요.`:"45초를 버티거나 낱말이 바닥에 세 번 닿으면 끝나요."],
     cross:[`뜻풀이를 누르고 낱말을 입력해요. 틀려도 맞은 글자는 칸에 남고, 시간이 5초 줄어요. 제한 시간은 ${L.cwT}초예요.`,"낱말 하나에 5점, 다 풀면 보너스를 더 받아요. 한 판 최고 45점이에요.",s?"다 풀면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.":"다 풀거나, 시간이 끝나거나, 그만하고 채점을 누르면 끝나요."],
-    twenty:[`${s?"인물·장소·물건 판과 성경 상식 판이 번갈아 나와요":"인물·장소·물건이나 성경 상식 문제가 나와요"}. 설명이 하나씩 나오면 맞으면 O, 틀리면 X를 빠르게 골라요. 고르면 바로 다음 설명으로 넘어가요. 제한 시간은 ${L.twT}초예요.`,"맞힌 설명 하나에 3점, 10개를 다 고르면 보너스를 더 받아요. 빨리 끝낼수록 보너스가 커요.",s?"기회 5번으로 시작해요. 틀리면 하나 줄어요. 10개를 다 고르면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.":"10개를 다 고르거나, 기회 5번을 다 쓰거나, 시간이 끝나면 끝나요."],
+    twenty:[`${s?"인물·장소·물건 판과 성경 상식 판이 번갈아 나와요":"인물·장소·물건이나 성경 상식 문제가 나와요"}. 설명이 하나씩 나오면 맞으면 O, 틀리면 X를 빠르게 골라요. 고르면 바로 다음 설명으로 넘어가요. 제한 시간은 ${L.twT}초예요.`,"맞힌 설명 하나에 3점, 7~8개를 다 고르면 보너스를 더 받아요. 빨리 끝낼수록 보너스가 커요.",s?"기회 5번으로 시작해요. 틀리면 하나 줄어요. 7~8개를 다 고르면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.":"7~8개를 다 고르거나, 기회 5번을 다 쓰거나, 시간이 끝나면 끝나요."],
     shoot:[`비행기를 고르고, 화면 아무 곳에서나 손가락을 끌면 끈 만큼 상하좌우로 움직여요. 컴퓨터는 마우스나 방향키로 움직여요. 빛은 저절로 나가요. 초록색 좋은 말씀(성령의 아홉 열매 등)은 비행기로 받고, 나쁜 말씀은 빛으로 깨요. 적의 총알은 한 번에 ${L.sh.shot}개씩 나와요.`,"나쁜 말씀을 깨면 1점, 좋은 말씀을 받으면 2점, 끝까지 버티면 5점을 더 받아요. 좋은 말씀이든 나쁜 말씀이든 바닥에 떨어지면 2점이 줄어요. 한 판 최고 45점이에요.",s?`${life} 총알이나 나쁜 말씀에 부딪히면 하나 줄어요. 40초를 버티면 다음 단계로 가요.`:"40초를 버티거나 세 번 부딪히면 끝나요.","좋은 것: 🛡️ 방어막(한 번 막아 줘요), ⚡ 레이저(4초), 💣 폭탄(나쁜 말씀과 총알을 모두 없애요). 나쁜 것: 🐌 느려짐(4초), 🧊 얼음(2초 동안 못 움직이고 못 쏴요)."]
   }[k];
   return [["방법",R[0]],["점수",R[1]],...(R[3]?[["아이템",R[3]]]:[]),["끝나는 때",R[2]+(s?" 그만하기를 누르면 그때까지의 점수를 저장해요. 점수는 끝날 때까지 이어지고, 단계가 오르면 고급까지 어려워져요.":"")]];
@@ -1039,6 +1039,16 @@ function wikiLook(q,box){
     }).catch(()=>{if(t===wikiTok&&box.isConnected)box.innerHTML=`<p class="muted bm-maph">위키백과에 연결하지 못했어요. 인터넷을 확인해 주세요.</p>`});
   },500);
 }
+/* 최근 검색어: 찾기를 누르거나, 낱말을 끝까지 입력했거나, 비슷한 말을 눌렀을 때 이 기기에 남겨요 */
+const RECENT_KEY="bm-dict-recent",RECENT_MAX=8;
+const recentGet=()=>{try{const a=JSON.parse(localStorage.getItem(RECENT_KEY));return Array.isArray(a)?a.filter(x=>typeof x==="string"):[]}catch(_){return[]}};
+const recentHtml=()=>{const l=recentGet();return l.length?`<span class="muted">최근 검색어</span>${l.map(w=>`<span class="bm-rq"><button type="button" data-rq="${esc(w)}">${esc(w)}</button><button type="button" data-rx="${esc(w)}" aria-label="${esc(w)} 지우기">×</button></span>`).join("")}<button type="button" class="bm-rall" data-rall>모두 지우기</button>`:""};
+const recentSet=l=>{try{localStorage.setItem(RECENT_KEY,JSON.stringify(l.slice(0,RECENT_MAX)))}catch(_){}const b=document.querySelector("#bmRecent");if(b)b.innerHTML=recentHtml()};
+const recentAdd=w=>{w=w.trim();if(w)recentSet([w,...recentGet().filter(x=>x!==w)])};
+document.addEventListener("click",e=>{const t=e.target.closest("[data-rq],[data-rx],[data-rall]");if(!t)return;
+  if(t.dataset.rx!==undefined)return recentSet(recentGet().filter(x=>x!==t.dataset.rx));
+  if(t.dataset.rall!==undefined)return recentSet([]);
+  const i=document.querySelector("#bmMapS"),sr=document.querySelector("#bmMapR");if(!i||!sr)return;i.value=t.dataset.rq;recentAdd(i.value);dictShow(i.value,sr)});
 function dictShow(q,sr){
   wikiTok++;clearTimeout(wikiTimer);q=q.trim();if(!q){sr.innerHTML="";return}
   const {hit,via,more}=dictFind(q);
@@ -1046,7 +1056,7 @@ function dictShow(q,sr){
     +(more.length?`<div class="bm-mfind">${more.map(e=>`<button type="button" data-dword="${esc(e.n)}"><b>${esc(e.n)}</b><span>${esc(e.d[0]?e.d[0][0]:"")}</span></button>`).join("")}</div>`:"")+(via==="exact"?"":`<div id="bmWiki"></div>`);
   sr.querySelectorAll("[data-mfind]").forEach(b=>b.onclick=()=>mapGo(b.dataset.mfind));
   sr.querySelectorAll("[data-mperson]").forEach(b=>b.onclick=()=>{CFG.mv="p:"+b.dataset.mperson;CFG.mp="";rerender();const m=document.querySelector(".bm-mapw");if(m)m.scrollIntoView({block:"center"})});
-  sr.querySelectorAll("[data-dword]").forEach(b=>b.onclick=()=>{const i=document.querySelector("#bmMapS");i.value=b.dataset.dword;dictShow(i.value,sr)});
+  sr.querySelectorAll("[data-dword]").forEach(b=>b.onclick=()=>{const i=document.querySelector("#bmMapS");i.value=b.dataset.dword;recentAdd(i.value);dictShow(i.value,sr)});
   if(via!=="exact")wikiLook(q,sr.querySelector("#bmWiki"));
 }
 /* 인물을 찾으면 그 사람의 활동지역만 모은 지도를 그때그때 만들어요 */
@@ -1085,7 +1095,7 @@ function mapPage(){
   const chips=f=>MAPV.filter(f).map(x=>`<button type="button" data-mapv="${x.k}" aria-pressed="${x===v}">${x.n}</button>`).join("");
   return `<div class="bm-home">
     <h2 class="sec">성경지도보기</h2>
-    <form class="bm-in bm-msearch" id="bmMapF"><input id="bmMapS" autocomplete="off" aria-label="성경사전 검색" placeholder="성경사전: 궁금한 단어 입력"><button type="submit" class="btn primary">찾기</button></form><div id="bmMapR"></div>
+    <form class="bm-in bm-msearch" id="bmMapF"><input id="bmMapS" autocomplete="off" aria-label="성경사전 검색" placeholder="성경사전: 궁금한 단어 입력"><button type="submit" class="btn primary">찾기</button></form><div class="bm-recent" id="bmRecent">${recentHtml()}</div><div id="bmMapR"></div>
     <div class="bm-mapc">${chips(x=>x.k==="all")}</div>
     <p class="bm-mapg">구약</p><div class="bm-mapc">${chips(x=>x.k!=="all"&&!MAP_NT.includes(x.k))}</div>
     <p class="bm-mapg">신약</p><div class="bm-mapc">${chips(x=>MAP_NT.includes(x.k))}</div>
@@ -1101,8 +1111,8 @@ const MZ={};
 window.bibleMapAfter=function(){
   const svg=document.querySelector(".bm-map.zoom");if(!svg)return;
   const si=document.querySelector("#bmMapS"),sr=document.querySelector("#bmMapR");
-  si.oninput=()=>dictShow(si.value,sr);
-  document.querySelector("#bmMapF").onsubmit=e=>{e.preventDefault();si.blur();dictShow(si.value,sr)};
+  let recentT=0;si.oninput=()=>{dictShow(si.value,sr);clearTimeout(recentT);recentT=setTimeout(()=>{if(si.isConnected&&si.value.trim()&&dictFind(si.value.trim()).via==="exact")recentAdd(si.value)},1500)};
+  document.querySelector("#bmMapF").onsubmit=e=>{e.preventDefault();si.blur();clearTimeout(recentT);recentAdd(si.value);dictShow(si.value,sr)};
   const v=curView(),{W,H}=mapGeo(v),z=MZ[v.k]||(MZ[v.k]={x:0,y:0,w:W,sel:""}),minW=W/(v.k==="all"?24:8),maxW=W*Math.max(1.15,Math.min(46/(v.b[1]-v.b[0]),6));
   const pins=[...svg.querySelectorAll(".bm-pin")].map(g=>{const c=g.querySelectorAll("circle");return{g,hit:c[0],dot:c[1],t:g.querySelector("text"),x:+c[0].getAttribute("cx"),y:+c[0].getAttribute("cy"),on:g.classList.contains("on")}}).sort((a,b)=>b.on-a.on);
   const draw=()=>{
@@ -1178,7 +1188,7 @@ function onAct(e){
 function cellRC(i){if(i<=6)return[6-i,0];if(i<=12)return[0,i-6];if(i<=18)return[i-12,6];return[6,24-i]}
 const tokStyle=(pi,pos)=>{const [r,c]=cellRC(pos),dx=pi?.72:.28,dy=pi?.72:.28;return `left:${(c+dx)/7*100}%;top:${(r+dy)/7*100}%`};
 const DIE_A=[0,2,3,4],DIE_B=[-1,1,2,3];
-const pips=n=>n<=0?`<b class="z">${n}</b>`:({1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]})[n].map(p=>`<i style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></i>`).join("");
+const pips=n=>n<=0?`<b class="z">${n}</b>`:`<svg viewBox="0 0 100 100" aria-hidden="true">`+({1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]})[n].map(p=>`<circle cx="${[26,50,74][(p-1)%3]}" cy="${[26,50,74][Math.ceil(p/3)-1]}" r="10"/>`).join("")+`</svg>`;
 function midHtml(){
   const p=curP();
   const dice=`<div class="bm-dice"><div id="bmD1">${pips(B.dice[0])}</div><div id="bmD2">${pips(B.dice[1]??1)}</div></div>`;
@@ -1360,7 +1370,12 @@ function raceRun(el,car){
     else out.push(near,later.length?later[rnd(later.length)]:o());
     return out.filter((x,i)=>x!==chunks[at]&&out.indexOf(x)===i)};
   const pill=(txt,ln)=>{const n=document.createElement("span");n.className="bm-rp";n.textContent=txt;n.style.left=(ln+.5)/3*100+"%";road.appendChild(n);return{txt,ln,n}};
-  const spawn=()=>{const ls=shuf([0,1,2]),items=[pill(chunks[at],ls[0])];decoys().forEach((d,i)=>{if(ls[i+1]!==undefined)items.push(pill(d,ls[i+1]))});rows.push({y:-44,items,done:false})};
+  const spawn=()=>{const txts=[chunks[at],...decoys()].slice(0,3),prev=rows[rows.length-1];let ls=shuf([0,1,2]);
+    /* 바로 앞줄과 같은 차선에 같은 말이 오지 않게 자리를 다시 뽑아요 */
+    for(let n=0;n<8&&prev&&txts.some((tx,i)=>prev.items.some(b=>b.ln===ls[i]&&b.txt===tx));n++)ls=shuf([0,1,2]);
+    rows.push({y:-44,items:txts.map((tx,i)=>pill(tx,ls[i])),done:false})};
+  /* 다음 조각으로 바뀌면서 한 줄에 같은 말이 둘이 되면 하나를 다른 말로 바꿔요 */
+  const undup=(o,it)=>o.items.filter(x=>x!==it&&x.txt===it.txt).forEach(x=>{const w=others.filter(c=>!o.items.some(y=>y.txt===c));if(w.length){x.txt=w[rnd(w.length)];x.n.textContent=x.txt}else{x.n.remove();o.items=o.items.filter(y=>y!==x)}});
   const pressLane=e=>{if(e.type==="pointermove"&&!e.buttons)return;const b=road.getBoundingClientRect();setLane(Math.floor((e.clientX-b.left)/b.width*3));e.preventDefault()};
   road.addEventListener("pointerdown",pressLane);road.addEventListener("pointermove",pressLane);
   const key=e=>{if(e.key==="ArrowLeft")setLane(lane-1);if(e.key==="ArrowRight")setLane(lane+1)};
@@ -1376,7 +1391,7 @@ function raceRun(el,car){
         if(hit){hit.n.remove();r.items=r.items.filter(x=>x!==hit);
           if(hit.txt===chunks[at]){at++;verse();sfx("ok");carEl.classList.add("good");after(220,()=>carEl.classList.remove("good"));
             if(at>=K){end(true);return false}
-            rows.forEach(o=>{if(o!==r&&!o.done){const it=o.items.find(x=>x.txt===chunks[at-1]);if(it){it.txt=chunks[at];it.n.textContent=it.txt}}})}
+            rows.forEach(o=>{if(o!==r&&!o.done){const it=o.items.find(x=>x.txt===chunks[at-1]);if(it){it.txt=chunks[at];it.n.textContent=it.txt;undup(o,it)}}})}
           else{lives--;sfx("no");carEl.classList.add("bad");after(380,()=>carEl.classList.remove("bad"));if(lives<=0){end(false);return false}}}}
       if(r.y>h+50){r.items.forEach(x=>x.n.remove());return false}return true});
     if(over)return;if(t>=T){if(A.solo&&lives>1){over=true;return raceGo(el,car,Math.round(15*at/K),lives-1,false)}return end(false)}
@@ -1526,14 +1541,14 @@ function miniCross(el){
 
 /* ---------- OX 퀴즈 : 설명을 하나씩 O나 X로 빠르게 골라요 ---------- */
 /* 성경 상식 판: 개역개정과 대조한 성경퀴즈의 문제와 보기로 만들어요 */
-function oxFacts(){return pick("oxq",QUIZ[A.lv],10).map(it=>{const y=rnd(2);return [`${it[0]}\n→ ${y?it[1]:it[2+rnd(3)]}`,y]})}
+function oxFacts(){return pick("oxq",QUIZ[A.lv],7+rnd(2)).map(it=>{const y=rnd(2);return [`${it[0]}\n→ ${y?it[1]:it[2+rnd(3)]}`,y]})}
 /* 틀린 설명으로 쓰면 안 되는 힌트: 구약·신약이 달라도 다른 인물이나 장소에 맞을 수 있어요 */
 const TW_VAGUE=new Set(["천사가 찾아왔어요","총독이었어요","유대 땅의 왕이었어요","사내아이를 다 죽였어요","아론의 자손이에요","유대인의 지도자였어요","모든 백성의 존경을 받는 율법 교사였어요","성경에 능통했어요","백성을 많이 구제했어요","예루살렘의 의롭고 경건한 사람이에요","아기를 안고 하나님을 찬송했어요","물로 손을 씻었어요","양 치는 자였어요","양을 치는 사람이었어요","하루 세 번 기도했어요","유력한 사람이었어요","다윗의 아들이에요","성전을 건축했어요","왕이 높인 대신이에요","하나님의 영으로 지혜를 받았어요","유다 지파 사람이에요","선지자라고 불렸어요","떡과 포도주를 가지고 나왔어요","돌로 침을 받았어요","나실인이었어요","율법에 익숙한 학자예요","궁이 있었어요","혼례가 있었어요","예수님이 기도하신 곳이에요","온 성에 우상이 가득했어요","장대 위에 달았어요","쳐다본즉 살았어요","다섯 개가 있었어요","한 아이가 가지고 있었어요"]);
 function twBuild(a){
   const pool=[1,2,3].flatMap(l=>TWENTY[l]),tg=a[1],far=pool.filter(x=>x[1][1]!==tg[1]);
-  const yes=[...new Set([TW_Q[tg[1]],a[2],a[3],...[...tg.slice(2)].map(c=>TW_Q[c])])];
+  const n=7+rnd(2),yes=[...new Set([TW_Q[tg[1]],a[2],a[3],...[...tg.slice(2)].map(c=>TW_Q[c])].filter(Boolean))].slice(0,n-3);
   const hints=list=>shuf(list.flatMap(x=>[x[2],x[3]])).filter(h=>!TW_VAGUE.has(h)&&!yes.includes(h));
-  const no=[...new Set([TW_Q[tg[1]==="O"?"N":"O"],...(tg[0]==="p"?[TW_Q[tg[2]==="m"?"f":"m"]]:[]),...hints(far.filter(x=>x[1][0]===tg[0])),...hints(far.filter(x=>x[1][0]!==tg[0]))])].slice(0,10-yes.length);
+  const no=[...new Set([TW_Q[tg[1]==="O"?"N":"O"],...hints(far.filter(x=>x[1][0]===tg[0])),...hints(far.filter(x=>x[1][0]!==tg[0]))])].slice(0,n-yes.length);
   return shuf([...yes.map(t=>[t,1]),...no.map(t=>[t,0])]);
 }
 function miniTwenty(el){
