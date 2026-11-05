@@ -784,7 +784,7 @@ const G={
   type:{n:"말씀타자",i:"⌨️"},
   map:{n:"성경지도 찾기",i:"🗺️"},
   cross:{n:"가로세로낱말퀴즈",i:"✏️"},
-  twenty:{n:"맞는 설명 찾기",i:"✅"},
+  twenty:{n:"OX 퀴즈",i:"⭕"},
   shoot:{n:"말씀 슈팅",i:"🚀"}
 };
 const CORNER={0:{t:"start",p:"출발",i:"🚩"},6:{t:"rest",p:"광야",i:"🏜️"},12:{t:"grace",p:"은혜의 샘",i:"💧"},18:{t:"lot",p:"제비뽑기",i:"🎲"}};
@@ -804,7 +804,7 @@ const rulesOf=k=>{
     race:["자동차를 고르고, 가고 싶은 쪽을 누르면 그 줄로 저절로 가요. 위 말씀의 순서대로 조각을 받고 다른 말은 피하세요.","말씀을 다 받으면 20점에 남은 시간과 목숨만큼 더 받아요. 다 못 받으면 받은 조각만큼 점수를 받아요.",s?`${life} 다른 말을 받으면 하나 줄고, 시간이 지나면 하나 줄면서 새 말씀이 나와요. 말씀을 다 받으면 다음 말씀이 바로 이어져요.`:"말씀을 다 받거나, 목숨 3개를 다 쓰거나, 시간이 끝나면 끝나요."],
     type:["떨어지는 성경 낱말을 입력하고 엔터나 띄어쓰기를 누르면 사라져요.","낱말 하나에 2점, 끝까지 버티면 5점을 더 받아요. 한 판 최고 45점이에요.",s?`${life} 낱말이 바닥에 닿으면 하나 줄어요. 45초를 버티면 다음 단계로 가요.`:"45초를 버티거나 낱말이 바닥에 세 번 닿으면 끝나요."],
     cross:[`뜻풀이를 누르고 낱말을 입력해요. 틀려도 맞은 글자는 칸에 남고, 시간이 5초 줄어요. 제한 시간은 ${L.cwT}초예요.`,"낱말 하나에 5점, 다 풀면 보너스를 더 받아요. 한 판 최고 45점이에요.",s?"다 풀면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.":"다 풀거나, 시간이 끝나거나, 그만하고 채점을 누르면 끝나요."],
-    twenty:[`성경 인물이나 장소, 물건을 먼저 보여 줘요. 설명 10개마다 맞으면 O, 틀리면 X를 골라요. 제한 시간은 ${L.twT}초예요.`,"맞힌 설명 하나에 3점, 10개를 다 고르면 보너스를 더 받아요.",s?"기회 5번으로 시작해요. 틀리면 하나 줄어요. 10개를 다 고르면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.":"10개를 다 고르거나, 기회 5번을 다 쓰거나, 시간이 끝나면 끝나요."],
+    twenty:[`${s?"인물·장소·물건 판과 성경 상식 판이 번갈아 나와요":"인물·장소·물건이나 성경 상식 문제가 나와요"}. 설명이 하나씩 나오면 맞으면 O, 틀리면 X를 빠르게 골라요. 고르면 바로 다음 설명으로 넘어가요. 제한 시간은 ${L.twT}초예요.`,"맞힌 설명 하나에 3점, 10개를 다 고르면 보너스를 더 받아요. 빨리 끝낼수록 보너스가 커요.",s?"기회 5번으로 시작해요. 틀리면 하나 줄어요. 10개를 다 고르면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.":"10개를 다 고르거나, 기회 5번을 다 쓰거나, 시간이 끝나면 끝나요."],
     shoot:["비행기를 고르고, 화면을 누르면 그쪽으로 저절로 움직여요. 빛은 저절로 나가요.","유혹 하나에 2점, 끝까지 버티면 5점을 더 받아요. 한 판 최고 45점이에요.",s?`${life} 공격이나 유혹에 부딪히면 하나 줄어요. 40초를 버티면 다음 단계로 가요.`:"40초를 버티거나 세 번 부딪히면 끝나요."]
   }[k];
   return [["방법",R[0]],["점수",R[1]],["끝나는 때",R[2]+(s?" 그만하기를 누르면 그때까지의 점수를 저장해요. 점수는 끝날 때까지 이어지고, 단계가 오르면 고급까지 어려워져요.":"")]];
@@ -1495,7 +1495,9 @@ function miniCross(el){
   every(200,()=>{const r=1-(performance.now()-t0)/T;bar.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=Math.max(0,Math.ceil(r*T/1000))+"초";if(r<=0)end()});
 }
 
-/* ---------- 맞는 설명 찾기 : 정답을 보여 주고 설명 10개마다 O나 X를 골라요 ---------- */
+/* ---------- OX 퀴즈 : 설명을 하나씩 O나 X로 빠르게 골라요 ---------- */
+/* 성경 상식 판: 개역개정과 대조한 성경퀴즈의 문제와 보기로 만들어요 */
+function oxFacts(){return pick("oxq",QUIZ[A.lv],10).map(it=>{const y=rnd(2);return [`${it[0]}\n→ ${y?it[1]:it[2+rnd(3)]}`,y]})}
 /* 틀린 설명으로 쓰면 안 되는 힌트: 구약·신약이 달라도 다른 인물이나 장소에 맞을 수 있어요 */
 const TW_VAGUE=new Set(["천사가 찾아왔어요","총독이었어요","유대 땅의 왕이었어요","사내아이를 다 죽였어요","아론의 자손이에요","유대인의 지도자였어요","모든 백성의 존경을 받는 율법 교사였어요","성경에 능통했어요","백성을 많이 구제했어요","예루살렘의 의롭고 경건한 사람이에요","아기를 안고 하나님을 찬송했어요","물로 손을 씻었어요","양 치는 자였어요","양을 치는 사람이었어요","하루 세 번 기도했어요","유력한 사람이었어요","다윗의 아들이에요","성전을 건축했어요","왕이 높인 대신이에요","하나님의 영으로 지혜를 받았어요","유다 지파 사람이에요","선지자라고 불렸어요","떡과 포도주를 가지고 나왔어요","돌로 침을 받았어요","나실인이었어요","율법에 익숙한 학자예요","궁이 있었어요","혼례가 있었어요","예수님이 기도하신 곳이에요","온 성에 우상이 가득했어요","장대 위에 달았어요","쳐다본즉 살았어요","다섯 개가 있었어요","한 아이가 가지고 있었어요"]);
 function twBuild(a){
@@ -1506,17 +1508,20 @@ function twBuild(a){
   return shuf([...yes.map(t=>[t,1]),...no.map(t=>[t,0])]);
 }
 function miniTwenty(el){
-  const [a]=pick("twenty",TWENTY[A.lv],1),list=twBuild(a),t0=performance.now(),T=LV[A.lv].twT*1000,got=new Map();
-  let right=0,lives=A.solo?A.run.lives:5,over=false;
+  const fact=(A.solo?A.run.done:rnd(2))%2===1,[a]=fact?[["성경 상식"]]:pick("twenty",TWENTY[A.lv],1),list=fact?oxFacts():twBuild(a),t0=performance.now(),T=LV[A.lv].twT*1000,got=new Map();
+  let right=0,lives=A.solo?A.run.lives:5,over=false,at=0,lock=false;
   const end=(win,late)=>{if(over)return;over=true;const left=Math.max(0,T-(performance.now()-t0))/1000,sc=right*3+(win?5+Math.floor(left/15):0),note=`${a[0]}: 설명 ${list.length}개 가운데 ${right}개를 맞혔어요`;
     const miss=list.map(([t,y],i)=>got.get(i)===y?"":`<div>${esc(t)} · 정답 <b>${y?"O":"X"}</b></div>`).join(""),more=miss?`<div class="bm-rev"><h4>틀린 내용</h4>${miss}</div>`:"";
     if(win)clear(sc,A.solo?lives:undefined,note,more);else finish(sc,(late?"시간이 다 됐어요. ":"")+note,more)};
   const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`${"❤️".repeat(lives)} ${got.size}/${list.length} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
-  el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><div class="bm-tw"><b>${esc(a[0])}</b><span class="muted">설명마다 맞으면 O, 틀리면 X를 고르세요</span></div><div class="bm-oxs">${list.map(([t],i)=>`<div class="bm-ox"><span>${esc(t)}</span><button type="button" data-ox="${i}:1" aria-label="맞아요">O</button><button type="button" data-ox="${i}:0" aria-label="틀려요">X</button></div>`).join("")}</div></div>`;
-  el.querySelectorAll("[data-ox]").forEach(b=>b.onclick=()=>{const [i,v]=b.dataset.ox.split(":").map(Number);if(over||got.has(i))return;got.set(i,v);
-    const y=list[i][1],row=b.parentNode;row.classList.add(v===y?"ok":"no");row.querySelectorAll("button").forEach(x=>{x.disabled=true;if(+x.dataset.ox.split(":")[1]===y)x.classList.add("ans")});
-    if(v===y){right++;if(A.solo)A.run.cur=right*3}else{lives--;if(lives<=0)return end(false)}
-    if(got.size>=list.length)return end(true);tick()});
+  el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><div class="bm-tw"><b>${esc(a[0])}</b></div><div class="bm-oxq" id="bmOxQ"></div><div class="bm-oxb"><button type="button" data-ox="1" aria-label="맞아요">O</button><button type="button" data-ox="0" aria-label="틀려요">X</button></div></div>`;
+  const box=el.querySelector("#bmOxQ"),btns=[...el.querySelectorAll("[data-ox]")];
+  const show=()=>{box.className="bm-oxq";box.textContent=list[at][0];btns.forEach(x=>x.classList.remove("ans"))};
+  btns.forEach(b=>b.onclick=()=>{if(over||lock)return;lock=true;const v=+b.dataset.ox,y=list[at][1],ok=v===y;got.set(at,v);box.classList.add(ok?"ok":"no");
+    btns.find(x=>+x.dataset.ox===y).classList.add("ans");
+    if(ok){right++;if(A.solo)A.run.cur=right*3}else lives--;
+    tick();after(ok?250:600,()=>{if(lives<=0)return end(false);if(got.size>=list.length)return end(true);at++;lock=false;show()})});
+  show();
   tick();every(200,tick);
 }
 
