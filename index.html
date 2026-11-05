@@ -4623,7 +4623,7 @@ function boardSetup(){
   const s=B||loadSave();
   return `<div class="bm-home">
     <button type="button" class="btn bm-back" data-bmsub="">‹ 성경게임</button>
-    <div class="card bm-hero"><h2>🎲 ${BOARD_NAME}</h2><p>두 개의 주사위를 굴려 성경 땅을 돌아요. 주사위 하나는 0·1·2·3, 다른 하나는 -1·1·2·3이에요. 합이 -1이면 한 칸 뒤로, 0이면 제자리예요. 멈춘 칸의 게임을 이겨 8라운드 동안 점수를 모으세요.</p></div>
+    <div class="card bm-hero"><h2>🎲 ${BOARD_NAME}</h2><p>두 개의 주사위를 굴려 성경 땅을 돌아요. 주사위 하나는 0·2·3·4, 다른 하나는 -1·1·2·3이에요. 합이 -1이면 한 칸 뒤로 가요. 멈춘 칸의 게임을 이겨 8라운드 동안 점수를 모으세요.</p></div>
     ${s?`<button type="button" class="btn primary bm-big" data-bmgo="resume">이어하기 · ${LV[s.lv].n} ${Math.min(s.round,s.turns)}/${s.turns}라운드</button>`:""}
     <h2 class="sec">단계</h2>${lvPick()}
     <button type="button" class="btn ${s?"":"primary "}bm-big" data-bmgo="new" style="margin-top:18px">${s?"새 게임 시작":"게임 시작"}</button>
@@ -4870,7 +4870,7 @@ function onAct(e){
 }
 function cellRC(i){if(i<=6)return[6-i,0];if(i<=12)return[0,i-6];if(i<=18)return[i-12,6];return[6,24-i]}
 const tokStyle=(pi,pos)=>{const [r,c]=cellRC(pos),dx=.74,dy=.28;return `left:${(c+dx)/7*100}%;top:${(r+dy)/7*100}%`};
-const DIE_A=[0,1,2,3],DIE_B=[-1,1,2,3];
+const DIE_A=[0,2,3,4],DIE_B=[-1,1,2,3];
 const pips=n=>n<=0?`<b class="z">${n}</b>`:({1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]})[n].map(p=>`<i style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></i>`).join("");
 function midHtml(){
   const p=curP();
@@ -4896,7 +4896,7 @@ function roll(){
   const a=q("#bmD1"),b=q("#bmD2");a.parentNode.classList.add("spin");let n=0;
   const id=every(80,()=>{a.innerHTML=pips(DIE_A[rnd(4)]);b.innerHTML=pips(DIE_B[rnd(4)]);if(++n<9)return;
     clearInterval(id);V.t.delete(id);a.innerHTML=pips(d1);b.innerHTML=pips(d2);a.parentNode.classList.remove("spin");
-    const msg=q("#bmMsg");if(msg)msg.innerHTML=sum<0?`<b>뒤로 ${-sum}칸</b>`:sum?`<b>${sum}칸</b> 이동`:`<b>제자리</b>`;
+    const msg=q("#bmMsg");if(msg)msg.innerHTML=sum<0?`<b>뒤로 ${-sum}칸</b>`:`<b>${sum}칸</b> 이동`;
     let step=0;const tok=q("#bmTok"+B.cur);
     const dir=sum<0?-1:1,len=Math.abs(sum),walk=()=>{if(step>=len)return after(280,land);step++;tok.setAttribute("style",tokStyle(B.cur,(from+dir*step+24)%24)+";background:"+p.color);after(170,walk)};
     after(300,walk)});
@@ -5240,7 +5240,7 @@ function miniShoot(el){
 
 <script>
 (function () {
-  var BUILD = '20261105130024';
+  var BUILD = '20261105131715';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
