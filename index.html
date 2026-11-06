@@ -3604,7 +3604,7 @@ function renderHome(){
       return `<div class="admin-row"><b>${TEAMS[t].label}</b>${me&&me.dev?`<span class="code none">${esc(me.name)} 선생님 (QR로 로그인됨)</span><button class="btn primary" data-mytcode="${t}">${me.hasPw?"내 비밀번호 변경":"내 비밀번호 만들기"}</button>`:me?`<span class="code none">${esc(me.name)} 선생님으로 로그인됨</span><button class="btn primary" data-mytcode="${t}">${me.own?"내 비밀번호 변경":"내 비밀번호 만들기"}</button>`:""}</div>`}).join("")}</div></details>`}
   h+=staffPwCard()+qrCard();
   if(!S.isAdmin&&S.staffMgr)h+=renderStaff();
-  if(S.isAdmin){h+=renderPromoAdmin();if(S.staffMgr)h+=renderStaff();if(!S.isCo2)h+=activityCard()}if(S.isAdmin||isHrOnly()||isTeamMgr())h+=bibleCard(); /* 연말 학년 등반은 팀 관리자 등록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
+  if(S.isAdmin){if(S.staffMgr)h+=renderStaff();h+=renderPromoAdmin();if(!S.isCo2)h+=activityCard()}if(S.isAdmin||isHrOnly()||isTeamMgr())h+=bibleCard(); /* 연말 학년 등반은 활동 기록 바로 위 */ /* 로그아웃·로그인 버튼은 맨 아래 */
   h+=lookPanel(); /* 새로고침은 맨 위 제목 줄 오른쪽 ↻ 버튼 */
   h+=`<div style="margin-top:12px;text-align:center">${S.isAdmin?`<button class="btn" id="adminOut">관리자 로그아웃</button>`:isHrOnly()||isTeamMgr()?`<button class="btn" id="hrOut">로그아웃</button>`:""}${S.isAdmin||isHrOnly()||isTeamMgr()?` <button class="btn" id="qrSelf">내 다른 기기 추가</button>`:""}${showA2hs()||isStandalone()?"":` <button class="btn" id="a2hsAgain">홈 화면에 추가</button>`}${hasStored()||Object.keys(S._codes||{}).length||Object.keys(S._gcodes||{}).length?`<div style="margin-top:10px"><button class="btn danger" id="forgetCodes">이 기기 번호 지우기</button><div class="muted" style="font-size:12px;margin-top:4px">번호를 다시 넣어야 부서에 들어갈 수 있어요</div></div>`:""}</div>`;
   return h;
@@ -4094,7 +4094,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261106163940';
+  var BUILD = '20261106200050';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
