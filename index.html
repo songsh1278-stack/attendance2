@@ -1238,7 +1238,8 @@ S.date=keyOf(lastSunday());
 {const _n=new Date(),_y=_n.getFullYear();S.years=new Set(_n.getMonth()<2?[_y-1,_y]:[_y]);S.years.add(Number(S.date.slice(0,4)));S.allYears=[];S.photos=new Map();S.ver="";S.vers={};S.lastBoot=0;
  try{const j=JSON.parse(localStorage.getItem("ya-photos")||"null");if(j)S.photos=new Map(Object.entries(j))}catch(_){}}
 try{const t=localStorage.getItem("ya-team");if(t)S.team=t;const g=localStorage.getItem("ya-group");if(g)S.group=g}catch(e){}
-try{if(localStorage.getItem("ya-fold-summary")==="0")S.fold.summary=false}catch(e){}
+/* 접기 메뉴는 기본이 닫힘이고, 이 기기에서 마지막으로 열고 닫은 상태를 기억해요 */
+try{Object.assign(S.fold,JSON.parse(localStorage.getItem("ya-fold")||"{}"));localStorage.removeItem("ya-fold-summary")}catch(e){}
 setTeam(S.team);
 
 function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
@@ -1976,7 +1977,7 @@ function openGuide(){
 /* ---------- 활동 기록 (총관리자·공동관리자1. 텔레그램 알림 종류·답장은 총관리자만) ---------- */
 const activityCard=()=>`<details class="fold" data-fold="activity"${S.fold.activity?" open":""}><summary><h2 class="sec">활동 기록</h2></summary><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">출석 체크(반별), 명단·반 이동, 번호 변경, 일정, 자료실, 설정, 요청 등 모든 기록 (로그인 포함 보기 가능)</span><button class="btn" id="actOpen">기록 보기</button></div>${S.isCo?"":`<div class="admin-row"><b>텔레그램 알림</b><span class="code none">휴대폰 텔레그램으로 받을 기록 종류</span><button class="btn" id="tgOpen">알림 종류</button></div>`}</div></details>`;
 const useTime=(t,n)=>{const s=Math.round((Number(t)||0)/(Number(n)||1)),h=Math.floor(s/3600),m=Math.floor(s%3600/60),c=s%60;return h?h+"시간 "+m+"분":m?m+"분 "+c+"초":c+"초"};
-const bibleCard=()=>[["bibleMap","부록-성경지도보기","시대별 지도, 성경사전, 사진","map","지도 보기"],["bibleGame","부록-성경게임","퀴즈, 말씀게임으로 성경지식 쌓기","game","게임하기"],["bibleJubo","부록-주보보기","이번 주 교회 주보와 지난 주보","jubo","주보 보기"]].map(([f,t,d,k,b])=>`<details class="fold" data-fold="${f}"${S.fold[f]!==false?" open":""}><summary><h2 class="sec">${t}</h2>${S.isAdmin&&!S.isCo&&S.bibleViews?`<span class="fold-sum num">조회수 ${Number(S.bibleViews[k])||0} · 평균 이용시간 ${useTime(S.bibleViews["t"+k],S.bibleViews[k])}</span>`:""}</summary><div class="card admin-list"><div class="admin-row"><span class="code none">${d}</span><button class="btn" data-bmhome="${k}">${b}</button></div></div></details>`).join("");
+const bibleCard=()=>[["bibleMap","부록-성경지도보기","시대별 지도, 성경사전, 사진","map","지도 보기"],["bibleGame","부록-성경게임","퀴즈, 말씀게임으로 성경지식 쌓기","game","게임하기"],["bibleJubo","부록-주보보기","이번 주 교회 주보와 지난 주보","jubo","주보 보기"]].map(([f,t,d,k,b])=>`<details class="fold" data-fold="${f}"${S.fold[f]?" open":""}><summary><h2 class="sec">${t}</h2>${S.isAdmin&&!S.isCo&&S.bibleViews?`<span class="fold-sum num">조회수 ${Number(S.bibleViews[k])||0} · 평균 이용시간 ${useTime(S.bibleViews["t"+k],S.bibleViews[k])}</span>`:""}</summary><div class="card admin-list"><div class="admin-row"><span class="code none">${d}</span><button class="btn" data-bmhome="${k}">${b}</button></div></div></details>`).join("");
 /* 텔레그램으로 받을 알림 종류 고르기 (총관리자 전용) */
 async function openTgKinds(){
   const ov=document.createElement("div");ov.className="overlay";
@@ -2087,7 +2088,7 @@ const canRpt=()=>S.isAdmin||Object.keys(TEAMS).some(t=>((S.scope||{})[t]||{}).le
 const isTeamMgr=()=>!S.isAdmin&&Object.keys(TEAMS).some(t=>((S.scope||{})[t]||{}).level==="dept");
 /* 담임·팀 관리자로 들어온 사람: 메인화면 아래 버튼이 [로그아웃] */
 const isHrOnly=()=>!S.isAdmin&&!isTeamMgr()&&Object.keys(TEAMS).some(t=>["grade","sub"].includes(((S.scope||{})[t]||{}).level));
-const foldOpen=k=>S.isAdmin||(isTeamMgr()&&["guide","mycode","hrcodes"].includes(k))?!!S.fold[k]:S.fold[k]!==false;
+const foldOpen=k=>!!S.fold[k];
 /* 당회보고서 제출 현황 (그달 제출한 부서 수). 1분이 지나면 메인 화면을 그릴 때 다시 받아요 */
 function rptStatLoad(){
   if(!S.rptOk||Date.now()-(S.rptStatAt||0)<60000)return;S.rptStatAt=Date.now();const ym=rptDefaultYm();
@@ -3477,7 +3478,7 @@ function renderAdminSummary(){
   });
   const sum=f=>rows.reduce((a,r)=>a+r[f],0);
   const S1={on:sum("on"),n:sum("n")},T1={on:sum("ton"),n:sum("tn")};
-  return `<details class="fold" data-fold="summary"${S.fold.summary!==false?" open":""}><summary><h2 class="sec">부서별 출석 현황</h2><span class="fold-sum num">${d.getMonth()+1}월 ${d.getDate()}일 주일 · 학생 ${attFrac(S1.on,S1.n)}</span></summary><div class="card">
+  return `<details class="fold" data-fold="summary"${S.fold.summary?" open":""}><summary><h2 class="sec">부서별 출석 현황</h2><span class="fold-sum num">${d.getMonth()+1}월 ${d.getDate()}일 주일 · 학생 ${attFrac(S1.on,S1.n)}</span></summary><div class="card">
     <div class="datebar" style="margin:0 0 12px"><button class="arrow" data-adate="-7" aria-label="지난 주일">‹</button>
     <div class="date"><strong class="num">${d.getMonth()+1}월 ${d.getDate()}일 주일</strong></div>
     <button class="arrow" data-adate="7" aria-label="다음 주일">›</button></div>
@@ -3493,7 +3494,7 @@ function renderClassSummary(t){
   for(const [g,l] of classesOf(t)){const ps=all.filter(p=>p.group===g);rows.push({label:esc(l),...cnt(ps)});
     const ss=sectionsOfKey(t,g);if(ss.length)for(const x of ss)rows.push({label:"&nbsp;&nbsp;└ "+x+"반",sub:true,...cnt(ps.filter(p=>p.section===x))})}
   const st=cnt(all.filter(p=>p.group!=="T")),tc=cnt(all.filter(p=>p.group==="T"));
-  return `<details class="fold" data-fold="cls_${t}"${S.fold["cls_"+t]!==false?" open":""} style="margin-top:12px"><summary><h2 class="sec">${TEAMS[t].label} 반별 출석 현황</h2><span class="fold-sum num">${d.getMonth()+1}월 ${d.getDate()}일 · 학생 ${attFrac(st.on,st.n)}</span></summary><div class="card">
+  return `<details class="fold" data-fold="cls_${t}"${S.fold["cls_"+t]?" open":""} style="margin-top:12px"><summary><h2 class="sec">${TEAMS[t].label} 반별 출석 현황</h2><span class="fold-sum num">${d.getMonth()+1}월 ${d.getDate()}일 · 학생 ${attFrac(st.on,st.n)}</span></summary><div class="card">
     <div class="datebar" style="margin:0 0 12px"><button class="arrow" data-adate="-7" aria-label="지난 주일">‹</button>
     <div class="date"><strong class="num">${d.getMonth()+1}월 ${d.getDate()}일 주일</strong></div>
     <button class="arrow" data-adate="7" aria-label="다음 주일">›</button></div>
@@ -3613,11 +3614,11 @@ function renderStaff(){
   const full=staffFull(),TO=["infant","toddler","youth","teen"],oi=t=>TO.indexOf(t)<0?9:TO.indexOf(t),ord=x=>x.role==="admin"?0:x.role==="co"?1:x.role==="co2"?2:3;const L=[...(S.staff||[])].sort((a,b)=>ord(a)-ord(b)||(ord(a)===3?oi(a.team)-oi(b.team):0)||String(a.name).localeCompare(String(b.name),"ko"));
   const rl=x=>x.role==="admin"?"총관리자":x.role==="co"?"공동관리자1":x.role==="co2"?"공동관리자2":"팀 관리자"+(x.duty?"("+x.duty+")":"");
   const teams=mgrTeams();
-  const G=([...[...new Set(L.filter(x=>x.role==="team").map(x=>TEAMS[x.team]?x.team:""))].sort((a,b)=>oi(a)-oi(b)).map(t=>["team-"+(t||"none"),(t?TEAMS[t].label:"부서 미지정")+" 팀 관리자",L.filter(x=>x.role==="team"&&(TEAMS[x.team]?x.team:"")===t)]),["mgr","총관리자·공동관리자",L.filter(x=>x.role!=="team")]]).filter(g=>g[2].length),gOpen=G.some(g=>S.fold["staff-"+g[0]]!==false);
+  const G=([...[...new Set(L.filter(x=>x.role==="team").map(x=>TEAMS[x.team]?x.team:""))].sort((a,b)=>oi(a)-oi(b)).map(t=>["team-"+(t||"none"),(t?TEAMS[t].label:"부서 미지정")+" 팀 관리자",L.filter(x=>x.role==="team"&&(TEAMS[x.team]?x.team:"")===t)]),["mgr","총관리자·공동관리자",L.filter(x=>x.role!=="team")]]).filter(g=>g[2].length),gOpen=G.some(g=>!!S.fold["staff-"+g[0]]);
   const row=x=>`<div class="admin-row"><b>${esc(staffNm(x))}</b><span class="tag ${x.role==="admin"?"admin":x.role==="co"||x.role==="co2"?"new":"role"}">${rl(x)}</span>${x.pos&&x.pos!==x.duty?`<span class="tag admin">${esc(x.pos)}</span>`:""}${x.role==="team"?`<span class="tag ${x.team?"role":"new"}">${x.team&&TEAMS[x.team]?esc(TEAMS[x.team].label):"부서 미지정"}</span>`:""}<span class="code none" style="letter-spacing:0;word-break:break-all">${esc(x.email)}${x.role==="admin"?"":`<br><span style="font-size:12px">${x.hasPw?"비밀번호 있음":`<span style="color:var(--danger,#C0392B)">비밀번호 없음</span>`} · 기기 ${x.devs||0}대</span>`}</span>${x.role!=="admin"&&(full?(!S.isCo||x.role==="team"):canMngStaff(x))?`<button class="btn${x.hasPw?"":" primary"}" data-qr-staff="${esc(x.email)}"${x.hasPw?` style="opacity:.45" title="비밀번호가 있어서 QR 없이 [로그인]으로 들어올 수 있어요"`:""}>QR</button>`:""}${canMngStaff(x)?`<button class="btn" data-staff-edit="${esc(x.email)}">수정</button><button class="btn danger" data-staff-del="${esc(x.email)}">삭제</button>`:""}</div>`;
   return `<details class="fold" data-fold="staff"${S.fold.staff?" open":""}><summary><h2 class="sec">로그인 관리 · ${full?"관리자 등록":"팀 관리자 등록"}</h2><span class="fold-sum">QR · 비밀번호 · 기기 · 관리자 ${L.length}명</span></summary>${qrTeams().length?qrBody(qrTeams()):""}<h3 style="margin:14px 0 8px;font-size:15px">${full?"팀 관리자·공동관리자 등록":"팀 관리자 등록"}</h3><div class="card">
     ${full?"":`<p class="muted" style="font-size:13px;margin:0 0 10px">${S.staffMgr==="all"?"모든 부서":esc(teams.map(t=>TEAMS[t].label).join("·"))}의 팀 관리자를 등록하고 QR을 만들어요.</p>`}
-    ${L.length?`<div style="display:flex;justify-content:flex-end;margin:0 0 6px"><button type="button" class="btn" data-staffall="${gOpen?"close":"open"}">${gOpen?"모두 접기":"모두 펼치기"}</button></div>`+G.map(([k,lab,g])=>`<details class="fold staff-grp" data-fold="staff-${k}"${S.fold["staff-"+k]!==false?" open":""}><summary><b>${lab}</b><span class="fold-sum">${g.length}명</span></summary><div class="admin-list">${g.map(row).join("")}</div></details>`).join(""):`<p class="muted" style="margin:0 0 10px">등록된 사람이 없어요.</p>`}
+    ${L.length?`<div style="display:flex;justify-content:flex-end;margin:0 0 6px"><button type="button" class="btn" data-staffall="${gOpen?"close":"open"}">${gOpen?"모두 접기":"모두 펼치기"}</button></div>`+G.map(([k,lab,g])=>`<details class="fold staff-grp" data-fold="staff-${k}"${S.fold["staff-"+k]?" open":""}><summary><b>${lab}</b><span class="fold-sum">${g.length}명</span></summary><div class="admin-list">${g.map(row).join("")}</div></details>`).join(""):`<p class="muted" style="margin:0 0 10px">등록된 사람이 없어요.</p>`}
     <form id="staffForm" class="form" style="grid-template-columns:1fr"><label>이름<input id="f-sname" maxlength="20" required autocomplete="off"></label><label>이메일<input id="f-semail" type="email" inputmode="email" autocomplete="off" required></label>
     <label>구분<select id="f-srole">${teamOpts("")}${full?`<option value="co">공동관리자1</option><option value="co2">공동관리자2</option><option value="admin" ${S.isCo?"disabled":""}>총관리자</option>`:""}</select></label>
     ${posSelect("f-spos","")}
@@ -3812,7 +3813,7 @@ document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.dataset&&d.datas
   else{const o=S.statOpen||(S.statOpen=new Set());if(d.open)o.add(k);else o.delete(k)}
   saveStatView()}},true);
 document.addEventListener("click",e=>{const b=e.target.closest("[data-staffall]");if(!b)return;const op=b.dataset.staffall==="open";document.querySelectorAll("details.staff-grp").forEach(d=>{S.fold[d.dataset.fold]=op});render()});
-document.addEventListener("toggle",e=>{const f=e.target;if(f.dataset&&f.dataset.fold){S.fold[f.dataset.fold]=f.open;if(f.dataset.fold==="summary")try{f.open?localStorage.removeItem("ya-fold-summary"):localStorage.setItem("ya-fold-summary","0")}catch(_){}}},true);
+document.addEventListener("toggle",e=>{const f=e.target;if(f.dataset&&f.dataset.fold){S.fold[f.dataset.fold]=f.open;try{localStorage.setItem("ya-fold",JSON.stringify(S.fold))}catch(_){}}},true);
 document.addEventListener("click",e=>{const ad=e.target.closest("[data-adate]");
 if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   if(d<START){toast("기록은 시작 주일부터 있어요");return}
@@ -4082,7 +4083,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261106153103';
+  var BUILD = '20261106155058';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
