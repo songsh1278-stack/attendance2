@@ -1399,7 +1399,7 @@ function raceRun(el,car){
   const road=el.querySelector("#bmRoad"),carEl=el.querySelector("#bmCar"),rv=el.querySelector("#bmRv");
   let at=0,lane=A.solo&&A.run.lane!==undefined?A.run.lane:1,lives=A.solo?A.run.lives:3,rows=[],last=performance.now(),t=0,gapY=0,over=false,info="",lock=0;
   /* 단계를 통과할수록 3%씩 빨라지고 1.2배에서 멈춰요. 줄 간격이 좁아도 손이 따라갈 틈은 남겨요 */
-  const H=()=>road.clientHeight,boost=(1+Math.min(.2,(A.solo?A.run.done:0)*.03))*(1+(hot()-1)*.6),speed=()=>L.rs*boost*Math.max(.8,H()/520),rowGap=()=>Math.max(H()*.42,120),T=K*(rowGap()/speed())*3+6;
+  const H=()=>road.clientHeight,boost=(1+Math.min(.2,(A.solo?A.run.done:0)*.03))*(1+(hot()-1)*.6),speed=()=>L.rs*boost*Math.max(.8,H()/520),rowGap=()=>Math.max(H()*.42,120),T=K*(rowGap()/speed())*3+16;
   const verse=()=>{rv.innerHTML=chunks.map((c,i)=>`<span class="${i<at?"ok":i===at&&A.lv<=2?"cur":""}">${esc(c)}</span>`).join(" ")};
   const setLane=n=>{const o=lane;lane=Math.max(0,Math.min(2,n));if(A.solo)A.run.lane=lane;carEl.style.left=laneX(lane);if(o!==lane){carEl.style.setProperty("--tilt",(lane>o?9:-9)+"deg");after(150,()=>carEl.style.setProperty("--tilt","0deg"))}};
   const end=win=>{if(over)return;over=true;const left=Math.max(0,1-t/T);
