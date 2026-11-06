@@ -990,24 +990,24 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
 .bm-confetti i{position:absolute;top:-14px;width:9px;height:14px;border-radius:2px;animation:bmFall 1.8s ease-in forwards}
 @keyframes bmFall{to{transform:translateY(105vh) rotate(540deg);opacity:.7}}
 .bm-menu{grid-template-columns:repeat(auto-fit,minmax(138px,1fr))}
-.bm-menu button{border:0;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.2);text-shadow:0 1px 2px rgba(0,0,0,.35);transition:transform .08s,box-shadow .08s}
-.bm-menu button:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
-.bm-menu span{width:54px;height:54px;display:grid;place-items:center;border-radius:50%;background:rgba(255,255,255,.9);font-size:29px;text-shadow:none}
+.bm-menu button{border:1px solid rgba(90,70,60,.1);color:#3A3340;box-shadow:0 2px 6px rgba(70,50,40,.1);transition:transform .08s,box-shadow .08s}
+.bm-menu button:active{transform:translateY(2px);box-shadow:none}
+.bm-menu span{width:54px;height:54px;display:grid;place-items:center;border-radius:50%;background:rgba(255,255,255,.75);font-size:29px}
 .bm-menu .bm-k-rank span{width:40px;height:40px;font-size:22px}
-.bm-menu .bm-k-quiz{background:linear-gradient(150deg,#5B3CC4,#B8487C)!important}
-.bm-menu .bm-k-race{background:linear-gradient(150deg,#E8574A,#B3261E)!important}
-.bm-menu .bm-k-pair{background:linear-gradient(150deg,#1B8FB5,#0F4C75)!important}
-.bm-menu .bm-k-map{background:linear-gradient(150deg,#B8863F,#6E4522)!important}
-.bm-menu .bm-k-cross{background:linear-gradient(150deg,#2E9E73,#17593F)!important}
-.bm-menu .bm-k-twenty{background:linear-gradient(150deg,#42A5E8,#1B6FBB)!important}
-.bm-menu .bm-k-shoot{background:linear-gradient(150deg,#3A2F8F,#0F1438)!important}
-.bm-menu .bm-k-diff{background:linear-gradient(150deg,#26303A,#54687A)!important}
-.bm-menu .bm-k-art{background:linear-gradient(150deg,#A26B2C,#5E3A16)!important}
-.bm-menu .bm-k-board{background:linear-gradient(150deg,#E2A82B,#B27A0C)!important}
-.bm-menu .bm-k-rank{background:linear-gradient(90deg,#6E1F2E,#A8423F)!important}
-.bm-home .bm-hero{background:linear-gradient(120deg,#6E1F2E,#A8423F 60%,#D9A520);border:0;color:#fff}
-.bm-home .bm-hero h2{color:#fff}
-.bm-home .bm-hero p{color:rgba(255,255,255,.88)}
+.bm-menu .bm-k-quiz{background:linear-gradient(150deg,#E8DFF8,#F6DFEA)!important}
+.bm-menu .bm-k-race{background:linear-gradient(150deg,#FBE0D9,#FAEAD3)!important}
+.bm-menu .bm-k-pair{background:linear-gradient(150deg,#D5EDF5,#DEEAF9)!important}
+.bm-menu .bm-k-map{background:linear-gradient(150deg,#F4E8D2,#EEDFC8)!important}
+.bm-menu .bm-k-cross{background:linear-gradient(150deg,#D9F1E4,#E6F4DB)!important}
+.bm-menu .bm-k-twenty{background:linear-gradient(150deg,#DAEDFB,#E6F4FB)!important}
+.bm-menu .bm-k-shoot{background:linear-gradient(150deg,#DFDFF6,#E8E2F4)!important}
+.bm-menu .bm-k-diff{background:linear-gradient(150deg,#DFE8EE,#EAF0F3)!important}
+.bm-menu .bm-k-art{background:linear-gradient(150deg,#F2E5D5,#F6ECDE)!important}
+.bm-menu .bm-k-board{background:linear-gradient(150deg,#FBF0CC,#F9E8BC)!important}
+.bm-menu .bm-k-rank{background:linear-gradient(150deg,#F6DFE3,#FBEADB)!important}
+.bm-home .bm-hero{background:linear-gradient(120deg,#F6E3E6,#FBEFD8);border:1px solid rgba(90,70,60,.1);color:#4A2A30}
+.bm-home .bm-hero h2{color:#4A2A30}
+.bm-home .bm-hero p{color:#6A5550}
 /* 펼친 폴더폰과 태블릿: 글자와 단추를 키우고 보기는 두 줄로 놓아요 */
 @media (min-width:600px){
   .bm-sb{max-width:760px}
@@ -1074,6 +1074,26 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
 }
 @supports (aspect-ratio:1){.bm-dp{height:auto!important}}
 @media (max-height:420px){.bm-art{max-height:25vh}}
+/* 출석부 화면: 플립 커버처럼 세로가 낮은 폰은 돌린 방향과 상관없이 머리를 같이 스크롤하고 아래 메뉴를 낮춰요 */
+@media (max-height:520px){
+  header.top{position:relative;top:auto;padding-block:6px 5px}
+  header.top .datebar{margin-top:5px}
+  .chips{margin-top:6px}
+  nav.tabs button{padding:5px 0 6px;font-size:10.5px;gap:1px}
+  nav.tabs svg{width:17px;height:17px}
+  .app{padding-block-end:56px}
+  .sheet{max-height:100%}
+}
+/* 손가락으로 누르는 화면은 작은 단추를 조금 키워요 */
+@media (pointer:coarse),(max-width:900px){
+  #view .btn,#view button:not(.chip):not(.who-wrap):not([data-t]):not([data-tab]):not(.icon-btn):not(.check):not([class*="bm-"]){min-height:32px}
+  #view .sd-nm{min-height:30px}
+  #view .who-wrap{min-height:32px}
+  .sheet .btn{min-height:36px}
+}
+/* 좁은 폰: 긴 메모가 세로로 끝없이 늘어나지 않게 두 줄만 보여요. 이름을 누르면 전체가 보여요 */
+@media (max-width:400px){.row .who>span:not(.memo-line){display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
+.brand h1{word-break:keep-all}
 </style>
 </head>
 <body>
@@ -4009,7 +4029,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261106144123';
+  var BUILD = '20261106145432';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
