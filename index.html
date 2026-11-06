@@ -1989,7 +1989,7 @@ function openGuide(){
 /* ---------- 활동 기록 (총관리자·공동관리자1. 텔레그램 알림 종류·답장은 총관리자만) ---------- */
 const activityCard=()=>`<details class="fold" data-fold="activity"${S.fold.activity?" open":""}><summary><h2 class="sec">활동 기록</h2></summary><div class="card admin-list"><div class="admin-row"><b>전체 부서</b><span class="code none">출석 체크(반별), 명단·반 이동, 번호 변경, 일정, 자료실, 설정, 요청 등 모든 기록 (로그인 포함 보기 가능)</span><button class="btn" id="actOpen">기록 보기</button></div>${S.isCo?"":`<div class="admin-row"><b>텔레그램 알림</b><span class="code none">휴대폰 텔레그램으로 받을 기록 종류</span><button class="btn" id="tgOpen">알림 종류</button></div>`}</div></details>`;
 const useTime=(t,n)=>{const s=Math.round((Number(t)||0)/(Number(n)||1)),h=Math.floor(s/3600),m=Math.floor(s%3600/60),c=s%60;return h?h+"시간 "+m+"분":m?m+"분 "+c+"초":c+"초"};
-const bibleCard=()=>[["bibleMap","부록-성경지도보기","시대별 지도, 성경사전, 사진","map","지도 보기"],["bibleGame","부록-성경게임","퀴즈, 말씀게임으로 성경지식 쌓기","game","게임하기"],["bibleJubo","부록-주보보기","이번 주 교회 주보와 지난 주보","jubo","주보 보기"]].map(([f,t,d,k,b])=>`<details class="fold" data-fold="${f}"${S.fold[f]?" open":""}><summary><h2 class="sec">${t}</h2>${S.isAdmin&&!S.isCo&&S.bibleViews?`<span class="fold-sum num">조회수 ${Number(S.bibleViews[k])||0} · 평균 이용시간 ${useTime(S.bibleViews["t"+k],S.bibleViews[k])}</span>`:""}</summary><div class="card admin-list"><div class="admin-row"><span class="code none">${d}</span><button class="btn" data-bmhome="${k}">${b}</button></div></div></details>`).join("");
+const bibleCard=()=>[["bibleMap","부록-성경지도보기","시대별 지도, 성경사전, 사진","map","지도 보기"],["bibleGame","부록-성경게임","퀴즈, 말씀게임으로 성경지식 쌓기","game","게임하기"],["bibleJubo","부록-주보보기","이번 주 교회 주보와 지난 주보","jubo","주보 보기"]].map(([f,t,d,k,b])=>`<details class="fold" data-fold="${f}"${S.fold[f]?" open":""}><summary><h2 class="sec">${t}</h2>${S.isAdmin&&!S.isCo&&S.bibleViews?`<span class="fold-sum num">조회수 ${Number(S.bibleViews[k])||0} · 평균 ${useTime(S.bibleViews["t"+k],S.bibleViews[k])}</span>`:""}</summary><div class="card admin-list"><div class="admin-row"><span class="code none">${d}</span><button class="btn" data-bmhome="${k}">${b}</button></div></div></details>`).join("");
 /* 텔레그램으로 받을 알림 종류 고르기 (총관리자 전용) */
 async function openTgKinds(){
   const ov=document.createElement("div");ov.className="overlay";
@@ -4094,7 +4094,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261106160440';
+  var BUILD = '20261106163940';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
