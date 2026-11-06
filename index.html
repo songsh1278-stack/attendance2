@@ -968,11 +968,11 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
 .bm-note{border-left:4px solid var(--gold)}
 .bm-tw b{color:var(--accent);font-weight:700}
 .bm-oxq{border-color:#BFE2F7;background:linear-gradient(180deg,#fff,#EEF8FE);font-weight:700}
-.bm-oxb button{border:0;color:#fff;font-weight:800;transition:transform .08s,box-shadow .08s;background:linear-gradient(180deg,#3BC07A,#229A5C);box-shadow:0 6px 0 #17754A}
-.bm-oxb button+button{color:#fff;background:linear-gradient(180deg,#F0705F,#D2402F);box-shadow:0 6px 0 #9E2A1E}
-.bm-oxb button:active:not(:disabled){transform:translateY(5px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
-.bm-oxb button.ans{outline:4px solid #FFD35C;outline-offset:2px;background:linear-gradient(180deg,#3BC07A,#229A5C)}
-.bm-oxb button+button.ans{background:linear-gradient(180deg,#F0705F,#D2402F)}
+.bm-oxb button{border:2px solid #A8DFC0;color:#2E9E5B;font-weight:800;transition:transform .08s,box-shadow .08s;background:linear-gradient(180deg,#E3F7EA,#CFF0DC);box-shadow:0 5px 0 #A8DFC0}
+.bm-oxb button+button{border-color:#F6C3BC;color:#D9574A;background:linear-gradient(180deg,#FDE9E5,#FBD9D3);box-shadow:0 5px 0 #F6C3BC}
+.bm-oxb button:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 rgba(90,70,60,.2)}
+.bm-oxb button.ans{outline:4px solid #FFD35C;outline-offset:2px;background:linear-gradient(180deg,#D3F3DF,#BDEBCF)}
+.bm-oxb button+button.ans{background:linear-gradient(180deg,#FCDDD7,#F9CCC4)}
 .bm-art{box-sizing:border-box;border:7px solid #C9A24B;outline:1px solid #7A5A1F;border-radius:3px;box-shadow:0 8px 18px rgba(0,0,0,.35),inset 0 0 0 1px #FBE9B0}
 .bm-dp{border-radius:3px;box-shadow:0 0 0 3px #C9A24B,0 4px 10px rgba(0,0,0,.3);flex:0 1 auto;min-width:0;max-width:100%}
 .bm-stage .bm-map{border:3px solid #A87B3F;background:#F4EAD0}
@@ -4077,7 +4077,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261106151304';
+  var BUILD = '20261106151809';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
