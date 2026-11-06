@@ -1217,6 +1217,8 @@ function nextTurn(){
   }
   B.msg=notes.join(" · ");B.phase="roll";save();drawBoard();
 }
+/* 게임 장면이 아닌 설명·고르기·결과 화면은 파스텔 바탕을 써요 */
+const softStage=el=>{el.parentNode.classList.add("bm-soft");return el};
 function stageOpen(title){
   const old=q(".bm-stage");if(old)old.remove();
   const s=document.createElement("div");s.className="bm-stage";s.dataset.k=(A&&A.pending&&A.pending.k)||"end";
@@ -1225,7 +1227,7 @@ function stageOpen(title){
 }
 function intro(){
   const d=A.pending,g=G[d.k];
-  const el=stageOpen(g.i+" "+g.n);el.parentNode.classList.add("bm-soft");
+  const el=softStage(stageOpen(g.i+" "+g.n));
   el.innerHTML=`<div class="bm-card"><div class="bm-emoji">${g.i}</div><p class="muted">${A.solo?LV[A.lv].n:`${esc(d.pre||"")}${esc(d.p)} 칸${d.m>1?" · 점수 2배":""}`}</p><h3>${g.n}</h3><div class="bm-rules">${rulesOf(d.k).map(([t,x])=>`<div><b>${t}</b>${x}</div>`).join("")}</div><button type="button" class="btn primary bm-big" data-bm="start">시작하기</button></div>`;
 }
 function startMini(){
@@ -1242,10 +1244,10 @@ function finish(pts,note,more=""){
   stopAll();if(A.phase!=="intro")return;
   const d=A.pending,got=(pts+(A.solo?A.run.pts:0))*d.m,g=G[d.k],face=got>=20?"🎉":got>0?"👏":"🙏";sfx(A.solo?"over":got>0?"clear":"no");if(got>0)after(30,confetti);const done=A.solo?A.run.done:0;
   if(A.solo&&!A.board){A.phase="done";
-    stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">${got}점</h3>${A.run.done?`<p class="muted num">${A.run.done}단계까지 통과</p>`:""}<p>${esc(note)}</p>${more}<div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="again">다시 하기</button><button type="button" class="btn bm-big" data-bm="exit">목록으로</button></div>`;
+    softStage(stageOpen(g.i+" "+g.n)).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">${got}점</h3>${A.run.done?`<p class="muted num">${A.run.done}단계까지 통과</p>`:""}<p>${esc(note)}</p>${more}<div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="again">다시 하기</button><button type="button" class="btn bm-big" data-bm="exit">목록으로</button></div>`;
     showRank(d.k,A.lv0,got);return}
   A=B;const p=curP();p.score+=got;B.pending=null;B.phase="next";B.msg=`${g.n} +${got}점`;save();
-  stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">+${got}점</h3>${done?`<p class="muted num">${done}단계까지 통과</p>`:""}<p>${esc(note)}${d.m>1?" (점수 2배)":""}</p>${more}<button type="button" class="btn primary bm-big" data-bm="board">다음 주사위로</button></div>`;
+  softStage(stageOpen(g.i+" "+g.n)).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">+${got}점</h3>${done?`<p class="muted num">${done}단계까지 통과</p>`:""}<p>${esc(note)}${d.m>1?" (점수 2배)":""}</p>${more}<button type="button" class="btn primary bm-big" data-bm="board">다음 주사위로</button></div>`;
 }
 /* 판을 통과하면 다음 단계로 가요. 땅밟기 칸은 그만둘 수 없고 목숨이 없어질 때까지 이어져요. lives를 안 주면 목숨은 그대로예요 */
 function clear(pts,lives,note,more=""){
@@ -1255,10 +1257,10 @@ function clear(pts,lives,note,more=""){
   r.pts+=pts;r.cur=0;r.done++;if(lives!==undefined)r.lives=lives;
   if(A.board){A.pending.pts=r.pts;save()}
   lvUp(r);
-  stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">🎉</div><p class="muted num">${r.done}단계 통과</p><h3 class="num">${r.pts}점</h3><p>${esc(note)}</p>${LIFE_GAME(k)?`<p>${"❤️".repeat(r.lives)}</p>`:""}${more}<p class="muted">다음 단계 난이도: ${LV[A.lv].n}</p><button type="button" class="btn primary bm-big num" data-bm="start">${r.done+1}단계 도전</button>${A.board?"":`<button type="button" class="btn bm-big" data-bm="giveup">그만하고 점수 저장</button>`}</div>`;
+  softStage(stageOpen(g.i+" "+g.n)).innerHTML=`<div class="bm-card"><div class="bm-emoji">🎉</div><p class="muted num">${r.done}단계 통과</p><h3 class="num">${r.pts}점</h3><p>${esc(note)}</p>${LIFE_GAME(k)?`<p>${"❤️".repeat(r.lives)}</p>`:""}${more}<p class="muted">다음 단계 난이도: ${LV[A.lv].n}</p><button type="button" class="btn primary bm-big num" data-bm="start">${r.done+1}단계 도전</button>${A.board?"":`<button type="button" class="btn bm-big" data-bm="giveup">그만하고 점수 저장</button>`}</div>`;
 }
 function drawEnd(){
-  sfx("clear");after(30,confetti);const el=stageOpen("🏆 게임 끝"),me=B.players[0];
+  sfx("clear");after(30,confetti);const el=softStage(stageOpen("🏆 게임 끝")),me=B.players[0];
   el.innerHTML=`<div class="bm-card"><div class="bm-emoji">🏆</div><h3 class="num">${me.score}점</h3><p>${BOARD_NAME} ${LV[B.lv].n} ${B.turns}라운드를 모두 마쳤어요!</p><div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="done">마치기</button></div>`;
   showRank("board",B.lv,me.score);
 }
@@ -1375,7 +1377,7 @@ const SIM={은:"는",는:"은",이:"가",가:"이",을:"를",를:"을",에:"의"
 const similar=c=>{const l=c[c.length-1];return c.slice(0,-1)+(SIM[l]||"요")};
 function miniRace(el){
   if(A.solo&&A.run.car!==undefined)return raceRun(el,A.run.car);
-  let last=0;try{last=+localStorage.getItem("bm-car")||0}catch(_){}
+  softStage(el);let last=0;try{last=+localStorage.getItem("bm-car")||0}catch(_){}
   el.innerHTML=`<div class="bm-card"><h3>자동차를 고르세요</h3><div class="bm-cars">${CARS.map((c,i)=>`<button type="button" data-car="${i}" aria-pressed="${i===last}">${carSvg(i)}<b>${c[0]}</b></button>`).join("")}</div></div>`;
   el.querySelectorAll("[data-car]").forEach(b=>b.onclick=()=>{const i=+b.dataset.car;try{localStorage.setItem("bm-car",i)}catch(_){}if(A.solo)A.run.car=i;raceRun(el,i)});
 }
@@ -1386,6 +1388,7 @@ function raceGo(el,car,pts,lives,up){
   raceRun(el,car);
 }
 function raceRun(el,car){
+  el.parentNode.classList.remove("bm-soft");
   const L=LV[A.lv],[v]=pick("race",VERSE[A.lv],1),words=v[1].split(" "),K=Math.min(A.lv===1?6:A.lv===2?8:10,words.length),chunks=[];
   for(let i=0;i<K;i++)chunks.push(words.slice(Math.floor(i*words.length/K),Math.floor((i+1)*words.length/K)).join(" "));
   const others=VERSE[A.lv].filter(x=>x!==v).flatMap(x=>x[1].split(" ")).filter(w=>w.length>=2&&!chunks.includes(w));
@@ -1548,6 +1551,8 @@ function twBuild(a){
   const no=[...new Set([TW_Q[tg[1]==="O"?"N":"O"],...hints(far.filter(x=>x[1][0]===tg[0])),...hints(far.filter(x=>x[1][0]!==tg[0]))])].slice(0,n-yes.length);
   return shuf([...yes.map(t=>[t,1]),...no.map(t=>[t,0])]);
 }
+/* OX 퀴즈 아래 풀밭: 양이 징검돌을 건너 집으로 가며 얼마나 왔는지 보여 줘요 */
+const oxMeadow=n=>`<div class="bm-oxm" aria-hidden="true"><svg class="tree" viewBox="0 0 60 80"><rect x="26" y="50" width="8" height="28" rx="3" fill="#9A6B3F"/><circle cx="30" cy="30" r="24" fill="#5DB45F"/><circle cx="16" cy="42" r="14" fill="#4FA653"/><circle cx="44" cy="42" r="14" fill="#6FC26C"/><circle cx="22" cy="22" r="5" fill="#8BD685"/></svg><svg class="tree b" viewBox="0 0 60 80"><rect x="26" y="50" width="8" height="28" rx="3" fill="#9A6B3F"/><circle cx="30" cy="30" r="24" fill="#6FC26C"/><circle cx="16" cy="42" r="14" fill="#5DB45F"/><circle cx="44" cy="42" r="14" fill="#4FA653"/></svg><div class="bm-oxw"><div class="bm-oxp" style="grid-template-columns:repeat(${n+1},1fr)">${"<i></i>".repeat(n)}<svg class="home" viewBox="0 0 60 56"><path d="M6 28L30 6L54 28Z" fill="#E8574A"/><rect x="12" y="27" width="36" height="27" rx="2" fill="#FFF3DC"/><rect x="25" y="36" width="10" height="18" rx="2" fill="#B5763F"/><rect x="15" y="33" width="7" height="7" fill="#9AD3F2"/><rect x="38" y="33" width="7" height="7" fill="#9AD3F2"/></svg></div><div class="bm-oxsh" style="left:${50/(n+1)}%"><svg viewBox="0 0 60 48"><path d="M18 38V46M26 39V46M38 39V46M46 38V46" stroke="#4A3A33" stroke-width="3.4" stroke-linecap="round"/><g fill="#fff" stroke="#D9D2C5" stroke-width="1"><circle cx="16" cy="24" r="9"/><circle cx="26" cy="16" r="10"/><circle cx="38" cy="18" r="9"/><circle cx="24" cy="31" r="10"/><circle cx="37" cy="30" r="10"/></g><circle cx="29" cy="24" r="11" fill="#fff"/><ellipse cx="49" cy="22" rx="8" ry="9" fill="#4A3A33"/><ellipse cx="42" cy="15" rx="5" ry="2.6" transform="rotate(-24 42 15)" fill="#4A3A33"/><circle cx="46" cy="10" r="4.4" fill="#fff"/><circle cx="51.5" cy="20" r="2.4" fill="#fff"/><circle cx="52" cy="20" r="1.3" fill="#1F2933"/><path d="M50 27Q53 29 55 26" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg></div></div></div>`;
 function miniTwenty(el){
   const fact=(A.solo?A.run.done:rnd(2))%2===1,[a]=fact?[["성경 상식"]]:pick("twenty",TWENTY[A.lv],1),list=fact?oxFacts():twBuild(a),t0=performance.now(),T=LV[A.lv].twT*1000,got=new Map();
   let right=0,lives=A.solo?A.run.lives:5,over=false,at=0,lock=false;
@@ -1555,14 +1560,17 @@ function miniTwenty(el){
     const miss=list.map(([t,y],i)=>!got.has(i)||got.get(i)===y?"":`<div>${esc(t)} · 정답 <b>${y?"O":"X"}</b></div>`).join(""),more=miss?`<div class="bm-rev"><h4>틀린 내용</h4>${miss}</div>`:"";
     if(win)clear(sc,A.solo?lives:undefined,note,more);else finish(sc,(late?"시간이 다 됐어요. ":"")+note,more)};
   const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`❤️${lives} ${got.size}/${list.length} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
-  el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><div class="bm-tw"><b>${esc(a[0])}</b></div><div class="bm-oxq" id="bmOxQ"></div><div class="bm-oxb"><button type="button" data-ox="1" aria-label="맞아요">O</button><button type="button" data-ox="0" aria-label="틀려요">X</button></div></div>`;
-  const box=el.querySelector("#bmOxQ"),btns=[...el.querySelectorAll("[data-ox]")];
+  el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><div class="bm-tw"><b>${esc(a[0])}</b></div><div class="bm-oxq" id="bmOxQ"></div><div class="bm-oxb"><button type="button" data-ox="1" aria-label="맞아요">O</button><button type="button" data-ox="0" aria-label="틀려요">X</button></div></div>${oxMeadow(list.length)}`;
+  el.classList.add("bm-oxs");
+  const box=el.querySelector("#bmOxQ"),btns=[...el.querySelectorAll("[data-ox]")],stones=[...el.querySelectorAll(".bm-oxp i")],sheep=el.querySelector(".bm-oxsh");
+  /* 양은 답할 때마다 다음 돌로 한 칸 뛰어요 */
+  const walk=n=>{sheep.style.left=(n+.5)/(list.length+1)*100+"%";sheep.classList.remove("hop");void sheep.offsetWidth;sheep.classList.add("hop");stones.forEach((x,i)=>x.classList.toggle("now",i===n))};
   const show=()=>{box.className="bm-oxq";box.textContent=list[at][0];btns.forEach(x=>x.classList.remove("ans"))};
-  btns.forEach(b=>b.onclick=()=>{if(over||lock)return;lock=true;const v=+b.dataset.ox,y=list[at][1],ok=v===y;got.set(at,v);box.classList.add(ok?"ok":"no");
+  btns.forEach(b=>b.onclick=()=>{if(over||lock)return;lock=true;const v=+b.dataset.ox,y=list[at][1],ok=v===y;got.set(at,v);box.classList.add(ok?"ok":"no");stones[at].classList.add(ok?"ok":"no");stones[at].textContent=ok?"✓":"✕";walk(got.size);
     btns.find(x=>+x.dataset.ox===y).classList.add("ans");
     sfx(ok?"ok":"no");if(ok){right++;if(A.solo)A.run.cur=right*3}else lives--;
     tick();after(ok?250:600,()=>{if(lives<=0)return end(false);if(got.size>=list.length)return end(true);at++;lock=false;show()})});
-  show();
+  show();walk(0);
   tick();every(200,tick);
 }
 
@@ -1621,11 +1629,12 @@ function planeSvg(i,f=0){
 }
 function miniShoot(el){
   if(A.solo&&A.run.plane!==undefined)return shootRun(el,A.run.plane);
-  let last=0;try{last=+localStorage.getItem("bm-plane")||0}catch(_){}
+  softStage(el);let last=0;try{last=+localStorage.getItem("bm-plane")||0}catch(_){}
   el.innerHTML=`<div class="bm-card"><h3>비행기를 고르세요</h3><div class="bm-cars">${PLANES.map((c,i)=>`<button type="button" data-plane="${i}" aria-pressed="${i===last}">${planeSvg(i)}<b>${c[0]}</b></button>`).join("")}</div></div>`;
   el.querySelectorAll("[data-plane]").forEach(b=>b.onclick=()=>{const i=+b.dataset.plane;try{localStorage.setItem("bm-plane",i)}catch(_){}if(A.solo)A.run.plane=i;shootRun(el,i)});
 }
 function shootRun(el,plane){
+  el.parentNode.classList.remove("bm-soft");
   const imgs=[0,1].map(f=>{const m=new Image();m.src="data:image/svg+xml,"+encodeURIComponent(planeSvg(plane,f));return m});let bank=0,prevX=0;
   el.innerHTML=`<canvas id="bmCv" class="bm-cv" aria-label="말씀 슈팅 게임 화면"></canvas>`;
   const cv=el.querySelector("#bmCv"),x=cv.getContext("2d"),P=LV[A.lv].sh,dpr=Math.min(2,window.devicePixelRatio||1);

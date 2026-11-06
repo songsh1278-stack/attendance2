@@ -1110,8 +1110,38 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
 .bm-soft .bm-sh .btn{background:rgba(255,255,255,.75);border-color:rgba(90,70,60,.16);color:#3A3340}
 .bm-soft .bm-sb>.bm-card{box-shadow:0 4px 14px rgba(70,50,40,.12)}
 /* 설명이 길어도 시작하기 단추는 늘 화면 아래에 보여요 */
-.bm-stage.bm-soft .bm-card .btn[data-bm="start"]{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:1;box-shadow:0 4px 0 rgba(0,0,0,.25),0 14px 0 6px var(--surface),0 -8px 12px 8px var(--surface)}
+.bm-stage.bm-soft .bm-card .btn[data-bm="start"]{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:1;box-shadow:0 3px 0 #E2BE6A,0 14px 0 6px var(--surface),0 -8px 12px 8px var(--surface)}
 .bm-soft .bm-sb>.bm-card{overflow:clip}
+/* 게임 장면이 아닌 화면의 단추와 고른 칩도 진한 색 대신 연한 금색으로 */
+.bm-home .btn.primary,.bm-stage.bm-soft .btn.primary,.bm-mapc button[aria-pressed="true"],.bm-steps button[aria-pressed="true"]{background:linear-gradient(180deg,#FDEFC8,#FAE3A8);border:1px solid #E2BE6A;color:#4A3410}
+.bm-stage.bm-soft .btn.primary.bm-big,.bm-home .btn.primary.bm-big{box-shadow:0 3px 0 #E2BE6A}
+/* OX 퀴즈: 패널이 화면 높이를 채우고 아래에 양이 걷는 풀밭이 있어요 */
+.bm-sb.bm-oxs{display:flex;flex-direction:column;max-width:none;padding:8px 0 0;overflow:hidden auto}
+.bm-oxs>.bm-q{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;width:calc(100% - 24px);max-width:736px;margin:0 auto 8px}
+.bm-oxs .bm-oxq{flex:1 1 110px;font-size:clamp(19px,5.4vw,28px);line-height:1.4}
+.bm-oxs .bm-oxb{flex:1 1 112px;max-height:230px;padding-bottom:6px}
+.bm-oxs .bm-oxb button{min-height:96px;height:100%;font-size:clamp(52px,16vw,84px)}
+.bm-oxm{position:relative;flex:0 0 clamp(104px,19vh,190px);padding-bottom:env(safe-area-inset-bottom,0px);background:radial-gradient(75% 95% at 14% 112%,#8BD685 98%,transparent 100%),radial-gradient(80% 110% at 88% 118%,#7CCB6E 98%,transparent 100%),linear-gradient(180deg,transparent 42%,#6FC26C 42%)}
+.bm-oxm .tree{position:absolute;bottom:52%;left:5%;width:clamp(38px,11vw,64px);height:auto}
+.bm-oxm .tree.b{left:auto;right:7%;bottom:58%;width:clamp(30px,9vw,52px)}
+.bm-oxw{position:absolute;left:0;right:0;bottom:calc(12px + env(safe-area-inset-bottom,0px));width:calc(100% - 24px);max-width:736px;margin:0 auto}
+.bm-oxp{display:grid;align-items:center;justify-items:center;padding-top:30px}
+.bm-oxp i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:800;color:#fff;background:#D9CDB5;box-shadow:0 3px 0 #B8A98C;transition:background .15s}
+.bm-oxp i.now{background:#FFE9A8;box-shadow:0 3px 0 #D9A520}
+.bm-oxp i.ok{background:#2E9E5B;box-shadow:0 3px 0 #1E7445}
+.bm-oxp i.no{background:#D9483B;box-shadow:0 3px 0 #9E2A1E}
+.bm-oxp .home{width:min(44px,100%);height:auto}
+.bm-oxsh{position:absolute;bottom:18px;width:clamp(38px,10vw,50px);transform:translateX(-50%);transition:left .3s ease-in-out}
+.bm-oxsh svg{display:block;width:100%;height:auto}
+.bm-oxsh.hop svg{animation:bmHop .3s ease-out}
+@keyframes bmHop{50%{transform:translateY(-14px)}}
+@media (max-height:560px){
+  .bm-oxm{display:none}
+  .bm-oxs>.bm-q{width:calc(100% - 12px);margin-bottom:4px}
+  .bm-oxs .bm-oxq{flex:1 1 60px;font-size:15px}
+  .bm-oxs .bm-oxb{flex:1 1 64px}
+  .bm-oxs .bm-oxb button{min-height:60px;font-size:34px}
+}
 </style>
 </head>
 <body>
@@ -4047,7 +4077,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261106150526';
+  var BUILD = '20261106151304';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
