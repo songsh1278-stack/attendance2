@@ -841,7 +841,7 @@ const rulesOf=k=>{
     art:[`기독교 명화를 보고 제목이나 화가를 네 가지 보기에서 골라요. 문제마다 ${L.qt}초가 주어져요.`,"맞히면 10점, 시간이 절반 넘게 남았을 때 맞히면 15점이에요.",`${life} 틀리거나 시간이 지나면 하나 줄어요. ${n}문제를 풀면 다음 단계로 가요.`],
     cross:[`뜻풀이를 누르고 낱말을 입력해요. 틀려도 맞은 글자는 칸에 남고, 시간이 5초 줄어요. 제한 시간은 ${L.cwT}초예요.`,"낱말 하나에 5점, 다 풀면 보너스를 더 받아요. 한 판 최고 45점이에요.","다 풀면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요."],
     twenty:[`인물·장소·물건 판과 성경 상식 판이 번갈아 나와요. 설명이 하나씩 나오면 맞으면 O, 틀리면 X를 빠르게 골라요. 고르면 바로 다음 설명으로 넘어가요. 제한 시간은 ${L.twT}초예요.`,"맞힌 설명 하나에 3점, 7~8개를 다 고르면 보너스를 더 받아요. 빨리 끝낼수록 보너스가 커요.",`${s?"기회 5번으로 시작해요. 틀리면 하나 줄어요.":"기회는 1번이에요. 틀리면 끝나요."} 7~8개를 다 고르면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.`],
-    shoot:[`비행기를 고르고, 화면 아무 곳에서나 손가락을 끌면 끈 만큼 상하좌우로 움직여요. 컴퓨터는 마우스나 방향키로 움직여요. 빛은 저절로 나가요. 초록색 좋은 말씀(성령의 아홉 열매 등)은 비행기로 받고, 나쁜 말씀은 빛으로 깨요. 적의 총알은 한 번에 ${L.sh.shot}개씩 나와요.`,"나쁜 말씀을 깨면 1점, 좋은 말씀을 받으면 2점, 끝까지 버티면 5점을 더 받아요. 바닥에 떨어져도 점수는 줄지 않아요. 한 판 최고 45점이에요.",`${life} 총알이나 나쁜 말씀에 부딪히면 하나 줄어요. 40초를 버티면 다음 단계로 가요.`,"절반은 ? 모양으로 내려와서 받아 봐야 알 수 있어요. 좋은 것: 🛡️ 방어막(한 번 막아 줘요), ⚡ 레이저(4초), 💣 폭탄(나쁜 말씀과 총알을 모두 없애요). 나쁜 것: 🐌 느려짐(4초), 🧊 얼음(2초 동안 못 움직이고 못 쏴요)."]
+    shoot:[`비행기를 고르고, 화면 아무 곳에서나 손가락을 끌면 끈 만큼 상하좌우로 움직여요. 컴퓨터는 마우스나 방향키로 움직여요. 빛은 저절로 나가요. 초록색 좋은 말씀(성령의 아홉 열매 등)은 비행기로 받고, 나쁜 말씀은 빛으로 깨요. 적의 총알은 한 번에 ${L.sh.shot}개씩 나와요.`,"나쁜 말씀을 깨면 1점, 좋은 말씀을 받으면 2점, 끝까지 버티면 5점을 더 받아요. 바닥에 떨어져도 점수는 줄지 않아요. 한 판 최고 45점이에요.",`${life} 총알이나 나쁜 말씀에 부딪히면 하나 줄어요. 40초를 버티면 다음 단계로 가요.`,"절반은 ? 모양으로 내려와서 받아 봐야 알 수 있어요. 좋은 것: 🛡️ 방어막(한 번 막아 줘요), ⚡ 레이저(4초, 고급에는 없어요), 💣 폭탄(나쁜 말씀과 총알을 모두 없애요). 나쁜 것: 🐌 느려짐(4초), 🧊 얼음(2초 동안 못 움직이고 못 쏴요)."]
   }[k];
   return [["방법",R[0]],["점수",R[1]],...(R[3]?[["아이템",R[3]]]:[]),["끝나는 때",R[2]+(s?" 그만하기를 누르면 그때까지의 점수를 저장해요. 점수는 끝날 때까지 이어지고, 3단계를 통과할 때마다 고급까지 어려워져요."+(A.board?"":" 오래 할수록 제한 시간이 줄고 속도가 빨라져요."):" 게임이 끝날 때까지 단계가 이어지고, 3단계를 통과할 때마다 고급까지 어려워져요. 얻은 점수는 모두 내 점수에 더해요.")]];
 };
@@ -1675,7 +1675,8 @@ function shootRun(el,plane){
   addEventListener("keydown",key);addEventListener("keyup",key);V.off.push(()=>{removeEventListener("keydown",key);removeEventListener("keyup",key)});
   const end=()=>{if(over)return;over=true;const sc=Math.min(45,pts+(lives>0?5:0)),nt=`나쁜 말씀 ${kills}개를 깨고 좋은 말씀 ${caught}개를 받았어요${lives>0?" 끝까지 버텨서 +5점!":""}`;if(lives>0)clear(sc,lives,nt);else finish(sc,nt)};
   const hit=()=>{if(inv>0)return;if(shield){shield=false;inv=.8;sfx("power");pop(ship.x,ship.y-40,"방어막이 막았어요","#9FE0FF");return}lives--;inv=1.5;shake=.25;boom(ship.x,ship.y,"#FF9A6A",12);sfx("hit");if(lives<=0)end()};
-  const kill=(f,drop)=>{f.dead=1;kills++;gain(1);boom(f.x,f.y,f.hp>1?"#D08BFF":"#A99CFF",8);if(drop&&Math.random()<.2)items.push({x:f.x,y:f.y,k:SHIP_ITEMS[rnd(SHIP_ITEMS.length)],q:Math.random()<.5})};
+  const loot=SHIP_ITEMS.filter(k=>A.lv<3||k[0]!=="laser");
+  const kill=(f,drop)=>{f.dead=1;kills++;gain(1);boom(f.x,f.y,f.hp>1?"#D08BFF":"#A99CFF",8);if(drop&&Math.random()<.2)items.push({x:f.x,y:f.y,k:loot[rnd(loot.length)],q:Math.random()<.5})};
   const take=k=>{const [id,,name,good]=k;sfx(good?"power":"no");pop(ship.x,ship.y-40,name,good?"#9FF0C0":"#FF9A9A");
     if(id==="shield")shield=true;else if(id==="laser")laser=4;else if(id==="slow")slow=4;else if(id==="ice"){ice=2;ship.to=null}
     else{foes.forEach(f=>kill(f,false));shots=[];flash=.25}};
