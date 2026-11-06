@@ -3490,9 +3490,9 @@ function renderAdminSummary(){
   });
   const sum=f=>rows.reduce((a,r)=>a+r[f],0);
   const S1={on:sum("on"),n:sum("n")},T1={on:sum("ton"),n:sum("tn")};
-  return `<details class="fold" data-fold="summary"${S.fold.summary?" open":""}><summary><h2 class="sec">부서별 출석 현황</h2><span class="fold-sum num">${d.getMonth()+1}월 ${d.getDate()}일 주일 · 학생 ${attFrac(S1.on,S1.n)}</span></summary><div class="card">
+  return `<details class="fold" data-fold="summary"${S.fold.summary?" open":""}><summary><h2 class="sec">부서별 출석 현황</h2><span class="fold-sum num">${d.getMonth()+1}월 ${d.getDate()}일 · 학생 ${attFrac(S1.on,S1.n)}</span></summary><div class="card">
     <div class="datebar" style="margin:0 0 12px"><button class="arrow" data-adate="-7" aria-label="지난 주일">‹</button>
-    <div class="date"><strong class="num">${d.getMonth()+1}월 ${d.getDate()}일 주일</strong></div>
+    <div class="date"><strong class="num">${d.getMonth()+1}월 ${d.getDate()}일</strong></div>
     <button class="arrow" data-adate="7" aria-label="다음 주일">›</button></div>
     <p class="dept-line num"><span class="st">학생 ${attFrac(S1.on,S1.n)}</span>, <span class="tc">교사 ${attFrac(T1.on,T1.n)}</span></p>
     <table><thead><tr><th>부서</th><th class="r">학생</th><th class="r">교사</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.label}</td><td class="r num">${attFrac(r.on,r.n)}</td><td class="r num">${attFrac(r.ton,r.tn)}</td></tr>`).join("")}</tbody></table></div></details>`;
@@ -4094,7 +4094,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261106200050';
+  var BUILD = '20261106204205';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
