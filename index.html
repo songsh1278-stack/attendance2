@@ -2475,7 +2475,7 @@ function setTotalTalent(id,v){
 function renderTalent(){
   const ps=activePeople(S.group).filter(p=>p.group!=="T");
   const tot=ps.reduce((a,p)=>a+totalTalent(p),0),mode=S.talMode==="class"?"class":"person";
-  const open=S.statOpen||(S.statOpen=new Set()),closed=S.statClosed||(S.statClosed=new Set());
+  const open=S.statOpen||(S.statOpen=new Set());
   const md=k=>Number(k.slice(5,7))+"/"+Number(k.slice(8));
   let h=`<div class="summary"><div><div class="big num">${tot}<em> 달란트</em></div><div class="sub">${TEAMS[S.team].short} ${S.group==="all"?"전체":GL[S.group]} · ${S.date.slice(0,4)}년 누적 (선택한 주일까지)</div></div></div>
     <p class="muted" style="font-size:12px;margin:0 0 10px">달란트 현황을 보는 화면이에요. 달란트는 출석 탭에서 주고, 사람 정보는 명단 탭에서 고쳐요.</p>
@@ -2493,7 +2493,7 @@ function renderTalent(){
     const gs=classesOf(S.team).filter(([g])=>S.group==="all"||S.group===g).map(([g,l])=>[g,l,ps.filter(p=>p.group===g)]).filter(x=>x[2].length);
     h+=`<p class="muted" style="font-size:12px;margin:0 0 8px">반을 누르면 접혀요</p><div class="sd-list">${gs.map(([g,l,gp])=>{const id="tc:"+S.team+"_"+g,sum=gp.reduce((a,p)=>a+totalTalent(p),0),wk=gp.reduce((a,p)=>a+talentOf(S.date,p.id),0);
       const sorted=[...gp].sort((a,b)=>totalTalent(b)-totalTalent(a)||a.name.localeCompare(b.name,"ko"));
-      return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${esc(l)}<small>${gp.length}명 · 1인 평균 ${(sum/gp.length).toFixed(1)} · 이번 주 ${wk}</small></span><span style="flex:1"></span><span class="tal-tot num">${sum}</span></summary>
+      return `<details class="sd" data-sk="${id}" ${open.has(id)?"open":""}><summary><span class="sd-l">${esc(l)}<small>${gp.length}명 · 1인 평균 ${(sum/gp.length).toFixed(1)} · 이번 주 ${wk}</small></span><span style="flex:1"></span><span class="tal-tot num">${sum}</span></summary>
         <div class="sd-in">${sorted.map((p,i)=>`<div class="pp-row"><span class="pp-l">${i+1}. ${esc(p.name)}</span><span class="pp-v num" style="margin-left:auto">${totalTalent(p)}</span></div>`).join("")}</div></details>`}).join("")||`<div class="empty">학생이 없어요.</div>`}</div>`;
   }
   return h;
@@ -2568,7 +2568,7 @@ async function exportPeriodStats(){
 /* 개인별 누적: 사람을 펼치면 달란트와, 고른 단위(월·분기·반기·연)마다 출석 횟수 옆에 주일별 출석(●)·결석(○)이 바로 보여요 */
 function renderPersonPeriods(rows,ks){
   /* 위에서 이번 주를 골라도 개인별 누적은 최근 한 달로 보여요 */
-  const U=statUnit()==="week"?"recent":statUnit(),Y=Number(S.date.slice(0,4)),closed=S.statClosed||(S.statClosed=new Set());
+  const U=statUnit()==="week"?"recent":statUnit(),Y=Number(S.date.slice(0,4)),open=S.statOpen||(S.statOpen=new Set());
   const pct=(n,d)=>d?Math.round(n/d*100):0;
   /* 편집 권한이 있으면 ●/○를 눌러 지난 출석을 고칠 수 있어요 */
   const ed=!!S.editable;
@@ -2580,14 +2580,14 @@ function renderPersonPeriods(rows,ks){
       return `<div class="pp-row"><span class="pp-l">${c.l}</span><span class="pp-v num">${n}/${c.ks.length} <em>(${pct(n,c.ks.length)}%)</em></span>${chips(p.id,c.ks)}</div>`}).join("");
     return per||`<p class="muted">기록이 없어요.</p>`};
   const one=r=>{const id="u:"+r.p.id;
-    return `<details class="sd" data-sk="${id}" data-dopen="1" ${closed.has(id)?"":"open"}><summary><span class="sd-l">${esc(r.p.name)}<small>${esc(GL[r.p.group]||"")}</small></span><span style="flex:1"></span><span class="pp-days num">출석 <b>${r.n}/${ks.length}</b>${talentOn()&&r.p.group!=="T"?` (달란트 ${r.t}개)`:""}</span></summary><div class="sd-in">${body(r.p)}</div></details>`};
+    return `<details class="sd" data-sk="${id}" ${open.has(id)?"open":""}><summary><span class="sd-l">${esc(r.p.name)}<small>${esc(GL[r.p.group]||"")}</small></span><span style="flex:1"></span><span class="pp-days num">출석 <b>${r.n}/${ks.length}</b>${talentOn()&&r.p.group!=="T"?` (달란트 ${r.t}개)`:""}</span></summary><div class="sd-in">${body(r.p)}</div></details>`};
   /* 학년별로 보기: 반 순서대로 묶고 제목을 달아요 (반 안에서는 출석이 많은 순) */
   /* 정렬: 출석순(기본) · 가나다순 · 학년별 — 어느 쪽이든 학생이 먼저, 교사는 아래 */
   const PS=["name","att","grade"].includes(S.ppSort)?S.ppSort:"att";
   if(PS==="name")rows=[...rows].sort((a,b)=>(a.p.group==="T")-(b.p.group==="T")||a.p.name.localeCompare(b.p.name,"ko"));
   const list=PS==="grade"?GROUPS.map(([g,l])=>{const gr=rows.filter(r=>r.p.group===g);return gr.length?`<div class="pp-gh">${esc(l)} <span class="muted">${gr.length}명</span></div>${gr.map(one).join("")}`:""}).join(""):rows.map(one).join("");
   const ul=(STAT_UNITS.find(u=>u[0]===U)||["",""])[1];
-  const anyOpen=rows.some(r=>!closed.has("u:"+r.p.id));
+  const anyOpen=rows.some(r=>open.has("u:"+r.p.id));
   /* 모두 접기: 개인별 누적 목록 전체를 숨기고 제목만 남겨요 (창 접기는 사람 칸만 접어요) */
   const hid=!!S.ppHidden,win=`<button class="btn pp-b" data-ppwin>${hid?"모두 펼치기":"모두 접기"}</button>`;
   const head=`<div class="pp-head"><h2 class="sec">개인별 누적 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>${rows.length&&!hid?`<div class="pp-sort">${[["name","ㄱㄴ순"],["att","출석순"],["grade","학년별"]].map(([v,l])=>`<button class="btn pp-b" data-ppsort="${v}" aria-pressed="${PS===v}">${l}</button>`).join("")}</div><button class="btn pp-b" data-ppall="${anyOpen?"close":"open"}">${anyOpen?"창 접기":"창 펼치기"}</button>`:""}${win}</div>`;
@@ -2642,7 +2642,7 @@ const STAT_UNITS=[["week","이번 주"],["recent","최근 한 달"],["year","연
 const statUnit=()=>S.statUnit==="recent"||S.statUnit==="week"?S.statUnit:"year"; /* 기간 단위: 이번 주, 최근 한 달, 연도별 */
 const dayLabel=k=>Number(k.slice(5,7))+"월 "+Number(k.slice(8))+"일";
 function renderStatPeriods(){
-  const U=statUnit(),Y=Number(S.date.slice(0,4)),closed=S.statClosed||(S.statClosed=new Set()),open=S.statOpen||(S.statOpen=new Set());
+  const U=statUnit(),Y=Number(S.date.slice(0,4)),open=S.statOpen||(S.statOpen=new Set());
   if(U==="year"){const yrs=statYears();if(yrs.some(y=>!S.years.has(y)))setTimeout(()=>ensureYears(yrs).catch(()=>{}),0)}
   const ps=activePeople(S.group),stu=S.group==="T"?ps:ps.filter(p=>p.group!=="T"),tch=S.group==="T"?[]:ps.filter(p=>p.group==="T");
   const sIds=stu.map(p=>p.id),tIds=tch.map(p=>p.id),unit=S.group==="T"?"교사":TEAMS[S.team].unit;
@@ -2654,13 +2654,13 @@ function renderStatPeriods(){
       return `<div class="sd-g"><div class="sd-gh"><b>${esc(GL[g]||"")}</b><span class="num">${y.length}/${gp.length}</span></div>
         <div class="sd-names">${y.map(p=>`<span class="sd-nm on">${esc(p.name)}</span>`).join("")}${n.length?`<span class="sd-ab">결석</span>${n.map(p=>`<span class="sd-nm">${esc(p.name)}</span>`).join("")}`:""}</div></div>`}).join("");
     return gs||`<p class="muted">사람이 없어요.</p>`};
-  const dayRow=(k,first)=>{const a=attOf(k).p||{},on=sIds.filter(id=>a[id]).length,tOn=tIds.filter(id=>a[id]).length,id="d:"+k;
-    return `<details class="sd day" data-sk="${id}" ${first?`data-dopen="1" ${closed.has(id)?"":"open"}`:open.has(id)?"open":""}><summary><span class="sd-l">${dayLabel(k)}</span><span style="flex:1"></span><span class="sd-v num"><b>${on}/${sIds.length}</b><small>${pct(on,sIds.length)}%${tIds.length?` · 교사 ${tOn}/${tIds.length}`:""}</small></span></summary><div class="sd-in">${dayBody(k)}</div></details>`};
+  const dayRow=k=>{const a=attOf(k).p||{},on=sIds.filter(id=>a[id]).length,tOn=tIds.filter(id=>a[id]).length,id="d:"+k;
+    return `<details class="sd day" data-sk="${id}" ${open.has(id)?"open":""}><summary><span class="sd-l">${dayLabel(k)}</span><span style="flex:1"></span><span class="sd-v num"><b>${on}/${sIds.length}</b><small>${pct(on,sIds.length)}%${tIds.length?` · 교사 ${tOn}/${tIds.length}`:""}</small></span></summary><div class="sd-in">${dayBody(k)}</div></details>`};
   let list;
-  if(U==="day")list=yearKeys().slice().reverse().map((k,i)=>dayRow(k,i===0)).join("");
-  else list=periodCols(U,Y).filter(c=>!c.sum).map(c=>({...c,ks:U==="year"?c.ks:c.ks.filter(k=>k<=S.date)})).filter(c=>c.ks.length).reverse().map((c,ci)=>{
+  if(U==="day")list=yearKeys().slice().reverse().map((k,i)=>dayRow(k)).join("");
+  else list=periodCols(U,Y).filter(c=>!c.sum).map(c=>({...c,ks:U==="year"?c.ks:c.ks.filter(k=>k<=S.date)})).filter(c=>c.ks.length).reverse().map(c=>{
     const n=attCount(sIds,c.ks),tn=attCount(tIds,c.ks),w=c.ks.length,id="p:"+U+":"+c.l,r=pct(n,sIds.length*w);
-    return `<details class="sd" data-sk="${id}" ${ci===0?`data-dopen="1" ${closed.has(id)?"":"open"}`:open.has(id)?"open":""}><summary><span class="sd-l">${c.l}<small>주일 ${w}번</small></span><span style="flex:1"></span><span class="sd-v num"><b>${r}%</b><small>평균 ${(n/w).toFixed(1)}명${tIds.length?` · 교사 ${(tn/w).toFixed(1)}명`:""}</small></span></summary><div class="sd-in">${U==="week"?dayBody(c.ks[0]):c.ks.slice().reverse().map((k,ki)=>dayRow(k,ci===0&&ki===0)).join("")}</div></details>`}).join("");
+    return `<details class="sd" data-sk="${id}" ${open.has(id)?"open":""}><summary><span class="sd-l">${c.l}<small>주일 ${w}번</small></span><span style="flex:1"></span><span class="sd-v num"><b>${r}%</b><small>평균 ${(n/w).toFixed(1)}명${tIds.length?` · 교사 ${(tn/w).toFixed(1)}명`:""}</small></span></summary><div class="sd-in">${U==="week"?dayBody(c.ks[0]):c.ks.slice().reverse().map(k=>dayRow(k)).join("")}</div></details>`}).join("");
   return `<h2 class="sec">기간별 ${esc(unit)} 출석 ${S.group==="all"?"":"· "+esc(GL[S.group]||"")}</h2>
     <div class="pstat-ctl"><div class="seg sm">${STAT_UNITS.map(([v,l])=>`<button data-sunit="${v}" aria-pressed="${U===v}">${l}</button>`).join("")}</div><button class="btn" id="pstatXls" style="flex:none">엑셀로 받기</button></div>
     <p class="muted" style="font-size:12px;margin:6px 0 8px">최근 기간과 이번 주일은 펼쳐져 있어요 · 기간을 누르면 주일별로, 주일을 누르면 반별 출석·결석 명단이 펼쳐져요 · 출석률은 ${esc(unit)} 기준 · 사람은 지금 명단 기준</p>
@@ -3804,13 +3804,12 @@ function openPerson(id){
 document.addEventListener("change",e=>{const c=e.target.closest&&e.target.closest("[data-bgcustom]");if(c)setBg(c.value);const d=e.target.closest&&e.target.closest("[data-dccustom]");if(d&&/^#[0-9a-f]{6}$/i.test(d.value))setDeptColor(d.value)});
 /* 통계 화면의 펼침·접힘과 단위는 이 기기에 기억해 두고, 다시 열어도 마지막 상태로 보여 줘요 */
 const STAT_KEY="ya-statview";
-(()=>{try{const v=JSON.parse(localStorage.getItem(STAT_KEY)||"null");if(v){S.statOpen=new Set((v.open||[]).filter(k=>k!=="gradestat"&&String(k).indexOf("dg:")!==0));S.statClosed=new Set(v.closed||[]);if(v.unit)S.statUnit=v.unit;S.ppSort=v.ppSort||(v.byGrade?"grade":"att");S.ppHidden=!!v.ppHidden}}catch(_){}})();
+(()=>{try{const v=JSON.parse(localStorage.getItem(STAT_KEY)||"null");if(v){S.statOpen=new Set((v.open||[]).filter(k=>k!=="gradestat"&&String(k).indexOf("dg:")!==0));if(v.unit)S.statUnit=v.unit;S.ppSort=v.ppSort||(v.byGrade?"grade":"att");S.ppHidden=!!v.ppHidden}}catch(_){}})();
 /* 학년별 통계(gradestat)와 부서별 통계의 [학년별 열기](dg:)는 기억하지 않아요 — 앱을 열 때마다 접힌 채로 시작 */
 const statNoKeep=k=>k==="gradestat"||k.indexOf("dg:")===0;
-function saveStatView(){try{const cut=x=>[...(x||[])].filter(k=>!statNoKeep(k)).slice(-400);localStorage.setItem(STAT_KEY,JSON.stringify({open:cut(S.statOpen),closed:cut(S.statClosed),unit:S.statUnit||"",ppSort:S.ppSort||"att",ppHidden:!!S.ppHidden}))}catch(_){}}
+function saveStatView(){try{const cut=x=>[...(x||[])].filter(k=>!statNoKeep(k)).slice(-400);localStorage.setItem(STAT_KEY,JSON.stringify({open:cut(S.statOpen),unit:S.statUnit||"",ppSort:S.ppSort||"att",ppHidden:!!S.ppHidden}))}catch(_){}}
 document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.dataset&&d.dataset.sk){const k=d.dataset.sk;
-  if(d.dataset.dopen){const c=S.statClosed||(S.statClosed=new Set());if(d.open)c.delete(k);else c.add(k)} /* 처음부터 펼친 칸은 접은 것만 기억 */
-  else{const o=S.statOpen||(S.statOpen=new Set());if(d.open)o.add(k);else o.delete(k)}
+  {const o=S.statOpen||(S.statOpen=new Set());if(d.open)o.add(k);else o.delete(k)}
   saveStatView()}},true);
 document.addEventListener("click",e=>{const b=e.target.closest("[data-staffall]");if(!b)return;const op=b.dataset.staffall==="open";document.querySelectorAll("details.staff-grp").forEach(d=>{S.fold[d.dataset.fold]=op});render()});
 document.addEventListener("toggle",e=>{const f=e.target;if(f.dataset&&f.dataset.fold){S.fold[f.dataset.fold]=f.open;try{localStorage.setItem("ya-fold",JSON.stringify(S.fold))}catch(_){}}},true);
@@ -3908,8 +3907,8 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   const pps=e.target.closest("[data-ppsort]");if(pps){S.ppSort=pps.dataset.ppsort;saveStatView();render();return}
   const dg=e.target.closest("[data-dgrade]");if(dg){const o=S.statOpen||(S.statOpen=new Set()),k="dg:"+dg.dataset.dgrade;if(o.has(k))o.delete(k);else o.add(k);saveStatView();render();return}
   if(e.target.closest("[data-ppwin]")){S.ppHidden=!S.ppHidden;saveStatView();render();return}
-  const ppa=e.target.closest("[data-ppall]");if(ppa){const c=S.statClosed||(S.statClosed=new Set()),close=ppa.dataset.ppall==="close";
-    activePeople(S.group).forEach(p=>{const k="u:"+p.id;if(close)c.add(k);else c.delete(k)});saveStatView();render();return}
+  const ppa=e.target.closest("[data-ppall]");if(ppa){const c=S.statOpen||(S.statOpen=new Set()),close=ppa.dataset.ppall==="close";
+    activePeople(S.group).forEach(p=>{const k="u:"+p.id;if(close)c.delete(k);else c.add(k)});saveStatView();render();return}
   const tat=e.target.closest("[data-tatt]");if(tat){if(!S.editable){toast("보기 권한이라 고칠 수 없어요");return}
     const [k,id]=tat.dataset.tatt.split("|"),p=S.people.get(id),on=isOn(k,id);writeAtt(k,{p:{[id]:on?0:1}});
     toast(`${p?p.name+" · ":""}${Number(k.slice(5,7))}/${Number(k.slice(8))} ${on?"결석":"출석"}으로 바꿨어요`);return}
@@ -4083,7 +4082,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261106155058';
+  var BUILD = '20261106155612';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
