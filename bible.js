@@ -1289,16 +1289,18 @@ function setEnd(n,right,pts,lives){
 }
 /* ---------- 성경퀴즈 · 넌센스 성경퀴즈 ---------- */
 function miniQuiz(el){
-  const L=LV[A.lv],[nq,nf]=A.solo?[3,2]:[2,1],items=shuf(pick("quiz",QUIZ[A.lv],nq).concat(pick("fun",FUN[A.lv],nf)));let i=0,pts=0,right=0,lives=A.solo?A.run.lives:0;
+  const L=LV[A.lv],[nq,nf]=A.solo?[3,2]:[2,1],items=shuf(pick("quiz",QUIZ[A.lv],nq).concat(pick("fun",FUN[A.lv],nf))),res=[];let i=0,pts=0,right=0,lives=A.solo?A.run.lives:0;
+  el.classList.add("bm-oxs","bm-qz");
   const ask=()=>{
     if(i>=items.length||A.solo&&lives<=0)return setEnd(i,right,pts,lives);
     lifeInfo(lives,pts);
     const it=items[i],opts=shuf(it.slice(1,5)),t0=performance.now(),T=L.qt*1000;let over=false;
     el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><p class="muted num">${i+1} / ${items.length}${FUN[A.lv].includes(it)?" · 😜 넌센스":""}</p><h3>${esc(it[0])}</h3>
-      <div class="bm-opts">${opts.map((o,n)=>`<button type="button" data-o="${n}">${esc(o)}</button>`).join("")}</div><div id="bmAfter"></div></div>`;
+      <div class="bm-opts">${opts.map((o,n)=>`<button type="button" data-o="${n}">${esc(o)}</button>`).join("")}</div><div id="bmAfter"></div></div>${oxMeadow(items.length,true)}`;
+    res.forEach((ok,n)=>oxMark(el,n,ok,"★"));oxWalk(el,i,items.length,false);
     const bar=el.querySelector("#bmBar");
     const pickIt=o=>{if(over)return;over=true;clearInterval(id);V.t.delete(id);
-      const rem=Math.max(0,1-(performance.now()-t0)/T),ok=o===it[1];
+      const rem=Math.max(0,1-(performance.now()-t0)/T),ok=o===it[1];res[i]=ok;oxMark(el,i,ok,"★");oxWalk(el,i+1,items.length);
       sfx(ok?"ok":"no");if(ok){right++;pts+=10+(rem>.5?5:0)}else if(A.solo)lives--;
       lifeInfo(lives,pts);
       el.querySelectorAll("[data-o]").forEach(b=>{const v=opts[+b.dataset.o];b.disabled=true;if(v===it[1])b.classList.add("ok");else if(v===o)b.classList.add("no")});
@@ -1386,6 +1388,7 @@ function raceGo(el,car,pts,lives,up){
   raceRun(el,car);
 }
 function raceRun(el,car){
+  el.parentNode.classList.add("bm-deep");
   const L=LV[A.lv],[v]=pick("race",VERSE[A.lv],1),words=v[1].split(" "),K=Math.min(A.lv===1?6:A.lv===2?8:10,words.length),chunks=[];
   for(let i=0;i<K;i++)chunks.push(words.slice(Math.floor(i*words.length/K),Math.floor((i+1)*words.length/K)).join(" "));
   const others=VERSE[A.lv].filter(x=>x!==v).flatMap(x=>x[1].split(" ")).filter(w=>w.length>=2&&!chunks.includes(w));
@@ -1549,7 +1552,11 @@ function twBuild(a){
   return shuf([...yes.map(t=>[t,1]),...no.map(t=>[t,0])]);
 }
 /* OX 퀴즈 아래 풀밭: 양이 징검돌을 건너 집으로 가며 얼마나 왔는지 보여 줘요 */
-const oxMeadow=n=>`<div class="bm-oxm" aria-hidden="true"><svg class="tree" viewBox="0 0 60 80"><rect x="26" y="50" width="8" height="28" rx="3" fill="#9A6B3F"/><circle cx="30" cy="30" r="24" fill="#5DB45F"/><circle cx="16" cy="42" r="14" fill="#4FA653"/><circle cx="44" cy="42" r="14" fill="#6FC26C"/><circle cx="22" cy="22" r="5" fill="#8BD685"/></svg><svg class="tree b" viewBox="0 0 60 80"><rect x="26" y="50" width="8" height="28" rx="3" fill="#9A6B3F"/><circle cx="30" cy="30" r="24" fill="#6FC26C"/><circle cx="16" cy="42" r="14" fill="#5DB45F"/><circle cx="44" cy="42" r="14" fill="#4FA653"/></svg><div class="bm-oxw"><div class="bm-oxp" style="grid-template-columns:repeat(${n+1},1fr)">${"<i></i>".repeat(n)}<svg class="home" viewBox="0 0 60 56"><path d="M6 28L30 6L54 28Z" fill="#E8574A"/><rect x="12" y="27" width="36" height="27" rx="2" fill="#FFF3DC"/><rect x="25" y="36" width="10" height="18" rx="2" fill="#B5763F"/><rect x="15" y="33" width="7" height="7" fill="#9AD3F2"/><rect x="38" y="33" width="7" height="7" fill="#9AD3F2"/></svg></div><div class="bm-oxsh" style="left:${50/(n+1)}%"><svg viewBox="0 0 60 48"><path d="M18 38V46M26 39V46M38 39V46M46 38V46" stroke="#4A3A33" stroke-width="3.4" stroke-linecap="round"/><g fill="#fff" stroke="#D9D2C5" stroke-width="1"><circle cx="16" cy="24" r="9"/><circle cx="26" cy="16" r="10"/><circle cx="38" cy="18" r="9"/><circle cx="24" cy="31" r="10"/><circle cx="37" cy="30" r="10"/></g><circle cx="29" cy="24" r="11" fill="#fff"/><ellipse cx="49" cy="22" rx="8" ry="9" fill="#4A3A33"/><ellipse cx="42" cy="15" rx="5" ry="2.6" transform="rotate(-24 42 15)" fill="#4A3A33"/><circle cx="46" cy="10" r="4.4" fill="#fff"/><circle cx="51.5" cy="20" r="2.4" fill="#fff"/><circle cx="52" cy="20" r="1.3" fill="#1F2933"/><path d="M50 27Q53 29 55 26" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg></div></div></div>`;
+const OX_DOVE=`<svg viewBox="0 0 60 48"><path d="M40 16C50 8 56 12 58 18L50 20C48 28 40 34 28 34C18 34 10 30 2 36C6 26 12 20 22 20C28 20 34 20 40 16Z" fill="#fff" stroke="#B9B2D6" stroke-width="1.2"/><path d="M34 22C28 8 18 4 8 6C12 14 20 24 30 26Z" fill="#EFEAFB" stroke="#B9B2D6" stroke-width="1.2"/><circle cx="50" cy="15" r="1.5" fill="#2B2B3A"/><path d="M57 17L60 18.5L56.5 20Z" fill="#F29A4A"/></svg>`,OX_CHURCH=`<svg class="home" viewBox="0 0 60 64"><path d="M29 2H31V7H35V9H31V15H29V9H25V7H29Z" fill="#C9A24B"/><path d="M30 13L44 28H16Z" fill="#B48AD8"/><rect x="18" y="27" width="24" height="35" fill="#FFF8EC"/><path d="M4 40L18 30V62H4ZM56 40L42 30V62H56Z" fill="#F2E9DA"/><path d="M25 62V48Q30 42 35 48V62Z" fill="#A9835A"/><circle cx="30" cy="35" r="4" fill="#9AD3F2"/></svg>`;
+/* 양이나 비둘기를 n번째 자리로 옮겨요 */
+const oxWalk=(el,n,total,hop=true)=>{const sh=el.querySelector(".bm-oxsh");sh.style.left=(n+.5)/(total+1)*100+"%";if(hop){sh.classList.remove("hop");void sh.offsetWidth;sh.classList.add("hop")}el.querySelectorAll(".bm-oxp i").forEach((x,i)=>x.classList.toggle("now",i===n))};
+const oxMark=(el,i,ok,t)=>{const x=el.querySelectorAll(".bm-oxp i")[i];x.classList.add(ok?"ok":"no");x.textContent=ok?t:"✕"};
+const oxMeadow=(n,quiz)=>`<div class="bm-oxm${quiz?" q":""}" aria-hidden="true"><svg class="tree" viewBox="0 0 60 80"><rect x="26" y="50" width="8" height="28" rx="3" fill="#9A6B3F"/><circle cx="30" cy="30" r="24" fill="#5DB45F"/><circle cx="16" cy="42" r="14" fill="#4FA653"/><circle cx="44" cy="42" r="14" fill="#6FC26C"/><circle cx="22" cy="22" r="5" fill="#8BD685"/></svg><svg class="tree b" viewBox="0 0 60 80"><rect x="26" y="50" width="8" height="28" rx="3" fill="#9A6B3F"/><circle cx="30" cy="30" r="24" fill="#6FC26C"/><circle cx="16" cy="42" r="14" fill="#5DB45F"/><circle cx="44" cy="42" r="14" fill="#4FA653"/></svg><div class="bm-oxw"><div class="bm-oxp" style="grid-template-columns:repeat(${n+1},1fr)">${"<i></i>".repeat(n)}${quiz?OX_CHURCH:`<svg class="home" viewBox="0 0 60 56"><path d="M6 28L30 6L54 28Z" fill="#E8574A"/><rect x="12" y="27" width="36" height="27" rx="2" fill="#FFF3DC"/><rect x="25" y="36" width="10" height="18" rx="2" fill="#B5763F"/><rect x="15" y="33" width="7" height="7" fill="#9AD3F2"/><rect x="38" y="33" width="7" height="7" fill="#9AD3F2"/></svg>`}</div><div class="bm-oxsh" style="left:${50/(n+1)}%">${quiz?OX_DOVE:`<svg viewBox="0 0 60 48"><path d="M18 38V46M26 39V46M38 39V46M46 38V46" stroke="#4A3A33" stroke-width="3.4" stroke-linecap="round"/><g fill="#fff" stroke="#D9D2C5" stroke-width="1"><circle cx="16" cy="24" r="9"/><circle cx="26" cy="16" r="10"/><circle cx="38" cy="18" r="9"/><circle cx="24" cy="31" r="10"/><circle cx="37" cy="30" r="10"/></g><circle cx="29" cy="24" r="11" fill="#fff"/><ellipse cx="49" cy="22" rx="8" ry="9" fill="#4A3A33"/><ellipse cx="42" cy="15" rx="5" ry="2.6" transform="rotate(-24 42 15)" fill="#4A3A33"/><circle cx="46" cy="10" r="4.4" fill="#fff"/><circle cx="51.5" cy="20" r="2.4" fill="#fff"/><circle cx="52" cy="20" r="1.3" fill="#1F2933"/><path d="M50 27Q53 29 55 26" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg>`}</div></div></div>`;
 function miniTwenty(el){
   const fact=(A.solo?A.run.done:rnd(2))%2===1,[a]=fact?[["성경 상식"]]:pick("twenty",TWENTY[A.lv],1),list=fact?oxFacts():twBuild(a),t0=performance.now(),T=LV[A.lv].twT*1000,got=new Map();
   let right=0,lives=A.solo?A.run.lives:5,over=false,at=0,lock=false;
@@ -1559,15 +1566,13 @@ function miniTwenty(el){
   const tick=()=>{if(over)return;const r=1-(performance.now()-t0)/T,b=el.querySelector("#bmBar");if(b)b.style.width=Math.max(0,r*100)+"%";q("#bmInfo").textContent=`❤️${lives} ${got.size}/${list.length} · ${Math.max(0,Math.ceil(r*T/1000))}초`;if(r<=0)end(false,true)};
   el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><div class="bm-tw"><b>${esc(a[0])}</b></div><div class="bm-oxq" id="bmOxQ"></div><div class="bm-oxb"><button type="button" data-ox="1" aria-label="맞아요">O</button><button type="button" data-ox="0" aria-label="틀려요">X</button></div></div>${oxMeadow(list.length)}`;
   el.classList.add("bm-oxs");
-  const box=el.querySelector("#bmOxQ"),btns=[...el.querySelectorAll("[data-ox]")],stones=[...el.querySelectorAll(".bm-oxp i")],sheep=el.querySelector(".bm-oxsh");
-  /* 양은 답할 때마다 다음 돌로 한 칸 뛰어요 */
-  const walk=n=>{sheep.style.left=(n+.5)/(list.length+1)*100+"%";sheep.classList.remove("hop");void sheep.offsetWidth;sheep.classList.add("hop");stones.forEach((x,i)=>x.classList.toggle("now",i===n))};
+  const box=el.querySelector("#bmOxQ"),btns=[...el.querySelectorAll("[data-ox]")];
   const show=()=>{box.className="bm-oxq";box.textContent=list[at][0];btns.forEach(x=>x.classList.remove("ans"))};
-  btns.forEach(b=>b.onclick=()=>{if(over||lock)return;lock=true;const v=+b.dataset.ox,y=list[at][1],ok=v===y;got.set(at,v);box.classList.add(ok?"ok":"no");stones[at].classList.add(ok?"ok":"no");stones[at].textContent=ok?"✓":"✕";walk(got.size);
+  btns.forEach(b=>b.onclick=()=>{if(over||lock)return;lock=true;const v=+b.dataset.ox,y=list[at][1],ok=v===y;got.set(at,v);box.classList.add(ok?"ok":"no");oxMark(el,at,ok,"✓");oxWalk(el,got.size,list.length);
     btns.find(x=>+x.dataset.ox===y).classList.add("ans");
     sfx(ok?"ok":"no");if(ok){right++;if(A.solo)A.run.cur=right*3}else lives--;
     tick();after(ok?250:600,()=>{if(lives<=0)return end(false);if(got.size>=list.length)return end(true);at++;lock=false;show()})});
-  show();walk(0);
+  show();oxWalk(el,0,list.length,false);
   tick();every(200,tick);
 }
 

@@ -979,11 +979,11 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
 .bm-grid{padding:6px;background:linear-gradient(150deg,#DDF2E6,#E9F5DD);border-radius:10px;box-shadow:inset 0 0 0 1px rgba(60,110,85,.16)}
 .bm-cc{border-color:#A9C4B6}
 .bm-clues button{border-radius:10px}
-.bm-road{--sd:max(14px,5%);background:linear-gradient(#FFFFFF 0 24px,#F5B9B1 24px 48px) calc(var(--sd) - 6px) var(--off)/6px 48px repeat-y,linear-gradient(#FFFFFF 0 24px,#F5B9B1 24px 48px) calc(100% - var(--sd) + 6px) var(--off)/6px 48px repeat-y,linear-gradient(90deg,#C5CBD9,#D5DAE5 50%,#C5CBD9) center/calc(100% - 2*var(--sd)) 100% no-repeat,radial-gradient(circle at 40% 30%,#97D398 0 6px,transparent 7px) 0 var(--off)/var(--sd) 96px repeat-y,radial-gradient(circle at 60% 74%,#FFE27A 0 2px,transparent 3px) 100% var(--off)/var(--sd) 96px repeat-y,radial-gradient(circle at 55% 20%,#97D398 0 6px,transparent 7px) 100% var(--off)/var(--sd) 96px repeat-y,#C3E8BD}
+.bm-road{--sd:max(14px,5%);background:linear-gradient(#F4F4F4 0 24px,#D9483B 24px 48px) calc(var(--sd) - 6px) var(--off)/6px 48px repeat-y,linear-gradient(#F4F4F4 0 24px,#D9483B 24px 48px) calc(100% - var(--sd) + 6px) var(--off)/6px 48px repeat-y,linear-gradient(90deg,#343A46,#474E5C 50%,#343A46) center/calc(100% - 2*var(--sd)) 100% no-repeat,radial-gradient(circle at 40% 30%,#2A6A36 0 6px,transparent 7px) 0 var(--off)/var(--sd) 96px repeat-y,radial-gradient(circle at 60% 74%,#FFE27A 0 2px,transparent 3px) 100% var(--off)/var(--sd) 96px repeat-y,radial-gradient(circle at 55% 20%,#2A6A36 0 6px,transparent 7px) 100% var(--off)/var(--sd) 96px repeat-y,#3F9150}
 .bm-road>i:nth-of-type(1){left:calc(var(--sd) + (100% - 2*var(--sd))/3)}
 .bm-road>i:nth-of-type(2){left:calc(var(--sd) + (100% - 2*var(--sd))*2/3)}
-.bm-road>i{width:4px;background:repeating-linear-gradient(#fff 0 24px,transparent 24px 48px);background-position-y:var(--off)}
-.bm-rp{width:calc((100% - 2*var(--sd))/3 - 6px);background:linear-gradient(180deg,#fff,#F2EEE3);border:2px solid #D9A520;border-radius:10px;box-shadow:0 3px 0 rgba(120,100,70,.28)}
+.bm-road>i{width:4px;background:repeating-linear-gradient(rgba(255,255,255,.85) 0 24px,transparent 24px 48px);background-position-y:var(--off)}
+.bm-rp{width:calc((100% - 2*var(--sd))/3 - 6px);background:linear-gradient(180deg,#fff,#F2EEE3);border:2px solid #D9A520;border-radius:10px;box-shadow:0 3px 0 rgba(0,0,0,.35)}
 .bm-rv{background:#FFFDF8}
 .bm-car.good svg{filter:drop-shadow(0 0 10px #8BF0B0)}
 .bm-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3}
@@ -1142,11 +1142,23 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
   .bm-oxs .bm-oxb{flex:1 1 64px}
   .bm-oxs .bm-oxb button{min-height:60px;font-size:34px}
 }
-/* 슈팅과 홍해의 게임 진행 화면만 진한 장면을 써요 */
+/* 슈팅, 홍해, 레이싱의 게임 진행 화면만 진한 장면을 써요 */
+.bm-stage.bm-deep[data-k="race"]{background:#2F5F80}
 .bm-stage.bm-deep[data-k="shoot"]{background:#0B1026}
 .bm-stage.bm-deep[data-k="pair"]{background:#0A3566}
 .bm-stage.bm-deep .bm-sh{background:rgba(255,255,255,.08);color:#fff}
 .bm-stage.bm-deep .bm-sh .btn{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff}
+/* 성경퀴즈: 보기가 화면을 채우고 아래에 비둘기가 별을 따라가는 언덕이 있어요 */
+.bm-qz>.bm-q{min-height:auto}
+.bm-qz .bm-opts{flex:1 1 auto;grid-auto-rows:1fr;max-height:min(460px,58vh)}
+.bm-qz .bm-opts button{font-size:clamp(16px,4.6vw,23px)}
+.bm-oxm.q{background:radial-gradient(75% 95% at 14% 112%,#E1D6F6 98%,transparent 100%),radial-gradient(80% 110% at 88% 118%,#D4C6F1 98%,transparent 100%),linear-gradient(180deg,transparent 42%,#CDBEEE 42%)}
+.bm-oxm.q .tree{opacity:.75}
+.bm-oxm.q .bm-oxp i{background:#EDE6F9;box-shadow:0 3px 0 #BBAAE0;color:#fff;font-size:15px}
+.bm-oxm.q .bm-oxp i.now{background:#FFF1C2;box-shadow:0 3px 0 #E2BE6A}
+.bm-oxm.q .bm-oxp i.ok{background:#F2B632;box-shadow:0 3px 0 #C98A0E}
+.bm-oxm.q .bm-oxp i.no{background:#E77B70;box-shadow:0 3px 0 #B8483C}
+.bm-oxm.q .bm-oxsh{bottom:26px}
 </style>
 </head>
 <body>
@@ -4082,7 +4094,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261106155612';
+  var BUILD = '20261106160440';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
