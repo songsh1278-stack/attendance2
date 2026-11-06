@@ -782,9 +782,9 @@ const ART=[["lastsupper","최후의 만찬","레오나르도 다 빈치","1495~1
 /* 틀린그림찾기: 바꿀 곳. [x,y,반지름,(세로 배율)]. 바뀐 그림 이름-b.jpg에서 가져온다. alt:1 초급 그림, alt:2 diff_paint.py로 만든 명화·사진. 인물 얼굴은 건드리지 않는다 */
 const DIFF=[{"id":"babel","s":[[0.8411,0.8944,0.1026,0.64],[0.1794,0.1223,0.0734,1.45],[0.9572,0.9202,0.0292],[0.8,0.1649,0.0489,0.5],[0.8989,0.3685,0.0189],[0.675,0.0631,0.0339,1.09]],"alt":2},{"id":"noah","s":[[0.4189,0.2754,0.041,0.5],[0.9511,0.0772,0.041,0.46],[0.4117,0.9211,0.0323,0.68],[0.5383,0.9544,0.0339,0.65],[0.3456,0.8833,0.0379,0.6],[0.87,0.1123,0.0316,0.55]],"alt":2},{"id":"hicks","s":[[0.2467,0.6489,0.0789,0.36],[0.2183,0.5057,0.0292],[0.2167,0.2525,0.1057,0.34],[0.8583,0.9625,0.086,0.54],[0.465,0.479,0.0174],[0.5828,0.4682,0.026,0.91]],"alt":2},{"id":"cana","s":[[0.5939,0.102,0.0323,0.76],[0.3261,0.1078,0.0371,2.26],[0.5889,0.1625,0.0174,1.18],[0.455,0.4925,0.0323,0.68],[0.2178,0.5033,0.0189,0.92]],"alt":2},{"id":"keys","s":[[0.28,0.3109,0.0363,2.5],[0.7306,0.3056,0.0229,3.21],[0.4883,0.4812,0.0323,1.24],[0.295,0.1156,0.0655,0.35],[0.8833,0.0466,0.0347,1.14]],"alt":2},{"id":"census","s":[[0.6122,0.0682,0.0252,0.69],[0.4367,0.947,0.0363,0.78],[0.4333,0.5538,0.0442,0.71],[0.5117,0.5506,0.0371],[0.6783,0.6493,0.0229,1.34],[0.3528,0.5201,0.0245,1.81]],"alt":2},{"id":"blind","s":[[0.4878,0.102,0.0678,0.42],[0.7133,0.41,0.0284,0.78],[0.1678,0.748,0.1152,0.33],[0.9539,0.271,0.0292],[0.37,0.927,0.0379,0.46]],"alt":2},{"id":"john","s":[[0.2167,0.6262,0.0426,2.41],[0.7322,0.2477,0.0331,0.83],[0.705,0.3093,0.0174],[0.6578,0.1009,0.06,0.39],[0.9161,0.9121,0.0371,0.89]],"alt":2},{"id":"emmaus","s":[[0.3639,0.743,0.0781,0.6],[0.8022,0.582,0.0331,1.21],[0.7456,0.757,0.0331,0.88],[0.8856,0.7977,0.0757,0.72],[0.6672,0.082,0.0513,1.74],[0.4711,0.7695,0.0268,0.91]],"alt":2},{"id":"daniel","s":[[0.93,0.9663,0.071,0.46],[0.2472,0.9605,0.0465,0.78],[0.4733,0.5814,0.0426,0.72],[0.6294,0.0403,0.0292,0.59],[0.8011,0.9556,0.0584,0.38]],"alt":2},{"id":"tribute","s":[[0.0817,0.4614,0.0213,3.67],[0.215,0.2916,0.0245,2.58],[0.1056,0.6904,0.0615,0.42],[0.885,0.2566,0.0323],[0.3839,0.0542,0.0497,0.37],[0.1428,0.8639,0.0402,0.45],[0.0361,0.4735,0.0174]],"alt":2},{"id":"annun","s":[[0.0289,0.6424,0.0268,1.09],[0.3133,0.1007,0.0473],[0.2478,0.316,0.0458,0.84],[0.4717,0.2306,0.0371,3.74],[0.695,0.5479,0.0355,0.6],[0.5711,0.8049,0.0331,2.17]],"alt":2},{"id":"kiss","s":[[0.6106,0.0695,0.056,1.66],[0.6694,0.3149,0.0323,2.17],[0.4528,0.1748,0.0339,1.65],[0.0994,0.0757,0.0339,1.14],[0.1394,0.2899,0.0876,1.59]],"alt":2},{"id":"c-noah","n":"노아의 방주","alt":1,"s":[[0.6667,0.1094,0.08],[0.3889,0.25,0.0733],[0.1,0.4531,0.0667],[0.2111,0.3438,0.0667],[0.5556,0.2969,0.0378],[0.7778,0.4063,0.0333],[0.5722,0.4547,0.0289],[0.6167,0.8781,0.0667],[0.2067,0.925,0.0511],[0.9556,0.5781,0.0822],[0.0667,0.9344,0.0333],[0.4889,0.95,0.0333],[0.7333,0.95,0.0333],[0.9333,0.95,0.0333],[0.6667,0.7344,0.0489]]},{"id":"c-jonah","n":"요나와 큰 물고기","alt":1,"s":[[0.4222,0.125,0.08],[0.7111,0.1875,0.0867],[0.2889,0.2656,0.0378],[0.5556,0.2969,0.0333],[0.8778,0.1094,0.0356],[0.5778,0.0781,0.0378],[0.2333,0.3828,0.1111],[0.8889,0.3516,0.1022],[0.1167,0.6719,0.0578],[0.1722,0.875,0.0511],[0.9056,0.875,0.0511],[0.3167,0.9219,0.0467],[0.9611,0.5938,0.0444],[0.7667,0.9375,0.0511],[0.3756,0.5469,0.0378]]},{"id":"c-david","n":"양을 치는 다윗","alt":1,"s":[[0.4667,0.1406,0.0867],[0.8,0.1094,0.08],[0.3111,0.1094,0.0378],[0.6556,0.2656,0.0333],[0.8778,0.4688,0.1244],[0.0778,0.4688,0.0844],[0.58,0.5703,0.0933],[0.4444,0.6438,0.0511],[0.2622,0.6906,0.0644],[0.3622,0.9094,0.06],[0.66,0.7375,0.0644],[0.5733,0.9406,0.0533],[0.0667,0.7156,0.0333],[0.9222,0.825,0.0333],[0.4667,0.9656,0.0311],[0.6889,0.4688,0.0333],[0.2778,0.5156,0.0333],[0.8889,0.9531,0.0578],[0.1333,0.6875,0.0489]]},{"id":"c-bethlehem","n":"베들레헴의 밤","alt":1,"s":[[0.1311,0.1563,0.0622],[0.2778,0.1094,0.0222],[0.3556,0.25,0.0222],[0.6778,0.0938,0.0222],[0.7778,0.2344,0.0222],[0.9111,0.125,0.0222],[0.9556,0.3125,0.0222],[0.2333,0.3281,0.0222],[0.0889,0.375,0.0222],[0.6222,0.2813,0.0222],[0.4111,0.0938,0.0222],[0.7667,0.6484,0.0533],[0.2778,0.5625,0.1389],[0.2244,0.8781,0.0578],[0.3178,0.925,0.0511],[0.8022,0.8344,0.1044],[0.1111,0.8562,0.06],[0.5933,0.925,0.0511],[0.4667,0.8906,0.0489]]},{"id":"c-fish","n":"오병이어","alt":1,"s":[[0.1889,0.1094,0.08],[0.7667,0.125,0.0867],[0.2667,0.3359,0.0889],[0.7667,0.3359,0.0778],[0.3667,0.2031,0.0378],[0.6222,0.2031,0.0333],[0.6889,0.8063,0.0533],[0.2867,0.7031,0.0289],[0.1889,0.6563,0.0733],[0.8,0.6641,0.0778],[0.9556,0.875,0.0778],[0.4444,0.95,0.0333],[0.5778,0.9656,0.0311],[0.8444,0.9656,0.0311],[0.2444,0.9656,0.0311],[0.4956,0.875,0.0467],[0.6222,0.7344,0.0444]]},{"id":"c-eden","n":"에덴동산","alt":1,"s":[[0.1778,0.125,0.08],[0.5333,0.1719,0.0867],[0.3556,0.0938,0.0378],[0.6889,0.2656,0.0333],[0.1,0.3719,0.0189],[0.1667,0.3484,0.0189],[0.1222,0.4422,0.0189],[0.1944,0.4266,0.0189],[0.0667,0.45,0.0189],[0.9333,0.4531,0.1044],[0.4111,0.4609,0.0844],[0.2889,0.7344,0.0578],[0.9222,0.8828,0.0578],[0.8111,0.7031,0.1022],[0.2644,0.9313,0.0689],[0.3667,0.6563,0.0333],[0.7111,0.4688,0.0333],[0.0556,0.7312,0.0333],[0.4667,0.7469,0.0333],[0.9556,0.7156,0.0333],[0.7667,0.9656,0.0311],[0.6178,0.875,0.0378],[0.2667,0.5625,0.0356]]},{"id":"p-basil","e":1,"n":"성 바실리 대성당","a":"사진 Akuptsova","s":[[0.8567,0.9161,0.0631,1.49],[0.3022,0.4911,0.0221,1.79],[0.7078,0.4922,0.0221,1.71],[0.53,0.2189,0.0205,1.69],[0.14,0.2672,0.1104,0.42],[0.7961,0.1339,0.0418,1.15]],"alt":2},{"id":"p-bethlehem","e":1,"n":"베들레헴 예수 탄생 교회","a":"사진 Berthold Werner","s":[[0.1283,0.3907,0.1239,0.38],[0.9228,0.0618,0.0671,0.87],[0.3383,0.5543,0.0213,2.3],[0.2178,0.5334,0.0189,1.12],[0.5294,0.4416,0.0174],[0.9406,0.5701,0.0308,1.31],[0.3944,0.1745,0.0978,0.36]],"alt":2},{"id":"p-chapel","e":1,"n":"숲속 예배당","a":"사진 Ajznponar","s":[[0.3711,0.2481,0.0237,1.37],[0.7294,0.8541,0.026,1.61],[0.1606,0.9244,0.0355,1.2],[0.2972,0.9104,0.0655],[0.47,0.9407,0.041,0.77],[0.3367,0.757,0.0284,1.89]],"alt":2},{"id":"p-ephesus","e":1,"n":"에베소 켈수스 도서관","a":"사진 Normherr","s":[[0.2383,0.4481,0.0671],[0.5528,0.5422,0.0371,1.79],[0.8222,0.1378,0.0505,0.34],[0.6811,0.057,0.0915,0.41],[0.5622,0.7378,0.0331,0.71],[0.1044,0.2985,0.0552,1.24]],"alt":2},{"id":"p-milan","e":1,"n":"밀라노 대성당","a":"사진 Julian Lupyan","s":[[0.3944,0.0884,0.0174,2.23],[0.2778,0.2017,0.0174,2.36],[0.7194,0.2033,0.0181,2.17],[0.1483,0.3033,0.0174,1.68],[0.1372,0.1198,0.1018,0.32],[0.5006,0.7826,0.0434,1.65]],"alt":2},{"id":"p-notredame","e":1,"n":"파리 노트르담 대성당","a":"사진 Ali Sabbagh","s":[[0.8111,0.3527,0.0205,1.96],[0.4567,0.3678,0.0189,1.71],[0.225,0.303,0.0418],[0.3333,0.1574,0.0473,0.37],[0.7117,0.1667,0.0576,1.32],[0.8839,0.3603,0.0497],[0.6833,0.415,0.0174,3.05]],"alt":2},{"id":"p-pisa","e":1,"n":"피사 대성당","a":"사진 Perituss","s":[[0.4956,0.1458,0.0237,1.5],[0.64,0.9333,0.0458],[0.1583,0.8833,0.0276,1.49],[0.68,0.1558,0.0442,0.39],[0.7233,0.4717,0.0174,1.73],[0.1544,0.4667,0.0426,1.11],[0.1506,0.2633,0.0655,1.33]],"alt":2},{"id":"p-santorini","e":1,"n":"산토리니 교회","a":"사진 Mustang Joe","s":[[0.5539,0.1847,0.0276,1.09],[0.2283,0.2879,0.0686,0.44],[0.8072,0.218,0.0371,0.89],[0.6106,0.4418,0.0292,1.92],[0.3344,0.1356,0.0221],[0.2628,0.4958,0.045,0.39]],"alt":2}];
 const LV={
-  1:{n:"초급",d:"유명한 성경 이야기",qt:20,rs:125,pr:{n:6,ct:20,push:.16,bad:.15},df:{n:3,t:90},ck:5,cw:5,cwT:150,twT:90,sh:{sp:85,drop:1.2,dive:2.6,hp:1,shot:1,good:2.4}},
-  2:{n:"중급",d:"인물과 사건 더 깊이",qt:15,rs:140,pr:{n:8,ct:18,push:.12,bad:.18},df:{n:3,t:90},ck:7,cw:6,cwT:130,twT:75,sh:{sp:100,drop:1.25,dive:2.3,hp:1,shot:2,good:2.2}},
-  3:{n:"고급",d:"성경 박사에게 도전",qt:12,rs:160,pr:{n:10,ct:14,push:.1,bad:.22},df:{n:4,t:75},ck:9,cw:7,cwT:110,twT:60,sh:{sp:118,drop:1.2,dive:1.9,hp:2,shot:3,good:1.9}}
+  1:{n:"초급",d:"유명한 성경 이야기",qt:20,rs:125,pr:{n:6,ct:22,push:.16,bad:.15},df:{n:3,t:90},ck:5,cw:5,cwT:110,twT:90,sh:{sp:85,drop:1.2,dive:2.6,hp:1,shot:1,good:2.4}},
+  2:{n:"중급",d:"인물과 사건 더 깊이",qt:15,rs:140,pr:{n:8,ct:22,push:.13,bad:.18},df:{n:3,t:90},ck:7,cw:6,cwT:110,twT:75,sh:{sp:100,drop:1.25,dive:2.3,hp:1,shot:2,good:2.2}},
+  3:{n:"고급",d:"성경 박사에게 도전",qt:12,rs:160,pr:{n:10,ct:20,push:.13,bad:.2},df:{n:4,t:75},ck:9,cw:6,cwT:95,twT:60,sh:{sp:118,drop:1.2,dive:1.9,hp:2,shot:3,good:1.9}}
 };
 const G={
   quiz:{n:"성경퀴즈+넌센스",i:"📖"},
@@ -822,6 +822,10 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-bmsnd]");i
 /* 혼자 하는 게임: 판을 통과하면 다음 단계로 올라가고 점수와 목숨이 이어져요 */
 /* 같은 난이도를 이만큼 통과해야 다음 난이도로 올라가요 */
 const LV_STEP=3;
+/* 시간제한은 없어요. 보통 실력이면 초급 3분, 중급 2분 30초, 고급 2분쯤 끝나도록 절반이 지나면 조금씩 어려워져요 */
+const RUN_T={1:180,2:150,3:120};
+const hot=()=>{if(!A.solo||A.board)return 1;const r=A.run,n=performance.now();if(!r.s0)r.s0=n;const x=((r.play||0)+(n-r.s0)/1000)/RUN_T[A.lv0];return x<.5?1:Math.min(3,1+(x-.5)*1.6)};
+const lap=r=>{if(r.s0){r.play=(r.play||0)+(performance.now()-r.s0)/1000;r.s0=0}};
 const lvUp=r=>{if(A.lv<3&&r.done%LV_STEP===0){A.lv++;A.used=SOLO[A.lv]}};
 const newRun=k=>({pts:0,lives:k==="twenty"?5:3,asked:0,right:0,done:0});
 const LIFE_GAME=k=>["quiz","map","race","shoot","twenty","diff","art"].includes(k);
@@ -837,9 +841,9 @@ const rulesOf=k=>{
     art:[`기독교 명화를 보고 제목이나 화가를 네 가지 보기에서 골라요. 문제마다 ${L.qt}초가 주어져요.`,"맞히면 10점, 시간이 절반 넘게 남았을 때 맞히면 15점이에요.",`${life} 틀리거나 시간이 지나면 하나 줄어요. ${n}문제를 풀면 다음 단계로 가요.`],
     cross:[`뜻풀이를 누르고 낱말을 입력해요. 틀려도 맞은 글자는 칸에 남고, 시간이 5초 줄어요. 제한 시간은 ${L.cwT}초예요.`,"낱말 하나에 5점, 다 풀면 보너스를 더 받아요. 한 판 최고 45점이에요.","다 풀면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요."],
     twenty:[`인물·장소·물건 판과 성경 상식 판이 번갈아 나와요. 설명이 하나씩 나오면 맞으면 O, 틀리면 X를 빠르게 골라요. 고르면 바로 다음 설명으로 넘어가요. 제한 시간은 ${L.twT}초예요.`,"맞힌 설명 하나에 3점, 7~8개를 다 고르면 보너스를 더 받아요. 빨리 끝낼수록 보너스가 커요.",`${s?"기회 5번으로 시작해요. 틀리면 하나 줄어요.":"기회는 1번이에요. 틀리면 끝나요."} 7~8개를 다 고르면 다음 단계로 가요. 시간이 끝나면 게임도 끝나요.`],
-    shoot:[`비행기를 고르고, 화면 아무 곳에서나 손가락을 끌면 끈 만큼 상하좌우로 움직여요. 컴퓨터는 마우스나 방향키로 움직여요. 빛은 저절로 나가요. 초록색 좋은 말씀(성령의 아홉 열매 등)은 비행기로 받고, 나쁜 말씀은 빛으로 깨요. 적의 총알은 한 번에 ${L.sh.shot}개씩 나와요.`,"나쁜 말씀을 깨면 1점, 좋은 말씀을 받으면 2점, 끝까지 버티면 5점을 더 받아요. 좋은 말씀이든 나쁜 말씀이든 바닥에 떨어지면 2점이 줄어요. 한 판 최고 45점이에요.",`${life} 총알이나 나쁜 말씀에 부딪히면 하나 줄어요. 40초를 버티면 다음 단계로 가요.`,"좋은 것: 🛡️ 방어막(한 번 막아 줘요), ⚡ 레이저(4초), 💣 폭탄(나쁜 말씀과 총알을 모두 없애요). 나쁜 것: 🐌 느려짐(4초), 🧊 얼음(2초 동안 못 움직이고 못 쏴요)."]
+    shoot:[`비행기를 고르고, 화면 아무 곳에서나 손가락을 끌면 끈 만큼 상하좌우로 움직여요. 컴퓨터는 마우스나 방향키로 움직여요. 빛은 저절로 나가요. 초록색 좋은 말씀(성령의 아홉 열매 등)은 비행기로 받고, 나쁜 말씀은 빛으로 깨요. 적의 총알은 한 번에 ${L.sh.shot}개씩 나와요.`,"나쁜 말씀을 깨면 1점, 좋은 말씀을 받으면 2점, 끝까지 버티면 5점을 더 받아요. 바닥에 떨어져도 점수는 줄지 않아요. 한 판 최고 45점이에요.",`${life} 총알이나 나쁜 말씀에 부딪히면 하나 줄어요. 40초를 버티면 다음 단계로 가요.`,"좋은 것: 🛡️ 방어막(한 번 막아 줘요), ⚡ 레이저(4초), 💣 폭탄(나쁜 말씀과 총알을 모두 없애요). 나쁜 것: 🐌 느려짐(4초), 🧊 얼음(2초 동안 못 움직이고 못 쏴요)."]
   }[k];
-  return [["방법",R[0]],["점수",R[1]],...(R[3]?[["아이템",R[3]]]:[]),["끝나는 때",R[2]+(s?" 그만하기를 누르면 그때까지의 점수를 저장해요. 점수는 끝날 때까지 이어지고, 3단계를 통과할 때마다 고급까지 어려워져요.":" 게임이 끝날 때까지 단계가 이어지고, 3단계를 통과할 때마다 고급까지 어려워져요. 얻은 점수는 모두 내 점수에 더해요.")]];
+  return [["방법",R[0]],["점수",R[1]],...(R[3]?[["아이템",R[3]]]:[]),["끝나는 때",R[2]+(s?" 그만하기를 누르면 그때까지의 점수를 저장해요. 점수는 끝날 때까지 이어지고, 3단계를 통과할 때마다 고급까지 어려워져요."+(A.board?"":" 오래 할수록 제한 시간이 줄고 속도가 빨라져요."):" 게임이 끝날 때까지 단계가 이어지고, 3단계를 통과할 때마다 고급까지 어려워져요. 얻은 점수는 모두 내 점수에 더해요.")]];
 };
 const SOLO={1:{},2:{},3:{}};
 const BOARD_NAME="성경 땅밟기";
@@ -1252,7 +1256,7 @@ function clear(pts,lives,note,more=""){
   if(!A.solo)return finish(pts,note,more);
   stopAll();if(A.phase!=="intro")return;
   const r=A.run,k=A.pending.k,g=G[k];sfx("clear");after(30,confetti);
-  r.pts+=pts;r.cur=0;r.done++;if(lives!==undefined)r.lives=lives;
+  lap(r);r.pts+=pts;r.cur=0;r.done++;if(lives!==undefined)r.lives=lives;
   if(A.board){A.pending.pts=r.pts;save()}
   lvUp(r);
   stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">🎉</div><p class="muted num">${r.done}단계 통과</p><h3 class="num">${r.pts}점</h3><p>${esc(note)}</p>${LIFE_GAME(k)?`<p>${"❤️".repeat(r.lives)}</p>`:""}${more}<p class="muted">다음 단계 난이도: ${LV[A.lv].n}</p><button type="button" class="btn primary bm-big num" data-bm="start">${r.done+1}단계 도전</button>${A.board?"":`<button type="button" class="btn bm-big" data-bm="giveup">그만하고 점수 저장</button>`}</div>`;
@@ -1294,7 +1298,7 @@ function miniQuiz(el){
   const ask=()=>{
     if(i>=items.length||A.solo&&lives<=0)return setEnd(i,right,pts,lives);
     lifeInfo(lives,pts);
-    const it=items[i],opts=shuf(it.slice(1,5)),t0=performance.now(),T=L.qt*1000;let over=false;
+    const it=items[i],opts=shuf(it.slice(1,5)),t0=performance.now(),T=L.qt*1000/hot();let over=false;
     el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><p class="muted num">${i+1} / ${items.length}${FUN[A.lv].includes(it)?" · 😜 넌센스":""}</p><h3>${esc(it[0])}</h3>
       <div class="bm-opts">${opts.map((o,n)=>`<button type="button" data-o="${n}">${esc(o)}</button>`).join("")}</div><div id="bmAfter"></div></div>${oxMeadow(items.length,true)}`;
     res.forEach((ok,n)=>oxMark(el,n,ok,"★"));oxWalk(el,i,items.length,false);
@@ -1397,7 +1401,7 @@ function raceRun(el,car){
   const road=el.querySelector("#bmRoad"),carEl=el.querySelector("#bmCar"),rv=el.querySelector("#bmRv");
   let at=0,lane=A.solo&&A.run.lane!==undefined?A.run.lane:1,lives=A.solo?A.run.lives:3,rows=[],last=performance.now(),t=0,gapY=0,over=false,info="",lock=0;
   /* 단계를 통과할수록 4%씩 빨라지고 1.3배에서 멈춰요. 줄 간격이 좁아도 손이 따라갈 틈은 남겨요 */
-  const H=()=>road.clientHeight,boost=1+Math.min(.3,(A.solo?A.run.done:0)*.04),speed=()=>L.rs*boost*Math.max(.8,H()/520),rowGap=()=>Math.max(H()*.42,120),T=K*(rowGap()/speed())*2.6+6;
+  const H=()=>road.clientHeight,boost=(1+Math.min(.3,(A.solo?A.run.done:0)*.04))*hot(),speed=()=>L.rs*boost*Math.max(.8,H()/520),rowGap=()=>Math.max(H()*.42,120),T=K*(rowGap()/speed())*2.6+6;
   const verse=()=>{rv.innerHTML=chunks.map((c,i)=>`<span class="${i<at?"ok":i===at&&A.lv<=2?"cur":""}">${esc(c)}</span>`).join(" ")};
   const setLane=n=>{const o=lane;lane=Math.max(0,Math.min(2,n));if(A.solo)A.run.lane=lane;carEl.style.left=laneX(lane);if(o!==lane){carEl.style.setProperty("--tilt",(lane>o?9:-9)+"deg");after(150,()=>carEl.style.setProperty("--tilt","0deg"))}};
   const end=win=>{if(over)return;over=true;const left=Math.max(0,1-t/T);
@@ -1456,7 +1460,7 @@ function miniMap(el){
   const ask=()=>{
     if(i>=items.length||A.solo&&lives<=0)return setEnd(i,right,pts,lives);
     lifeInfo(lives,pts);
-    const [vk,id]=items[i],v=MAPV.find(x=>x.k===vk),m=MAPP[id],ids=pins(v,id),t0=performance.now(),T=L.qt*1000;let over=false;
+    const [vk,id]=items[i],v=MAPV.find(x=>x.k===vk),m=MAPP[id],ids=pins(v,id),t0=performance.now(),T=L.qt*1000/hot();let over=false;
     const hard=A.lv===3&&!m[3].includes(m[0]);
     el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><p class="muted num">${i+1} / ${items.length} · ${esc(v.n)}</p><h3>${hard?esc(m[3]):`${esc(m[0])}${(m[0].charCodeAt(m[0].length-1)-0xAC00)%28?"은":"는"} 어디일까요?`}</h3><div id="bmMapQ"></div><div id="bmAfter"></div></div>`;
     const bar=el.querySelector("#bmBar"),box=el.querySelector("#bmMapQ");
@@ -1511,7 +1515,7 @@ function miniCross(el){
   const H=r1-r0+1,W=c1-c0+1,num=new Map();let no=0;
   pl.slice().sort((a,b)=>a.r-b.r||a.col-b.col).forEach(p=>{const k=p.r+","+p.col;if(!num.has(k))num.set(k,++no);p.no=num.get(k)});
   const at=p=>[...p.w].map((_,i)=>(p.r+(p.d?i:0))+","+(p.col+(p.d?0:i)));
-  let sel=pl[0],T=L.cwT*1000,t0=performance.now(),over=false;const got=new Set();
+  let sel=pl[0],T=L.cwT*1000/hot(),t0=performance.now(),over=false;const got=new Set();
   let grid="";for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++){const k=r+","+c;grid+=map.has(k)?`<div class="bm-cc" data-k="${k}">${num.has(k)?`<sup>${num.get(k)}</sup>`:""}<span></span></div>`:`<div></div>`}
   const clue=d=>pl.filter(p=>p.d===d).sort((a,b)=>a.no-b.no).map(p=>`<button type="button" data-w="${pl.indexOf(p)}"><b class="num">${p.no}</b> ${esc(p.c)} <small class="num">(${p.w.length}글자)</small></button>`).join("");
   el.innerHTML=`<div class="bm-q bm-cw"><div class="bm-bar"><div id="bmBar"></div></div>
@@ -1558,7 +1562,7 @@ const oxWalk=(el,n,total,hop=true)=>{const sh=el.querySelector(".bm-oxsh");sh.st
 const oxMark=(el,i,ok,t)=>{const x=el.querySelectorAll(".bm-oxp i")[i];x.classList.add(ok?"ok":"no");x.textContent=ok?t:"✕"};
 const oxMeadow=(n,quiz)=>`<div class="bm-oxm${quiz?" q":""}" aria-hidden="true"><svg class="tree" viewBox="0 0 60 80"><rect x="26" y="50" width="8" height="28" rx="3" fill="#9A6B3F"/><circle cx="30" cy="30" r="24" fill="#5DB45F"/><circle cx="16" cy="42" r="14" fill="#4FA653"/><circle cx="44" cy="42" r="14" fill="#6FC26C"/><circle cx="22" cy="22" r="5" fill="#8BD685"/></svg><svg class="tree b" viewBox="0 0 60 80"><rect x="26" y="50" width="8" height="28" rx="3" fill="#9A6B3F"/><circle cx="30" cy="30" r="24" fill="#6FC26C"/><circle cx="16" cy="42" r="14" fill="#5DB45F"/><circle cx="44" cy="42" r="14" fill="#4FA653"/></svg><div class="bm-oxw"><div class="bm-oxp" style="grid-template-columns:repeat(${n+1},1fr)">${"<i></i>".repeat(n)}${quiz?OX_CHURCH:`<svg class="home" viewBox="0 0 60 56"><path d="M6 28L30 6L54 28Z" fill="#E8574A"/><rect x="12" y="27" width="36" height="27" rx="2" fill="#FFF3DC"/><rect x="25" y="36" width="10" height="18" rx="2" fill="#B5763F"/><rect x="15" y="33" width="7" height="7" fill="#9AD3F2"/><rect x="38" y="33" width="7" height="7" fill="#9AD3F2"/></svg>`}</div><div class="bm-oxsh" style="left:${50/(n+1)}%">${quiz?OX_DOVE:`<svg viewBox="0 0 60 48"><path d="M18 38V46M26 39V46M38 39V46M46 38V46" stroke="#4A3A33" stroke-width="3.4" stroke-linecap="round"/><g fill="#fff" stroke="#D9D2C5" stroke-width="1"><circle cx="16" cy="24" r="9"/><circle cx="26" cy="16" r="10"/><circle cx="38" cy="18" r="9"/><circle cx="24" cy="31" r="10"/><circle cx="37" cy="30" r="10"/></g><circle cx="29" cy="24" r="11" fill="#fff"/><ellipse cx="49" cy="22" rx="8" ry="9" fill="#4A3A33"/><ellipse cx="42" cy="15" rx="5" ry="2.6" transform="rotate(-24 42 15)" fill="#4A3A33"/><circle cx="46" cy="10" r="4.4" fill="#fff"/><circle cx="51.5" cy="20" r="2.4" fill="#fff"/><circle cx="52" cy="20" r="1.3" fill="#1F2933"/><path d="M50 27Q53 29 55 26" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg>`}</div></div></div>`;
 function miniTwenty(el){
-  const fact=(A.solo?A.run.done:rnd(2))%2===1,[a]=fact?[["성경 상식"]]:pick("twenty",TWENTY[A.lv],1),list=fact?oxFacts():twBuild(a),t0=performance.now(),T=LV[A.lv].twT*1000,got=new Map();
+  const fact=(A.solo?A.run.done:rnd(2))%2===1,[a]=fact?[["성경 상식"]]:pick("twenty",TWENTY[A.lv],1),list=fact?oxFacts():twBuild(a),t0=performance.now(),T=LV[A.lv].twT*1000/hot(),got=new Map();
   let right=0,lives=A.solo?A.run.lives:5,over=false,at=0,lock=false;
   const end=(win,late)=>{if(over)return;over=true;const left=Math.max(0,T-(performance.now()-t0))/1000,sc=right*3+(win?5+Math.floor(left/15):0),note=`${a[0]}: 설명 ${list.length}개 가운데 ${right}개를 맞혔어요`;
     const miss=list.map(([t,y],i)=>!got.has(i)||got.get(i)===y?"":`<div>${esc(t)} · 정답 <b>${y?"O":"X"}</b></div>`).join(""),more=miss?`<div class="bm-rev"><h4>틀린 내용</h4>${miss}</div>`:"";
@@ -1651,13 +1655,12 @@ function shootRun(el,plane){
   watchSize(el,size);
   const stars=Array.from({length:LOW?28:60},()=>[Math.random(),Math.random(),.3+Math.random()*.7]);
   const ship={x:w/2,y:h-60,to:null};
-  let sparks=[],shake=0,bul=[],foes=[],goods=[],shots=[],items=[],pops=[],pts=0,kills=0,caught=0,missed=0,lives=A.solo?A.run.lives:3,time=40,inv=0,fireT=0,dropT=1.2,diveT=P.dive,goodT=1,t=0,last=performance.now(),over=false,info="",shield=false,laser=0,slow=0,ice=0,flash=0;
+  let sparks=[],shake=0,bul=[],foes=[],goods=[],shots=[],items=[],pops=[],pts=0,kills=0,caught=0,lives=A.solo?A.run.lives:3,time=40,inv=0,fireT=0,dropT=1.2,diveT=P.dive,goodT=1,t=0,last=performance.now(),over=false,info="",shield=false,laser=0,slow=0,ice=0,flash=0;
   const wave=()=>{const cols=w<420?4:6,gap=(w-16)/cols;for(let r=0;r<3;r++)for(let c=0;c<cols;c++)foes.push({hx:8+gap*(c+.5),hy:34+r*38,x:8+gap*(c+.5),y:-40-r*40,l:FOES[rnd(FOES.length)],hp:r===0?P.hp:1,dv:0})};
   wave();
   const pop=(px,py,s,c)=>pops.push({x:px,y:py,s,c,t:.9});
   const boom=(px,py,c,n)=>{n=LOW?n>>1:n;for(let i=0;i<n&&sparks.length<70;i++){const a=Math.random()*6.3,v=50+Math.random()*130;sparks.push({x:px,y:py,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:.35+Math.random()*.3,c})}};
   const gain=n=>{pts=Math.max(0,Math.min(45,pts+n))};
-  const lose=(px,l)=>{gain(-2);missed++;sfx("no");pop(Math.max(50,Math.min(w-50,px)),h-26,l+" -2","#FF9A9A")};
   /* 터치는 손가락이 비행기를 가리지 않게, 어디서든 끈 만큼만 움직여요. 마우스는 따라와요 */
   let pid=null,pt=null;
   const at=e=>{const b=cv.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
@@ -1670,7 +1673,7 @@ function shootRun(el,plane){
   const KEYS={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]},held=new Set();
   const key=e=>{if(!KEYS[e.key])return;e.preventDefault();if(e.type==="keydown")held.add(e.key);else held.delete(e.key);ship.to=null};
   addEventListener("keydown",key);addEventListener("keyup",key);V.off.push(()=>{removeEventListener("keydown",key);removeEventListener("keyup",key)});
-  const end=()=>{if(over)return;over=true;const sc=Math.min(45,pts+(lives>0?5:0)),nt=`나쁜 말씀 ${kills}개를 깨고 좋은 말씀 ${caught}개를 받았어요${missed?` (바닥에 ${missed}개 떨어짐)`:""}${lives>0?" 끝까지 버텨서 +5점!":""}`;if(lives>0)clear(sc,lives,nt);else finish(sc,nt)};
+  const end=()=>{if(over)return;over=true;const sc=Math.min(45,pts+(lives>0?5:0)),nt=`나쁜 말씀 ${kills}개를 깨고 좋은 말씀 ${caught}개를 받았어요${lives>0?" 끝까지 버텨서 +5점!":""}`;if(lives>0)clear(sc,lives,nt);else finish(sc,nt)};
   const hit=()=>{if(inv>0)return;if(shield){shield=false;inv=.8;sfx("power");pop(ship.x,ship.y-40,"방어막이 막았어요","#9FE0FF");return}lives--;inv=1.5;shake=.25;boom(ship.x,ship.y,"#FF9A6A",12);sfx("hit");if(lives<=0)end()};
   const kill=(f,drop)=>{f.dead=1;kills++;gain(1);boom(f.x,f.y,f.hp>1?"#D08BFF":"#A99CFF",8);if(drop&&Math.random()<.2)items.push({x:f.x,y:f.y,k:SHIP_ITEMS[rnd(SHIP_ITEMS.length)]})};
   const take=k=>{const [id,,name,good]=k;sfx(good?"power":"no");pop(ship.x,ship.y-40,name,good?"#9FF0C0":"#FF9A9A");
@@ -1679,7 +1682,7 @@ function shootRun(el,plane){
   const pill=(f)=>{x.font="700 13px sans-serif";const tw=x.measureText(f.l).width+16;f.w=tw;return tw};
   const frame=now=>{
     if(!live()||over)return;
-    const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;time-=dt;inv=Math.max(0,inv-dt);laser=Math.max(0,laser-dt);slow=Math.max(0,slow-dt);ice=Math.max(0,ice-dt);flash=Math.max(0,flash-dt);fireT-=dt;dropT-=dt;diveT-=dt;goodT-=dt;
+    const dt=Math.min(.05,(now-last)/1000),z=hot();last=now;t+=dt;time-=dt;inv=Math.max(0,inv-dt);laser=Math.max(0,laser-dt);slow=Math.max(0,slow-dt);ice=Math.max(0,ice-dt);flash=Math.max(0,flash-dt);fireT-=dt;dropT-=dt;diveT-=dt;goodT-=dt;
     if(ice<=0){const sp=slow>0?.45:1;
       if(ship.to){ship.to.x=Math.max(20,Math.min(w-20,ship.to.x));ship.to.y=Math.max(h*.3,Math.min(h-34,ship.to.y));const dx=ship.to.x-ship.x,dy=ship.to.y-ship.y,d=Math.hypot(dx,dy),st=SHIP_V*sp*dt;if(d<=st){ship.x=ship.to.x;ship.y=ship.to.y}else{ship.x+=dx/d*st;ship.y+=dy/d*st}}
       held.forEach(k=>{ship.x+=KEYS[k][0]*340*sp*dt;ship.y+=KEYS[k][1]*340*sp*dt});
@@ -1688,12 +1691,12 @@ function shootRun(el,plane){
     if(ice<=0&&laser<=0&&fireT<=0){fireT=slow>0?.42:.26;sfx("shot");bul.push({x:ship.x,y:ship.y-16})}
     if(!foes.length)wave();
     const sway=Math.sin(t*.9)*Math.min(26,w*.05);
-    foes.forEach(f=>{if(f.dv){f.y+=(P.sp*1.9)*dt;f.x+=Math.sign(ship.x-f.x)*P.sp*.7*dt;if(f.y>h-4){f.dead=1;lose(f.x,f.l)}}
+    foes.forEach(f=>{if(f.dv){f.y+=(P.sp*z*1.9)*dt;f.x+=Math.sign(ship.x-f.x)*P.sp*z*.7*dt;if(f.y>h-4)f.dead=1}
       else{f.x+=(f.hx+sway-f.x)*Math.min(1,dt*5);f.y+=(f.hy-f.y)*Math.min(1,dt*2.4)}});
-    if(diveT<=0&&foes.length){diveT=P.dive;foes[rnd(foes.length)].dv=1}
-    if(dropT<=0&&foes.length){dropT=P.drop;const f=foes[rnd(foes.length)];if(f.y>0)for(let i=0;i<P.shot;i++)shots.push({x:f.x,y:f.y+12,vx:(i-(P.shot-1)/2)*75})}
+    if(diveT<=0&&foes.length){diveT=P.dive/z;foes[rnd(foes.length)].dv=1}
+    if(dropT<=0&&foes.length){dropT=P.drop/z;const f=foes[rnd(foes.length)];if(f.y>0)for(let i=0;i<P.shot;i++)shots.push({x:f.x,y:f.y+12,vx:(i-(P.shot-1)/2)*75})}
     if(goodT<=0){goodT=P.good;goods.push({x:40+Math.random()*(w-80),y:-16,l:GOODS[rnd(GOODS.length)]})}
-    bul.forEach(b=>b.y-=460*dt);shots.forEach(s=>{s.y+=(P.sp+110)*dt;s.x+=s.vx*dt});goods.forEach(g=>g.y+=P.sp*1.3*dt);items.forEach(i=>i.y+=130*dt);
+    bul.forEach(b=>b.y-=460*dt);shots.forEach(s=>{s.y+=(P.sp*z+110)*dt;s.x+=s.vx*dt});goods.forEach(g=>g.y+=P.sp*z*1.3*dt);items.forEach(i=>i.y+=130*dt);
     /* 빛은 좋은 말씀을 그대로 지나가요. 그래야 비행기로 받을 수 있어요 */
     bul=bul.filter(b=>{if(b.y<-10)return false;
       for(const f of foes){if(f.dead)continue;const fw=(f.w||50)/2;if(Math.abs(b.x-f.x)<fw&&Math.abs(b.y-f.y)<14){if(--f.hp<=0){kill(f,true);sfx("pop")}return false}}return true});
@@ -1701,7 +1704,7 @@ function shootRun(el,plane){
     shots=shots.filter(s=>{if(s.y>h+10)return false;if(Math.abs(s.x-ship.x)<16&&Math.abs(s.y-ship.y)<16){hit();return false}return true});
     foes.forEach(f=>{if(!f.dead&&Math.abs(f.x-ship.x)<(f.w||50)/2+12&&Math.abs(f.y-ship.y)<22){f.dead=1;hit()}});
     foes=foes.filter(f=>!f.dead);
-    goods=goods.filter(g=>{if(Math.abs(g.x-ship.x)<(g.w||50)/2+20&&Math.abs(g.y-ship.y)<30){gain(2);caught++;boom(g.x,g.y,"#9FF0C0",6);sfx("ok");pop(g.x,ship.y-40,g.l+" +2","#9FF0C0");return false}if(g.y>h-4){lose(g.x,g.l);return false}return true});
+    goods=goods.filter(g=>{if(Math.abs(g.x-ship.x)<(g.w||50)/2+20&&Math.abs(g.y-ship.y)<30){gain(2);caught++;boom(g.x,g.y,"#9FF0C0",6);sfx("ok");pop(g.x,ship.y-40,g.l+" +2","#9FF0C0");return false}return g.y<=h-4});
     items=items.filter(i=>{if(i.y>h+10)return false;if(Math.abs(i.x-ship.x)<26&&Math.abs(i.y-ship.y)<28){take(i.k);return false}return true});
     pops=pops.filter(p=>{p.t-=dt;p.y-=26*dt;return p.t>0});sparks=sparks.filter(p=>{p.t-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;return p.t>0});shake=Math.max(0,shake-dt);
     if(over)return;if(time<=0)return end();
@@ -1742,7 +1745,7 @@ function miniPair(el){
   watchSize(el,size);
   /* 낱말 판은 위아래 모두 두 줄로 초급 4칸, 중급·고급 6칸이고 짝의 두 낱말은 늘 위아래에 함께 있어요 */
   const [cols,rows]=[[2,2],[3,2],[3,2]][A.lv-1],K=cols*rows,wait=list.slice(),up=Array(K).fill(null),dn=Array(K).fill(null);
-  const closeT=Math.max(P.ct*.5,P.ct*Math.pow(.95,A.run.done));
+  const closeT=Math.max(P.ct*.5,P.ct*Math.pow(.95,A.run.done))/hot();
   let gap=1,pr=0,sel=null,right=0,t=0,last=performance.now(),over=false,fin="",finT=0,shake=0,warned=false,info="",refill=0,pops=[],drops=[];
   const tile=(s,p)=>({t:s,p,a:0,ph:Math.random()*6,fs:0,tw:0});
   const free=a=>a.map((v,i)=>v?-1:i).filter(i=>i>=0);
@@ -1846,7 +1849,7 @@ function miniArt(el){
   const ask=()=>{
     if(i>=items.length||lives<=0)return setEnd(i,right,pts,lives);
     lifeInfo(lives,pts);
-    const it=items[i],me=i,col=rnd(2)?2:1,ans=it[col],opts=shuf([ans,...shuf([...new Set(ART.map(a=>a[col]))].filter(v=>v!==ans)).slice(0,3)]),T=L.qt*1000;let t0=0,tid=0,over=false;
+    const it=items[i],me=i,col=rnd(2)?2:1,ans=it[col],opts=shuf([ans,...shuf([...new Set(ART.map(a=>a[col]))].filter(v=>v!==ans)).slice(0,3)]),T=L.qt*1000/hot();let t0=0,tid=0,over=false;
     el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><p class="muted num">${i+1} / ${items.length}</p><h3>${col===2?"이 그림을 그린 화가는 누구일까요?":"이 그림의 제목은 무엇일까요?"}</h3>
       <img class="bm-art" src="${artSrc(it[0])}" alt="문제 그림"><div class="bm-opts two">${opts.map((o,n)=>`<button type="button" data-o="${n}">${esc(o)}</button>`).join("")}</div><div id="bmAfter"></div></div>`;
     const bar=el.querySelector("#bmBar"),img=el.querySelector(".bm-art");
@@ -1878,7 +1881,7 @@ function miniDiff(el){
   const D=LV[A.lv].df,seen=A.run.seen||(A.run.seen=[]),pool=DIFF.filter(x=>!(x.alt===1||x.e)===(A.lv>1));let left=pool.filter(x=>!seen.includes(x.id));
   if(!left.length){left=pool;pool.forEach(x=>seen.splice(seen.indexOf(x.id),1))}
   const d=left[rnd(left.length)];seen.push(d.id);
-  const art=ART.find(a=>a[0]===d.id)||[d.id,d.n,d.a||"성경게임 그림",""],cap=`${art[1]} · ${art[2]}${art[3]?", "+art[3]:""}`,T=D.t*1000,lives0=A.run.lives;
+  const art=ART.find(a=>a[0]===d.id)||[d.id,d.n,d.a||"성경게임 그림",""],cap=`${art[1]} · ${art[2]}${art[3]?", "+art[3]:""}`,T=D.t*1000/hot(),lives0=A.run.lives;
   const far=(a,b,w,h)=>Math.hypot((a[0]-b[0])*w,(a[1]-b[1])*h)>(a[2]*Math.max(1,a[3]||1)+b[2]*Math.max(1,b[3]||1))*w*1.3,img=new Image();
   el.innerHTML=`<div class="bm-q"><div class="bm-bar"><div id="bmBar"></div></div><p class="muted" id="bmDf">그림을 불러오는 중이에요…</p><div class="bm-dw" id="bmDw"></div><p class="bm-dcap">${esc(cap)}</p></div>`;
   let lives=lives0,found=0,over=false,t0=0,wait=0;
