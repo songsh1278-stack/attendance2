@@ -784,7 +784,7 @@ const DIFF=[{"id":"babel","s":[[0.8411,0.8944,0.1026,0.64],[0.1794,0.1223,0.0734
 const LV={
   1:{n:"초급",d:"유명한 성경 이야기",qt:20,rs:105,pr:{n:6,ct:23,push:.16,bad:.15},df:{n:3,t:90},ck:5,cw:5,cwT:150,twT:90,sh:{sp:85,drop:1.2,dive:2.6,hp:1,shot:1,good:2.4}},
   2:{n:"중급",d:"인물과 사건 더 깊이",qt:15,rs:135,pr:{n:8,ct:18,push:.12,bad:.18},df:{n:3,t:90},ck:7,cw:6,cwT:130,twT:75,sh:{sp:115,drop:1,dive:1.9,hp:2,shot:2,good:1.9}},
-  3:{n:"고급",d:"성경 박사에게 도전",qt:12,rs:165,pr:{n:10,ct:14,push:.1,bad:.22},df:{n:4,t:75},ck:9,cw:7,cwT:110,twT:60,sh:{sp:145,drop:.85,dive:1.4,hp:2,shot:3,good:1.5}}
+  3:{n:"고급",d:"성경 박사에게 도전",qt:12,rs:165,pr:{n:10,ct:16,push:.1,bad:.22},df:{n:4,t:75},ck:9,cw:7,cwT:110,twT:60,sh:{sp:145,drop:.85,dive:1.4,hp:2,shot:3,good:1.5}}
 };
 const G={
   quiz:{n:"성경퀴즈+넌센스",i:"📖"},
