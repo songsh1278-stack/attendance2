@@ -845,6 +845,13 @@ const SOLO={1:{},2:{},3:{}};
 const BOARD_NAME="성경 땅밟기";
 const V={ov:null,t:new Set(),raf:0,off:[]};
 let B=null,A=null; /* B: 저장되는 판 게임, A: 지금 진행 중인 게임(판 게임이거나 단독 게임) */
+/* 옛 폴더폰 브라우저에는 둥근 사각형 그리기가 없어서 직접 넣어요 */
+if(window.CanvasRenderingContext2D&&!CanvasRenderingContext2D.prototype.roundRect)CanvasRenderingContext2D.prototype.roundRect=function(X,Y,W,H,r){r=Math.min(+r||0,W/2,H/2);this.moveTo(X+r,Y);this.arcTo(X+W,Y,X+W,Y+H,r);this.arcTo(X+W,Y+H,X,Y+H,r);this.arcTo(X,Y+H,X,Y,r);this.arcTo(X,Y,X+W,Y,r);this.closePath()};
+/* 느린 폰은 효과를 줄여요 */
+const LOW=(navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory||8)<=2;
+/* 폴더폰을 접고 펴거나 폰을 돌려서 화면 크기가 바뀌면 f를 다시 불러요 */
+function watchSize(el,f){addEventListener("resize",f);V.off.push(()=>removeEventListener("resize",f));if(window.ResizeObserver){const o=new ResizeObserver(f);o.observe(el);V.off.push(()=>o.disconnect())}}
+function confetti(){const st=q(".bm-stage");if(!st)return;const c=["#FFD35C","#EF6A5B","#3DB56E","#3C8DE0","#E77FB3"];st.insertAdjacentHTML("beforeend",`<div class="bm-confetti">${[...Array(LOW?12:26)].map((_,i)=>`<i style="left:${Math.random()*100}%;background:${c[i%5]};animation-delay:${(Math.random()*.5).toFixed(2)}s"></i>`).join("")}</div>`)}
 const rnd=n=>Math.floor(Math.random()*n);
 const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 const q=s=>V.ov.querySelector(s);
@@ -1212,7 +1219,7 @@ function nextTurn(){
 }
 function stageOpen(title){
   const old=q(".bm-stage");if(old)old.remove();
-  const s=document.createElement("div");s.className="bm-stage";
+  const s=document.createElement("div");s.className="bm-stage";s.dataset.k=(A&&A.pending&&A.pending.k)||"end";
   s.innerHTML=`<div class="bm-sh"><button type="button" class="btn" data-bm="exit" aria-label="나가기">✕</button><b>${title}</b>${sndBtn()}<span id="bmInfo" class="num"></span></div><div class="bm-sb" id="bmSb"></div>`;
   V.ov.appendChild(s);return s.querySelector("#bmSb");
 }
@@ -1233,7 +1240,7 @@ function startMini(){
 }
 function finish(pts,note,more=""){
   stopAll();if(A.phase!=="intro")return;
-  const d=A.pending,got=(pts+(A.solo?A.run.pts:0))*d.m,g=G[d.k],face=got>=20?"🎉":got>0?"👏":"🙏";sfx(A.solo?"over":got>0?"clear":"no");const done=A.solo?A.run.done:0;
+  const d=A.pending,got=(pts+(A.solo?A.run.pts:0))*d.m,g=G[d.k],face=got>=20?"🎉":got>0?"👏":"🙏";sfx(A.solo?"over":got>0?"clear":"no");if(got>0)after(30,confetti);const done=A.solo?A.run.done:0;
   if(A.solo&&!A.board){A.phase="done";
     stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">${face}</div><h3 class="num">${got}점</h3>${A.run.done?`<p class="muted num">${A.run.done}단계까지 통과</p>`:""}<p>${esc(note)}</p>${more}<div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="again">다시 하기</button><button type="button" class="btn bm-big" data-bm="exit">목록으로</button></div>`;
     showRank(d.k,A.lv0,got);return}
@@ -1244,14 +1251,14 @@ function finish(pts,note,more=""){
 function clear(pts,lives,note,more=""){
   if(!A.solo)return finish(pts,note,more);
   stopAll();if(A.phase!=="intro")return;
-  const r=A.run,k=A.pending.k,g=G[k];sfx("clear");
+  const r=A.run,k=A.pending.k,g=G[k];sfx("clear");after(30,confetti);
   r.pts+=pts;r.cur=0;r.done++;if(lives!==undefined)r.lives=lives;
   if(A.board){A.pending.pts=r.pts;save()}
   lvUp(r);
   stageOpen(g.i+" "+g.n).innerHTML=`<div class="bm-card"><div class="bm-emoji">🎉</div><p class="muted num">${r.done}단계 통과</p><h3 class="num">${r.pts}점</h3><p>${esc(note)}</p>${LIFE_GAME(k)?`<p>${"❤️".repeat(r.lives)}</p>`:""}${more}<p class="muted">다음 단계 난이도: ${LV[A.lv].n}</p><button type="button" class="btn primary bm-big num" data-bm="start">${r.done+1}단계 도전</button>${A.board?"":`<button type="button" class="btn bm-big" data-bm="giveup">그만하고 점수 저장</button>`}</div>`;
 }
 function drawEnd(){
-  sfx("clear");const el=stageOpen("🏆 게임 끝"),me=B.players[0];
+  sfx("clear");after(30,confetti);const el=stageOpen("🏆 게임 끝"),me=B.players[0];
   el.innerHTML=`<div class="bm-card"><div class="bm-emoji">🏆</div><h3 class="num">${me.score}점</h3><p>${BOARD_NAME} ${LV[B.lv].n} ${B.turns}라운드를 모두 마쳤어요!</p><div id="bmRk"></div><button type="button" class="btn primary bm-big" data-bm="done">마치기</button></div>`;
   showRank("board",B.lv,me.score);
 }
@@ -1296,7 +1303,7 @@ function miniQuiz(el){
       lifeInfo(lives,pts);
       el.querySelectorAll("[data-o]").forEach(b=>{const v=opts[+b.dataset.o];b.disabled=true;if(v===it[1])b.classList.add("ok");else if(v===o)b.classList.add("no")});
       el.querySelector("#bmAfter").innerHTML=`<p class="bm-note">${ok?"정답이에요!":o===null?"시간이 다 됐어요.":"아쉬워요."} ${esc(it[5])}</p><button type="button" class="btn primary bm-big" id="bmNext">${i+1<items.length&&(!A.solo||lives>0)?"다음 문제":"결과 보기"}</button>`;
-      el.querySelector("#bmNext").onclick=()=>{i++;ask()}};
+      el.scrollTop=el.scrollHeight;el.querySelector("#bmNext").onclick=()=>{i++;ask()}};
     el.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>pickIt(opts[+b.dataset.o]));
     const id=every(100,()=>{const r=1-(performance.now()-t0)/T;bar.style.width=Math.max(0,r*100)+"%";if(r<=0)pickIt(null)});
   };
@@ -1304,10 +1311,65 @@ function miniQuiz(el){
 }
 
 /* ---------- 말씀레이싱 : 3차선에서 말씀 조각을 순서대로 받고 다른 말은 피해요 ---------- */
-const CARS=[["콩콩이","#E8574A","round"],["붕붕이","#3C8DE0","van"],["통통이","#F2B632","bus"],["씽씽이","#3DB56E","sport"],["뽀뽀","#E77FB3","beetle"]];
+/* 자동차는 위에서 내려다본 모습이에요. 앞이 위쪽이고 앞유리에 얼굴이 있어요 */
+const CARS=[["콩콩이","#E8574A","round","#A32C25","#FF9C8A"],["붕붕이","#3C8DE0","van","#1D569E","#A3D2FA"],["통통이","#F2B632","bus","#B3780A","#FFE391"],["씽씽이","#3DB56E","sport","#1A7040","#A4F0C1"],["뽀뽀","#E77FB3","beetle","#AD4779","#FFCBE2"]];
+const toonFace=(x,y,s)=>`<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="-21" cy="10" rx="5.6" ry="3.4" fill="#FF7F98" opacity=".75"/><ellipse cx="21" cy="10" rx="5.6" ry="3.4" fill="#FF7F98" opacity=".75"/><ellipse cx="-10.5" cy="0" rx="8" ry="9.2" fill="#fff" stroke="#27313B" stroke-width="1.4"/><ellipse cx="10.5" cy="0" rx="8" ry="9.2" fill="#fff" stroke="#27313B" stroke-width="1.4"/><circle cx="-9" cy="1" r="5.2" fill="#1F2933"/><circle cx="12" cy="1" r="5.2" fill="#1F2933"/><circle cx="-7" cy="-1.4" r="2" fill="#fff"/><circle cx="14" cy="-1.4" r="2" fill="#fff"/><path d="M-6 11Q0 17 6 11" fill="none" stroke="#27313B" stroke-width="2.4" stroke-linecap="round"/></g>`;
+const tyre=(x,y,w,h)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#1E2228"/><path d="M${x+1.5} ${y+h*.2}H${x+w-1.5}M${x+1.5} ${y+h*.4}H${x+w-1.5}M${x+1.5} ${y+h*.6}H${x+w-1.5}M${x+1.5} ${y+h*.8}H${x+w-1.5}" stroke="#4C545F" stroke-width="1.6"/>`;
+const pair=(b,w=120)=>`${b}<g transform="matrix(-1 0 0 1 ${w} 0)">${b}</g>`;
+const CAR_ART={
+  round:(p,c,d,l)=>`${pair(tyre(12,32,13,31)+tyre(12,106,13,31))}${pair(`<path d="M22 62L10 58Q8 66 14 68L22 68Z" fill="${d}"/><path d="M12 60Q10 65 14 66L18 65Z" fill="#CFE8F7"/>`)}
+    <path d="M60 5C84 5 98 15 100 38L103 118C103 143 88 155 60 155S17 143 17 118L20 38C22 15 36 5 60 5Z" fill="url(#${p}b)" stroke="${d}" stroke-width="2"/>
+    <path d="M38 13Q60 7 82 13L88 42Q60 35 32 42Z" fill="#fff" opacity=".17"/><path d="M53 6H67V44H53Z" fill="#fff" opacity=".85"/>
+    ${pair(`<ellipse cx="36" cy="15" rx="10" ry="6.4" transform="rotate(-24 36 15)" fill="url(#${p}h)" stroke="${d}" stroke-width="1.6"/><path d="M27 42Q25 80 26 120" fill="none" stroke="${d}" stroke-width="1.5" opacity=".55"/><path d="M22 92H36" stroke="${d}" stroke-width="1.5" opacity=".55"/><rect x="29" y="97" width="9" height="2.6" rx="1.3" fill="#F2F4F6"/><path d="M26 138L43 147L42 151L33 150Q26 146 26 138Z" fill="#FF3B30" stroke="#8F1D17" stroke-width="1"/>`)}
+    <path d="M30 46Q60 37 90 46L84 79Q60 74 36 79Z" fill="url(#${p}g)" stroke="#26343F" stroke-width="2.2"/>
+    ${pair(`<path d="M29 54L35 82L34 116L29 118Q26 84 29 54Z" fill="url(#${p}g)" stroke="#26343F" stroke-width="1.4"/>`)}
+    <rect x="37" y="81" width="46" height="37" rx="9" fill="#FDF7F0" stroke="${d}" stroke-width="1.4"/><path d="M53 81H67V118H53Z" fill="${c}"/>
+    <path d="M36 121Q60 125 84 121L88 136Q60 143 32 136Z" fill="url(#${p}g)" stroke="#26343F" stroke-width="2"/><path d="M42 131Q60 134 78 131" fill="none" stroke="#fff" stroke-width="1.3" opacity=".7"/>
+    <path d="M30 148Q60 156 90 148" fill="none" stroke="#E4E8EC" stroke-width="3.4" stroke-linecap="round"/>${toonFace(60,60,.82)}`,
+  van:(p,c,d,l)=>`${pair(tyre(10,26,13,30)+tyre(10,112,13,30))}${pair(`<path d="M18 50L6 47Q5 55 10 56L18 56Z" fill="#30343A"/>`)}
+    <path d="M36 6H84Q102 8 104 30V136Q104 154 88 155H32Q16 154 16 136V30Q18 8 36 6Z" fill="url(#${p}b)" stroke="${d}" stroke-width="2"/>
+    <rect x="42" y="7" width="36" height="5" rx="2" fill="#26303A"/><path d="M46 8.5V11M52 8.5V11M58 8.5V11M64 8.5V11M70 8.5V11" stroke="#8A97A4" stroke-width="1.2"/>
+    ${pair(`<path d="M22 12Q30 8 37 8L36 17Q28 18 21 21Z" fill="url(#${p}h)" stroke="${d}" stroke-width="1.4"/><rect x="21" y="60" width="4" height="86" rx="2" fill="url(#${p}g)" stroke="#26343F" stroke-width="1"/><path d="M28 70V144" stroke="${d}" stroke-width="1.3" opacity=".5"/><rect x="18" y="144" width="12" height="9" rx="2.5" fill="#FF3B30" stroke="#8F1D17" stroke-width="1"/>`)}
+    <path d="M28 24Q60 15 92 24L96 57Q60 51 24 57Z" fill="url(#${p}g)" stroke="#26343F" stroke-width="2.2"/>
+    <rect x="30" y="60" width="60" height="87" rx="9" fill="${l}" opacity=".5"/><path d="M38 62V146M60 62V146M82 62V146" stroke="#fff" stroke-width="1.6" opacity=".5"/>
+    <path d="M34 72H86M34 134H86" stroke="#39424C" stroke-width="3.4" stroke-linecap="round"/>
+    <rect x="38" y="78" width="30" height="24" rx="4" fill="#B56A32" stroke="#6E3D1B" stroke-width="1.6"/><path d="M47 78V102M59 78V102" stroke="#6E3D1B" stroke-width="2"/><rect x="44" y="104" width="38" height="24" rx="4" fill="#E9B44C" stroke="#8A6118" stroke-width="1.6"/><path d="M63 104V128" stroke="#8A6118" stroke-width="2.4"/><rect x="70" y="78" width="13" height="24" rx="4" fill="#57B6A0" stroke="#2C7364" stroke-width="1.6"/>
+    ${toonFace(60,37,.86)}`,
+  bus:(p,c,d,l)=>`${pair(tyre(7,26,12,30)+tyre(7,116,12,30))}${pair(`<path d="M15 26L4 16Q2 22 6 26L13 32Z" fill="#30343A"/><rect x="2" y="13" width="7" height="12" rx="3" fill="#30343A"/>`)}
+    <rect x="12" y="3" width="96" height="154" rx="14" fill="url(#${p}b)" stroke="${d}" stroke-width="2"/>
+    <rect x="16" y="3" width="88" height="7" rx="3.5" fill="#262B31"/>
+    ${pair(`<circle cx="24" cy="6.6" r="3.2" fill="url(#${p}h)"/><circle cx="33" cy="6.6" r="2.2" fill="#FF8A1F"/><rect x="20" y="146" width="11" height="8" rx="2.5" fill="#FF3B30" stroke="#8F1D17" stroke-width="1"/><path d="M15.5 56H19.5V142H15.5Z" fill="#262B31"/><path d="M16 62H19M16 74H19M16 86H19M16 98H19M16 110H19M16 122H19M16 134H19" stroke="#8FC8E8" stroke-width="7"/><path d="M23 56V142" stroke="#262B31" stroke-width="2.6"/><circle cx="29" cy="60" r="1.4" fill="${d}"/><circle cx="29" cy="100" r="1.4" fill="${d}"/><circle cx="29" cy="140" r="1.4" fill="${d}"/>`)}
+    <path d="M21 14H99Q103 14 102 20L100 46Q60 51 20 46L18 20Q17 14 21 14Z" fill="url(#${p}g)" stroke="#26343F" stroke-width="2.2"/><path d="M60 15V48" stroke="#26343F" stroke-width="1.6" opacity=".5"/>
+    <rect x="32" y="56" width="56" height="94" rx="8" fill="${l}" opacity=".6"/>
+    <rect x="44" y="62" width="32" height="22" rx="5" fill="#EEF3F6" stroke="#79838C" stroke-width="1.6"/><path d="M47 70H73M47 76H73" stroke="#A9B4BD" stroke-width="1.8"/>
+    <rect x="44" y="122" width="32" height="22" rx="5" fill="#EEF3F6" stroke="#79838C" stroke-width="1.6"/><path d="M47 130H73M47 136H73" stroke="#A9B4BD" stroke-width="1.8"/>
+    <path d="M56 89H64V96H71V104H64V117H56V104H49V96H56Z" fill="#fff" stroke="${d}" stroke-width="1.5"/>
+    ${toonFace(60,31,.9)}`,
+  sport:(p,c,d,l)=>`${pair(tyre(10,28,14,30)+tyre(5,104,19,36))}${pair(`<path d="M28 64L15 60Q13 67 18 69L28 70Z" fill="${d}"/>`)}
+    <path d="M60 3C78 3 90 10 96 28L100 60L113 104Q114 138 96 148H24Q6 138 7 104L20 60L24 28C30 10 42 3 60 3Z" fill="url(#${p}b)" stroke="${d}" stroke-width="2"/>
+    <path d="M46 4H54V146H46ZM66 4H74V146H66Z" fill="#fff" opacity=".9"/>
+    ${pair(`<path d="M30 12Q37 7 45 5L45 13Q36 16 28 22Z" fill="url(#${p}h)" stroke="${d}" stroke-width="1.4"/><path d="M33 32L43 28V40L33 44Z" fill="#17301F"/><path d="M36 33V41M40 31V39" stroke="${c}" stroke-width="1.4"/><path d="M19 104L33 96V116L22 122Z" fill="#17301F"/><path d="M23 103V118M28 100V114" stroke="${c}" stroke-width="1.6"/>`)}
+    <path d="M32 50Q60 42 88 50L86 80Q60 75 34 80Z" fill="url(#${p}g)" stroke="#26343F" stroke-width="2.2"/>
+    ${pair(`<path d="M30 56L33 83L37 104L32 105Q26 80 30 56Z" fill="url(#${p}g)" stroke="#26343F" stroke-width="1.3"/>`)}
+    <path d="M38 83Q60 79 82 83L80 104Q60 101 40 104Z" fill="${d}"/><path d="M46 81.5H54V102H46ZM66 81.5H74V102H66Z" fill="#fff" opacity=".9"/>
+    <path d="M40 106Q60 103 80 106L84 122Q60 119 36 122Z" fill="#17301F"/><path d="M42 111H78M41 116H79" stroke="${l}" stroke-width="1.5" opacity=".6"/>
+    ${pair(`<rect x="10" y="130" width="7" height="24" rx="2" fill="#262B31"/><path d="M28 140H46L44 146H26Z" fill="#FF3B30" stroke="#8F1D17" stroke-width="1"/><rect x="46" y="147" width="7" height="6" rx="2" fill="#AEB7BF" stroke="#59626B" stroke-width="1"/>`)}
+    <rect x="10" y="134" width="100" height="10" rx="4" fill="#262B31"/><path d="M14 137H106" stroke="${c}" stroke-width="2"/>
+    ${toonFace(60,63,.78)}`,
+  beetle:(p,c,d,l)=>`${pair(tyre(9,30,13,28)+tyre(9,108,13,28))}
+    ${pair(`<path d="M14 18Q18 8 32 8Q40 12 42 28V62Q24 66 15 58Q11 38 14 18Z" fill="url(#${p}b)" stroke="${d}" stroke-width="2"/><path d="M16 100Q24 94 42 98V140Q38 152 30 152Q18 152 14 140Q12 116 16 100Z" fill="url(#${p}b)" stroke="${d}" stroke-width="2"/><rect x="15" y="65" width="16" height="32" rx="4" fill="#E9EDF0" stroke="#8A949D" stroke-width="1.4"/><path d="M17 72H29M17 80H29M17 88H29" stroke="#8A949D" stroke-width="1.4"/><circle cx="26" cy="15" r="7.6" fill="url(#${p}h)" stroke="#CFD6DC" stroke-width="2.4"/><rect x="21" y="143" width="10" height="7" rx="3" fill="#FF3B30" stroke="#8F1D17" stroke-width="1"/><ellipse cx="17" cy="60" rx="5.6" ry="3.6" fill="#E9EDF0" stroke="#8A949D" stroke-width="1.2"/>`)}
+    <path d="M60 6C80 6 92 22 94 54C97 92 96 124 84 142Q74 153 60 153T36 142C24 124 23 92 26 54C28 22 40 6 60 6Z" fill="url(#${p}b)" stroke="${d}" stroke-width="2"/>
+    <path d="M56 8H64V44H56Z" fill="#fff" opacity=".35"/><path d="M50 10Q60 6 70 10" fill="none" stroke="#E9EDF0" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M33 48Q60 37 87 48L84 80Q60 75 36 80Z" fill="url(#${p}g)" stroke="#26343F" stroke-width="2.2"/>
+    ${pair(`<path d="M31 56L36 82L38 112L33 115Q27 86 31 56Z" fill="url(#${p}g)" stroke="#26343F" stroke-width="1.3"/>`)}
+    <path d="M60 99C55 91 43 92 43 101C43 108 53 113 60 118C67 113 77 108 77 101C77 92 65 91 60 99Z" transform="translate(12 18.6) scale(.8)" fill="#fff" stroke="${d}" stroke-width="1.8"/>
+    <path d="M44 120Q60 124 76 120L79 130Q60 135 41 130Z" fill="url(#${p}g)" stroke="#26343F" stroke-width="1.8"/>
+    <path d="M47 139H73M49 144H71" stroke="${d}" stroke-width="2.2" stroke-linecap="round"/>
+    ${toonFace(60,61,.8)}`
+};
 function carSvg(i){
-  const [,c,t]=CARS[i],body={round:'<rect x="9" y="8" width="42" height="64" rx="20"/>',van:'<rect x="8" y="6" width="44" height="68" rx="11"/>',bus:'<rect x="7" y="3" width="46" height="74" rx="8"/>',sport:'<path d="M30 3C42 3 50 16 51 34L53 66C53 73 46 76 30 76S7 73 7 66L9 34C10 16 18 3 30 3Z"/>',beetle:'<ellipse cx="30" cy="40" rx="23" ry="35"/>'}[t];
-  return `<svg viewBox="0 0 60 80" aria-hidden="true"><rect x="2" y="16" width="9" height="16" rx="4" fill="#333"/><rect x="49" y="16" width="9" height="16" rx="4" fill="#333"/><rect x="2" y="52" width="9" height="16" rx="4" fill="#333"/><rect x="49" y="52" width="9" height="16" rx="4" fill="#333"/><g fill="${c}">${body}</g><rect x="15" y="20" width="30" height="20" rx="8" fill="#DFF3FF"/><circle cx="23" cy="30" r="3.4" fill="#222"/><circle cx="37" cy="30" r="3.4" fill="#222"/><circle cx="24" cy="29" r="1.1" fill="#fff"/><circle cx="38" cy="29" r="1.1" fill="#fff"/><path d="M25 35Q30 39 35 35" fill="none" stroke="#222" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="35" r="2.2" fill="#FF9DB0"/><circle cx="43" cy="35" r="2.2" fill="#FF9DB0"/><rect x="18" y="50" width="24" height="12" rx="5" fill="#fff" opacity=".35"/></svg>`;
+  const [,c,t,d,l]=CARS[i],p="bmc"+i+"-";
+  return `<svg viewBox="0 0 120 160" aria-hidden="true"><defs><linearGradient id="${p}b"><stop offset="0" stop-color="${d}"/><stop offset=".2" stop-color="${c}"/><stop offset=".42" stop-color="${l}"/><stop offset=".62" stop-color="${c}"/><stop offset="1" stop-color="${d}"/></linearGradient><linearGradient id="${p}g" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="#E4F6FF"/><stop offset=".5" stop-color="#A5D8F2"/><stop offset="1" stop-color="#5E9FCB"/></linearGradient><radialGradient id="${p}h"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#FFF4B8"/><stop offset="1" stop-color="#FFC93C"/></radialGradient></defs>${CAR_ART[t](p,c,d,l)}</svg>`;
 }
 const SIM={은:"는",는:"은",이:"가",가:"이",을:"를",를:"을",에:"의",의:"에",와:"과",과:"와",니:"며",며:"니",라:"다",다:"라",고:"며",로:"를",요:"라",서:"도",도:"서",게:"께",께:"게",하:"한",한:"하"};
 const similar=c=>{const l=c[c.length-1];return c.slice(0,-1)+(SIM[l]||"요")};
@@ -1327,13 +1389,13 @@ function raceRun(el,car){
   const L=LV[A.lv],[v]=pick("race",VERSE[A.lv],1),words=v[1].split(" "),K=Math.min(A.lv===1?5:A.lv===2?7:9,words.length),chunks=[];
   for(let i=0;i<K;i++)chunks.push(words.slice(Math.floor(i*words.length/K),Math.floor((i+1)*words.length/K)).join(" "));
   const others=VERSE[A.lv].filter(x=>x!==v).flatMap(x=>x[1].split(" ")).filter(w=>w.length>=2&&!chunks.includes(w));
-  el.style.padding="0";el.style.overflow="hidden";
+  el.classList.add("bm-full");const laneX=l=>`calc(var(--sd) + (100% - 2*var(--sd))*${(l+.5)/3})`;
   el.innerHTML=`<div class="bm-rc"><div class="bm-rv"><small class="muted">${A.solo?`${A.run.done+1}단계 · ${A.run.pts}점 · `:""}${esc(v[0])}</small><p id="bmRv"></p></div><div class="bm-road" id="bmRoad"><i></i><i></i><div class="bm-car" id="bmCar">${carSvg(car)}</div></div></div>`;
   const road=el.querySelector("#bmRoad"),carEl=el.querySelector("#bmCar"),rv=el.querySelector("#bmRv");
   let at=0,lane=A.solo&&A.run.lane!==undefined?A.run.lane:1,lives=A.solo?A.run.lives:3,rows=[],last=performance.now(),t=0,gapY=0,over=false,info="",lock=0;
   const H=()=>road.clientHeight,speed=()=>L.rs*Math.max(.8,H()/520),T=K*(H()*.5/speed())*3.2+6;
   const verse=()=>{rv.innerHTML=chunks.map((c,i)=>`<span class="${i<at?"ok":i===at&&A.lv===1?"cur":""}">${esc(c)}</span>`).join(" ")};
-  const setLane=n=>{lane=Math.max(0,Math.min(2,n));if(A.solo)A.run.lane=lane;carEl.style.left=(lane+.5)/3*100+"%"};
+  const setLane=n=>{const o=lane;lane=Math.max(0,Math.min(2,n));if(A.solo)A.run.lane=lane;carEl.style.left=laneX(lane);if(o!==lane){carEl.style.setProperty("--tilt",(lane>o?9:-9)+"deg");after(150,()=>carEl.style.setProperty("--tilt","0deg"))}};
   const end=win=>{if(over)return;over=true;const left=Math.max(0,1-t/T);
     if(win&&A.solo)raceGo(el,car,20+Math.round(left*5)+lives*2,lives,true);else if(win)clear(20+Math.round(left*5)+lives*2,lives,`말씀을 끝까지 받았어요! ${v[0]}`);else finish(Math.round(15*at/K),`${K}조각 가운데 ${at}조각을 받았어요. ${v[0]}`)};
   const decoys=()=>{const later=chunks.slice(at+1),o=()=>others[rnd(others.length)]||similar(chunks[at]),near=similar(chunks[at]),out=[];
@@ -1341,7 +1403,7 @@ function raceRun(el,car){
     else if(A.lv===2)out.push(Math.random()<.35?near:o(),later.length?later[rnd(later.length)]:o());
     else out.push(near,later.length?later[rnd(later.length)]:o());
     return out.filter((x,i)=>x!==chunks[at]&&out.indexOf(x)===i)};
-  const pill=(txt,ln)=>{const n=document.createElement("span");n.className="bm-rp";n.textContent=txt;n.style.left=(ln+.5)/3*100+"%";road.appendChild(n);return{txt,ln,n}};
+  const pill=(txt,ln)=>{const n=document.createElement("span");n.className="bm-rp";n.textContent=txt;n.style.left=laneX(ln);road.appendChild(n);return{txt,ln,n}};
   const spawn=()=>{const txts=[chunks[at],...decoys()].slice(0,3),prev=rows[rows.length-1];let ls=shuf([0,1,2]);
     /* 바로 앞줄과 같은 차선에 같은 말이 오지 않게 자리를 다시 뽑아요 */
     for(let n=0;n<8&&prev&&txts.some((tx,i)=>prev.items.some(b=>b.ln===ls[i]&&b.txt===tx));n++)ls=shuf([0,1,2]);
@@ -1355,9 +1417,9 @@ function raceRun(el,car){
   verse();setLane(lane);
   const frame=now=>{
     if(!live()||over)return;
-    const dt=Math.min(.05,(now-last)/1000),h=H(),sp=speed(),carY=h-158;last=now;t+=dt;gapY-=sp*dt;
+    const dt=Math.min(.05,(now-last)/1000),h=H(),sp=speed(),carY=carEl.offsetTop-5;last=now;t+=dt;gapY-=sp*dt;
     if(gapY<=0){spawn();gapY=h*.5}
-    road.style.setProperty("--off",(t*sp%48)+"px");
+    road.style.setProperty("--off",(t*sp%96)+"px");
     rows=rows.filter(r=>{r.y+=sp*dt;r.items.forEach(x=>x.n.style.top=r.y+"px");
       if(!r.done&&r.y>=carY-34){r.done=true;const hit=r.items.find(x=>x.ln===lane);
         if(hit){hit.n.remove();r.items=r.items.filter(x=>x!==hit);
@@ -1510,17 +1572,51 @@ const GOODS=["사랑","희락","화평","오래 참음","자비","양선","충�
 /* [이름, 그림, 화면 글자, 좋은 아이템인지] */
 const SHIP_ITEMS=[["shield","🛡️","방어막",1],["laser","⚡","레이저",1],["bomb","💣","폭탄",1],["slow","🐌","느려짐",0],["ice","🧊","얼음 2초",0]];
 const SHIP_V=640;
-const FLIP=b=>`${b}<g transform="matrix(-1 0 0 1 60 0)">${b}</g>`;
+/* 비행기도 위에서 내려다본 모습이에요. f는 움직임 그림 번호(0·1)로, 불꽃·프로펠러·날갯짓이 바뀌어요 */
+const flame=(x,y,w,n)=>`<path d="M${x-w} ${y}Q${x-w*.7} ${y+n*.6} ${x} ${y+n}Q${x+w*.7} ${y+n*.6} ${x+w} ${y}Z" fill="#FF8A2B"/><path d="M${x-w*.55} ${y}Q${x-w*.4} ${y+n*.4} ${x} ${y+n*.66}Q${x+w*.4} ${y+n*.4} ${x+w*.55} ${y}Z" fill="#FFE36B"/>`;
 const PLANES=[
-  ["포근이",24,`<path d="M4 38C4 30 16 28 30 28S56 30 56 38C56 42 52 43 48 42L30 38L12 42C8 43 4 42 4 38Z" fill="#3E9FD8"/><path d="M19 56C19 51 41 51 41 56C41 60 19 60 19 56Z" fill="#3E9FD8"/><ellipse cx="30" cy="30" rx="15" ry="25" fill="#7CCDF7"/><ellipse cx="30" cy="44" rx="8" ry="6" fill="#D8F2FF"/>`],
-  ["콩닥이",25,`<rect x="3" y="19" width="54" height="12" rx="6" fill="#F7B267"/><rect x="11" y="39" width="38" height="9" rx="4.5" fill="#F7B267"/><path d="M21 54H39L42 61H18Z" fill="#C94B3F"/><rect x="17" y="8" width="26" height="49" rx="13" fill="#EF6A5B"/><ellipse cx="30" cy="6" rx="15" ry="2.8" fill="#6B5B53"/><circle cx="30" cy="7" r="3.8" fill="#FFD35C"/>`],
-  ["반짝이",27,`${FLIP('<path d="M16 37L5 53C4 57 7 58 10 57L19 52Z" fill="#EF6A5B"/>')}<path d="M24 55C25 61 28 63 30 63S35 61 36 55Z" fill="#FF8A4C"/><path d="M30 2C41 10 46 22 46 34C46 44 42 52 38 56H22C18 52 14 44 14 34C14 22 19 10 30 2Z" fill="#FFD35C"/><path d="M30 2C34 5 37 9 39 13H21C23 9 26 5 30 2Z" fill="#EF6A5B"/><path d="M30 38L32 43L37 43L33 46L35 51L30 48L25 51L27 46L23 43L28 43Z" fill="#FFF7D6"/>`],
-  ["윙윙이",25,`${FLIP('<ellipse cx="11" cy="28" rx="10" ry="15" transform="rotate(-18 11 28)" fill="#DDF3FF"/><path d="M25 13C24 8 21 6 19 5" fill="none" stroke="#4A3A2C" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="4.5" r="2.2" fill="#4A3A2C"/>')}<ellipse cx="30" cy="34" rx="15" ry="24" fill="#FFC94A"/><path d="M15.5 38H44.5C44.3 40 44 41.5 43.5 43H16.5C16 41.5 15.7 40 15.5 38Z" fill="#4A3A2C"/><path d="M19 49H41C39.5 51.5 37.5 53.5 35 55H25C22.5 53.5 20.5 51.5 19 49Z" fill="#4A3A2C"/>`],
-  ["구구",21,`${FLIP('<path d="M26 24C15 18 5 22 3 31C2 36 6 38 9 36C10 40 14 41 17 38C19 41 24 41 27 37Z" fill="#CFE3F2"/>')}<path d="M23 48L17 60C24 63 36 63 43 60L37 48Z" fill="#CFE3F2"/><ellipse cx="30" cy="30" rx="13" ry="23" fill="#FBF8F1"/><ellipse cx="39" cy="6" rx="7" ry="2.8" transform="rotate(-20 39 6)" fill="#6FBF73"/><path d="M26 9L30 3L34 9Z" fill="#F29A4A"/>`]
+  ["포근이",(p,f)=>`${pair(`${flame(27,86,4.6,f?13:8)}<path d="M50 94L26 108Q23 113 28 114L52 110Z" fill="url(#${p}a)" stroke="#1F5D8C" stroke-width="1.6"/><path d="M50 46L6 78Q1 84 6 87L10 87L50 76Z" fill="url(#${p}a)" stroke="#1F5D8C" stroke-width="1.8"/><path d="M6 78Q1 84 6 87L10 87L15 72Z" fill="#EF6A5B"/><path d="M20 80L48 71" stroke="#1F5D8C" stroke-width="1.4" opacity=".6"/><rect x="21.5" y="62" width="11" height="25" rx="5" fill="#E9F0F5" stroke="#55708A" stroke-width="1.5"/><ellipse cx="27" cy="63.5" rx="5.5" ry="2.6" fill="#2C3A47"/><path d="M23 82H31" stroke="#55708A" stroke-width="1.5"/>`)}
+    <path d="M60 3C72 3 78 18 78 38V94C78 108 68 122 60 125C52 122 42 108 42 94V38C42 18 48 3 60 3Z" fill="url(#${p}b)" stroke="#1F5D8C" stroke-width="2"/>
+    <path d="M54 4Q60 2 66 4L65 13H55Z" fill="#EF6A5B"/>
+    <path d="M57 52H63V124H57Z" fill="#EF6A5B" opacity=".9"/><path d="M60 98V126" stroke="#1F5D8C" stroke-width="4" stroke-linecap="round"/>
+    ${pair(`<path d="M47 56V96" stroke="#2C5F86" stroke-width="3.4" stroke-dasharray="3.4 3.6"/>`)}
+    ${toonFace(60,34,.72)}`],
+  ["콩닥이",(p,f)=>`${pair(`<path d="M48 106H24Q19 108 20 113Q21 118 26 117H50Z" fill="#F7B267" stroke="#A85F22" stroke-width="1.6"/><path d="M12 72H52V89H14Q8 88 7 80Q8 73 12 72Z" fill="url(#${p}a)" stroke="#A85F22" stroke-width="1.8"/><path d="M22 72V89M32 72V89M42 72V89" stroke="#A85F22" stroke-width="1.2" opacity=".55"/>`)}
+    <path d="M60 110V127" stroke="#A62F26" stroke-width="5" stroke-linecap="round"/>
+    <path d="M60 8C74 8 80 16 80 32L74 96Q68 118 60 120Q52 118 46 96L40 32C40 16 46 8 60 8Z" fill="url(#${p}b)" stroke="#8F2A21" stroke-width="2"/>
+    <path d="M42 22Q60 14 78 22L79 30Q60 24 41 30Z" fill="#6B5B53"/><path d="M47 18V25M53 16V24M60 15V23M67 16V24M73 18V25" stroke="#CFC4BB" stroke-width="1.6"/>
+    ${pair(`<path d="M6 44H52V68H7Q1 66 1 56Q1 46 6 44Z" fill="url(#${p}a)" stroke="#A85F22" stroke-width="1.8"/><path d="M16 44V68M28 44V68M40 44V68" stroke="#A85F22" stroke-width="1.2" opacity=".55"/><circle cx="16" cy="56" r="7.4" fill="#fff" stroke="#EF6A5B" stroke-width="3"/><circle cx="16" cy="56" r="2.6" fill="#EF6A5B"/><path d="M25 66V74M41 66V74" stroke="#6B5B53" stroke-width="2.4"/>`)}
+    <rect x="48" y="44" width="24" height="24" fill="#F7B267"/><path d="M48 44H72M48 68H72" stroke="#A85F22" stroke-width="1.8"/>
+    <path d="M49 72Q60 66 71 72L69 96Q60 100 51 96Z" fill="#5A3A28" stroke="#3A2518" stroke-width="1.6"/><path d="M51 73Q60 68 69 73L68 80Q60 76 52 80Z" fill="url(#${p}g)" stroke="#26343F" stroke-width="1"/>
+    <circle cx="60" cy="88" r="6.4" fill="#8A5A3A"/><path d="M53 87Q60 80 67 87L66 90H54Z" fill="#4A2E1E"/>
+    ${f?`<ellipse cx="60" cy="9" rx="31" ry="4.6" fill="#D8E3EA" opacity=".45"/><path d="M60 9L28 7Q26 9 28 11ZM60 9L92 7Q94 9 92 11Z" fill="#46413C"/>`:`<ellipse cx="60" cy="9" rx="31" ry="4.6" fill="#D8E3EA" opacity=".3"/><path d="M60 9L42 3Q39 6 42 8ZM60 9L78 15Q81 12 78 10Z" fill="#46413C"/>`}<circle cx="60" cy="9" r="5" fill="#FFD35C" stroke="#A85F22" stroke-width="1.5"/>
+    ${toonFace(60,36,.58)}`],
+  ["반짝이",(p,f)=>`${flame(60,108,14,f?20:12)}
+    ${pair(`<path d="M38 72L8 104Q4 112 9 116L20 114L40 102Z" fill="url(#${p}a)" stroke="#8F2A21" stroke-width="2"/><path d="M9 116L20 114L26 98L13 102Q5 110 9 116Z" fill="#FFD35C"/>`)}
+    <path d="M46 104H74L78 115H42Z" fill="#59626B" stroke="#30363C" stroke-width="1.8"/><path d="M46 108H74" stroke="#9AA4AD" stroke-width="1.6"/>
+    <path d="M60 3C78 16 88 40 88 66C88 84 82 98 74 106H46C38 98 32 84 32 66C32 40 42 16 60 3Z" fill="url(#${p}b)" stroke="#A85F22" stroke-width="2"/>
+    <path d="M60 3C68 9 75 18 79 28Q60 22 41 28C45 18 52 9 60 3Z" fill="#EF6A5B" stroke="#8F2A21" stroke-width="1.6"/><path d="M48 16Q54 8 60 5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>
+    <path d="M36 84Q60 92 84 84L80 94Q60 101 40 94Z" fill="#EF6A5B"/><path d="M60 94L61.6 98.2H66L62.4 100.8L63.8 105L60 102.4L56.2 105L57.6 100.8L54 98.2H58.4Z" fill="#FFF7D6"/>
+    <circle cx="60" cy="54" r="22.5" fill="#CFD8DF" stroke="#6F7C87" stroke-width="2"/><circle cx="60" cy="54" r="18" fill="url(#${p}g)" stroke="#3C4A56" stroke-width="1.6"/>
+    <circle cx="60" cy="33.6" r="1.3" fill="#6F7C87"/><circle cx="60" cy="74.4" r="1.3" fill="#6F7C87"/><circle cx="39.6" cy="54" r="1.3" fill="#6F7C87"/><circle cx="80.4" cy="54" r="1.3" fill="#6F7C87"/><circle cx="45.6" cy="39.6" r="1.3" fill="#6F7C87"/><circle cx="74.4" cy="39.6" r="1.3" fill="#6F7C87"/><circle cx="45.6" cy="68.4" r="1.3" fill="#6F7C87"/><circle cx="74.4" cy="68.4" r="1.3" fill="#6F7C87"/>
+    ${toonFace(60,52,.66)}`],
+  ["윙윙이",(p,f)=>`${pair(`<g transform="rotate(${f?-24:-4} 48 56)"><path d="M48 62Q26 68 16 88Q12 100 22 100Q40 98 50 72Z" fill="#E4F5FF" opacity=".8" stroke="#7FA9C4" stroke-width="1.4"/><path d="M46 66Q32 76 22 96M46 70Q38 84 30 96" fill="none" stroke="#7FA9C4" stroke-width="1"/></g><g transform="rotate(${f?-30:0} 48 50)"><path d="M48 54Q24 26 8 34Q0 42 8 54Q22 68 48 62Z" fill="#EFFAFF" opacity=".88" stroke="#7FA9C4" stroke-width="1.5"/><path d="M46 56Q26 46 8 44M46 58Q28 56 12 56M34 50Q24 38 18 34" fill="none" stroke="#7FA9C4" stroke-width="1"/></g><path d="M51 20Q44 8 34 8" fill="none" stroke="#3A2C20" stroke-width="2.8" stroke-linecap="round"/><circle cx="32" cy="8" r="3.8" fill="#3A2C20"/><path d="M45 56L33 53M43 70L31 74M45 84L34 92" stroke="#3A2C20" stroke-width="2.6" stroke-linecap="round"/>`)}
+    <path d="M60 126L54 112H66Z" fill="#3A2C20"/>
+    <path d="M60 58C76 58 84 74 83 90C82 104 72 116 60 118C48 116 38 104 37 90C36 74 44 58 60 58Z" fill="url(#${p}b)" stroke="#8A6118" stroke-width="2"/>
+    <path d="M38 78Q60 88 82 78L83 90Q60 100 37 90ZM43 104Q60 112 77 104Q70 114 60 118Q50 114 43 104Z" fill="#3A2C20"/><path d="M48 66Q52 62 58 61" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" opacity=".65"/>
+    <ellipse cx="60" cy="56" rx="18" ry="14" fill="#E8A92C" stroke="#8A6118" stroke-width="1.8"/><path d="M46 48L44 44M52 45L51 41M60 44V40M68 45L69 41M74 48L76 44M44 58L40 59M76 58L80 59M50 66L48 70M70 66L72 70" stroke="#8A6118" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="60" cy="32" r="21" fill="url(#${p}b)" stroke="#8A6118" stroke-width="2"/>
+    ${toonFace(60,31,.74)}`],
+  ["구구",(p,f)=>`${pair(`<path d="M52 98L38 124Q46 127 53 124L58 100Z" fill="#E6EEF4" stroke="#90A5B5" stroke-width="1.4"/>`)}<path d="M54 100L52 126Q60 129 68 126L66 100Z" fill="#fff" stroke="#90A5B5" stroke-width="1.4"/>
+    ${pair(`<g transform="rotate(${f?-20:0} 48 48)"><path d="M50 44C30 26 12 28 3 40Q0 48 6 50Q2 56 9 60Q6 66 14 68Q13 74 20 74Q22 80 30 78Q34 82 40 78Q46 82 52 74Z" fill="#C7DCEB" stroke="#7E98AB" stroke-width="1.6"/><path d="M50 46C34 36 20 38 13 46Q11 52 17 53Q15 58 21 60Q21 65 27 65Q30 69 35 67Q40 70 50 64Z" fill="#E6F0F7" stroke="#90A5B5" stroke-width="1.3"/><path d="M50 50C40 44 32 46 28 50Q28 56 34 56Q38 60 50 58Z" fill="#fff" stroke="#A9BBC8" stroke-width="1.2"/></g>`)}
+    <path d="M60 34C74 34 82 48 80 70C78 90 70 104 60 106C50 104 42 90 40 70C38 48 46 34 60 34Z" fill="url(#${p}b)" stroke="#90A5B5" stroke-width="1.8"/>
+    <path d="M50 76Q53 80 56 76M58 86Q61 90 64 86M64 74Q67 78 70 74M47 62Q50 66 53 62" fill="none" stroke="#A9BBC8" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="60" cy="27" r="19" fill="url(#${p}b)" stroke="#90A5B5" stroke-width="1.8"/>
+    ${toonFace(60,26,.62)}<path d="M66 36C74 34 86 26 101 12" fill="none" stroke="#5B8A3C" stroke-width="2.2" stroke-linecap="round"/><path d="M76 31Q75 23 84 19Q86 27 76 31ZM87 23Q87 15 95 12Q97 19 87 23ZM78 31Q86 32 90 38Q81 39 78 31ZM90 22Q97 22 101 28Q93 29 90 22Z" fill="#6FBF73" stroke="#3F7F44" stroke-width="1"/><circle cx="103" cy="10" r="3.4" fill="#7A9A3A"/><path d="M53 31L60 41L67 31Q60 28 53 31Z" fill="#F29A4A" stroke="#B5651D" stroke-width="1.4"/>`]
 ];
-function planeSvg(i){
-  const [,y,b]=PLANES[i];
-  return `<svg xmlns="${"http:"+"/"+"/www.w3.org/2000/svg"}" viewBox="0 0 60 64" width="120" height="128" aria-hidden="true">${b}<circle cx="23" cy="${y+4}" r="3" fill="#FF9AA8" opacity=".75"/><circle cx="37" cy="${y+4}" r="3" fill="#FF9AA8" opacity=".75"/><circle cx="25" cy="${y}" r="2.4" fill="#2B2B3A"/><circle cx="35" cy="${y}" r="2.4" fill="#2B2B3A"/><circle cx="25.8" cy="${y-.8}" r=".8" fill="#fff"/><circle cx="35.8" cy="${y-.8}" r=".8" fill="#fff"/><path d="M27.5 ${y+3}Q30 ${y+6} 32.5 ${y+3}" fill="none" stroke="#2B2B3A" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+function planeSvg(i,f=0){
+  const p="bmp"+i+"-",[a,b,c]=[["#2E7FB8","#BFE7FF","#79C4EE"],["#C4382D","#FF9F8F","#EF6A5B"],["#E09A2B","#FFF0A8","#FFD35C"],["#E5A52A","#FFE793","#FFC94A"],["#B7CBD9","#fff","#F4F7FA"]][i],[w1,w2]=i===2?["#C4382D","#FF9F8F"]:["#F2913D","#FFD9A6"];
+  return `<svg xmlns="${"http:"+"/"+"/www.w3.org/2000/svg"}" viewBox="0 0 120 128" width="240" height="256" aria-hidden="true"><defs><linearGradient id="${p}b"><stop offset="0" stop-color="${a}"/><stop offset=".25" stop-color="${c}"/><stop offset=".45" stop-color="${b}"/><stop offset=".7" stop-color="${c}"/><stop offset="1" stop-color="${a}"/></linearGradient><linearGradient id="${p}a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${i?w2:"#BFE7FF"}"/><stop offset="1" stop-color="${i?w1:"#3E9FD8"}"/></linearGradient><linearGradient id="${p}g" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="#E4F6FF"/><stop offset=".5" stop-color="#A5D8F2"/><stop offset="1" stop-color="#5E9FCB"/></linearGradient></defs>${PLANES[i][1](p,f)}</svg>`;
 }
 function miniShoot(el){
   if(A.solo&&A.run.plane!==undefined)return shootRun(el,A.run.plane);
@@ -1529,17 +1625,25 @@ function miniShoot(el){
   el.querySelectorAll("[data-plane]").forEach(b=>b.onclick=()=>{const i=+b.dataset.plane;try{localStorage.setItem("bm-plane",i)}catch(_){}if(A.solo)A.run.plane=i;shootRun(el,i)});
 }
 function shootRun(el,plane){
-  const img=new Image();img.src="data:image/svg+xml,"+encodeURIComponent(planeSvg(plane));
+  const imgs=[0,1].map(f=>{const m=new Image();m.src="data:image/svg+xml,"+encodeURIComponent(planeSvg(plane,f));return m});let bank=0,prevX=0;
   el.innerHTML=`<canvas id="bmCv" class="bm-cv" aria-label="말씀 슈팅 게임 화면"></canvas>`;
   const cv=el.querySelector("#bmCv"),x=cv.getContext("2d"),P=LV[A.lv].sh,dpr=Math.min(2,window.devicePixelRatio||1);
-  let w=0,h=0;const size=()=>{w=el.clientWidth;h=el.clientHeight;cv.width=w*dpr;cv.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0)};size();
-  addEventListener("resize",size);V.off.push(()=>removeEventListener("resize",size));
-  const stars=Array.from({length:40},()=>[Math.random(),Math.random(),.3+Math.random()*.7]);
+  el.classList.add("bm-full");const bgC=document.createElement("canvas");
+  /* 우주 배경은 크기가 바뀔 때만 한 번 그려 두고 판마다 붙여요 */
+  const paintBg=()=>{bgC.width=w*dpr;bgC.height=h*dpr;const g=bgC.getContext("2d");g.scale(dpr,dpr);let l=g.createLinearGradient(0,0,0,h);l.addColorStop(0,"#070B1E");l.addColorStop(.6,"#141A46");l.addColorStop(1,"#2A1B55");g.fillStyle=l;g.fillRect(0,0,w,h);
+    [[.2,.28,.5,"rgba(120,70,200,.28)"],[.85,.62,.55,"rgba(40,120,200,.22)"],[.4,.9,.6,"rgba(200,70,140,.18)"]].forEach(([a,b,r,c])=>{const q2=g.createRadialGradient(a*w,b*h,0,a*w,b*h,r*Math.max(w,h*.6));q2.addColorStop(0,c);q2.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=q2;g.fillRect(0,0,w,h)});
+    const px=w*.84,py=h*.16,pr=Math.min(34,w*.09),pg=g.createRadialGradient(px-pr*.4,py-pr*.4,2,px,py,pr);pg.addColorStop(0,"#FFD9A0");pg.addColorStop(1,"#B5562E");g.fillStyle=pg;g.beginPath();g.arc(px,py,pr,0,7);g.fill();g.strokeStyle="rgba(255,226,170,.65)";g.lineWidth=3;g.beginPath();g.ellipse(px,py,pr*1.6,pr*.42,-.35,0,7);g.stroke();
+    const eg=g.createRadialGradient(w/2,h+w*.9,w*.9,w/2,h+w*.9,w*.9+46);eg.addColorStop(0,"rgba(90,170,255,.55)");eg.addColorStop(1,"rgba(90,170,255,0)");g.fillStyle=eg;g.fillRect(0,h-60,w,60)};
+  let w=0,h=0;const size=()=>{const nw=el.clientWidth,nh=el.clientHeight;if(!nw||!nh||(nw===w&&nh===h))return;const rx=w?nw/w:1,ry=h?nh/h:1;w=nw;h=nh;cv.width=w*dpr;cv.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0);paintBg();
+    if(rx!==1||ry!==1){[foes,goods,shots,items,bul].forEach(a=>a.forEach(o=>{o.x*=rx;if(o.hx!==undefined)o.hx*=rx}));ship.x*=rx;ship.y*=ry;ship.to=null;prevX=0}};size();
+  watchSize(el,size);
+  const stars=Array.from({length:LOW?28:60},()=>[Math.random(),Math.random(),.3+Math.random()*.7]);
   const ship={x:w/2,y:h-60,to:null};
-  let bul=[],foes=[],goods=[],shots=[],items=[],pops=[],pts=0,kills=0,caught=0,missed=0,lives=A.solo?A.run.lives:3,time=40,inv=0,fireT=0,dropT=1.2,diveT=P.dive,goodT=1,t=0,last=performance.now(),over=false,info="",shield=false,laser=0,slow=0,ice=0,flash=0;
+  let sparks=[],shake=0,bul=[],foes=[],goods=[],shots=[],items=[],pops=[],pts=0,kills=0,caught=0,missed=0,lives=A.solo?A.run.lives:3,time=40,inv=0,fireT=0,dropT=1.2,diveT=P.dive,goodT=1,t=0,last=performance.now(),over=false,info="",shield=false,laser=0,slow=0,ice=0,flash=0;
   const wave=()=>{const cols=w<420?4:6,gap=(w-16)/cols;for(let r=0;r<3;r++)for(let c=0;c<cols;c++)foes.push({hx:8+gap*(c+.5),hy:34+r*38,x:8+gap*(c+.5),y:-40-r*40,l:FOES[rnd(FOES.length)],hp:r===0?P.hp:1,dv:0})};
   wave();
   const pop=(px,py,s,c)=>pops.push({x:px,y:py,s,c,t:.9});
+  const boom=(px,py,c,n)=>{n=LOW?n>>1:n;for(let i=0;i<n&&sparks.length<70;i++){const a=Math.random()*6.3,v=50+Math.random()*130;sparks.push({x:px,y:py,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:.35+Math.random()*.3,c})}};
   const gain=n=>{pts=Math.max(0,Math.min(45,pts+n))};
   const lose=(px,l)=>{gain(-2);missed++;sfx("no");pop(Math.max(50,Math.min(w-50,px)),h-26,l+" -2","#FF9A9A")};
   /* 터치는 손가락이 비행기를 가리지 않게, 어디서든 끈 만큼만 움직여요. 마우스는 따라와요 */
@@ -1555,8 +1659,8 @@ function shootRun(el,plane){
   const key=e=>{if(!KEYS[e.key])return;e.preventDefault();if(e.type==="keydown")held.add(e.key);else held.delete(e.key);ship.to=null};
   addEventListener("keydown",key);addEventListener("keyup",key);V.off.push(()=>{removeEventListener("keydown",key);removeEventListener("keyup",key)});
   const end=()=>{if(over)return;over=true;const sc=Math.min(45,pts+(lives>0?5:0)),nt=`나쁜 말씀 ${kills}개를 깨고 좋은 말씀 ${caught}개를 받았어요${missed?` (바닥에 ${missed}개 떨어짐)`:""}${lives>0?" 끝까지 버텨서 +5점!":""}`;if(lives>0)clear(sc,lives,nt);else finish(sc,nt)};
-  const hit=()=>{if(inv>0)return;if(shield){shield=false;inv=.8;sfx("power");pop(ship.x,ship.y-40,"방어막이 막았어요","#9FE0FF");return}lives--;inv=1.5;sfx("hit");if(lives<=0)end()};
-  const kill=(f,drop)=>{f.dead=1;kills++;gain(1);if(drop&&Math.random()<.2)items.push({x:f.x,y:f.y,k:SHIP_ITEMS[rnd(SHIP_ITEMS.length)]})};
+  const hit=()=>{if(inv>0)return;if(shield){shield=false;inv=.8;sfx("power");pop(ship.x,ship.y-40,"방어막이 막았어요","#9FE0FF");return}lives--;inv=1.5;shake=.25;boom(ship.x,ship.y,"#FF9A6A",12);sfx("hit");if(lives<=0)end()};
+  const kill=(f,drop)=>{f.dead=1;kills++;gain(1);boom(f.x,f.y,f.hp>1?"#D08BFF":"#A99CFF",8);if(drop&&Math.random()<.2)items.push({x:f.x,y:f.y,k:SHIP_ITEMS[rnd(SHIP_ITEMS.length)]})};
   const take=k=>{const [id,,name,good]=k;sfx(good?"power":"no");pop(ship.x,ship.y-40,name,good?"#9FF0C0":"#FF9A9A");
     if(id==="shield")shield=true;else if(id==="laser")laser=4;else if(id==="slow")slow=4;else if(id==="ice"){ice=2;ship.to=null}
     else{foes.forEach(f=>kill(f,false));shots=[];flash=.25}};
@@ -1568,6 +1672,7 @@ function shootRun(el,plane){
       if(ship.to){ship.to.x=Math.max(20,Math.min(w-20,ship.to.x));ship.to.y=Math.max(h*.3,Math.min(h-34,ship.to.y));const dx=ship.to.x-ship.x,dy=ship.to.y-ship.y,d=Math.hypot(dx,dy),st=SHIP_V*sp*dt;if(d<=st){ship.x=ship.to.x;ship.y=ship.to.y}else{ship.x+=dx/d*st;ship.y+=dy/d*st}}
       held.forEach(k=>{ship.x+=KEYS[k][0]*340*sp*dt;ship.y+=KEYS[k][1]*340*sp*dt});
       ship.x=Math.max(20,Math.min(w-20,ship.x));ship.y=Math.max(h*.3,Math.min(h-34,ship.y))}
+    bank+=(Math.max(-1,Math.min(1,(ship.x-(prevX||ship.x))/(dt||.016)/420))-bank)*Math.min(1,dt*12);prevX=ship.x;
     if(ice<=0&&laser<=0&&fireT<=0){fireT=slow>0?.42:.26;sfx("shot");bul.push({x:ship.x,y:ship.y-16})}
     if(!foes.length)wave();
     const sway=Math.sin(t*.9)*Math.min(26,w*.05);
@@ -1584,29 +1689,30 @@ function shootRun(el,plane){
     shots=shots.filter(s=>{if(s.y>h+10)return false;if(Math.abs(s.x-ship.x)<16&&Math.abs(s.y-ship.y)<16){hit();return false}return true});
     foes.forEach(f=>{if(!f.dead&&Math.abs(f.x-ship.x)<(f.w||50)/2+12&&Math.abs(f.y-ship.y)<22){f.dead=1;hit()}});
     foes=foes.filter(f=>!f.dead);
-    goods=goods.filter(g=>{if(Math.abs(g.x-ship.x)<(g.w||50)/2+20&&Math.abs(g.y-ship.y)<30){gain(2);caught++;sfx("ok");pop(g.x,ship.y-40,g.l+" +2","#9FF0C0");return false}if(g.y>h-4){lose(g.x,g.l);return false}return true});
+    goods=goods.filter(g=>{if(Math.abs(g.x-ship.x)<(g.w||50)/2+20&&Math.abs(g.y-ship.y)<30){gain(2);caught++;boom(g.x,g.y,"#9FF0C0",6);sfx("ok");pop(g.x,ship.y-40,g.l+" +2","#9FF0C0");return false}if(g.y>h-4){lose(g.x,g.l);return false}return true});
     items=items.filter(i=>{if(i.y>h+10)return false;if(Math.abs(i.x-ship.x)<26&&Math.abs(i.y-ship.y)<28){take(i.k);return false}return true});
-    pops=pops.filter(p=>{p.t-=dt;p.y-=26*dt;return p.t>0});
+    pops=pops.filter(p=>{p.t-=dt;p.y-=26*dt;return p.t>0});sparks=sparks.filter(p=>{p.t-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;return p.t>0});shake=Math.max(0,shake-dt);
     if(over)return;if(time<=0)return end();
     if(A.solo)A.run.cur=pts;const s=`❤️${lives} ${Math.ceil(time)}초 · ${pts}점`;if(s!==info){info=s;q("#bmInfo").textContent=s}
-    x.fillStyle="#0E1630";x.fillRect(0,0,w,h);
-    x.fillStyle="#fff";stars.forEach(a=>{x.globalAlpha=a[2]*.7;x.fillRect(a[0]*w,(a[1]*h+t*30*a[2])%h,2,2)});x.globalAlpha=1;
+    x.save();if(shake>0)x.translate((Math.random()-.5)*12*shake/.25,(Math.random()-.5)*12*shake/.25);x.drawImage(bgC,0,0,w,h);
+    x.fillStyle="#fff";stars.forEach(a=>{x.globalAlpha=a[2]*.8;const z=a[2]>.75?2.4:1.4;x.fillRect(a[0]*w,(a[1]*h+t*70*a[2]*a[2])%h,z,z)});x.globalAlpha=1;
     x.fillStyle="#E0562F";x.fillRect(0,h-4,w,4);
     if(laser>0){x.fillStyle="rgba(120,230,255,.28)";x.fillRect(ship.x-9,0,18,ship.y-20);x.fillStyle="#D8F8FF";x.fillRect(ship.x-3,0,6,ship.y-20)}
-    foes.forEach(f=>{const tw=pill(f);x.fillStyle=f.hp>1?"#A23BC4":f.dv?"#E0562F":"#5B4BC4";x.beginPath();x.roundRect(f.x-tw/2,f.y-13,tw,26,9);x.fill();x.fillStyle="#fff";x.textAlign="center";x.textBaseline="middle";x.fillText(f.l,f.x,f.y+1)});
+    foes.forEach(f=>{const tw=pill(f);x.fillStyle=f.hp>1?"#A23BC4":f.dv?"#E0562F":"#5B4BC4";x.beginPath();x.roundRect(f.x-tw/2,f.y-13,tw,26,9);x.fill();x.fillStyle="rgba(255,255,255,.2)";x.beginPath();x.roundRect(f.x-tw/2+2,f.y-12,tw-4,10,6);x.fill();x.fillStyle="#fff";x.textAlign="center";x.textBaseline="middle";x.fillText(f.l,f.x,f.y+1)});
     goods.forEach(g=>{const tw=pill(g);x.fillStyle="#1F9D63";x.strokeStyle="#FFE27A";x.lineWidth=2;x.beginPath();x.roundRect(g.x-tw/2,g.y-13,tw,26,13);x.fill();x.stroke();x.fillStyle="#fff";x.textAlign="center";x.textBaseline="middle";x.fillText(g.l,g.x,g.y+1)});
-    x.fillStyle="#FFE27A";bul.forEach(b=>x.fillRect(b.x-2,b.y-8,4,14));
-    x.fillStyle="#FF7A7A";shots.forEach(a=>{x.beginPath();x.arc(a.x,a.y,5,0,7);x.fill()});
+    x.fillStyle="rgba(255,226,122,.3)";bul.forEach(b=>x.fillRect(b.x-4,b.y-11,8,20));x.fillStyle="#FFF4C2";bul.forEach(b=>x.fillRect(b.x-1.5,b.y-8,3,14));
+    shots.forEach(a=>{x.fillStyle="rgba(255,90,90,.3)";x.beginPath();x.arc(a.x,a.y,9,0,7);x.fill();x.fillStyle="#FFB0A0";x.beginPath();x.arc(a.x,a.y,4.5,0,7);x.fill()});sparks.forEach(p=>{x.globalAlpha=Math.min(1,p.t*3);x.fillStyle=p.c;x.fillRect(p.x-1.5,p.y-1.5,3,3)});x.globalAlpha=1;
     items.forEach(i=>{x.fillStyle=i.k[3]?"rgba(40,170,110,.85)":"rgba(210,60,60,.85)";x.beginPath();x.arc(i.x,i.y,16,0,7);x.fill();x.font="18px sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillStyle="#fff";x.fillText(i.k[1],i.x,i.y+1)});
     if(!(inv>0&&Math.floor(t*10)%2)){x.save();if(laser>0){x.shadowColor="#9FE0FF";x.shadowBlur=18}
-      if(img.complete&&img.naturalWidth)x.drawImage(img,ship.x-24,ship.y-26,48,51.2);
+      const im=imgs[Math.floor(t*12)%2],img=im.complete&&im.naturalWidth?im:imgs[0];
+      if(img.complete&&img.naturalWidth){x.translate(ship.x,ship.y);x.rotate(bank*.22);x.scale(1-Math.abs(bank)*.16,1);x.drawImage(img,-28,-30,56,59.7)}
       else{x.fillStyle="#8FE3FF";x.beginPath();x.arc(ship.x,ship.y,16,0,7);x.fill()}
       x.restore()}
     if(shield){x.strokeStyle="#7FD8FF";x.lineWidth=3;x.beginPath();x.arc(ship.x,ship.y,32,0,7);x.stroke()}
     if(ice>0){x.fillStyle="rgba(170,225,255,.6)";x.beginPath();x.roundRect(ship.x-28,ship.y-30,56,60,10);x.fill();x.font="22px sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillStyle="#fff";x.fillText("🧊",ship.x,ship.y)}
     if(slow>0){x.font="16px sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillStyle="#fff";x.fillText("🐌",ship.x+30,ship.y+22)}
     x.font="700 14px sans-serif";x.textAlign="center";x.textBaseline="middle";pops.forEach(p=>{x.globalAlpha=Math.min(1,p.t*2);x.fillStyle=p.c;x.fillText(p.s,p.x,p.y)});x.globalAlpha=1;
-    if(flash>0){x.fillStyle=`rgba(255,255,255,${flash*2.4})`;x.fillRect(0,0,w,h)}
+    if(flash>0){x.fillStyle=`rgba(255,255,255,${flash*2.4})`;x.fillRect(0,0,w,h)}x.restore();
     V.raf=requestAnimationFrame(frame);
   };
   V.raf=requestAnimationFrame(frame);
@@ -1619,8 +1725,8 @@ function miniPair(el){
   const P=LV[A.lv].pr,seen=new Set(),all=PAIR[A.lv],hard=A.lv>1,plays=A.run.pl=A.run.pl||{},tier=Math.min(plays[A.lv]=(plays[A.lv]||0)+1,3)-1,third=Math.ceil(all.length/3),list=pick(hard?"pair"+tier:"pair",hard?all.slice(tier*third,(tier+1)*third):all,P.n+4).filter(p=>{if(seen.has(p[0])||seen.has(p[1]))return false;seen.add(p[0]);seen.add(p[1]);return true}).slice(0,P.n).sort((a,b)=>hard?all.indexOf(a)-all.indexOf(b):0);
   el.innerHTML=`<canvas id="bmCv" class="bm-cv" aria-label="홍해 건너기 게임 화면"></canvas>`;
   const cv=el.querySelector("#bmCv"),x=cv.getContext("2d"),dpr=Math.min(2,window.devicePixelRatio||1);
-  let w=0,h=0;const size=()=>{w=el.clientWidth;h=el.clientHeight;cv.width=w*dpr;cv.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0)};size();
-  addEventListener("resize",size);V.off.push(()=>removeEventListener("resize",size));
+  el.classList.add("bm-full");let w=0,h=0;const size=()=>{const nw=el.clientWidth,nh=el.clientHeight;if(!nw||!nh||(nw===w&&nh===h))return;w=nw;h=nh;cv.width=w*dpr;cv.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0)};size();
+  watchSize(el,size);
   /* 낱말 판은 위아래 모두 두 줄로 초급 4칸, 중급·고급 6칸이고 짝의 두 낱말은 늘 위아래에 함께 있어요 */
   const [cols,rows]=[[2,2],[3,2],[3,2]][A.lv-1],K=cols*rows,wait=list.slice(),up=Array(K).fill(null),dn=Array(K).fill(null);
   const closeT=Math.max(P.ct*.5,P.ct*Math.pow(.95,A.run.done));
@@ -1638,7 +1744,7 @@ function miniPair(el){
   const fishes=[...Array(7)].map(()=>({s:rnd(2)?-1:1,d:40+R01()*230,x:R01(),z:.7+R01()*.8,v:(rnd(2)?1:-1)*(.012+R01()*.02)}));
   const spray=[...Array(18)].map(()=>({s:rnd(2)?-1:1,x:R01(),p:R01()*6,r:1+R01()*2}));
   const people=[...Array(9)].map((_,i)=>({c:SEA_ROBE[i%SEA_ROBE.length],z:i%3===2?.78:1,b:i%4===1,hc:["#EFE4CC","#D8C7A0","#C9D6DE"][i%3]}));
-  const lay=()=>{const th=w<420?44:50,tw=Math.min(170,(w-16-(cols-1)*8)/cols),cy=h/2,need=rows*(th+8)+20,Eo=Math.max(58,Math.min(cy-need-6,h*.3));return{th,tw,cy,Eo,x0:(w-(cols*tw+(cols-1)*8))/2}};
+  const lay=()=>{const th=h<430?34:w<420?44:50,tw=Math.min(170,(w-16-(cols-1)*8)/cols),cy=h/2,need=rows*(th+8)+20,Eo=Math.max(58,Math.min(cy-need-6,h*.3));return{th,tw,cy,Eo,x0:(w-(cols*tw+(cols-1)*8))/2}};
   const edge=(px,dir,E,cy)=>cy+dir*E+Math.sin(px*.021+t*1.7+dir)*(3+(1-gap)*4)+Math.sin(px*.053-t*2.3)*2;
   const rect=(L,E,dir,i,o)=>{const c=i%cols,r=Math.floor(i/cols),bob=Math.sin(t*1.6+o.ph)*2;return{x:L.x0+c*(L.tw+8),y:(dir<0?L.cy-E-14-L.th-r*(L.th+8):L.cy+E+14+r*(L.th+8))+bob,w:L.tw,h:L.th}};
   const rr=(X,Y,W,H,r)=>{x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+W,Y,X+W,Y+H,r);x.arcTo(X+W,Y+H,X,Y+H,r);x.arcTo(X,Y+H,X,Y,r);x.arcTo(X,Y,X+W,Y,r);x.closePath()};
@@ -1768,16 +1874,16 @@ function miniDiff(el){
   const alt=d.alt?new Image():null;
   const ready=()=>{
     if(!live()||over)return;
-    const iw=img.naturalWidth,ih=img.naturalHeight,wide=iw>=ih,room=Math.max(200,el.getBoundingClientRect().bottom-box.getBoundingClientRect().top-el.querySelector(".bm-dcap").offsetHeight-22),bw=box.clientWidth;
-    const cw=Math.floor(wide?Math.min(bw,(room-8)/2*iw/ih):Math.min((bw-8)/2,room*iw/ih)),ch=Math.floor(cw*ih/iw),dpr=Math.min(2,window.devicePixelRatio||1);
+    const iw=img.naturalWidth,ih=img.naturalHeight,wide=iw>=ih,room=Math.max(200,el.getBoundingClientRect().bottom-box.getBoundingClientRect().top-el.querySelector(".bm-dcap").offsetHeight-52),bw=box.clientWidth;
+    const cwT=Math.min(bw,(room-8)/2*iw/ih),cwS=Math.min((bw-8)/2,room*iw/ih),side=cwS>cwT,cw=Math.floor(Math.max(cwT,cwS)),ch=Math.floor(cw*ih/iw),dpr=Math.min(2,window.devicePixelRatio||1);
     const spots=[];shuf(d.s).forEach(s=>{if(spots.length<D.n&&spots.every(o=>far(o,s,cw,ch)))spots.push(s.slice())});
-    box.classList.toggle("side",!wide);
-    box.innerHTML=[0,1].map(n=>`<div class="bm-dp" data-dp="${n}" style="width:${cw}px;height:${ch}px"><canvas width="${cw*dpr}" height="${ch*dpr}" aria-label="${n?"아래":"위"} 그림"></canvas></div>`).join("");
+    box.classList.toggle("side",side);
+    box.innerHTML=[0,1].map(n=>`<div class="bm-dp" data-dp="${n}" style="width:${cw}px;height:${ch}px;aspect-ratio:${cw}/${ch}"><canvas width="${cw*dpr}" height="${ch*dpr}" aria-label="${n?"두 번째":"첫 번째"} 그림"></canvas></div>`).join("");
     const ps=[...box.querySelectorAll(".bm-dp")],ca=ps[0].firstChild,cb=ps[1].firstChild,xa=ca.getContext("2d"),xb=cb.getContext("2d");
     xa.drawImage(img,0,0,ca.width,ca.height);xb.drawImage(ca,0,0);
     let from=ca;if(alt){from=document.createElement("canvas");from.width=ca.width;from.height=ca.height;from.getContext("2d").drawImage(alt,0,0,ca.width,ca.height)}
     spots.forEach(s=>diffApply(xb,from,s));
-    const mark=(s,cls)=>ps.forEach(p=>p.insertAdjacentHTML("beforeend",`<i class="bm-dm ${cls}" style="left:${s[0]*100}%;top:${s[1]*100}%;width:${s[2]*2.4*cw}px;height:${s[2]*2.4*cw*(s[3]||1)}px"></i>`));
+    const mark=(s,cls)=>ps.forEach(p=>p.insertAdjacentHTML("beforeend",`<i class="bm-dm ${cls}" style="left:${s[0]*100}%;top:${s[1]*100}%;width:${s[2]*240}%;height:${s[2]*240*(s[3]||1)*cw/ch}%"></i>`));
     const show=()=>{note.textContent=`다른 곳 ${spots.length}개 가운데 ${found}개를 찾았어요`;A.run.cur=found*5;q("#bmInfo").textContent=`❤️${lives} ${found}/${spots.length} · ${Math.max(0,Math.ceil((T-(performance.now()-t0))/1000))}초`};
     const end=(win,late)=>{if(over)return;over=true;const left=Math.max(0,T-(performance.now()-t0))/1000,nt=`${late?"시간이 다 됐어요. ":""}${cap}`;
       if(win)return after(600,()=>clear(found*5+5+Math.floor(left/10),lives,nt));
