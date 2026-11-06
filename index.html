@@ -1095,6 +1095,20 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
 @media (max-width:400px){.row .who>span:not(.memo-line){display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
 .brand h1{word-break:keep-all}
 .bm-stage .bm-in{background:var(--surface)}
+/* 게임 설명 화면: 메뉴와 같은 파스텔톤 */
+.bm-stage.bm-soft{background:linear-gradient(150deg,#F6E3E6,#FBEFD8)}
+.bm-stage.bm-soft[data-k="quiz"]{background:linear-gradient(150deg,#E8DFF8,#F6DFEA)}
+.bm-stage.bm-soft[data-k="race"]{background:linear-gradient(150deg,#FBE0D9,#FAEAD3)}
+.bm-stage.bm-soft[data-k="pair"]{background:linear-gradient(150deg,#D5EDF5,#DEEAF9)}
+.bm-stage.bm-soft[data-k="map"]{background:linear-gradient(150deg,#F4E8D2,#EEDFC8)}
+.bm-stage.bm-soft[data-k="cross"]{background:linear-gradient(150deg,#D9F1E4,#E6F4DB)}
+.bm-stage.bm-soft[data-k="twenty"]{background:linear-gradient(150deg,#DAEDFB,#E6F4FB)}
+.bm-stage.bm-soft[data-k="shoot"]{background:linear-gradient(150deg,#DFDFF6,#E8E2F4)}
+.bm-stage.bm-soft[data-k="diff"]{background:linear-gradient(150deg,#DFE8EE,#EAF0F3)}
+.bm-stage.bm-soft[data-k="art"]{background:linear-gradient(150deg,#F2E5D5,#F6ECDE)}
+.bm-soft .bm-sh{background:rgba(255,255,255,.5);color:#3A3340}
+.bm-soft .bm-sh .btn{background:rgba(255,255,255,.75);border-color:rgba(90,70,60,.16);color:#3A3340}
+.bm-soft .bm-sb>.bm-card{box-shadow:0 4px 14px rgba(70,50,40,.12)}
 </style>
 </head>
 <body>
@@ -4030,7 +4044,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261106145840';
+  var BUILD = '20261106150135';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;

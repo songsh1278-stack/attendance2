@@ -1225,7 +1225,7 @@ function stageOpen(title){
 }
 function intro(){
   const d=A.pending,g=G[d.k];
-  const el=stageOpen(g.i+" "+g.n);
+  const el=stageOpen(g.i+" "+g.n);el.parentNode.classList.add("bm-soft");
   el.innerHTML=`<div class="bm-card"><div class="bm-emoji">${g.i}</div><p class="muted">${A.solo?LV[A.lv].n:`${esc(d.pre||"")}${esc(d.p)} 칸${d.m>1?" · 점수 2배":""}`}</p><h3>${g.n}</h3><div class="bm-rules">${rulesOf(d.k).map(([t,x])=>`<div><b>${t}</b>${x}</div>`).join("")}</div><button type="button" class="btn primary bm-big" data-bm="start">시작하기</button></div>`;
 }
 function startMini(){
