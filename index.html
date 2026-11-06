@@ -1110,7 +1110,7 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
 .bm-soft .bm-sh .btn{background:rgba(255,255,255,.75);border-color:rgba(90,70,60,.16);color:#3A3340}
 .bm-soft .bm-sb>.bm-card{box-shadow:0 4px 14px rgba(70,50,40,.12)}
 /* 설명이 길어도 시작하기 단추는 늘 화면 아래에 보여요 */
-.bm-stage.bm-soft .bm-card .btn[data-bm="start"]{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:1;box-shadow:0 3px 0 #E2BE6A,0 14px 0 6px var(--surface),0 -8px 12px 8px var(--surface)}
+.bm-stage.bm-soft .bm-card .btn.primary.bm-big[data-bm="start"]{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:1;box-shadow:0 3px 0 #E2BE6A,0 14px 0 6px var(--surface),0 -8px 12px 8px var(--surface)}
 .bm-soft .bm-sb>.bm-card{overflow:clip}
 /* 게임 장면이 아닌 화면의 단추와 고른 칩도 진한 색 대신 연한 금색으로 */
 .bm-home .btn.primary,.bm-stage.bm-soft .btn.primary,.bm-mapc button[aria-pressed="true"],.bm-steps button[aria-pressed="true"]{background:linear-gradient(180deg,#FDEFC8,#FAE3A8);border:1px solid #E2BE6A;color:#4A3410}
@@ -1142,6 +1142,11 @@ nav.tabs button[data-tab="prenew"]{letter-spacing:-.05em;min-width:0;font-size:1
   .bm-oxs .bm-oxb{flex:1 1 64px}
   .bm-oxs .bm-oxb button{min-height:60px;font-size:34px}
 }
+/* 슈팅과 홍해의 게임 진행 화면만 진한 장면을 써요 */
+.bm-stage.bm-deep[data-k="shoot"]{background:#0B1026}
+.bm-stage.bm-deep[data-k="pair"]{background:#0A3566}
+.bm-stage.bm-deep .bm-sh{background:rgba(255,255,255,.08);color:#fff}
+.bm-stage.bm-deep .bm-sh .btn{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff}
 </style>
 </head>
 <body>
@@ -4077,7 +4082,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)
 
 <script>
 (function () {
-  var BUILD = '20261106152600';
+  var BUILD = '20261106153103';
   // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
   if ('serviceWorker' in navigator) {
     var had = !!navigator.serviceWorker.controller;
