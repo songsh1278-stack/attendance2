@@ -883,14 +883,14 @@ setInterval(()=>{
 /* ---------- 탭 첫 화면 ---------- */
 const lvPick=()=>`<div class="bm-lvs">${[1,2,3].map(l=>`<button type="button" data-bmset="lv:${l}" aria-pressed="${CFG.lv===l}"><b>${LV[l].n}</b><span>${LV[l].d}</span></button>`).join("")}</div>`;
 function rankPage(){
-  const ks=Object.keys(G).concat("board"),nm=k=>k==="board"?BOARD_NAME:G[k].n;CFG.rk=CFG.rk||"quiz";
-  return `<div class="bm-home"><button type="button" class="btn bm-back" data-bmsub="">‹ 성경게임</button><h2 class="sec">랭킹 보기</h2>${lvPick()}
-    <div class="bm-mapc" style="margin-top:10px">${ks.map(k=>`<button type="button" data-rk="${k}" aria-pressed="${CFG.rk===k}">${nm(k)}</button>`).join("")}</div><div id="bmRankBox" class="card" style="margin-top:12px"><p class="muted">불러오는 중…</p></div></div>`;
+  return `<div class="bm-home"><button type="button" class="btn bm-back" data-bmsub="">‹ 성경게임</button><h2 class="sec">랭킹 보기</h2><div id="bmRankBox"><p class="muted">불러오는 중…</p></div></div>`;
 }
+/* 모든 게임의 초급·중급·고급 상위 3명을 한 화면에 보여 줘요 */
 function rankLoad(){
-  const box=document.querySelector("#bmRankBox");if(!box)return;const k=CFG.rk,lv=CFG.lv,t=++rankTok;
-  call("gameRank",k,lv).then(r=>{if(t!==rankTok||!box.isConnected)return;
-    box.innerHTML=r.top.length?`<div class="bm-rank">${r.top.map(x=>`<div class="${x.n===r.name?"me":""}"><span class="num">${x.r}</span>${esc(x.n)}<b class="num">${x.s}점</b></div>`).join("")}</div>${r.rank>10?`<p class="muted">내 순위 ${r.rank}위 · ${r.best}점</p>`:""}`:`<p class="muted">아직 기록이 없어요.</p>`
+  const box=document.querySelector("#bmRankBox");if(!box)return;const t=++rankTok,ks=Object.keys(G).concat("board"),nm=k=>k==="board"?BOARD_NAME:G[k].n;
+  const line=(x,me)=>`<div style="display:flex;gap:4px;padding:1px 3px;font-size:12px;line-height:1.5;border-radius:5px${x.n===me?";background:var(--accent-soft);font-weight:700":""}"><span class="num">${x.r}</span><span style="flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${esc(x.n)}</span><b class="num">${x.s}</b></div>`;
+  call("gameRankAll").then(r=>{if(t!==rankTok||!box.isConnected)return;
+    box.innerHTML=ks.map(k=>`<div class="card" style="margin:0 0 8px;padding:9px 10px"><b style="display:block;margin-bottom:4px;font-size:14px">${nm(k)}</b><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">${[1,2,3].map(l=>{const a=(r.all[k]||{})[l]||[];return `<div><small class="muted">${LV[l].n}</small>${a.length?a.map(x=>line(x,r.name)).join(""):`<div class="muted" style="font-size:12px">기록 없음</div>`}</div>`}).join("")}</div></div>`).join("")
   }).catch(e=>{if(box.isConnected)box.innerHTML=`<p class="muted">${esc(e.message||"랭킹을 불러오지 못했어요")}</p>`});
 }
 let rankTok=0;
@@ -925,8 +925,6 @@ document.addEventListener("click",e=>{
   if(st){const [k,v]=st.dataset.bmset.split(":");CFG[k]=Number(v);rerender();if(CFG.sub==="rank")rankLoad();return}
   const sb=e.target.closest("[data-bmsub]");
   if(sb){CFG.sub=sb.dataset.bmsub;rerender();window.scrollTo(0,0);if(CFG.sub==="rank")rankLoad();return}
-  const rk=e.target.closest("[data-rk]");
-  if(rk){CFG.rk=rk.dataset.rk;rerender();rankLoad();return}
   const mv=e.target.closest("[data-mapv]");
   if(mv){CFG.mv=mv.dataset.mapv;CFG.mp="";rerender();return}
   const mp=e.target.closest("[data-mapp]");
