@@ -1740,7 +1740,10 @@ function miniPair(el){
   const P=LV[A.lv].pr,seen=new Set(),all=PAIR[A.lv],hard=A.lv>1,plays=A.run.pl=A.run.pl||{},tier=Math.min(plays[A.lv]=(plays[A.lv]||0)+1,3)-1,third=Math.ceil(all.length/3),list=pick(hard?"pair"+tier:"pair",hard?all.slice(tier*third,(tier+1)*third):all,P.n+4).filter(p=>{if(seen.has(p[0])||seen.has(p[1]))return false;seen.add(p[0]);seen.add(p[1]);return true}).slice(0,P.n).sort((a,b)=>hard?all.indexOf(a)-all.indexOf(b):0);
   el.innerHTML=`<canvas id="bmCv" class="bm-cv" aria-label="홍해 건너기 게임 화면"></canvas>`;
   const cv=el.querySelector("#bmCv"),x=cv.getContext("2d"),dpr=Math.min(2,window.devicePixelRatio||1);
-  el.classList.add("bm-full");let w=0,h=0;const size=()=>{const nw=el.clientWidth,nh=el.clientHeight;if(!nw||!nh||(nw===w&&nh===h))return;w=nw;h=nh;cv.width=w*dpr;cv.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0)};size();
+  el.classList.add("bm-full");let w=0,h=0,sb=24;
+  /* 아래쪽 낱말이 홈 표시줄이나 제스처 영역에 걸리면 눌리지 않는 폰이 있어요. 안전 영역만큼 띄워 둬요 */
+  const safeB=()=>{const d=document.createElement("div");d.style.cssText="position:fixed;bottom:0;height:0;visibility:hidden;padding-bottom:env(safe-area-inset-bottom,0px)";document.body.appendChild(d);const v=parseFloat(getComputedStyle(d).paddingBottom)||0;d.remove();return v};
+  const size=()=>{const nw=el.clientWidth,nh=el.clientHeight;if(!nw||!nh||(nw===w&&nh===h))return;w=nw;h=nh;sb=Math.max(24,safeB()+12);cv.width=w*dpr;cv.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0)};size();
   watchSize(el,size);
   /* 낱말 판은 위아래 모두 두 줄로 초급 4칸, 중급·고급 6칸이고 짝의 두 낱말은 늘 위아래에 함께 있어요 */
   const [cols,rows]=[[2,2],[3,2],[3,2]][A.lv-1],K=cols*rows,wait=list.slice(),up=Array(K).fill(null),dn=Array(K).fill(null);
@@ -1759,7 +1762,7 @@ function miniPair(el){
   const fishes=[...Array(7)].map(()=>({s:rnd(2)?-1:1,d:40+R01()*230,x:R01(),z:.7+R01()*.8,v:(rnd(2)?1:-1)*(.012+R01()*.02)}));
   const spray=[...Array(18)].map(()=>({s:rnd(2)?-1:1,x:R01(),p:R01()*6,r:1+R01()*2}));
   const people=[...Array(9)].map((_,i)=>({c:SEA_ROBE[i%SEA_ROBE.length],z:i%3===2?.78:1,b:i%4===1,hc:["#EFE4CC","#D8C7A0","#C9D6DE"][i%3]}));
-  const lay=()=>{const th=h<430?34:w<420?44:50,tw=Math.min(170,(w-16-(cols-1)*8)/cols),cy=h/2,need=rows*(th+8)+20,Eo=Math.max(58,Math.min(cy-need-6,h*.3));return{th,tw,cy,Eo,x0:(w-(cols*tw+(cols-1)*8))/2}};
+  const lay=()=>{const H=h-sb,th=H<430?34:w<420?44:50,tw=Math.min(170,(w-16-(cols-1)*8)/cols),cy=H/2,need=rows*(th+8)+20,Eo=Math.max(58,Math.min(cy-need-6,H*.3));return{th,tw,cy,Eo,x0:(w-(cols*tw+(cols-1)*8))/2}};
   const edge=(px,dir,E,cy)=>cy+dir*E+Math.sin(px*.021+t*1.7+dir)*(3+(1-gap)*4)+Math.sin(px*.053-t*2.3)*2;
   const rect=(L,E,dir,i,o)=>{const c=i%cols,r=Math.floor(i/cols),bob=Math.sin(t*1.6+o.ph)*2;return{x:L.x0+c*(L.tw+8),y:(dir<0?L.cy-E-14-L.th-r*(L.th+8):L.cy+E+14+r*(L.th+8))+bob,w:L.tw,h:L.th}};
   const rr=(X,Y,W,H,r)=>{x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+W,Y,X+W,Y+H,r);x.arcTo(X+W,Y+H,X,Y+H,r);x.arcTo(X,Y+H,X,Y,r);x.arcTo(X,Y,X+W,Y,r);x.closePath()};
