@@ -939,13 +939,17 @@ window.bmHome=k=>{navPush();S.view="bible";S.bpage=k;CFG.sub="";rerender();windo
 /* ---------- 부록-주보보기 : 교회 홈페이지의 주보 그림을 서버가 찾아 줘요 ---------- */
 const JUBO_URL="https:"+"/"+"/www.sdcc.or.kr/chnet2/home/?code=bd02&step1=12&sid=107";
 let JB={list:[],k:"",img:[],busy:true,err:false};
-const juboBody=()=>`${JB.list.length?`<div class="bm-mapc">${JB.list.map(x=>`<button type="button" data-jubo="${esc(x.k)}" aria-pressed="${x.k===JB.k}">${esc(x.t)}</button>`).join("")}</div>`:""}
-  ${JB.busy?`<p class="muted bm-maph">주보를 불러오는 중이에요…</p>`:JB.err?`<p class="muted bm-maph">주보를 불러오지 못했어요. 아래 홈페이지에서 봐 주세요.</p>`:JB.img.length?`<p class="muted bm-maph">그림을 누르면 크게 볼 수 있어요.</p><div class="bm-jubo">${JB.img.map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="주보 ${i+1}쪽" loading="lazy"></a>`).join("")}</div>`:`<p class="muted bm-maph">이 주보에는 그림이 없어요. 아래 홈페이지에서 봐 주세요.</p>`}`;
+const juboToday=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const juboBody=()=>`<div class="bm-jdate"><input type="date" id="juboDate" aria-label="주보 날짜" value="${esc(JB.date||"")}" max="${juboToday()}"><button type="button" class="btn" data-jubodate>날짜로 찾기</button></div>${JB.list.length?`<div class="bm-mapc">${JB.list.map(x=>`<button type="button" data-jubo="${esc(x.k)}" aria-pressed="${x.k===JB.k}">${esc(x.t)}</button>`).join("")}</div>`:""}
+  ${JB.busy?`<p class="muted bm-maph">주보를 불러오는 중이에요…</p>`:JB.err?`<p class="muted bm-maph">${esc(JB.err===true?"주보를 불러오지 못했어요. 아래 홈페이지에서 봐 주세요.":JB.err)}</p>`:JB.img.length?`${JB.found?`<p class="bm-maph"><b>${esc(JB.found.t)}</b></p>`:""}<p class="muted bm-maph">그림을 누르면 크게 볼 수 있어요.</p><div class="bm-jubo">${JB.img.map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="주보 ${i+1}쪽" loading="lazy"></a>`).join("")}</div>`:`<p class="muted bm-maph">이 주보에는 그림이 없어요. 아래 홈페이지에서 봐 주세요.</p>`}`;
 const juboDraw=()=>{const b=document.querySelector("#bmJubo");if(b)b.innerHTML=juboBody()};
-function juboLoad(k){JB.busy=true;JB.err=false;if(k)JB.k=k;juboDraw();
-  call("jubo",k||"").then(d=>{JB={...d,busy:false,err:false};juboDraw()}).catch(()=>{JB.busy=false;JB.err=true;juboDraw()})}
+function juboLoad(k){const byDate=/^\d{4}-\d{2}-\d{2}$/.test(k||"");JB.busy=true;JB.err=false;JB.date=byDate?k:"";if(k&&!byDate)JB.k=k;juboDraw();
+  call("jubo",k||"").then(d=>{JB={...d,date:byDate?k:"",busy:false,err:false};juboDraw()}).catch(e=>{JB.busy=false;JB.err=byDate?((e&&e.message)||"그 날짜 주보를 찾지 못했어요")+". 날짜를 다시 확인해 주세요.":true;juboDraw()})}
 window.renderJubo=()=>`<div class="bm-home"><div id="bmJubo">${juboBody()}</div><a class="btn bm-big" href="${esc(JUBO_URL)}" target="_blank" rel="noopener">교회 홈페이지에서 보기</a></div>`;
 document.addEventListener("click",e=>{const b=e.target.closest("[data-jubo]");if(b&&b.dataset.jubo!==JB.k)juboLoad(b.dataset.jubo)});
+const juboByDate=()=>{const i=document.querySelector("#juboDate");if(!i)return;if(!i.value){i.focus();if(i.showPicker)try{i.showPicker()}catch(_){}return}if(!JB.busy)juboLoad(i.value)};
+document.addEventListener("click",e=>{if(e.target.closest("[data-jubodate]"))juboByDate()});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="juboDate"){e.preventDefault();juboByDate()}});
 
 /* ---------- 성경지도보기 : 시대별 지도, 지명을 누르면 설명 ---------- */
 function mapGeo(v){
