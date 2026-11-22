@@ -3,20 +3,7 @@
 <head>
 <base target="_top">
 <meta charset="utf-8">
-<script>(function(){var OK='https://songsh1278-stack.github.io/attendance2/',h=location.hostname;if(location.href.indexOf(OK)!==0&&h!=='localhost'&&h!=='127.0.0.1'&&h!=='')location.replace(OK)})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="교회학교 교육부 주일 출석·달란트·명단 관리">
-<meta name="theme-color" content="#6E1F2E">
-<meta name="apple-mobile-web-app-title" content="출석부">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta property="og:title" content="신당중앙교회">
-<meta property="og:description" content="교회학교 교육부 주일 출석·달란트·명단 관리">
-<meta property="og:image" content="icon-512.png">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="preconnect" href="https://script.google.com">
-<link rel="preconnect" href="https://script.googleusercontent.com">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>신당중앙교회 교육팀 출석부</title>
@@ -2785,10 +2772,10 @@ function openLogin(){
     S.remember=!!ov.querySelector("#f-lrem").checked;let r;
     try{r=await call("login",id,pw)}catch(x){err(x.message);pwI.select();return}
     if(r.kind==="staff"){storeEmail(r.email);S._copw=pw;if(S.remember!==false)try{localStorage.setItem("ya-copw",pw);localStorage.removeItem("ya-myname")}catch(_){}
-      ov.remove();await load();if(r.role==="team"&&TEAMS[r.team]&&canEnter(r.team))goDept(r.team);
+      ov.remove();await load(false,true);if(r.role==="team"&&TEAMS[r.team]&&canEnter(r.team))goDept(r.team);
       toast(r.role==="co2"?"공동관리자2로 로그인했어요":r.role==="co"?"공동관리자1로 로그인했어요":"임원으로 로그인했어요");return}
     (r.list||[]).forEach(x=>{storeTCode(x.pid,pw);storeWho(x.team,null)});if(S.remember!==false)try{localStorage.setItem("ya-myname",id)}catch(_){}
-    ov.remove();await load();const t=((r.list||[])[0]||{}).team;if(t&&canEnter(t))goDept(t);
+    ov.remove();await load(false,true);const t=((r.list||[])[0]||{}).team;if(t&&canEnter(t))goDept(t);
     toast(((r.list||[])[0]||{}).name+" 선생님으로 로그인했어요")}));
 }
 /* 붙여 넣은 QR 링크로 로그인 (PC, 아이폰 홈 화면 앱처럼 카메라로 찍기 어려울 때) */
@@ -2960,7 +2947,7 @@ const qrBody=ts=>`<p class="muted" style="font-size:13px;margin:0 0 10px"><b>먼
     <div class="admin-row"><b>로그인 기기${qrCntTag("d")}</b><span class="code none">QR로 등록된 기기 보기·해제</span><button class="btn" id="qrDevOpen">기기 관리</button></div></div>`;
 const qrCard=()=>{const ts=qrTeams();if(!ts.length||S.staffMgr)return "";
   return `<details class="fold" data-fold="qr"${foldOpen("qr")?" open":""}><summary><h2 class="sec">선생님 로그인 관리${qrCntTag("d")}</h2><span class="fold-sum">QR · 개인 비밀번호 · 기기</span></summary>${qrBody(ts)}</details>`};
-function forgetDevice(msg){revokeMyDevs();try{["ya-relogin","ya-admin","ya-email","ya-copw","ya-codes","ya-gcodes","ya-tcodes","ya-scodes","ya-who","ya-tk","ya-photos",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._email="";S._copw="";S._codes={};S._gcodes={};S._tcodes={};S._scodes={};S._who={};S.hrMe={};S._tk={};S.photos=new Map();S.view="home";S.book=null;load();toast(msg||"이 기기에 기억된 번호와 로그인을 지웠어요")}
+function forgetDevice(msg){revokeMyDevs();try{["ya-relogin","ya-admin","ya-email","ya-copw","ya-codes","ya-gcodes","ya-tcodes","ya-scodes","ya-who","ya-tk","ya-photos",BOOT_KEY].concat(Object.keys(TEAMS).flatMap(t=>["ya-ev-"+t,"ya-lib-"+t])).forEach(k=>localStorage.removeItem(k))}catch(_){}S._admin="";S._email="";S._copw="";S._codes={};S._gcodes={};S._tcodes={};S._scodes={};S._who={};S.hrMe={};S._tk={};S.photos=new Map();S.view="home";S.book=null;load(false,true);toast(msg||"이 기기에 기억된 번호와 로그인을 지웠어요")}
 /* 로그아웃: 로그인은 끝내지만, '이 기기에서 기억하기'로 들어왔다면 이메일·번호를 이 기기에만 남겨 다시 로그인할 때 미리 채워요 */
 const reLogin=()=>{try{return JSON.parse(localStorage.getItem("ya-relogin")||"{}")||{}}catch(_){return {}}};
 function logoutKeep(){const old=reLogin(),keep={};
@@ -2981,7 +2968,7 @@ navTry(()=>{history.replaceState({base:1},"");history.pushState({root:1},"")});
 addEventListener("popstate",()=>{
   if(navSkip>0){navSkip--;return}
   const ovs=document.querySelectorAll("body > .overlay");
-  if(ovs.length){navByBack=true;ovs[ovs.length-1].remove();return}
+  if(ovs.length){const top=ovs[ovs.length-1];if(top.dataset.busy){navTry(()=>history.pushState({ov:1},""));return}navByBack=true;top.remove();return}
   if(NAV.length){const s=NAV.pop();S.view=s.view;if(s.view==="dept"){setTeam(s.team);S.tab=s.tab}render();window.scrollTo(0,0);return}
   if(Date.now()-navLastBack<2000){navTry(()=>history.back());return}
   navLastBack=Date.now();toast("뒤로 버튼을 한 번 더 누르면 종료돼요");navTry(()=>history.pushState({root:1},""));
@@ -3458,7 +3445,7 @@ function openAdminLogin(){
   ov.querySelector("form").addEventListener("submit",loginBusy(ov,async e=>{
     e.preventDefault();const pw=ov.querySelector("#f-admin").value,em=ov.querySelector("#f-aemail").value.trim();S.remember=!!ov.querySelector("#f-ar").checked;
     const r=await call("adminLogin",pw,em).catch(err=>({ok:false,error:err.message}));
-    if(r.ok){if(S.remember!==false)try{localStorage.setItem("ya-admin",pw)}catch(_){}S._admin=pw;storeEmail(em);ov.remove();await load();toast("관리자로 로그인했어요")}
+    if(r.ok){if(S.remember!==false)try{localStorage.setItem("ya-admin",pw)}catch(_){}S._admin=pw;storeEmail(em);ov.remove();await load(false,true);toast("관리자로 로그인했어요")}
     else{const el=ov.querySelector("#adminErr");el.textContent=r.error?r.error:r.configured===false?"시트에 관리자 비밀번호가 아직 없어요.":"비밀번호가 맞지 않아요.";el.hidden=false}
   }));
 }
@@ -3700,7 +3687,7 @@ function openStaffEdit(email){
   ov.addEventListener("click",e=>{if(e.target===ov||e.target.closest("[data-close]"))ov.remove()});
   ov.addEventListener("change",e=>{if(e.target.id==="f-esr"){ov.querySelector("#f-espwl").hidden=e.target.value!=="co"&&e.target.value!=="co2";ov.querySelector("#f-esteaml").hidden=roleOf(e.target.value).role!=="team"}});
   ov.querySelector("form").addEventListener("submit",async e=>{
-    e.preventDefault();const f={name:ov.querySelector("#f-esn").value.trim(),email:ov.querySelector("#f-ese").value.trim(),...roleOf(ov.querySelector("#f-esr").value),pw:(ov.querySelector("#f-espw").value||"").trim(),team:ov.querySelector("#f-este").value||"",pos:(ov.querySelector("#f-espos")||{}).value||x.pos||""};
+    e.preventDefault();const f={name:ov.querySelector("#f-esn").value.trim(),email:ov.querySelector("#f-ese").value.trim(),...roleOf(ov.querySelector("#f-esr").value),pw:(ov.querySelector("#f-espw").value||"").trim(),team:ov.querySelector("#f-este").value||"",pos:ov.querySelector("#f-espos")?ov.querySelector("#f-espos").value:(x.pos||"")};
     try{const list=await tracked(call("staffEdit",email,posFix(f)));if(String(AUTH().email||"").toLowerCase()===email.toLowerCase())storeEmail(f.email);S.staff=list;ov.remove();render();toast("수정했어요")}
     catch(err){const el=ov.querySelector("#esErr");el.textContent=err.message;el.hidden=false}
   });
@@ -3942,7 +3929,7 @@ if(ad){const d=parseKey(S.date);d.setDate(d.getDate()+Number(ad.dataset.adate));
   {const q=e.target.closest("[data-qr-staff]");if(q)return makeQr({k:"staff",e:q.dataset.qrStaff})}
   if(e.target.closest("#hrOut"))return logoutKeep();
     if(e.target.closest("#adminIn")){if(S.isAdmin){toast("이미 총관리자로 로그인되어 있어요");return}return openAdminLogin()}
-  if(e.target.closest("#adminOut")){revokeMyDevs();try{localStorage.removeItem("ya-admin");localStorage.removeItem("ya-copw")}catch(_){}S._admin="";S._copw="";load();toast("로그아웃했어요");return}
+  if(e.target.closest("#adminOut")){revokeMyDevs();try{localStorage.removeItem("ya-admin");localStorage.removeItem("ya-copw");localStorage.removeItem("ya-email");localStorage.removeItem(BOOT_KEY)}catch(_){}S._admin="";S._copw="";S._email="";load(false,true);toast("로그아웃했어요");return}
   const pu=e.target.closest("[data-promo-undo]");if(pu){e.preventDefault();return openUndoPromotion(pu.dataset.promoUndo)}
   const cEd=e.target.closest("[data-class-edit]");if(cEd)return openClassEdit(cEd.dataset.classEdit);
   const cAs=e.target.closest("[data-class-assign]");if(cAs)return openClassAssign(cAs.dataset.classAssign);
@@ -4007,7 +3994,7 @@ $("#next").onclick=()=>{const d=parseKey(S.date);d.setDate(d.getDate()+7);S.date
 $("#datePick").onchange=e=>{if(e.target.value){S.date=keyOf(toSunday(parseKey(e.target.value)));needYear();render()}};
 
 /* ---------- data (Google Apps Script) ---------- */
-function AUTH(){let scodes={...(S._scodes||{})},tcodes={...(S._tcodes||{})},who={...(S._who||{})},tk={...(S._tk||{})},admin=S._admin||"",codes={...(S._codes||{})},gcodes={...(S._gcodes||{})},email=S._email||"",copw=S._copw||"";try{admin=localStorage.getItem("ya-admin")||admin;email=localStorage.getItem("ya-email")||email;copw=localStorage.getItem("ya-copw")||copw;tk={...tk,...(JSON.parse(localStorage.getItem("ya-tk")||"null")||{})};codes={...codes,...(JSON.parse(localStorage.getItem("ya-codes")||"null")||{})};gcodes={...gcodes,...(JSON.parse(localStorage.getItem("ya-gcodes")||"null")||{})};tcodes={...tcodes,...(JSON.parse(localStorage.getItem("ya-tcodes")||"null")||{})};who={...(JSON.parse(localStorage.getItem("ya-who")||"null")||{}),...who};scodes={...scodes,...(JSON.parse(localStorage.getItem("ya-scodes")||"null")||{})}}catch(_){}return{admin,codes,gcodes,tcodes,scodes,who,email,copw,tk,dev:devToks(),dv:devLabel()}}
+function AUTH(){let scodes={...(S._scodes||{})},tcodes={...(S._tcodes||{})},who={...(S._who||{})},tk={...(S._tk||{})},admin=S._admin||"",codes={...(S._codes||{})},gcodes={...(S._gcodes||{})},email=S._email||"",copw=S._copw||"";try{admin=admin||localStorage.getItem("ya-admin")||"";email=email||localStorage.getItem("ya-email")||"";copw=copw||localStorage.getItem("ya-copw")||"";tk={...(JSON.parse(localStorage.getItem("ya-tk")||"null")||{}),...tk};codes={...(JSON.parse(localStorage.getItem("ya-codes")||"null")||{}),...codes};gcodes={...(JSON.parse(localStorage.getItem("ya-gcodes")||"null")||{}),...gcodes};tcodes={...(JSON.parse(localStorage.getItem("ya-tcodes")||"null")||{}),...tcodes};who={...(JSON.parse(localStorage.getItem("ya-who")||"null")||{}),...who};scodes={...(JSON.parse(localStorage.getItem("ya-scodes")||"null")||{}),...scodes}}catch(_){}return{admin,codes,gcodes,tcodes,scodes,who,email,copw,tk,dev:devToks(),dv:devLabel()}}
 function storeEmail(v){v=String(v||"").trim().toLowerCase();if(!v)return;S._email=v;if(S.remember===false)return;try{localStorage.setItem("ya-email",v)}catch(_){}}
 let pending=0;
 // GitHub 페이지에서 열면 google.script.run 이 없으므로 웹앱 주소(doPost)로 직접 보낸다.
@@ -4111,16 +4098,19 @@ function slowNotice(show,msg){
   if(!el){el=document.createElement("div");el.id="slowBox";el.className="notice";el.style.cssText="margin:12px 16px;max-width:608px";document.querySelector(".app").insertBefore(el,document.querySelector("#view"))}
   el.innerHTML=`<b>${esc(msg)}</b><br>· 처음 열 때는 10초쯤 걸릴 수 있어요.<br>· 카카오톡 안에서 열었다면 Chrome이나 Safari로 열어 보세요.<br>· 구글 계정 여러 개에 로그인된 브라우저라면 시크릿 창에서 열어 보세요.<div style="margin-top:8px"><button class="btn" id="retryLoad">다시 시도</button></div>`;
 }
-async function load(quiet){
-  if(loading)return loading;
+let bootSeq=0;
+async function load(quiet,force){
+  if(loading&&!force)return loading;
+  const seq=++bootSeq;
   const slow=setTimeout(()=>{if(!S.ready){slowNotice(true,"구글 시트에서 불러오는 데 시간이 걸리고 있어요.");hideBootLoader()}},12000);
   const slowMsg=setTimeout(()=>{if(!S.ready&&$("#bootMsg"))$("#bootMsg").textContent="조금만 기다려 주세요. 처음 열 때는 시간이 걸려요…"},5000);
-  loading=call("boot",[...S.years]).then(d=>{applyBoot(d);saveBootCache(d);S.lastBoot=Date.now();slowNotice(false);$("#sync").textContent="저장됨";render();hideBootLoader();loadPhotos();setTimeout(afterBoot,0)})
-    .catch(e=>{console.error(e);$("#sync").textContent=S.ready?"연결 안 됨 · 자동 재시도":"연결 안 됨";if(!S.ready){slowNotice(true,"불러오지 못했어요: "+e.message);hideBootLoader()}else if(!quiet)toast(e.message)})
-    .finally(()=>{clearTimeout(slow);clearTimeout(slowMsg);loading=null});
-  return loading;
+  const p=call("boot",[...S.years]).then(d=>{if(seq!==bootSeq)return;applyBoot(d);saveBootCache(d);S.lastBoot=Date.now();slowNotice(false);$("#sync").textContent="저장됨";render();hideBootLoader();loadPhotos();setTimeout(afterBoot,0)})
+    .catch(e=>{if(seq!==bootSeq)return;console.error(e);$("#sync").textContent=S.ready?"연결 안 됨 · 자동 재시도":"연결 안 됨";if(!S.ready){slowNotice(true,"불러오지 못했어요: "+e.message);hideBootLoader()}else if(!quiet)toast(e.message)})
+    .finally(()=>{clearTimeout(slow);clearTimeout(slowMsg);if(loading===p)loading=null});
+  loading=p;
+  return p;
 }
-document.addEventListener("click",e=>{if(e.target.closest("#retryLoad")){$("#sync").textContent="불러오는 중…";loading=null;load()}});
+document.addEventListener("click",e=>{if(e.target.closest("#retryLoad")){$("#sync").textContent="불러오는 중…";load(false,true)}});
 render();useBootCache();qrBoot().finally(()=>load());
 if(S.view==="dept")setTimeout(()=>{preloadSched()},1500);
 setInterval(()=>{
@@ -4132,39 +4122,5 @@ setInterval(()=>{
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!pending)checkUpdate()});
 </script>
 
-<script>
-(function () {
-  var BUILD = '20261122122624';
-  // 1) 서비스워커: 항상 최신 sw.js 를 확인하고, 새 버전이 잡히면 자동으로 새로고침
-  if ('serviceWorker' in navigator) {
-    var had = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
-      reg.update();
-      document.addEventListener('visibilitychange', function () { if (!document.hidden) reg.update(); });
-    }).catch(function () {});
-    navigator.serviceWorker.addEventListener('controllerchange', function () { if (had) refresh(); });
-  }
-  // 2) 버전 확인: version.json 은 캐시를 거치지 않고 읽어서, 내 화면과 다르면 새로 불러옴
-  function busy() { return !!document.querySelector('.overlay') || (typeof pending !== 'undefined' && pending > 0); }
-  function clearAll() {
-    return (window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : Promise.resolve()).catch(function () {});
-  }
-  function refresh(build) {
-    if (busy()) { setTimeout(function () { refresh(build); }, 3000); return; }
-    var n = Number(sessionStorage.getItem('ya-reload') || 0);
-    if (n >= 3) return;                       // 무한 새로고침 방지
-    sessionStorage.setItem('ya-reload', String(n + 1));
-    clearAll().then(function () { location.replace(location.pathname + '?v=' + (build || Date.now())); });
-  }
-  function check() {
-    fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
-      if (j && j.build && j.build !== BUILD) refresh(j.build); else sessionStorage.removeItem('ya-reload');
-    }).catch(function () {});
-  }
-  check();
-  document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); });
-  setInterval(function () { if (!document.hidden) check(); }, 60000);
-})();
-</script>
 </body>
 </html>
